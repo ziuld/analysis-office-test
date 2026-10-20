@@ -1,0 +1,93 @@
+name: arktic-office-demo
+
+services:
+  audit-api:
+    extends:
+      service: auditor
+    profiles: !reset []
+    entrypoint: [python, /app/server.py]
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  auditor:
+    profiles: [audit]
+    image: arktic-hermes-auditor:ce28ca3
+    build:
+      context: .
+      dockerfile: docker/Auditor.Dockerfile
+    env_file: .env
+    volumes:
+      - ./reports:/reports
+      - hermes-auth:/auth
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=128m,mode=1777
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    init: true
+    mem_limit: 1g
+    cpus: 2
+    pids_limit: 128
+    networks: [office]
+
+  demo:
+    profiles: [demo]
+    image: arktic-hermes3d-demo:beb7629
+    build:
+      context: ./vendor/Hermes3D
+      dockerfile: ../../docker/Hermes3D.Dockerfile
+      target: demo
+    environment:
+      DEMO_ADAPTER_HOST: 0.0.0.0
+      DEMO_ADAPTER_PORT: "18789"
+    init: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: [CMD, node, -e, "const s=require('net').connect(18789,'127.0.0.1',()=>{s.end();process.exit(0)});s.on('error',()=>process.exit(1));setTimeout(()=>process.exit(1),3000)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    networks: [office]
+
+  office:
+    image: arktic-hermes3d-office:beb7629
+    build:
+      context: ./vendor/Hermes3D
+      dockerfile: ../../docker/Hermes3D.Dockerfile
+      target: office
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      HOST: 0.0.0.0
+      PORT: "3000"
+      HERMES3D_LOCAL_ONLY: "1"
+      UPSTREAM_ALLOWLIST: disabled.invalid
+      CUSTOM_RUNTIME_ALLOWLIST: disabled.invalid
+      HERMES_STATE_DIR: /data/hermes
+      AUDIT_API_URL: http://audit-api:8080
+    volumes:
+      - studio:/data/hermes
+    depends_on:
+      audit-api:
+        condition: service_healthy
+    init: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/office').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 10s
+      retries: 8
+      start_period: 30s
+    networks: [office]
+
+networks:
+  office:
+
+volumes:
+  studio:
+  hermes-auth:

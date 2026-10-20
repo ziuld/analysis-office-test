@@ -1,0 +1,17 @@
+**/.git
+.git
+**/__pycache__
+**/.venv
+.env
+.env.*
+reports
+artifacts
+vendor/Hermes3D
+vendor/hermes-agent
+vendor/hermes-runtime/website
+vendor/hermes-runtime/apps
+vendor/hermes-runtime/web
+vendor/hermes-runtime/ui-tui
+vendor/hermes-runtime/tests
+vendor/hermes-runtime/assets
+vendor/hermes-runtime/node_modules
