@@ -14,7 +14,8 @@ Versiones propias: **frontend 0.2.0** y **backend 0.2.0**, gestionadas de forma 
 - **Reporte visual, controles y límites:** [Seguridad](docs/SEGURIDAD.md).
 - **Cómo se redacta el informe:** [Estándar de comunicación compartido](docs/ESTANDAR_COMUNICACION_INFORMES.md).
 - **Preparar la subida y mantener las versiones:** [Repositorio y reproducción](docs/REPOSITORIO.md).
-- **Alcance y seguimiento:** [PLAN_MVP.md](PLAN_MVP.md), único documento de planificación.
+- **MVP actual e histórico:** [PLAN_MVP.md](PLAN_MVP.md), con el alcance y las verificaciones de la entrega 0.2.0.
+- **Siguiente evolución:** [Plan de Fase 1](docs/PLAN_FASE_1.md), con objetivos, tareas, criterios de cierre y decisiones pendientes. Su implementación todavía no ha comenzado.
 
 Con las dependencias recuperadas, `.env` configurado y la sesión del modelo autorizada:
 
@@ -55,6 +56,7 @@ Navegador → office (localhost:3000) → audit-api (red interna)
 | `.env.example` | Configuración de referencia sin credenciales |
 | `docs/` | Guías de instalación, flujo, operación y publicación |
 | `PLAN_MVP.md` | Objetivo, fases y comprobaciones del MVP |
+| `docs/PLAN_FASE_1.md` | Plan separado de la siguiente evolución; trabajo pendiente y decisiones por validar |
 | `vendor/` | Fuentes recuperadas de Hermes; se reconstruyen y no se suben a este repositorio |
 | `reports/`, `artifacts/` | Datos y capturas locales, excluidos de Git |
 
