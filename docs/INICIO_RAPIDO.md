@@ -33,19 +33,18 @@ cd arktic_office
 `vendor/` no se publica. En este clon nuevo, recuperar los originales y aplicar nuestra adaptación:
 
 ```powershell
-$officeCommit = (Get-Content HERMES3D_VERSION -Raw).Trim()
-git clone --config core.longpaths=true --no-checkout --depth 1 https://github.com/iamlukethedev/Hermes3D.git vendor/Hermes3D
-git -C vendor/Hermes3D fetch --depth 1 origin $officeCommit
-git -C vendor/Hermes3D checkout --detach $officeCommit
-git -C vendor/Hermes3D apply ../../docker/hermes3d-local-demo.patch
-
-$agentCommit = (Get-Content HERMES_AGENT_VERSION -Raw).Trim()
-git clone --config core.longpaths=true --no-checkout --depth 1 https://github.com/NousResearch/hermes-agent.git vendor/hermes-runtime
-git -C vendor/hermes-runtime fetch --depth 1 origin $agentCommit
-git -C vendor/hermes-runtime checkout --detach $agentCommit
+pwsh -NoProfile -File scripts/restore-sources.ps1
 ```
 
-La opción `core.longpaths=true` se guarda solo en esas copias y permite las rutas largas del runtime en Windows. Ejecutar este bloque una sola vez por clon nuevo; si un comando falla, detenerse y revisar el error. No aplicar el parche otra vez sobre una oficina ya adaptada. No se instalan dependencias ni se ejecutan scripts de los repositorios en el host.
+Requiere PowerShell 7 (`pwsh`). Recupera exclusivamente los commits fijados, verifica HEAD y comprueba/aplica el parche de frontend. No instala ni ejecuta dependencias en el host. Se detiene si cualquiera de los destinos ya existe para conservar cambios locales. Si una descarga falla, conserva el árbol parcial para diagnóstico; reintentar en otro clon limpio.
+
+Para comprobar construcción y arranque **sin configurar modelos**, ejecutar después:
+
+```powershell
+pwsh -NoProfile -File scripts/check-startup.ps1
+```
+
+Construye API y oficina; usa volúmenes nuevos, sin `.env` ni sesiones previas, red interna sin salida y ningún puerto publicado. Comprueba `/health`, `/office` y el proxy de listado vacío. Retira sus contenedores y volúmenes temporales al terminar. No inicia revisiones ni ejecuta scanners o modelos. La construcción instala los binarios de scanners incluidos en la imagen, pero no los ejecuta. Requiere Compose 2.24.4 o posterior por `!override`, además de soporte de `!reset`. Las imágenes conservan sus etiquetas actuales. Más detalles y límites: [Reproducción y CI](REPOSITORIO.md#integración-continua-sin-modelos).
 
 ## 3. Crear la configuración local
 

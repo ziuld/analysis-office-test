@@ -54,6 +54,18 @@ Para regenerarlo, incluir tanto los cambios de archivos rastreados como los arch
 
 Antes de sustituir el parche distribuido, aplicarlo en una copia limpia del commit fijado y construir `office`. No actualizar los commits originales ni rehacer un checkout que contenga trabajo local sin revisar sus cambios.
 
+## Integración continua sin modelos
+
+En un clon limpio, ejecutar `pwsh -NoProfile -File scripts/restore-sources.ps1` y después `pwsh -NoProfile -File scripts/check-startup.ps1`. Requisitos: Git, PowerShell 7, Docker con motor Linux amd64 y Compose >= 2.24.4 (etiquetas `!override` y `!reset`). El script de recuperación falla si existe cualquiera de los dos destinos; no actualiza ni borra fuentes locales. Las descargas fallidas quedan disponibles para diagnóstico; usar otro clon limpio para reintentar.
+
+`.github/workflows/ci.yaml` ejecuta ambos comandos en Ubuntu 24.04 para push, pull request y ejecución manual, con permisos de solo lectura y sin secretos. La recuperación usa commits completos y el frontend se valida con `git apply --check` y la comprobación inversa. Las imágenes usan los Dockerfiles y lockfiles actuales, con descarga e instalación de dependencias durante el build. Esto incluye instalar los binarios de scanners, sin ejecutarlos.
+
+El arranque combina `compose.yaml` con `compose.ci.yaml`: proyecto de nombre único, volúmenes nuevos sin sesiones, ningún `.env`, ningún puerto del host y red `internal` sin salida a Internet. Solo levanta `audit-api` y `office`. Espera sus healthchecks, comprueba `GET /health`, `GET /runs` vacío y sin consulta activa, oficina HTTP 200 y proxy `/api/audit/runs`, además de `/health` desde la red de la oficina. Verifica también `/reports` y `/auth` vacíos. No llama a rutas POST, análisis, scanners ni modelos. Un `finally` retira únicamente los recursos del proyecto temporal; una interrupción forzada del proceso puede requerir retirarlos manualmente por su nombre `arktic-ci-*`.
+
+El build puede reutilizar caché Docker y actualiza las etiquetas locales actuales; no publica imágenes ni cambia versiones. Tener HTTP saludable no valida la interfaz visual, resultados de análisis, proveedores, autenticación ni calidad de informes. GitHub Actions debe comprobarse también en el runner remoto: una ejecución local no acredita que el workflow haya pasado allí. Los fallos muestran logs limitados al proyecto aislado.
+
+**CD pendiente:** no hay despliegue automático, publicación de imágenes, etiquetas ni releases. El cierre de entrega y el siguiente número de versión requieren acuerdo posterior.
+
 ## Comprobación antes de compartir una versión
 
 1. Las rutas privadas siguen fuera de Git y los avisos de terceros se conservan.

@@ -15,7 +15,7 @@ Versiones propias: **frontend 0.2.0** y **backend 0.2.0**, gestionadas de forma 
 - **Cómo se redacta el informe:** [Estándar de comunicación compartido](docs/ESTANDAR_COMUNICACION_INFORMES.md).
 - **Preparar la subida y mantener las versiones:** [Repositorio y reproducción](docs/REPOSITORIO.md).
 - **MVP actual e histórico:** [PLAN_MVP.md](PLAN_MVP.md), con el alcance y las verificaciones de la entrega 0.2.0.
-- **Siguiente evolución:** [Plan de Fase 1](docs/PLAN_FASE_1.md), con objetivos, tareas, criterios de cierre y decisiones pendientes. Su implementación todavía no ha comenzado.
+- **Siguiente evolución:** [Plan de Fase 1](docs/PLAN_FASE_1.md), con objetivos, tareas, criterios de cierre y decisiones pendientes. El Bloque 1 incorpora reproducción automatizada y CI de arranque sin modelos; el resto sigue pendiente.
 
 Con las dependencias recuperadas, `.env` configurado y la sesión del modelo autorizada:
 

@@ -2,7 +2,7 @@
 
 Fecha de registro: 23/10/2026.
 
-Estado: plan registrado por acuerdo con el usuario; implementación pendiente. Las decisiones técnicas indicadas como pendientes requieren validación antes de adoptarse. Registrar este plan no implica que sus capacidades estén disponibles.
+Estado: implementación limitada al Bloque 1 (F1-01 a F1-03); comprobaciones y limitaciones registradas debajo. El resto continúa pendiente. Las decisiones técnicas indicadas como pendientes requieren validación antes de adoptarse. La entrega permanece abierta y las versiones actuales se conservan.
 
 ## Relación con el MVP actual
 
@@ -90,15 +90,28 @@ La configuración base admite un proceso exterior de hasta 25 minutos y limita e
 
 ## Roadmap y tareas
 
-Todas las tareas están pendientes. La finalización de un bloque exige registrar su evidencia, límites y resultado; no basta con cambiar su estado. No se asignan fechas ni duraciones de desarrollo todavía.
+Solo se implementa el Bloque 1 por encargo del usuario. La finalización de un bloque exige registrar su evidencia, límites y resultado; no basta con cambiar su estado. No se asignan fechas ni duraciones de desarrollo todavía.
 
 ### Bloque 1 — Base reproducible y CI mínima
 
-- [ ] F1-01 Automatizar recuperación de dependencias por commit y aplicación del parche de frontend desde un clon limpio.
-- [ ] F1-02 Añadir GitHub Actions para construir imágenes y comprobar arranque de API y oficina mediante sus rutas de salud.
-- [ ] F1-03 Garantizar que estas comprobaciones no inician revisiones ni requieren credenciales de modelos. Documentar CD como pendiente, sin despliegue automático.
+- [x] F1-01 Automatizar recuperación de dependencias por commit y aplicación del parche de frontend desde un clon limpio.
+- [x] F1-02 Añadir GitHub Actions para construir imágenes y comprobar arranque de API y oficina mediante sus rutas de salud.
+- [x] F1-03 Garantizar que estas comprobaciones no inician revisiones ni requieren credenciales de modelos. Documentar CD como pendiente, sin despliegue automático.
 
 **Cierre:** clon limpio reproducible, imágenes construidas y servicios saludables. Evidencia de las comprobaciones sin llamadas a modelos. Mantener las pruebas útiles del MVP como base de regresión.
+
+**Implementación y comprobaciones del 23/10/2026:**
+
+- F1-01: [restore-sources.ps1](../scripts/restore-sources.ps1) recupera con fetch superficial los commits completos de `HERMES3D_VERSION` y `HERMES_AGENT_VERSION`, verifica HEAD y comprueba/aplica el parche con verificación inversa. Configura rutas largas y conserva LF. Rechaza ambos destinos preexistentes antes de descargar; no sobrescribe ni borra fuentes locales.
+- F1-02: [ci.yaml](../.github/workflows/ci.yaml) ejecuta recuperación, build y arranque en Ubuntu 24.04 para push, PR y ejecución manual. Checkout fijado por SHA, permisos de lectura, sin secretos. [check-startup.ps1](../scripts/check-startup.ps1) es la misma entrada local y de CI; espera healthchecks y consulta rutas HTTP de API, oficina y proxy del listado.
+- F1-03: [compose.ci.yaml](../compose.ci.yaml) elimina `.env`, los montajes de uso diario y los puertos publicados; utiliza volúmenes nuevos y red interna sin salida. Solo se levantan API y oficina. El script solo hace GET, exige listado sin trabajos ni consulta activa, `/reports` vacío y `/auth` vacío. Limpia su propio proyecto temporal mediante `finally`. No inicia análisis, scanners ni llamadas a modelos. Los scanners se instalan como parte de la imagen existente, sin ejecutarlos.
+- Recuperación comprobada en `artifacts/block1-clean-network/`, exportación de archivos versionados y cambios de este bloque, sin `vendor`, `.env`, informes ni estado anterior. Ambos originales se descargaron de GitHub con los commits fijados; aplicación y comprobación inversa del parche correctas. La segunda invocación fue rechazada antes de modificar fuentes. Un primer intento aislado falló por restricción de red del sandbox; la repetición con acceso autorizado completó la descarga.
+- Entorno: Windows/PowerShell 7, Docker Desktop 4.47.0, Engine 28.4.0 Linux/amd64 y Compose 2.39.4-desktop.1. La configuración resuelta muestra únicamente API y oficina, red `internal: true`, sin puertos, sin variables de credenciales y con volúmenes exclusivos del proyecto temporal.
+- Construcción y arranque completados: ambas imágenes `arktic-hermes-auditor:0.2.0` y `arktic-hermes3d-office:0.2.0` construidas desde las fuentes recuperadas. Frontend compilado y TypeScript superado. La primera ejecución alcanzó ambos healthchecks pero una consulta adicional solicitaba `/api/audit/health`, ruta no admitida por el proxy; se corrigió el script para consultar `/health` directamente desde la red de la oficina y `/api/audit/runs` por el proxy, sin modificar la aplicación. También se comprobó la limpieza tras ese fallo.
+- Repetición completa con el script final: salida 0, proyecto `arktic-ci-c955ed6a2a5b`, ambos servicios `healthy`; API `/health` devuelve `{"ok":true,"version":"0.2.0"}`, `/runs` vacío y sin consulta activa; `/reports` y `/auth` vacíos. `GET /office`, `GET /api/audit/runs` y `GET http://audit-api:8080/health` desde office devuelven 200. Contenedores, red y tres volúmenes temporales retirados correctamente. Log final local excluido de Git: `artifacts/block1-startup-final.log`; primer build y diagnóstico: `artifacts/block1-startup.log`.
+- Sintaxis de ambos scripts PowerShell y `git diff --check` correctos. Archivos de versiones, referencias de terceros, `CHANGELOG.md` y `PLAN_MVP.md` sin cambios. Resultado del Bloque 1: implementado y comprobado localmente; ejecución del workflow remoto pendiente.
+
+**Limitaciones y entrega:** se prueba una exportación limpia con los cambios aún sin commit, no un clon remoto de una entrega publicada. Docker puede reutilizar caché; no se afirma construcción totalmente sin caché, sin Internet ni idéntica bit a bit. La construcción requiere GitHub, registros y servidores de paquetes. El workflow se añade pero no se ha ejecutado en GitHub Actions; Ubuntu y otros equipos quedan pendientes de validación remota. HTTP saludable no valida la representación visual ni calidad de informes, proveedores o autenticación. No se ejecutan análisis de repositorios ni scanners ni modelos para estas comprobaciones; las pruebas del MVP se conservan sin cambios y no se atribuyen nuevas ejecuciones a su histórico. Una interrupción forzada puede impedir la limpieza automática. **CD pendiente**, sin publicación de imágenes, despliegue, release ni etiquetas automáticas. Frontend/backend permanecen en **0.2.0**, commits de terceros y changelog sin cambios; el cierre de entrega se acordará después.
 
 ### Bloque 2 — Validación del indexador dentro de Docker
 
@@ -234,3 +247,4 @@ Capacidades contrastadas en fuentes primarias durante la propuesta del 23/10/202
 | Fecha | Cambio | Estado de implementación |
 |---|---|---|
 | 23/10/2026 | Plan registrado por petición del usuario, separado del MVP 0.2.0; alcance, recomendaciones, tareas y comprobaciones pendientes documentados | Ninguna tarea de la Fase 1 implementada en este registro |
+| 23/10/2026 | Bloque 1 F1-01 a F1-03 implementado: recuperación por commit, CI mínima y arranque aislado sin modelos; evidencia y limitaciones en el bloque | Comprobación local satisfactoria; GitHub Actions remoto pendiente; entrega abierta, versiones 0.2.0 conservadas |
