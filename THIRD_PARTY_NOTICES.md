@@ -10,3 +10,5 @@ Arktic Office reutiliza los siguientes proyectos. Las copias de sus avisos MIT c
 La adaptación de Hermes3D se distribuye como `docker/hermes3d-local-demo.patch`. El runtime de Hermes Agent se recupera sin un parche propio. Al preparar `vendor/`, los archivos `LICENSE` de ambos originales se mantienen en sus carpetas.
 
 Las dependencias transitivas conservan sus propios avisos y licencias en los proyectos y paquetes correspondientes. Este archivo es una atribución de los dos proyectos base, no un inventario completo de dependencias ni una licencia del código propio de Arktic Office.
+
+La imagen del auditor también incluye [Gitleaks 8.30.1](https://github.com/gitleaks/gitleaks/tree/v8.30.1), con aviso [MIT](licenses/Gitleaks-MIT.txt), y [OSV-Scanner 2.7.0](https://github.com/google/osv-scanner/tree/v2.7.0), con licencia [Apache 2.0](licenses/OSV-Scanner-Apache-2.0.txt). Los avisos se copian a `/usr/local/share/licenses/arktic/` en la imagen. Versiones y hashes de los binarios Linux/amd64 están en `docker/install_scanners.py`.

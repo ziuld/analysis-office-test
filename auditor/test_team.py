@@ -30,8 +30,13 @@ def report(item):
 def fake_invoke(prompt, config):
     file = config["files"][0]
     data = report(observation(config["name"] + " observó el archivo.", file["path"], 1, file["text"].splitlines()[0]))
-    data["schema_version"] = 2
+    data["schema_version"] = 3
+    from security import CONTROLS
+    data["controles"] = [{"id": key, "estado": "no_evaluado", "motivo": "Sin contexto", "evidencia": []} for key in CONTROLS] if config["id"] == "security" else []
+    data["confirmados"][0].update(severidad="informativa", control="contexto", accion="Revisar entorno", condiciones="Solo codigo")
     data["confirmados"][0].update(tema="arranque", importancia="Permite identificar el arranque declarado.", pendiente="Comprobar el entorno real.")
+    if config["id"] == "architecture":
+        data["propuesta_azure"] = {"estado": "informacion_insuficiente", "destino": "por_definir", "resumen": "Falta conocer la aplicación.", "justificacion": "El caso controlado no define el entorno.", "evidencia": [], "supuestos": [], "servicios": [], "pasos": [], "pendientes": ["Confirmar arranque y datos."]}
     return {"report": json.dumps(data), "usage": {"total_tokens": 50}}
 
 
@@ -73,8 +78,8 @@ class TeamTests(unittest.TestCase):
         value["files"] += [{"path": f"config{i}.yaml", "text": "x" * 12000} for i in range(10)]
         plan = plan_cells(value)
         for cell in plan:
-            self.assertLessEqual(len(cell["files"]), 6)
-            self.assertLessEqual(cell["bytes"], 24000)
+            self.assertLessEqual(len(cell["files"]), 12 if cell["id"] == "security" else 6)
+            self.assertLessEqual(cell["bytes"], 64000 if cell["id"] == "security" else 24000)
         inventory = next(c for c in plan if c["id"] == "inventory")
         self.assertNotIn("auth.py", [f["path"] for f in inventory["files"]])
         security = next(c for c in plan if c["id"] == "security")
@@ -121,7 +126,7 @@ class TeamTests(unittest.TestCase):
 
     def test_empty_inventory_skips_model_and_marks_partial(self):
         value = snapshot()
-        value["files"] = [f for f in value["files"] if f["path"] == "server.js"]
+        value["files"] = [f for f in value["files"] if f["path"] == "auth.py"]
         calls = []
         def invoke(prompt, config):
             calls.append(config["id"])
@@ -130,7 +135,7 @@ class TeamTests(unittest.TestCase):
             data = run_team(value, Path(temp), invoke=invoke, emit=lambda *a, **k: None)
         self.assertNotIn("inventory", calls)
         self.assertEqual(data["estado"], "parcial")
-        self.assertEqual(data["celulas"][2]["estado"], "sin_evidencia")
+        self.assertEqual(data["celulas"][2]["estado"], "informacion_insuficiente")
 
     def test_duplicates_keep_origins_and_uncertainty_is_not_promoted(self):
         first = report(observation("Declara Node."))
@@ -143,7 +148,7 @@ class TeamTests(unittest.TestCase):
         self.assertIn("discrepan", data["indicios"][0]["por_confirmar"])
 
     def test_adjusting_one_cell_does_not_raise_others(self):
-        with patch.dict(os.environ, {"AUDIT_MODEL": "gpt-6-luna", "AUDIT_REASONING": "low", "AUDIT_ARCHITECTURE_REASONING": "medium"}):
+        with patch.dict(os.environ, {"AUDIT_MODEL": "gpt-6-luna", "AUDIT_REASONING": "low", "AUDIT_SECURITY_MODEL": "", "AUDIT_SECURITY_REASONING": "", "AUDIT_ARCHITECTURE_REASONING": "medium"}):
             self.assertEqual(cell_config(CELLS[0])["reasoning"], "low")
             self.assertEqual(cell_config(CELLS[1])["reasoning"], "medium")
             self.assertEqual(cell_config(CELLS[2])["reasoning"], "low")

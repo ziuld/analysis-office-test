@@ -89,7 +89,7 @@ Conservar los archivos actuales `celulas/security.json`, `celulas/architecture.j
 - Mantener separados confirmados, indicios y dudas. Una posible implicación es condicional; una cita válida no demuestra por sí sola que la interpretación sea correcta.
 - Referencias breves `archivo:línea` como enlaces a GitHub fijados al commit revisado, y citas completas en la evidencia. Priorizar lo que afecta datos, acceso y operación, sin inventar urgencias, puntuaciones de preparación ni estimaciones de esfuerzo o recursos.
 - Lectura estática parcial: no confundir células completadas con repositorio revisado íntegramente, controles operativos verificados o despliegue seguro. La ausencia de hallazgos no acredita seguridad ni la ausencia de un componente.
-- Objetivo de extensión: una o dos páginas equivalentes, dejando el detalle en los archivos de la revisión. Mantener el límite por célula: hasta 2 confirmados, 1 indicio y 2 dudas.
+- Objetivo de extensión: una o dos páginas equivalentes, dejando el detalle en los archivos de la revisión. El formato 3 posterior amplía la respuesta y conserva los riesgos sin recortarlos al límite original; ver actualización de seguridad al final.
 
 ## Base técnica
 Reutilizar Hermes3D con oficina **2D por defecto** y conectar Hermes Agent para las revisiones reales. Empezar con el modo demo identificado como tal y comprobar pronto la integración real.
@@ -162,7 +162,7 @@ Añadir verificaciones, tests o análisis más profundos según las dudas reales
 
 **Cierre documental (20/10/2026):** README general y guías de instalación, flujo, operación y preparación del repositorio en `docs/`; versiones fijadas, parche y avisos de terceros conservados. Exclusiones de Git y enlaces locales comprobados. Fuentes reconstruidas localmente desde los commits originales y el parche, con construcción de ambas imágenes y 51 pruebas superadas, sin llamadas al modelo. La instalación en otro ordenador y la subida a un remoto siguen sin ejecutarse.
 
-## Perfil económico para la prueba objetivo
+## Perfil inicial del piloto (histórico; sustituido por la actualización de seguridad)
 Mínimo recomendado inicialmente: **gpt-6-luna con razonamiento low**, usando OAuth de ChatGPT. Es el modelo que ya produjo un informe real en este piloto; no se ha demostrado todavía que sea suficiente para el repositorio objetivo. La cuota de la suscripción y la facturación API son distintas.
 
 Configuración ajustable en `.env`: `AUDIT_MODEL=gpt-6-luna`, `AUDIT_REASONING=low`, `AUDIT_MAX_FILES=12`, `AUDIT_MAX_TOTAL_BYTES=48000`. Cada célula recibe hasta 6 archivos/24 KB y devuelve hasta 2 confirmados, 1 indicio y 2 dudas. `AUDIT_MAX_OUTPUT_TOKENS=2500` solicita un techo por célula en modo API; esta versión de Hermes no lo envía al backend Codex OAuth, por lo que con Plus la brevedad depende de las instrucciones y no es un límite duro de salida. No hay un presupuesto total de tokens garantizado. El prompt, las instrucciones internas y el razonamiento también consumen contexto. La validación de citas se hace con código.
@@ -170,3 +170,59 @@ Configuración ajustable en `.env`: `AUDIT_MODEL=gpt-6-luna`, `AUDIT_REASONING=l
 Seguridad, arquitectura e inventario heredan ese mismo modelo/razonamiento. Se puede ajustar una sola célula mediante las variables opcionales de `.env.example`. El coordinador distribuye evidencia y consolida mediante código, sin una llamada adicional al modelo. El informe identifica fuentes y células; conserva resultados si otra falla, declara cobertura parcial y no resuelve contradicciones semánticas automáticamente.
 
 Antes de la prueba objetivo: ejecutar `--inspect-only` y revisar si los archivos seleccionados cubren arranque, dependencias, Docker y datos. Si faltan archivos, ajustar primero la selección o subir hasta 20 archivos/90000 bytes. Si la evidencia es suficiente pero la interpretación es deficiente, probar Luna con `medium`; considerar Sol solo para la célula que lo necesite. No aumentar modelos ni repetir llamadas automáticamente. Comparar utilidad y citas con el arquitecto antes de conservar un ajuste.
+
+## Actualización de seguridad — 22/10/2026
+
+Cambio aprobado: reporte ejecutivo visual con gravedad separada de certeza, acciones y controles pendientes; perfil acotado OWASP; lectura priorizada para seguridad; Gitleaks y OSV sobre archivos descargados sin ejecutar el proyecto. Conserva inventario, consultas e informes anteriores. Semgrep queda para una ampliación posterior con reglas revisadas.
+
+Configuración actual: 24 archivos / 120000 bytes de texto global; Seguridad 12 / 64000, otras células 6 / 24000. Seguridad Sol/medium y demás Luna/low en `.env.example`; disponibilidad sujeta a la cuenta. El coordinador consolida sin otra llamada. Límites y operación en [docs/SEGURIDAD.md](docs/SEGURIDAD.md).
+
+**Verificado (22/10/2026):** imágenes construidas, 66 pruebas del auditor y 4 de interfaz superadas. Gitleaks detectó un token ficticio y no alertó en el control sin secreto; OSV detectó avisos para una dependencia de prueba sin resolver transitivas. Piloto nuevo de bookingApi terminado desde la oficina: `reports/e3b1f988-3940-4ce3-94fe-4ac14fe49888/`, rama `master`, commit `c0d247e3226d77a83471c7a1b32afdb0981eb7f1`, 24 archivos / 50885 bytes de texto. Tres llamadas: Seguridad Sol/medium (14162 tokens), Arquitectura Luna/low (6621) e Inventario Luna/low (6391), total 27174 tokens reportados por Hermes. Las comprobaciones pequeñas del modelo consumieron llamadas adicionales y no forman parte de ese total.
+
+Reporte visual y filtro de indicios comprobados; impresión confirmada por el usuario. Presentación ajustada sin nuevas llamadas para resumir datos sin confundirlos con riesgos y agrupar componentes del mismo nombre, conservando las variantes en el detalle. Informes previos conservados. En este piloto OSV quedó explícitamente no evaluado porque no se seleccionaron archivos de versiones resueltas admitidos; no se afirma ausencia de vulnerabilidades. No se ejecutó la aplicación ni se revisó la iniciativa empresarial objetivo. La selección sigue siendo heurística y la interpretación/severidad requieren revisión humana.
+
+## Propuesta Azure y ejemplo ficticio — 23/10/2026
+
+Arquitectura incorpora una propuesta DevOps preliminar y separada de los hallazgos: una opción principal sencilla, sus motivos, fuentes técnicas, supuestos, servicios mínimos, entrega y reversión, y validaciones del arquitecto. Se genera dentro de su llamada habitual con Luna/low. El perfil no obliga a usar Kubernetes ni presupone infraestructura corporativa disponible; si falta información, deja el destino por definir.
+
+Por instrucción del usuario, no se ejecutan más análisis ni llamadas a agentes para validar esta ampliación. Se crea el ejemplo completamente ficticio **Portal de personal**, con riesgos inventados y una propuesta App Service + PostgreSQL gestionado. Fuentes y resultados marcados como simulación; consultas bloqueadas para evitar consumo accidental. Se reproduce mediante `examples/create_fictional_report.py`. No se han ejecutado el proyecto objetivo, scanners ni agentes para ese ejemplo.
+
+Verificación de código: 78 pruebas superadas, incluidas fuentes de la propuesta, límites, conservación de informes anteriores y rechazo de consultas sobre simulaciones. La generación real del nuevo apartado con un modelo sigue pendiente por decisión del usuario; el ejemplo solo valida el formato.
+
+Imágenes actualizadas y servicios saludables. Ejemplo abierto en la oficina: resumen con 2 críticos, 3 altos, 2 medios, 1 bajo y 3 indicios, todos inventados; apartado Azure visible. Fuentes identificadas como ficticias y consultas bloqueadas. Capturas locales en `artifacts/demo-portal-prioridades.png` y `artifacts/demo-portal-azure.png`. No se hicieron llamadas a agentes para crear ni mostrar este ejemplo.
+
+## Estándar editorial y formato v12 — 23/10/2026
+
+Implementado el formato aprobado en generación, lectura en la oficina y Markdown. La guía compartida `docs/ESTANDAR_COMUNICACION_INFORMES.md` se incorpora a las instrucciones de cada célula y consulta; la consolidación determinista registra su versión y conserva las aportaciones originales. No añade llamadas al modelo.
+
+El informe presenta resumen, flujo con conexiones observadas/inferidas/desconocidas, riesgos con gravedad y certeza independientes, datos y recuperación, inventario, mejoras por dominio, propuesta Azure, decisión humana y anexos. El detalle técnico es desplegable y permite regresar al contexto. Los datos ausentes y resultados parciales se muestran explícitamente; se conservan variantes contradictorias y fuentes. Los nuevos campos editoriales se exigen en futuras revisiones sin invalidar informes antiguos.
+
+Verificado con el ejemplo ficticio `demo-editorial-v12-portal-personal`: 90 pruebas del auditor y 2 de interfaz superadas (filtro y navegación; impresión excluida). Construcciones realizadas y navegación al riesgo, apertura del respaldo técnico y regreso al contexto comprobados en la oficina. Descarga Markdown verificada: coincide exactamente con el archivo guardado. Parche de interfaz actualizado y comprobado. Referencia v12 intacta; informes anteriores conservados. Muestra independiente: `artifacts/informe-arktic-v12-muestra.html`; captura: `artifacts/informe-v12-oficina.png`.
+
+No se ejecutaron revisiones, agentes, scanners ni llamadas a modelos para este cambio. Queda pendiente comprobar la calidad de redacción y los nuevos campos con una ejecución real expresamente autorizada; el ejemplo valida presentación y comportamiento, no hallazgos reales.
+
+## Corrección de cobertura tras sysmeh — 23/10/2026
+
+La revisión real autorizada `eac4e30c-b6bf-4d55-8629-0a61a8653b7e` terminó parcial: Seguridad e Inventario válidos; Arquitectura rechazada por una propuesta Azure inválida. La selección previa dejó fuera manifiestos y configuración de base de datos, por lo que Arquitectura e Inventario recibieron solo README. El informe histórico se conserva; sus cero riesgos no acreditan seguridad. Consumo reportado: tres llamadas y 14950 tokens.
+
+Corregido el reparto por tipos de archivo para incluir código, manifiestos, arranque, datos, rutas y configuración sin depender del README ni aumentar límites. Se distinguen Composer y Docker Compose y se prioriza lógica concreta frente a controladores base. Seguridad muestra sus controles y pendientes en el diagnóstico, aunque no haya riesgos clasificables. Una propuesta Azure inválida o ausente deja Arquitectura parcial y conserva sus resultados si superan validación independiente; no se recuperan citas inválidas ni se reintenta el modelo.
+
+Inspección real sin modelo ni scanners: `reports/20261023T124047706673Z-e52b816c/`, mismo commit `e52b816c3d88d99c20c77535cecd9a8876db5514`, rama master. Se incluyeron composer.json, composer.lock, package.json, config/database.php y rutas/código. La calidad de los hallazgos con esta nueva cobertura sigue pendiente de otra revisión autorizada; no se ha repetido el equipo de agentes.
+
+Verificación de la corrección: 97 pruebas locales superadas, incluidas cobertura sin README, múltiples manifiestos, exceso de middleware y recuperación parcial de Arquitectura sin publicar citas inválidas. Se conservaron los límites y modelos; no se ejecutaron llamadas adicionales al modelo. Imágenes actualizadas para las próximas revisiones.
+
+## Cierre: información insuficiente y reporte compacto — 23/10/2026
+
+La falta de evidencia tiene estado terminal `informacion_insuficiente`, con `mensaje` y `necesita` disponibles en la API y visibles en la oficina sin personaje rojo ni ejecución permanente. Con aportaciones válidas y limitaciones, se conserva un resultado parcial. La ausencia de archivos analizables no llama al modelo. Sesión, conexión o citas inválidas siguen siendo fallos técnicos; no se ocultan como falta de información.
+
+La guía y el contrato permiten declarar insuficiencia sin romper el JSON. Una hipótesis del propósito requiere fuentes y se identifica como tal. El reporte reúne las limitaciones y siguientes pasos en un bloque, omite secciones y tablas vacías y conserva las aportaciones, cobertura y resultados originales. Los bloques opcionales de Arquitectura se validan por separado: un diagrama o propuesta inválidos no descartan un núcleo válido; las advertencias quedan registradas sin reintentos.
+
+Verificado: 108 pruebas de backend y 4 de interfaz superadas; prueba de impresión excluida. Ambas imágenes construidas, servicios saludables, API y descarga del ejemplo comprobadas. Ejemplo `demo-informacion-insuficiente` visible en la oficina: cero personajes en error y reporte breve con lo necesario para avanzar. Captura: `artifacts/informacion-insuficiente-oficina.png`. Vista compacta de los resultados guardados de sysmeh: `artifacts/sysmeh-informe-compacto.html` y `.md`; hashes de los originales comprobados y conservados. Parche de interfaz actualizado para reproducción.
+
+No se ejecutaron nuevas revisiones, scanners ni llamadas a modelos para validar este cierre. Las respuestas controladas verifican el comportamiento; la producción de este nuevo contrato por un modelo sigue pendiente de la siguiente revisión real. Las ejecuciones históricas mantienen su estado original y no se presentan como corregidas o reevaluadas.
+
+## Entrega versionada — 23/10/2026
+
+Primera versión propia explícita: frontend 0.2.0 y backend 0.2.0, con archivos de versión independientes, imágenes y etiquetas OCI correspondientes, versión visible de oficina y API, y CHANGELOG por componente. Las versiones de Hermes permanecen fijadas por sus commits originales.
+
+Verificación de entrega: 108 pruebas del backend y 9 de interfaz; impresión excluida. Imágenes construidas y servicios saludables. Parche de frontend comprobado sobre fuentes originales limpias. Archivos preparados para Git escaneados con Gitleaks sin detecciones; .env, informes, artefactos y vendor excluidos. No se ejecutaron nuevas revisiones ni llamadas a modelos. La entrega se propone mediante PR a main; no se fusiona ni publica imágenes o etiquetas de release automáticamente.

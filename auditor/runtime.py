@@ -4,8 +4,20 @@ import io
 import json
 import os
 import sys
+import re
 
 from settings import settings, runtime_options
+
+
+def failure_code(value):
+    value = str(value).lower()
+    for pattern, code in ((r"quota|rate.limit|usage.limit|429", "quota_or_rate_limit"),
+                          (r"not.supported|unsupported|model.not.found|model_not_found", "unsupported_model"),
+                          (r"401|unauthorized|authentication|expired.token", "authentication"),
+                          (r"timeout|timed.out|time.budget", "timeout")):
+        if re.search(pattern, value):
+            return code
+    return "incomplete_response"
 
 
 def main():
@@ -32,7 +44,7 @@ def main():
         try:
             result = agent.run_conversation(prompt)
             if not result.get("completed", False):
-                raise RuntimeError("Hermes no completó la revisión.")
+                raise RuntimeError(failure_code(str(result) + captured.getvalue()))
             output = result.get("final_response", "")
             usage = {key: result.get(key) for key in ("input_tokens", "output_tokens", "reasoning_tokens", "total_tokens", "api_calls")}
         finally:
@@ -45,5 +57,6 @@ if __name__ == "__main__":
         main()
     except Exception as exc:
         # Never print provider errors verbatim: they can contain prompts or credentials.
-        print(json.dumps({"runtime_error": type(exc).__name__}), file=sys.stderr)
+        code = str(exc) if str(exc) in {"quota_or_rate_limit", "unsupported_model", "authentication", "timeout", "incomplete_response"} else failure_code(exc)
+        print(json.dumps({"runtime_error": type(exc).__name__, "code": code}), file=sys.stderr)
         sys.exit(1)

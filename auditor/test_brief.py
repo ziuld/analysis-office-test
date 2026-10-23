@@ -89,7 +89,7 @@ class BriefTests(unittest.TestCase):
                 return fake_invoke(prompt, config)
             output, data = preview("source-test", root, invoke)
             self.assertEqual(calls, ["security", "architecture", "inventory"])
-            self.assertEqual(data["schema_version"], 2)
+            self.assertEqual(data["schema_version"], 3)
             self.assertIn("GitHub no se ha releído", (output / "informe.md").read_text())
             for name, content in original.items():
                 self.assertEqual((root / "source-test" / name).read_bytes(), content)

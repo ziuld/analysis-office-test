@@ -88,8 +88,8 @@ class RepositoryTests(unittest.TestCase):
             return {"encoding": "base64", "content": base64.b64encode(b"x" * 12000).decode()}
         result = collect("https://github.com/acme/app", fetch)
         self.assertLessEqual(len(downloads), 20)
-        self.assertLessEqual(result["bytes_read"], 90000)
-        self.assertEqual(len(downloads), 4)
+        self.assertLessEqual(result["bytes_read"], 120000)
+        self.assertEqual(len(downloads), 10)
 
     def test_redaction_preserves_line_numbers(self):
         text = 'first\npassword = "do-not-leak"\npostgres://user:pass@db/name\nlast'

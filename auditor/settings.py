@@ -16,7 +16,7 @@ def runtime_options():
     if effort not in {"low", "medium", "high"}:
         raise AuditError("AUDIT_REASONING debe ser low, medium o high.")
     try:
-        output = int(os.environ.get("AUDIT_MAX_OUTPUT_TOKENS", "2500"))
+        output = int(os.environ.get("AUDIT_MAX_OUTPUT_TOKENS", "4500"))
     except ValueError:
         raise AuditError("AUDIT_MAX_OUTPUT_TOKENS debe ser un número entero.") from None
     if not 1000 <= output <= 8000:

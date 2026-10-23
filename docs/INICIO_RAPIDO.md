@@ -54,7 +54,7 @@ if (!(Test-Path .env)) { Copy-Item .env.example .env }
 New-Item -ItemType Directory -Force reports | Out-Null
 ```
 
-Editar `.env` con el editor habitual. Mantener inicialmente `AUDIT_PROVIDER=openai-codex`, `AUDIT_MODEL=gpt-6-luna` y `AUDIT_REASONING=low`, el perfil comprobado en el piloto. Su disponibilidad depende de la cuenta.
+Editar `.env` con el editor habitual. Mantener inicialmente `AUDIT_PROVIDER=openai-codex`, `AUDIT_MODEL=gpt-6-luna` y `AUDIT_REASONING=low`, el perfil económico para Arquitectura e Inventario. Para Seguridad, el ejemplo configura `AUDIT_SECURITY_MODEL=gpt-6.1-sol` y `AUDIT_SECURITY_REASONING=medium`. Su disponibilidad depende de la cuenta.
 
 Añadir `GITHUB_TOKEN` si se necesita acceso a repositorios privados o evitar el límite anónimo de GitHub. Usar un token con acceso de lectura al contenido y metadatos de los repositorios necesarios. Dejar `OPENAI_API_KEY` vacío en modo OAuth. No compartir ni subir `.env`.
 

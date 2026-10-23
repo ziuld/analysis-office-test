@@ -4,11 +4,15 @@ Oficina virtual 2D para entender una aplicación a partir de su repositorio de G
 
 El MVP entrega un informe con evidencia del código, indicios por confirmar y preguntas pendientes. Ayuda al responsable técnico a valorar seguridad, operación y una posible migración a VPS o Kubernetes. La decisión de despliegue corresponde al arquitecto.
 
+Versiones propias: **frontend 0.2.0** y **backend 0.2.0**, gestionadas de forma independiente en `FRONTEND_VERSION` y `BACKEND_VERSION`. Cambios de cada componente: [CHANGELOG.md](CHANGELOG.md). Los archivos `HERMES3D_VERSION` y `HERMES_AGENT_VERSION` fijan las dependencias originales, no la versión de Arktic Office.
+
 ## Empezar
 
 - **Otro ordenador:** [Inicio rápido](docs/INICIO_RAPIDO.md), desde los requisitos hasta la primera revisión.
 - **Cómo trabaja el equipo:** [Flujo de agentes](docs/WORKFLOW.md).
 - **Configuración, operación y pruebas:** [Operación](docs/OPERACION.md).
+- **Reporte visual, controles y límites:** [Seguridad](docs/SEGURIDAD.md).
+- **Cómo se redacta el informe:** [Estándar de comunicación compartido](docs/ESTANDAR_COMUNICACION_INFORMES.md).
 - **Preparar la subida y mantener las versiones:** [Repositorio y reproducción](docs/REPOSITORIO.md).
 - **Alcance y seguimiento:** [PLAN_MVP.md](PLAN_MVP.md), único documento de planificación.
 
@@ -23,10 +27,13 @@ Abrir [la oficina local](http://localhost:3000/office), introducir una URL como 
 ## Qué incluye
 
 - Una URL como entrada. Busca `main` y, solo si no existe, utiliza `master`; si faltan ambas, informa del error. Guarda rama y commit.
-- Lectura estática acotada: por defecto, hasta 12 archivos y 48 KB; cada célula recibe hasta 6 archivos y 24 KB.
+- Lectura estática acotada: por defecto, 24 archivos / 120 KB; Seguridad recibe hasta 12 / 64 KB, las otras células hasta 6 / 24 KB.
 - Tres revisiones secuenciales y consolidación mediante código. Estados reales en la oficina, resultados parciales y errores visibles.
-- Un `informe.md` con contexto, resumen, construcción, puntos de atención, operación, migración y alcance. Evidencias enlazadas al commit revisado.
+- Reporte visual de seguridad con indicadores de gravedad, certeza separada, acciones, cobertura e inventario; descarga Markdown e impresión/PDF. Evidencias enlazadas al commit revisado.
+- Gitleaks para posibles secretos y OSV-Scanner para dependencias, sobre la descarga acotada y sin ejecutar el proyecto.
 - Consultas independientes al coordinador o a una célula, usando únicamente resultados y evidencia guardados.
+- Propuesta DevOps Azure preliminar de Arquitectura: opción sencilla, motivos, supuestos, servicios, entrega y validaciones.
+- [Ejemplo ficticio sin agentes](examples/README.md), con consultas bloqueadas para evitar consumo de tokens.
 
 No ejecuta la aplicación analizada, instala sus dependencias, lanza sus tests ni realiza despliegues. La cobertura es parcial: completar las tres células no acredita que el proyecto sea seguro ni que todo su código se haya revisado. CPU, memoria, capacidad o recuperación quedan como desconocidos si no hay evidencia suficiente.
 
@@ -53,7 +60,7 @@ Navegador → office (localhost:3000) → audit-api (red interna)
 
 ## Acceso y coste
 
-El perfil probado es `openai-codex` con `gpt-6-luna` y razonamiento `low`, autorizado mediante OAuth en Hermes. También existe el modo API con facturación independiente. La sesión del modelo se configura en cada instalación; no viene incluida al clonar.
+La configuración propone `openai-codex` mediante OAuth en Hermes: Seguridad con `gpt-6.1-sol` / `medium`, el resto con `gpt-6-luna` / `low`. También existe el modo API con facturación independiente. La sesión del modelo se configura en cada instalación; no viene incluida al clonar. Alcance y comprobaciones en [Seguridad](docs/SEGURIDAD.md).
 
 La revisión normal usa tres llamadas al modelo; cada pregunta añade una llamada al personaje elegido. El coordinador distribuye y consolida mediante código. No hay reintentos ni escalado de modelo automáticos. Con el backend Codex OAuth de esta versión, el límite de salida configurado no constituye un techo duro de tokens. Detalles en [Operación](docs/OPERACION.md).
 

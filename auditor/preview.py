@@ -43,6 +43,9 @@ def preview(source_id, root=None, invoke=None):
         data = run_team(snapshot, output, **({"invoke": invoke} if invoke else {}))
         write_json(output / "informe.json", data)
         (output / "informe.md").write_text(markdown(data, snapshot, provider + "/" + model), encoding="utf-8")
+        if data.get("schema_version") == 3:
+            from executive import render_html
+            (output / "informe.html").write_text(render_html(data, snapshot), encoding="utf-8")
         if any(hashlib.sha256((source / name).read_bytes()).hexdigest() != value for name, value in hashes.items()):
             raise AuditError("La evidencia original cambió durante la prueba; revisar la trazabilidad.")
         return output, data
@@ -63,13 +66,16 @@ if __name__ == "__main__":
                 raise AuditError("El ejemplo debe estar dentro de reports.")
             snapshot = json.loads((directory / "evidencia.json").read_text(encoding="utf-8-sig"))
             report = json.loads((directory / "informe.json").read_text(encoding="utf-8-sig"))
-            if not snapshot.get("source_revision") or report.get("schema_version") != 2:
-                raise AuditError("Solo se reformatea un ejemplo derivado de formato 2; no el informe original.")
+            if not snapshot.get("source_revision") or report.get("schema_version") not in (2, 3):
+                raise AuditError("Solo se reformatea un ejemplo derivado; no el informe original.")
             model = snapshot["runtime"]["provider"] + "/" + snapshot["runtime"]["model"]
             (directory / "informe.md").write_text(markdown(report, snapshot, model), encoding="utf-8")
+            if report.get("schema_version") == 3:
+                from executive import render_html
+                (directory / "informe.html").write_text(render_html(report, snapshot), encoding="utf-8")
         else:
             directory, report = preview(args.source_id)
-        print(f"Informe de formato 2: {directory}/informe.md · estado: {report['estado']}")
+        print(f"Informe de formato {report.get('schema_version', 1)}: {directory}/informe.md · estado: {report['estado']}")
         if report["estado"] != "completo":
             raise AuditError("Se conserva el informe parcial; no se reintenta automáticamente.")
     except AuditError as exc:
