@@ -1,0 +1,18 @@
+# Only use together with compose.yaml, through scripts/check-startup.ps1.
+services:
+  audit-api:
+    env_file: !reset []
+    volumes: !override
+      - ci-reports:/reports
+      - ci-auth:/auth
+  office:
+    ports: !reset []
+    volumes: !override
+      - ci-studio:/data/hermes
+networks:
+  office:
+    internal: true
+volumes:
+  ci-reports:
+  ci-auth:
+  ci-studio:
