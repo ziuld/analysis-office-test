@@ -58,3 +58,7 @@ La integración Docker utilizó Graphify real y datos ficticios de Python y Java
 No se ejecutaron análisis de repositorios reales, scanners, modelos, código objetivo ni pruebas de esos proyectos. No se repitieron las mediciones reales del Bloque 2. La comprobación de flujos valida recuperación e integración, **no la calidad de las decisiones de Hermes**, consumo real ni compatibilidad del proveedor. Tampoco cubre carga concurrente, repositorios grandes, corte abrupto del proceso o recuperación de una exploración interrumpida. Los grafos pueden ser incompletos y las reglas de adquisición pueden omitir un flujo relevante.
 
 Los logs locales están en `artifacts/block4-tests-final.log` y `artifacts/block4-integration.log`; no se publican. La CI conserva exclusivamente su base anterior. El histórico, las versiones y los pins de Hermes no se modifican.
+
+## Integración posterior: Bloque 5
+
+Los límites y el perfil de preparación se centralizan ahora en el registro de [coordinación](COORDINACION.md). La exploración conserva sus límites de llamadas/tiempo/contexto y solicita por defecto hasta 1500 tokens de salida (sin techo duro OAuth). La coordinación IA opcional puede sumar otras dos llamadas, sin reabrir la preparación ni dar herramientas a especialistas.

@@ -27,6 +27,8 @@ def parse_job_id(value):
 
 
 def run(url, inspect_only=False, job_id=None):
+    from arktic_office.config.models import validate_configuration
+    profiles = validate_configuration()
     provider, model = settings()
     options = runtime_options()
     if not inspect_only:
@@ -54,12 +56,15 @@ def run(url, inspect_only=False, job_id=None):
             from arktic_office.storage.jsonio import write_json
             snapshot = prepare(url, scanner=None if inspect_only else scan,
                                invoke=None if inspect_only else invoke_hermes,
-                               config={"model": model, "reasoning": options["reasoning_config"]["effort"]},
+                               config=profiles["preparation"],
                                emit=lambda state: write_json(output / "preparacion.json", {"mode": "hybrid", "exploration": state}))
             write_json(output / "preparacion.json", snapshot["preparation"])
         else:
             snapshot = collect(url, scanner=None if inspect_only else scan)
         snapshot["analyzed_at"] = datetime.now(timezone.utc).isoformat()
+        from arktic_office.config.models import request_options
+        snapshot["request"] = request_options()
+        snapshot["model_profiles"] = profiles
         snapshot["runtime"] = {"provider": provider, "model": model,
                                "reasoning": options["reasoning_config"]["effort"],
                                "max_output_tokens": options["max_tokens"]}

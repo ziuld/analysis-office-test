@@ -2,7 +2,7 @@
 
 Fecha de registro: 23/10/2026.
 
-Estado: Bloque 1 fusionado; bloques 2, 3 y 4 implementados y comprobados localmente, con evidencia y límites registrados debajo. Los bloques posteriores continúan pendientes. Las decisiones técnicas indicadas como pendientes requieren validación antes de adoptarse. La entrega permanece abierta y las versiones actuales se conservan.
+Estado: Bloque 1 fusionado; bloques 2, 3, 4 y 5 implementados y comprobados localmente, con evidencia y límites registrados debajo. Los bloques posteriores continúan pendientes. Las decisiones técnicas indicadas como pendientes requieren validación antes de adoptarse. La entrega permanece abierta y las versiones actuales se conservan.
 
 ## Relación con el MVP actual
 
@@ -175,12 +175,20 @@ Reglas locales, mapa estático, búsqueda literal y fragmentos conservan posicio
 
 ### Bloque 5 — Coordinador, especialistas y skills
 
-- [ ] F1-13 Extraer instrucciones de agentes y skills reutilizables, documentando entradas, salidas, herramientas y requisitos de compatibilidad.
-- [ ] F1-14 Centralizar perfiles de modelos, razonamiento y límites; validar configuración antes de consumir modelo.
-- [ ] F1-15 Incorporar reparto y síntesis con IA, manteniendo especialistas de una pasada, validación de citas y aportaciones parciales.
-- [ ] F1-16 Hacer opcionales las capacidades específicas, como propuesta Azure, según el encargo; su ausencia no debe invalidar una evaluación que no las necesita.
+- [x] F1-13 Extraer instrucciones de agentes y skills reutilizables, documentando entradas, salidas, herramientas y requisitos de compatibilidad.
+- [x] F1-14 Centralizar perfiles de modelos, razonamiento y límites; validar configuración antes de consumir modelo.
+- [x] F1-15 Incorporar reparto y síntesis con IA, manteniendo especialistas de una pasada, validación de citas y aportaciones parciales.
+- [x] F1-16 Hacer opcionales las capacidades específicas, como propuesta Azure, según el encargo; su ausencia no debe invalidar una evaluación que no las necesita.
 
 **Cierre:** solo la preparación amplía evidencia mediante iteraciones. Fallos o insuficiencia de una parte no destruyen resultados válidos. Portabilidad de skills documentada sin prometer compatibilidad automática con cualquier producto.
+
+**Registro del Bloque 5 — 23/10/2026:** instrucciones de roles y contratos extraídos a recursos instalados, con skill reutilizable y compatibilidad documentada. Registro central de perfiles para modelos, razonamiento, salida, tiempo y contexto; validación local antes de la primera llamada. Se conservan los modelos/proveedores y ajustes anteriores, sin verificar disponibilidad remota ni cambiar automáticamente de perfil.
+
+Coordinación con IA opcional (`AUDIT_COORDINATION_MODE=ai`): una llamada de reparto restringida a archivos preparados y una síntesis de aportaciones validadas. Los especialistas siguen siendo de una pasada, sin búsquedas ni reintentos. Repartos inválidos usan la base determinista; síntesis inválidas se omiten sin borrar originales. Las citas se contrastan con el snapshot, se conserva procedencia e incertidumbre y los fallos permanecen visibles. `coordinacion.json` registra llamadas, consumo comunicado y etapas; anexos muestran la síntesis identificada. Azure se solicita mediante `AUDIT_CAPABILITIES=azure`; vacío no la exige ni penaliza su ausencia. El modo predeterminado sigue siendo determinista y no añade llamadas del coordinador, atendiendo al presupuesto disponible indicado por el usuario.
+
+**Comprobaciones mínimas:** 116 ejecutadas, 115 correctas y 1 referencia visual opcional omitida en 6,582 s. Suite manual existente y solo tres casos nuevos sobre configuración previa al consumo, recorrido válido y conservación ante fallos; fixtures anteriores de Azure/editorial adaptados al encargo explícito. Skill validada localmente. Imágenes construidas; API 0.2.0/oficina saludables, oficina/proxy HTTP 200, sin trabajos ni autenticación; recursos temporales retirados. Se conservan los hashes de formatos históricos y del prompt de compatibilidad sin célula. Logs: `artifacts/block5-tests-final.log` y `artifacts/block5-startup.log`.
+
+**Limitaciones:** pruebas con respuestas ficticias, sin modelos del proyecto, scanners ni análisis de repositorios reales. No se valida calidad semántica real de reparto/síntesis, coste del proveedor, disponibilidad de modelos ni recuperación tras corte. Los tokens desconocidos se conservan como tales y OAuth sigue sin techo duro de salida. Portabilidad de la skill requiere adaptar herramientas, esquema, permisos y validación; no implica compatibilidad universal. Sin ampliaciones de CI/CD, cambios del histórico, versiones o pins de Hermes. Entrega abierta. Configuración, consumo y contratos en [COORDINACION.md](COORDINACION.md).
 
 ### Bloque 6 — Oficina y consultas
 

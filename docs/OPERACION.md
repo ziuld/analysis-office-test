@@ -19,7 +19,7 @@ Instalación inicial: [Inicio rápido](INICIO_RAPIDO.md). Todos los comandos se 
 
 Cada archivo aporta hasta 12000 bytes de texto o extractos con numeración original. Seguridad recibe hasta 12 archivos/64000 bytes; las demás células, 6/24000. Descarga y validación de resultados tienen límites independientes: ver [Seguridad](SEGURIDAD.md).
 
-Para ajustar una sola célula, utilizar `AUDIT_SECURITY_MODEL` / `AUDIT_SECURITY_REASONING`, `AUDIT_ARCHITECTURE_MODEL` / `AUDIT_ARCHITECTURE_REASONING` o `AUDIT_INVENTORY_MODEL` / `AUDIT_INVENTORY_REASONING`. Vacío significa heredar el perfil común. El coordinador usa el perfil común en las consultas y no llama al modelo para consolidar.
+Para ajustar una sola célula, utilizar `AUDIT_SECURITY_MODEL` / `AUDIT_SECURITY_REASONING`, `AUDIT_ARCHITECTURE_MODEL` / `AUDIT_ARCHITECTURE_REASONING` o `AUDIT_INVENTORY_MODEL` / `AUDIT_INVENTORY_REASONING`. Vacío significa heredar el perfil común. La coordinación determinista no llama al modelo; el modo IA opcional añade hasta dos llamadas y las consultas mantienen su llamada independiente. Perfiles y encargo: [COORDINACION.md](COORDINACION.md).
 
 El modo API admite `AUDIT_PROVIDER=openai`, un modelo disponible para la cuenta y `OPENAI_API_KEY`; no utiliza la sesión OAuth. La configuración predeterminada del código para este proveedor es `gpt-5.4-mini`, pero el piloto se comprobó con OAuth/Luna, no con ese modo. No hay cambio automático de proveedor si se agota una cuota.
 
@@ -138,3 +138,7 @@ Para revisar el formato sin agentes ni scanners, usar [el ejemplo ficticio](../e
 ## Preparación híbrida opcional
 
 El Bloque 4 incorpora un recorrido alternativo con preparador independiente y exploración limitada. Activación, vuelta al modo habitual, coste adicional, trazas y límites: [PREPARACION.md](PREPARACION.md). El arranque normal conserva `legacy`; no se lanzan ambos recorridos ni se duplican los especialistas. CI/CD permanece sin ampliaciones.
+
+## Coordinación y capacidades del Bloque 5
+
+`AUDIT_COORDINATION_MODE=deterministic` conserva el recorrido habitual. `ai` añade hasta una llamada de reparto y una de síntesis; no habilita búsquedas ni rondas especializadas. `AUDIT_CAPABILITIES` vacío omite Azure; `azure` la solicita expresamente. Ambas variables están documentadas en `.env.example`, sin modificar el `.env` local. Detalles y límites: [COORDINACION.md](COORDINACION.md).

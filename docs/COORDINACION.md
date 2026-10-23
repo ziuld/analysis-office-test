@@ -1,0 +1,66 @@
+# Coordinador, perfiles y skills — Bloque 5
+
+La revisión conserva las tres células de una pasada. El coordinador puede añadir un reparto inicial y una síntesis final con IA, sin búsqueda, herramientas de agente, reintentos ni ampliación de evidencia. Se activa expresamente para controlar el consumo; la configuración predeterminada continúa siendo determinista.
+
+## Encargo y consumo
+
+En el `.env` local, sin sustituir su contenido ni credenciales:
+
+```dotenv
+AUDIT_COORDINATION_MODE=deterministic
+AUDIT_CAPABILITIES=
+```
+
+`AUDIT_COORDINATION_MODE=ai` habilita hasta **dos llamadas adicionales**, una por reparto y otra por síntesis. Un contexto sin archivos o sin aportaciones válidas omite la llamada correspondiente. No se ejecutan ambos coordinadores: el reparto y la consolidación deterministas sirven como base de conservación y recuperación ante error, sin consumir modelo.
+
+`AUDIT_CAPABILITIES=azure` solicita la propuesta Azure a Arquitectura. Vacío la omite; esta ausencia no vuelve parcial una evaluación que no la necesita. Si se solicita y falta o resulta inválida, se conserva el núcleo válido y se registra la limitación, como antes. Solo se admite actualmente esa capacidad opcional. Los informes históricos y sus propuestas siguen disponibles independientemente del encargo actual.
+
+Para que los servicios lean cambios de `.env`, recrearlos sin trabajos activos, utilizando los mismos archivos Compose con los que se arrancaron. El modo de preparación `legacy`/`hybrid` es independiente:
+
+| Recorrido | Máximo de llamadas de revisión |
+|---|---|
+| Preparación legacy + coordinación determinista | 3 células |
+| Preparación legacy + coordinación IA | 3 células + 2 del coordinador |
+| Preparación híbrida + coordinación IA | Hasta 8 del explorador + 3 células + 2 del coordinador |
+
+Cada pregunta posterior sigue siendo una llamada independiente. Ninguna de estas llamadas se inicia por construir imágenes o arrancar servicios. Las comprobaciones de este bloque emplearon respuestas ficticias; no se consumió modelo del proyecto para validarlo.
+
+## Perfiles y validación
+
+La fuente de perfiles y límites locales es [models.json](../backend/src/arktic_office/resources/profiles/models.json). El adaptador de configuración la aplica a preparación, coordinador, especialistas y consultas. Conserva los proveedores y modelos predeterminados anteriores, así como los ajustes de célula existentes. No hay cambios automáticos de modelo o proveedor.
+
+| Rol | Límites predeterminados relevantes |
+|---|---|
+| Seguridad | 12 archivos, 64000 bytes, una llamada, 240 s, salida solicitada hasta 4500 tokens |
+| Arquitectura / Inventario | 6 archivos, 24000 bytes, una llamada cada uno, 240 s, salida solicitada hasta 4500 tokens |
+| Coordinador | Dos llamadas como máximo; cada una hasta 32000 bytes de prompt, 16000 bytes de respuesta, 60 s, salida solicitada hasta 2000 tokens |
+| Preparación | 8 iteraciones, 180 s, 60000 bytes acumulados; 60 s por llamada, salida solicitada hasta 1500 tokens |
+| Consulta al coordinador | Una llamada, 240 s; hereda el modelo común, salida solicitada hasta 4500 tokens |
+
+`AUDIT_MODEL`, `AUDIT_REASONING` y `AUDIT_MAX_OUTPUT_TOKENS` siguen siendo la base. Los prefijos `AUDIT_SECURITY_`, `AUDIT_ARCHITECTURE_`, `AUDIT_INVENTORY_`, `AUDIT_COORDINATOR_`, `AUDIT_PREPARATION_` y `AUDIT_QUESTION_` permiten ajustar `MODEL`, `REASONING` y `MAX_OUTPUT_TOKENS`. Los límites locales de archivos, tiempo y contexto están en el registro. La consulta a un especialista mantiene su perfil propio; `QUESTION` corresponde a la consulta al coordinador. Los ajustes explícitos de salida admiten 1000–8000 tokens; el valor predeterminado de cada rol limita el valor común heredado.
+
+Se valida toda la configuración antes de la adquisición/exploración o de la primera llamada del equipo: proveedor, sintaxis del modelo, razonamiento, salida, modo y capacidades. Esta validación es local: no demuestra disponibilidad del modelo, cuota, soporte de razonamiento ni compatibilidad del proveedor. El runtime recibe el proveedor, modelo, razonamiento y salida efectivos del perfil. El backend Codex OAuth fijado sigue sin garantizar un techo duro de tokens de salida; llamadas, bytes y tiempo tampoco equivalen a un presupuesto monetario exacto. El límite global de 1500 segundos de la ejecución API continúa prevaleciendo sobre las fases.
+
+## Reparto, síntesis y conservación
+
+El reparto recibe inventario, roles de archivo, tamaños, focos, capacidades y presupuestos; no todo el código. Solo puede asignar rutas ya presentes en el contexto preparado, sin lockfiles, duplicados ni exceso de archivos/bytes por célula. Una respuesta inválida deja registrado el fallo y utiliza el reparto determinista. Nunca relanza la preparación ni pide más archivos a un especialista.
+
+Cada especialista recibe sus fragmentos una vez. Sus citas se contrastan con el texto seleccionado y se conserva su resultado original en `celulas/`. La consolidación estructural anterior continúa conservando procedencia y discrepancias.
+
+La síntesis recibe exclusivamente aportaciones validadas y sus fuentes. Devuelve hasta cinco textos con identificadores de esas aportaciones. El Core rechaza identificadores inventados y vuelve a comprobar las citas; hereda las fuentes y mantiene la etiqueta de indicio si participa alguna aportación incierta. No crea hallazgos ni sustituye los originales. El texto es una interpretación del modelo: validar citas no demuestra fidelidad semántica ni resuelve contradicciones. La síntesis aparece identificada en los anexos HTML y Markdown y queda disponible para la consulta al coordinador.
+
+`coordinacion.json` guarda perfiles, etapas, llamadas intentadas, bytes de entrada, consumo comunicado, resultados y fallos. La información de síntesis y coordinación también queda en `informe.json`; el encargo y los perfiles efectivos quedan en `evidencia.json`. Un consumo no comunicado permanece `null`. Un error del coordinador conserva la base y las aportaciones válidas, deja parcial un equipo que de otro modo fuese completo y no dispara reintentos.
+
+## Instrucciones reutilizables
+
+El paquete incluye [arktic-review/SKILL.md](../backend/src/arktic_office/resources/skills/arktic-review/SKILL.md), instrucciones por rol en [agents.json](../backend/src/arktic_office/resources/profiles/agents.json), el [contrato de informe](../backend/src/arktic_office/resources/profiles/report-contract.md) y la [petición común](../backend/src/arktic_office/resources/profiles/review-request.md). Se reutilizan los perfiles de Seguridad/Azure y el estándar editorial canónico sin duplicarlo ni modificarlo. El prompt omite el párrafo editorial de Azure cuando no corresponde al encargo; no reescribe el estándar ni los informes guardados.
+
+La skill declara entradas, salida, herramientas y restricciones. Se carga explícitamente desde los recursos instalados; no habilita herramientas o descubrimiento implícito de Hermes. Para portarla hay que conservar sus referencias, aportar el estándar/esquema vigente y adaptar el anfitrión para imponer permisos, presupuestos y validación. El formato `SKILL.md` no garantiza por sí solo compatibilidad con Codex, Hermes u otros productos. No se instala en la configuración personal del usuario ni se añade un gestor de skills.
+
+## Comprobaciones y límites
+
+Se reutiliza la suite manual y se añaden solo tres casos necesarios: configuración inválida sin llamadas; reparto y síntesis válidos con conservación de originales y Azure omitido; fallos de coordinador/especialista sin reintentos ni pérdida de aportaciones válidas. Los fixtures previos que necesitan Azure lo solicitan expresamente. El runner bloquea procesos externos y conexiones no locales; el contenedor no tiene red ni credenciales. Resultado: 116 ejecutadas, 115 correctas y 1 referencia visual opcional omitida en 6,582 segundos. La skill pasó el validador de formato local.
+
+Se construyeron imágenes y se reutilizó el comprobador de arranque existente: API 0.2.0 y oficina saludables, oficina/proxy HTTP 200, sin trabajos, autenticación ni revisiones. El proyecto y sus volúmenes temporales se retiraron. Logs locales: `artifacts/block5-tests-final.log` y `artifacts/block5-startup.log`.
+
+No se ejecutaron análisis de repositorios reales, scanners ni modelos del proyecto. No se evaluaron calidad semántica del reparto/síntesis reales, consumo del proveedor, disponibilidad de modelos, carga concurrente ni recuperación de una llamada interrumpida. La prueba valida contratos y conservación con respuestas deterministas, no esas propiedades. CI/CD conserva su base sin ampliaciones; frontend/backend permanecen en 0.2.0, sin cierre de entrega.

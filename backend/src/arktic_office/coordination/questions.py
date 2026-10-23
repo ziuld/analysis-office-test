@@ -3,7 +3,7 @@ import json
 
 from arktic_office.preparation.repository import AuditError, redact
 from arktic_office.coordination.team import CELLS, cell_config, invoke_hermes
-from arktic_office.config.settings import settings, runtime_options
+from arktic_office.config.models import profile
 
 AGENTS = {"coordinator": "Coordinador", **{c["id"]: c["name"] for c in CELLS}}
 
@@ -23,8 +23,7 @@ def prepare_question(directory, agent, question):
         raise AuditError("La simulación no admite consultas al modelo ni consume tokens.")
     report = load(directory / "informe.json")
     if agent == "coordinator":
-        provider, model = settings()
-        config = {"provider": provider, "model": model, "reasoning": runtime_options()["reasoning_config"]["effort"]}
+        config = profile("question")
         # Coordinator sees the consolidated findings and short windows around their
         # citations, rather than sending the complete snapshot a second time.
         wanted = {}
@@ -39,6 +38,8 @@ def prepare_question(directory, agent, question):
                 wanted.setdefault(ref["path"], set()).update(range(max(1, ref["line"] - 2), ref["line"] + 3))
         if report.get("presentacion"):
             result["presentacion"] = report["presentacion"]
+        if report.get("sintesis"):
+            result["sintesis"] = report["sintesis"]
         files = snapshot["files"]
     else:
         cell = load(directory / "celulas" / (agent + ".json"))

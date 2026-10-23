@@ -1,4 +1,4 @@
-"""Fixed, sequential three-cell workflow. Coordination never calls a model."""
+"""Single-pass specialists with optional, bounded AI routing and synthesis."""
 import json
 from arktic_office.storage.jsonio import write_json
 from arktic_office.adapters.invoke import invoke_hermes
@@ -11,11 +11,8 @@ from arktic_office.preparation.repository import AuditError, MANIFESTS, SOURCE_E
 from arktic_office.reporting.reports import evidence_index, make_prompt, validate_report
 from arktic_office.config.settings import settings, runtime_options
 
-CELLS = (
-    {"id": "security", "name": "Seguridad", "focus": "Prioriza acceso a datos, autenticación, exposición y configuraciones inseguras evidentes. Gobernanza y responsables desconocidos quedan como dudas. No afirmes CVE sin prueba ni reproduzcas secretos."},
-    {"id": "architecture", "name": "Arquitectura y migración", "focus": "Prioriza arranque, persistencia/recuperación de datos, estabilidad y conexiones. Configuración de recursos no demuestra consumo real. Añade una propuesta DevOps Azure sencilla, condicionada y separada de los hechos; declara supuestos sin autorizar despliegues."},
-    {"id": "inventory", "name": "Inventario tecnológico", "focus": "Identifica componentes principales con tecnología, versiones declaradas y función evidenciada. No enumeres todos los paquetes. Incluye propósito solo si está documentado. Distingue declaración de uso real; no evalúes seguridad ni elijas infraestructura."},
-)
+from arktic_office.resources.paths import resource_path
+CELLS = tuple(json.loads(resource_path("profiles", "agents.json").read_text(encoding="utf-8")))
 
 
 
@@ -49,7 +46,10 @@ def relevance(cell_id, file):
 def plan_cells(snapshot):
     """Per-cell byte/file caps are fixed MVP limits, within the global selection."""
     plan = []
+    from arktic_office.config.models import request_options
+    capabilities = snapshot.get("request", request_options())["capabilities"]
     for cell in CELLS:
+        config = cell_config(cell)
         candidates = [(relevance(cell["id"], file), i, file) for i, file in enumerate(snapshot["files"])]
         candidates = sorted((x for x in candidates if x[0] is not None), key=lambda x: (x[0], x[1]))
         # Two manifest slots cover backend/frontend dependency declarations.
@@ -60,11 +60,11 @@ def plan_cells(snapshot):
         selected, size = [], 0
         for file in candidates:
             length = len(file["text"].encode("utf-8"))
-            if len(selected) >= (12 if cell["id"] == "security" else 6) or size + length > (64000 if cell["id"] == "security" else 24000):
+            if len(selected) >= config["limits"]["files"] or size + length > config["limits"]["bytes"]:
                 continue
             selected.append(file)
             size += length
-        plan.append({**cell, **cell_config(cell), "files": selected, "bytes": size})
+        plan.append({**cell, **config, "files": selected, "bytes": size, "capabilities": capabilities})
     return plan
 
 
@@ -263,7 +263,15 @@ def prepare_cell_response(raw, snapshot, cell_id):
 
 
 def run_team(snapshot, output, invoke=invoke_hermes, emit=print):
+    from arktic_office.config.models import validate_configuration, request_options
+    validate_configuration()
+    snapshot = {**snapshot, "request": snapshot.get("request", request_options())}
     plan = plan_cells(snapshot)
+    coordinator = None
+    if snapshot["request"]["mode"] == "ai":
+        from arktic_office.coordination.coordinator import Coordinator
+        coordinator = Coordinator(snapshot, output, invoke)
+        plan = coordinator.route(plan)
     cells = [{"id": c["id"], "nombre": c["name"], "estado": "pendiente", "provider": c["provider"],
               "model": c["model"], "reasoning": c["reasoning"], "archivos": [f["path"] for f in c["files"]],
               "bytes": c["bytes"]} for c in plan]
@@ -283,7 +291,16 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print):
         try:
             envelope = invoke(prompt, config)
             state["usage"] = envelope.get("usage")
-            report, omitted, warnings = prepare_cell_response(envelope["report"], subset, config["id"])
+            raw = envelope["report"]
+            if config["id"] == "architecture" and "azure" not in config["capabilities"]:
+                try:
+                    payload = json.loads(raw)
+                    if isinstance(payload, dict):
+                        payload.pop("propuesta_azure", None)
+                        raw = json.dumps(payload)
+                except (ValueError, TypeError):
+                    pass  # Existing response validator produces the technical error.
+            report, omitted, warnings = prepare_cell_response(raw, subset, config["id"])
             proposal_error = "Algunos apartados no superaron la validación; se conservan las aportaciones válidas. No se reintentó." if warnings else None
             if warnings:
                 state["advertencias"] = warnings
@@ -295,7 +312,7 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print):
                 raise AuditError("La célula devolvió bloques editoriales de otra especialidad.")
             if report.get("schema_version") != 3:
                 raise AuditError("La célula no devolvió el formato 3 con severidad y cobertura; no se completó esta célula.")
-            if config["id"] == "architecture" and "propuesta_azure" not in report:
+            if config["id"] == "architecture" and "azure" in config["capabilities"] and "propuesta_azure" not in report:
                 proposal_error = proposal_error or "Arquitectura no aportó una propuesta Azure; se conservan sus resultados válidos."
             if config["id"] != "architecture" and "propuesta_azure" in report:
                 raise AuditError("Solo Arquitectura puede generar la propuesta Azure.")
@@ -325,6 +342,11 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print):
             write_json(output / "celulas" / (config["id"] + ".json"), state)
         write_json(output / "estado.json", {"estado": "analizando", "celulas": cells})
     data = consolidate(results, cells)
+    if coordinator:
+        data["sintesis"] = coordinator.synthesize(results)
+        data["coordination"] = coordinator.state
+        if data["estado"] == "completo" and any(s["status"] == "error" for s in coordinator.state["stages"].values()):
+            data["estado"] = "parcial"
     from arktic_office.reporting.security import CONTROLS
     data["schema_version"] = 3
     data.setdefault("controles", [{"id": key, "estado": "no_evaluado", "motivo": "Seguridad no completó su evaluación.", "evidencia": []} for key in CONTROLS])

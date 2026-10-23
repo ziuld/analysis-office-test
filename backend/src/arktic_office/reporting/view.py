@@ -237,12 +237,17 @@ def annex_html(v):
             if x.get("severidad") == "informativa":
                 extra.append([h(section), h(x["observacion"]), h(x["importancia"]) + '<p>' + h(x["pendiente"]) + '</p>', sources(x, snapshot)])
     body += detail("aportaciones", "Otras aportaciones de las células", "Contexto, observaciones y pendientes originales", table(["Certeza", "Observación original", "Implicación y pendiente", "Fuentes"], extra))
+    if data.get("sintesis"):
+        content = ''.join('<p>' + h(item["certeza"]) + ' · ' + h(item["texto"]) + ' · ' + references(item, snapshot) + '</p>' for item in data["sintesis"])
+        body += detail("sintesis", "Síntesis del coordinador", "Interpretación con IA sobre aportaciones validadas; originales conservados", content)
     from arktic_office.core.outcome import notice
     _, questions, _ = notice(data)
     body += detail("preguntas", "Preguntas pendientes", "Información para la evaluación humana", '<ul>' + ''.join('<li>' + h(q) + '</li>' for q in questions) + '</ul>')
     coverage = '<p>Perfil acotado inspirado en OWASP ASVS 5.0.0 y Top 10:2025; los dominios son una agrupación de Arktic. No hay certificación ni porcentaje de cumplimiento.</p>'
     coverage += paragraph("Origen", snapshot.get("evidence_origin", snapshot["repository"])) + paragraph("Rama y commit", str(snapshot.get("branch", "No registrado")) + ' · ' + str(snapshot.get("commit", "No registrado")))
     coverage += paragraph("Estado del equipo", data.get("estado", "No registrado"))
+    if data.get("coordination"):
+        coverage += paragraph("Coordinación con IA", ' · '.join(name + ': ' + stage["status"] for name, stage in data["coordination"]["stages"].items()) + '. Consumo y fallos en coordinacion.json; sin reintentos.')
     from arktic_office.preparation.coverage import notes
     coverage += ''.join('<p>' + h(note) + '</p>' for note in notes(snapshot))
     if data.get("estandar_editorial"):
@@ -330,6 +335,10 @@ def render_markdown(data, snapshot, model=""):
     lines += ['', '### Cobertura y límites', '', 'Estado del equipo: ' + data.get("estado", "No registrado"), '', 'Perfil acotado inspirado en OWASP ASVS 5.0.0 y Top 10:2025. Sin certificación ni porcentaje de cumplimiento. La aplicación no se ejecutó; acceso real, credenciales, consumo y restauración no se comprobaron.']
     from arktic_office.preparation.coverage import notes
     lines += ['- ' + text(note) for note in notes(snapshot)]
+    if data.get("coordination"):
+        lines += ['- Coordinación con IA: ' + text(' · '.join(name + ': ' + stage["status"] for name, stage in data["coordination"]["stages"].items())) + '. Consumo y fallos en coordinacion.json.']
+    for item in data.get("sintesis", []):
+        lines += ['- Síntesis del coordinador (' + text(item["certeza"]) + '): ' + text(item["texto"]) + ' · ' + references(item, snapshot)]
     lines += ['', 'Rama: ' + text(snapshot.get("branch", "No registrada")) + ' · Commit: ' + text(snapshot.get("commit", "No registrado")), '', '| Dominio | Estado | Resultado / fuentes |', '|---|---|---|']
     for c in (c for c in data.get("controles", []) if c["estado"] != "no_evaluado"):
         lines.append(f'| {CONTROLS[c["id"]]} | {CONTROL_STATES[c["estado"]]} | {text(c["motivo"])} · {references(c, snapshot)} |')

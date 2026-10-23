@@ -10,8 +10,8 @@ from arktic_office.preparation.repository import (
     acquire, select, redact, mask_findings, LOCKFILES, NoRedirect, file_role,
 )
 
-LIMITS = {"iterations": 8, "seconds": 180, "prompt_bytes": 60_000,
-          "response_bytes": 8_000, "tool_bytes": 8_000, "read_lines": 100}
+from arktic_office.config.models import registry
+LIMITS = dict(registry()["roles"]["preparation"])
 
 
 def index_files(files):
@@ -132,7 +132,7 @@ def explore(retrieval, invoke, config, emit=lambda event: None):
                 break
             state["iterations"] += 1
             state["prompt_bytes"] += size
-            envelope = invoke(prompt, {**config, "timeout": max(1, min(remaining, 60))})
+            envelope = invoke(prompt, {**config, "timeout": max(1, min(remaining, LIMITS["call_seconds"]))})
             state["usage"].append(envelope.get("usage"))
             raw = envelope["report"]
             if len(raw.encode()) > LIMITS["response_bytes"]:

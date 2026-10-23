@@ -8,6 +8,10 @@ from arktic_office.core.errors import AuditError
 
 def invoke_hermes(prompt, config):
     env = dict(os.environ, AUDIT_MODEL=config["model"], AUDIT_REASONING=config["reasoning"])
+    if "provider" in config:
+        env["AUDIT_PROVIDER"] = config["provider"]
+    if "max_output_tokens" in config:
+        env["AUDIT_MAX_OUTPUT_TOKENS"] = str(config["max_output_tokens"])
     timeout = max(1, min(float(config.get("timeout", 240)), 240))
     try:
         result = subprocess.run([sys.executable, "-m", "arktic_office.adapters.hermes_runtime"], input=prompt, text=True,

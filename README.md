@@ -68,7 +68,7 @@ Navegador → office (localhost:3000) → audit-api (red interna)
 
 La configuración propone `openai-codex` mediante OAuth en Hermes: Seguridad con `gpt-6.1-sol` / `medium`, el resto con `gpt-6-luna` / `low`. También existe el modo API con facturación independiente. La sesión del modelo se configura en cada instalación; no viene incluida al clonar. Alcance y comprobaciones en [Seguridad](docs/SEGURIDAD.md).
 
-El recorrido habitual `legacy` usa tres llamadas al modelo; cada pregunta añade una llamada al personaje elegido. El coordinador distribuye y consolida mediante código. No hay reintentos ni escalado de modelo automáticos. Con el backend Codex OAuth de esta versión, el límite de salida configurado no constituye un techo duro de tokens. El modo híbrido opcional añade hasta ocho llamadas acotadas de preparación: [Preparación híbrida](docs/PREPARACION.md). Detalles en [Operación](docs/OPERACION.md).
+El recorrido habitual `legacy` usa tres llamadas al modelo; cada pregunta añade una llamada al personaje elegido. El modo opcional de [coordinación con IA](docs/COORDINACION.md) añade hasta dos llamadas para reparto y síntesis; conserva los originales y usa la base determinista si falla. Azure se genera solo cuando se solicita como capacidad del encargo. No hay reintentos ni escalado de modelo automáticos. Con el backend Codex OAuth de esta versión, el límite de salida configurado no constituye un techo duro de tokens. El modo híbrido opcional añade hasta ocho llamadas acotadas de preparación: [Preparación híbrida](docs/PREPARACION.md). Detalles en [Operación](docs/OPERACION.md).
 
 ## Datos y despliegue local
 

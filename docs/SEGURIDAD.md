@@ -77,3 +77,7 @@ Los informes antiguos no se reinterpretan automáticamente. El [ejemplo ficticio
 ## Preparación híbrida del Bloque 4
 
 La rama se resuelve desde los metadatos reales de GitHub y se fija el commit. El modo opcional `hybrid` separa adquisición, recuperación e inferencia; la cobertura de entrada a scanners se declara aparte de los fragmentos del explorador y los envíos por célula. El servicio Graphify recibe únicamente texto previamente ocultado, sin credenciales ni salida a Internet, y no ejecuta el proyecto. Hermes solicita acciones JSON que el Core limita a búsqueda, mapa y lectura sobre archivos ya adquiridos; no habilita herramientas de agente. Límites, conservación temporal, cierres y restricciones comprobadas: [PREPARACION.md](PREPARACION.md). Las comprobaciones de este bloque no ejecutaron scanners ni modelos reales.
+
+## Coordinación del Bloque 5
+
+La coordinación IA opcional añade hasta dos llamadas sobre inventario o aportaciones ya validadas, sin herramientas, búsquedas ni reintentos. Las referencias de síntesis se heredan de aportaciones existentes y se contrastan con el snapshot; su corrección no demuestra fidelidad semántica de la interpretación. Los originales y los fallos se conservan. Azure requiere un encargo explícito y su ausencia no invalida un encargo que no la solicita. Configuración, límites y pruebas sin consumo real: [COORDINACION.md](COORDINACION.md).

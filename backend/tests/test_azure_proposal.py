@@ -26,9 +26,13 @@ def report():
 
 
 class AzureProposalTests(unittest.TestCase):
+    def setUp(self):
+        from unittest.mock import patch
+        self.enterContext(patch.dict("os.environ", {"AUDIT_CAPABILITIES": "azure"}))
+
     def test_only_architecture_receives_the_profile(self):
         for cell in CELLS:
-            self.assertEqual("# Propuesta DevOps Azure" in make_prompt(snapshot(), cell), cell["id"] == "architecture")
+            self.assertEqual("# Propuesta DevOps Azure" in make_prompt(snapshot(), {**cell, "capabilities": ["azure"]}), cell["id"] == "architecture")
 
     def test_proposal_citations_are_resolved_without_becoming_findings(self):
         valid, _ = prepare_response(json.dumps(report()), snapshot())

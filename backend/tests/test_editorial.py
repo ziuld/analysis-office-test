@@ -57,7 +57,7 @@ class EditorialTests(unittest.TestCase):
         names = {'security': 'Seguridad', 'architecture': 'Arquitectura', 'inventory': 'Inventario'}
         source = sections()
         for cell in CELLS:
-            prompt = make_prompt(snapshot, cell)
+            prompt = make_prompt(snapshot, {**cell, "capabilities": ["azure"]})
             self.assertIn(source['Común'], prompt)
             self.assertIn(source[names[cell['id']]], prompt)
             self.assertEqual(prompt.count('ESTÁNDAR EDITORIAL COMPARTIDO'), 1)
