@@ -378,128 +378,54 @@ index 4708d1d..f6d0d07 100644
        const frameKey = `char_${visual.seed}_${this.frameFor(pose)}`;
        if (this.textures.exists(frameKey) && visual.sprite.texture.key !== frameKey) {
          visual.sprite.setTexture(frameKey);
-diff --git a/src/features/audit/AuditOffice.tsx b/src/features/audit/AuditOffice.tsx
+diff --git a/src/app/api/audit/[...path]/route.ts b/src/app/api/audit/[...path]/route.ts
 new file mode 100644
-index 0000000..38fc759
+index 0000000..9d8d289
 --- /dev/null
-+++ b/src/features/audit/AuditOffice.tsx
-@@ -0,0 +1,116 @@
-+"use client";
++++ b/src/app/api/audit/[...path]/route.ts
+@@ -0,0 +1,42 @@
++import { NextRequest, NextResponse } from "next/server";
 +
-+import { useCallback, useEffect, useMemo, useState } from "react";
-+import ReactMarkdown from "react-markdown";
-+import remarkGfm from "remark-gfm";
-+import { PixelOffice2D } from "@/features/pixel-office/PixelOffice2D";
-+import type { OfficeAgent } from "@/features/retro-office/core/types";
-+import { AgentQuestion, type Question } from "./AgentQuestion";
++export const runtime = "nodejs";
++export const dynamic = "force-dynamic";
 +
-+interface Cell { id: string; nombre: string; estado: string; model: string; reasoning: string; error?: string }
-+interface Run { id: string; repository: string; estado: string; commit?: string; branch?: string; celulas: Cell[]; error?: string; has_report: boolean; historical?: boolean; evidence_origin?: string; report_format?: number; derived_from?: string }
-+const roles = [{ id: "coordinator", name: "Coordinador", color: "#38bdf8" }, { id: "security", name: "Seguridad", color: "#fbbf24" }, { id: "architecture", name: "Arquitectura", color: "#a78bfa" }, { id: "inventory", name: "Inventario", color: "#34d399" }];
-+const busy = (state?: string) => state === "preparando" || state === "analizando";
-+const label: Record<string, string> = { preparando: "Leyendo repositorio", analizando: "Analizando", pendiente: "Pendiente", completada: "Completada", completo: "Completado", parcial: "Resultado parcial", error: "Error", sin_evidencia: "Sin evidencia", sin_resultados: "Sin resultados" };
-+
-+async function api(path: string, init?: RequestInit) {
-+  const response = await fetch("/api/audit/" + path, { cache: "no-store", ...init });
-+  const data = await response.json();
-+  if (!response.ok) throw new Error(data.error || "No se pudo completar la solicitud.");
-+  return data;
++async function proxy(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
++  const { path } = await context.params;
++  const valid = path.length === 1 && path[0] === "runs" ||
++    path.length === 2 && path[0] === "runs" && /^[a-zA-Z0-9_-]{8,80}$/.test(path[1]) ||
++    path.length === 3 && path[0] === "runs" && /^[a-zA-Z0-9_-]{8,80}$/.test(path[1]) && ["report", "download", "questions"].includes(path[2]) ||
++    path.length === 4 && path[0] === "runs" && /^[a-zA-Z0-9_-]{8,80}$/.test(path[1]) && path[2] === "questions" && /^[0-9a-f-]{36}$/.test(path[3]);
++  if (!valid || request.method === "POST" && !(path.length === 1 || path.length === 3 && path[2] === "questions")) {
++    return NextResponse.json({ error: "Ruta no disponible." }, { status: 404 });
++  }
++  if (request.method === "POST") {
++    let sameOrigin = false;
++    try {
++      const origin = new URL(request.headers.get("origin") || "");
++      sameOrigin = ["http:", "https:"].includes(origin.protocol) && origin.host === request.headers.get("host");
++    } catch { /* An absent or malformed browser origin is not accepted. */ }
++    if (!sameOrigin) return NextResponse.json({ error: "Origen no permitido." }, { status: 403 });
++  }
++  try {
++    const body = request.method === "POST" ? await request.text() : undefined;
++    if (body && new TextEncoder().encode(body).length > 2048) {
++      return NextResponse.json({ error: "Solicitud demasiado grande." }, { status: 413 });
++    }
++    const upstream = await fetch(`${process.env.AUDIT_API_URL || "http://audit-api:8080"}/${path.join("/")}`, {
++      method: request.method, body, headers: { "Content-Type": "application/json" }, cache: "no-store",
++      signal: AbortSignal.timeout(10000), redirect: "error",
++    });
++    const headers = new Headers({ "Content-Type": upstream.headers.get("Content-Type") || "application/json", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" });
++    const disposition = upstream.headers.get("Content-Disposition");
++    if (disposition) headers.set("Content-Disposition", disposition);
++    return new NextResponse(upstream.body, { status: upstream.status, headers });
++  } catch {
++    return NextResponse.json({ error: "No se puede contactar con el equipo de análisis. Comprueba que el servicio esté iniciado." }, { status: 503 });
++  }
 +}
 +
-+export function AuditOffice() {
-+  const [repository, setRepository] = useState("");
-+  const [runs, setRuns] = useState<Run[]>([]);
-+  const [selected, setSelected] = useState<string | null>(null);
-+  const [connected, setConnected] = useState(false);
-+  const [error, setError] = useState("");
-+  const [networkError, setNetworkError] = useState("");
-+  const [submitting, setSubmitting] = useState(false);
-+  const [panel, setPanel] = useState(true);
-+  const [report, setReport] = useState<string | null>(null);
-+  const [selectedCell, setSelectedCell] = useState("coordinator");
-+  const [chat, setChat] = useState<{ run: Run; agent: string } | null>(null);
-+  const [questionActive, setQuestionActive] = useState<Question | null>(null);
-+  const current = runs.find(r => r.id === selected) || runs[0];
-+  const active = runs.find(r => busy(r.estado));
-+
-+  const refresh = useCallback(async () => {
-+    try {
-+      const data = await api("runs");
-+      setRuns(data.runs); setQuestionActive(data.question_active || null); setConnected(true); setNetworkError("");
-+    } catch (e) { setConnected(false); setNetworkError(e instanceof Error ? e.message : "Servicio no disponible."); }
-+  }, []);
-+  useEffect(() => { void refresh(); const timer = window.setInterval(() => void refresh(), 2000); return () => window.clearInterval(timer); }, [refresh]);
-+
-+  // Avatars always represent the active job, even while viewing an older report.
-+  const live = active || runs[0];
-+  const agents = useMemo<OfficeAgent[]>(() => roles.map(role => {
-+    const cell = live?.celulas?.find(c => c.id === role.id);
-+    const state = questionActive?.agent === role.id ? "analizando" : role.id === "coordinator" ? live?.estado : cell?.estado;
-+    return { ...role, subtitle: label[state || ""] || "En espera", item: "coding", status: !connected ? "error" : busy(state) ? "working" : state === "error" || state === "sin_evidencia" ? "error" : "idle" };
-+  }), [live, connected, questionActive]);
-+
-+  async function start(event: React.FormEvent) {
-+    event.preventDefault(); setSubmitting(true); setError(""); setReport(null);
-+    try {
-+      const run = await api("runs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ repository }) });
-+      setSelected(run.id); await refresh();
-+    } catch (e) { setError(e instanceof Error ? e.message : "No se pudo iniciar la revisión."); }
-+    finally { setSubmitting(false); }
-+  }
-+
-+  async function openReport() {
-+    if (!current) return;
-+    try { const data = await api(`runs/${current.id}/report`); setReport(data.text); }
-+    catch (e) { setError(e instanceof Error ? e.message : "Informe no disponible."); }
-+  }
-+
-+  function consult(agent: string) {
-+    setSelectedCell(agent); setPanel(true);
-+    if (current?.has_report && !busy(current.estado)) setChat({ run: current, agent });
-+    else setError("Selecciona una revisión terminada con informe para consultar al equipo.");
-+  }
-+
-+  return <div className="relative h-full w-full bg-slate-950 text-slate-100">
-+    <div className={`absolute inset-x-0 top-14 ${panel ? "bottom-1/2 min-[1000px]:bottom-0 min-[1000px]:right-[380px]" : "bottom-0"}`}>
-+      <PixelOffice2D agents={agents} renderMode="2d" onRenderModeChange={() => {}} readOnly compact
-+        onAgentChatSelect={consult}
-+        officeTitle="Equipo de análisis" officeTitleLoaded gatewayStatus={connected ? "connected" : "disconnected"} activeAdapterType="hermes"
-+        remoteOfficeEnabled={false} remoteOfficeSourceKind="presence_endpoint" remoteOfficeLabel="" remoteOfficePresenceUrl="" remoteOfficeGatewayUrl="" remoteOfficeTokenConfigured={false}
-+        voiceRepliesEnabled={false} voiceRepliesVoiceId={null} voiceRepliesSpeed={1} voiceRepliesLoaded />
-+    </div>
-+    <header className="absolute inset-x-0 top-0 z-30 flex h-14 items-center justify-between border-b border-white/10 bg-slate-950 px-5">
-+      <div className="flex items-center gap-3"><strong className="text-lg font-black tracking-tight">ARKTIC<span className="text-[#42bcc6]">.</span></strong><span className="hidden border-l border-white/20 pl-3 text-xs text-slate-300 sm:block">Oficina de análisis</span></div>
-+      <button className="rounded-lg bg-[#42bcc6] px-4 py-2 text-sm font-semibold text-slate-950" onClick={() => setPanel(!panel)}>{panel ? "Ver oficina" : "Abrir revisión"}</button>
-+    </header>
-+    {panel && <aside aria-label="Panel de revisión" className="absolute bottom-3 left-3 right-3 top-1/2 z-30 overflow-auto rounded-xl border border-white/15 bg-slate-950/95 p-5 shadow-2xl min-[1000px]:left-auto min-[1000px]:top-16 min-[1000px]:w-[356px]">
-+      <h1 className="text-xl font-semibold">Revisión de repositorio</h1>
-+      <p className="mt-1 text-sm text-slate-400">Solo lectura de <strong>main</strong> o, si no existe, <strong>master</strong>. El arquitecto evalúa el resultado.</p>
-+      <form onSubmit={start} className="mt-5 space-y-3">
-+        <label className="block text-sm" htmlFor="repository">Repositorio de GitHub</label>
-+        <input id="repository" required type="url" placeholder="https://github.com/propietario/repositorio" value={repository} onChange={e => setRepository(e.target.value)} className="w-full rounded-lg border border-white/20 bg-slate-900 px-3 py-3 text-sm" />
-+        <button disabled={!connected || submitting || !!active || !!questionActive} className="w-full rounded-lg bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 disabled:opacity-40">{submitting ? "Iniciando…" : active ? "Revisión en curso" : questionActive ? "Consulta en curso" : "Iniciar revisión"}</button>
-+      </form>
-+      {(error || networkError) && <p role="alert" className="mt-4 rounded-lg border border-rose-400/30 bg-rose-950 p-3 text-sm text-rose-200">{error || networkError}</p>}
-+      {runs.length > 0 && <div className="mt-5"><label htmlFor="runs" className="text-xs text-slate-400">Revisiones guardadas</label><select id="runs" value={current?.id || ""} onChange={e => { setSelected(e.target.value); setReport(null); }} className="mt-1 w-full rounded-lg border border-white/20 bg-slate-900 p-2 text-xs">{runs.map(r => <option key={r.id} value={r.id}>{r.report_format === 2 ? "Formato 2 · " : ""}{r.derived_from ? "Evidencia guardada · " : r.historical ? "Histórico · " : ""}{r.repository.split("/").slice(-2).join("/")} · {label[r.estado] || r.estado} · {r.id.slice(0, 10)}</option>)}</select></div>}
-+      {current && <section className="mt-5 space-y-3" aria-label="Estado de la revisión" aria-live="polite">
-+        <div className="flex justify-between"><h2 className="font-semibold">{label[current.estado] || current.estado}</h2><span className="text-xs text-slate-400">{current.commit ? `${current.branch || "main"}@${current.commit.slice(0, 12)}` : current.estado === "error" ? "Sin commit leído" : "Preparando evidencia"}</span></div>
-+        <p className="break-all text-xs text-slate-400">{current.repository}</p>
-+        {current.error && <p role="alert" className="rounded-lg bg-rose-950 p-3 text-sm text-rose-200">{current.error}</p>}
-+        {current.evidence_origin && <p className="rounded-lg bg-amber-950 p-3 text-xs text-amber-200">{current.evidence_origin}</p>}
-+        {current.has_report && <p className="text-xs text-cyan-200">Pulsa un personaje o tarjeta para consultar esta revisión.</p>}
-+        {roles.map(role => { const cell = current.celulas?.find(c => c.id === role.id); const status = role.id === "coordinator" ? current.estado : cell?.estado || "pendiente"; return <button key={role.id} onClick={() => consult(role.id)} className={`block w-full rounded-lg border p-3 text-left ${selectedCell === role.id ? "border-cyan-300/70 bg-cyan-950/40" : "border-white/10 bg-slate-900"}`}>
-+          <span className="flex justify-between text-sm"><strong>{role.name}</strong><span>{label[status] || status}</span></span>
-+          <span className="mt-1 block text-xs text-slate-400">{cell ? `${cell.model} · ${cell.reasoning}` : role.id === "coordinator" ? "Distribuye evidencia y consolida" : "Esperando evidencia"}</span>
-+          {cell?.error && <span className="mt-2 block text-xs text-rose-300">{cell.error}</span>}
-+        </button>; })}
-+        {current.has_report && <div className="flex gap-2 pt-2"><button onClick={() => void openReport()} className="flex-1 rounded-lg border border-cyan-300/40 px-3 py-3 text-sm text-cyan-200">Leer informe</button><a href={`/api/audit/runs/${current.id}/download`} className="flex-1 rounded-lg bg-emerald-300 px-3 py-3 text-center text-sm font-semibold text-slate-950">Descargar informe</a></div>}
-+      </section>}
-+      {!current && <p className="mt-6 text-sm text-slate-400">El equipo está listo. Introduce un repositorio para comenzar.</p>}
-+    </aside>}
-+    {report !== null && <div role="dialog" aria-modal="true" aria-label="Informe de revisión" className="absolute inset-4 top-16 z-40 flex flex-col rounded-xl border border-white/20 bg-slate-950 p-5 shadow-2xl"><div className="mb-4 flex items-center justify-between"><h2 className="font-semibold">Informe para el arquitecto</h2><button onClick={() => setReport(null)} className="rounded border border-white/20 px-3 py-2">Cerrar informe</button></div><div className="overflow-auto break-words text-sm leading-relaxed text-slate-200 [&_h1]:mb-4 [&_h1]:text-2xl [&_h2]:my-5 [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:mt-5 [&_h3]:mb-2 [&_h3]:font-semibold [&_p]:my-3 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:my-2 [&_table]:w-full [&_table]:block [&_table]:overflow-x-auto [&_th]:border [&_th]:border-white/20 [&_th]:p-2 [&_td]:border [&_td]:border-white/20 [&_td]:p-2 [&_a]:text-cyan-300 [&_code]:text-cyan-200"><ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml components={{ a: ({ children, href }) => <a href={href} target="_blank" rel="noopener noreferrer">{children}</a> }}>{report}</ReactMarkdown></div></div>}
-+    {chat && <AgentQuestion key={`${chat.run.id}-${chat.agent}`} run={chat.run} agent={chat.agent} name={roles.find(r => r.id === chat.agent)?.name || chat.agent} active={questionActive} blocked={!!active || !!questionActive} onStarted={setQuestionActive} onClose={() => setChat(null)} />}
-+  </div>;
-+}
++export const GET = proxy;
++export const POST = proxy;
 diff --git a/src/features/audit/AgentQuestion.tsx b/src/features/audit/AgentQuestion.tsx
 new file mode 100644
 index 0000000..d6fbf8a
@@ -600,54 +526,214 @@ index 0000000..d6fbf8a
 +    </section>
 +  </div>;
 +}
-diff --git a/src/app/api/audit/[...path]/route.ts b/src/app/api/audit/[...path]/route.ts
+diff --git a/src/features/audit/AuditOffice.tsx b/src/features/audit/AuditOffice.tsx
 new file mode 100644
-index 0000000..9d8d289
+index 0000000..df27280
 --- /dev/null
-+++ b/src/app/api/audit/[...path]/route.ts
-@@ -0,0 +1,42 @@
-+import { NextRequest, NextResponse } from "next/server";
++++ b/src/features/audit/AuditOffice.tsx
+@@ -0,0 +1,123 @@
++"use client";
 +
-+export const runtime = "nodejs";
-+export const dynamic = "force-dynamic";
++import { useCallback, useEffect, useMemo, useState } from "react";
++import ReactMarkdown from "react-markdown";
++import remarkGfm from "remark-gfm";
++import { PixelOffice2D } from "@/features/pixel-office/PixelOffice2D";
++import type { OfficeAgent } from "@/features/retro-office/core/types";
++import { AgentQuestion, type Question } from "./AgentQuestion";
++import { ExecutiveReport } from "./ExecutiveReport";
 +
-+async function proxy(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
-+  const { path } = await context.params;
-+  const valid = path.length === 1 && path[0] === "runs" ||
-+    path.length === 2 && path[0] === "runs" && /^[a-zA-Z0-9_-]{8,80}$/.test(path[1]) ||
-+    path.length === 3 && path[0] === "runs" && /^[a-zA-Z0-9_-]{8,80}$/.test(path[1]) && ["report", "download", "questions"].includes(path[2]) ||
-+    path.length === 4 && path[0] === "runs" && /^[a-zA-Z0-9_-]{8,80}$/.test(path[1]) && path[2] === "questions" && /^[0-9a-f-]{36}$/.test(path[3]);
-+  if (!valid || request.method === "POST" && !(path.length === 1 || path.length === 3 && path[2] === "questions")) {
-+    return NextResponse.json({ error: "Ruta no disponible." }, { status: 404 });
-+  }
-+  if (request.method === "POST") {
-+    let sameOrigin = false;
-+    try {
-+      const origin = new URL(request.headers.get("origin") || "");
-+      sameOrigin = ["http:", "https:"].includes(origin.protocol) && origin.host === request.headers.get("host");
-+    } catch { /* An absent or malformed browser origin is not accepted. */ }
-+    if (!sameOrigin) return NextResponse.json({ error: "Origen no permitido." }, { status: 403 });
-+  }
-+  try {
-+    const body = request.method === "POST" ? await request.text() : undefined;
-+    if (body && new TextEncoder().encode(body).length > 2048) {
-+      return NextResponse.json({ error: "Solicitud demasiado grande." }, { status: 413 });
-+    }
-+    const upstream = await fetch(`${process.env.AUDIT_API_URL || "http://audit-api:8080"}/${path.join("/")}`, {
-+      method: request.method, body, headers: { "Content-Type": "application/json" }, cache: "no-store",
-+      signal: AbortSignal.timeout(10000), redirect: "error",
-+    });
-+    const headers = new Headers({ "Content-Type": upstream.headers.get("Content-Type") || "application/json", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" });
-+    const disposition = upstream.headers.get("Content-Disposition");
-+    if (disposition) headers.set("Content-Disposition", disposition);
-+    return new NextResponse(upstream.body, { status: upstream.status, headers });
-+  } catch {
-+    return NextResponse.json({ error: "No se puede contactar con el equipo de análisis. Comprueba que el servicio esté iniciado." }, { status: 503 });
-+  }
++interface Cell { id: string; nombre: string; estado: string; model: string; reasoning: string; error?: string; mensaje?: string; necesita?: string[] }
++interface Run { id: string; repository: string; estado: string; commit?: string; branch?: string; celulas: Cell[]; error?: string; mensaje?: string; necesita?: string[]; has_report: boolean; historical?: boolean; evidence_origin?: string; report_format?: number; derived_from?: string; simulation?: boolean }
++const roles = [{ id: "coordinator", name: "Coordinador", color: "#38bdf8" }, { id: "security", name: "Seguridad", color: "#fbbf24" }, { id: "architecture", name: "Arquitectura", color: "#a78bfa" }, { id: "inventory", name: "Inventario", color: "#34d399" }];
++const busy = (state?: string) => state === "preparando" || state === "analizando";
++import { statusLabel as label, avatarStatus } from "./auditStatus";
++
++async function api(path: string, init?: RequestInit) {
++  const response = await fetch("/api/audit/" + path, { cache: "no-store", ...init });
++  const data = await response.json();
++  if (!response.ok) throw new Error(data.error || "No se pudo completar la solicitud.");
++  return data;
 +}
 +
-+export const GET = proxy;
-+export const POST = proxy;
++export function AuditOffice() {
++  const [repository, setRepository] = useState("");
++  const [runs, setRuns] = useState<Run[]>([]);
++  const [selected, setSelected] = useState<string | null>(null);
++  const [connected, setConnected] = useState(false);
++  const [error, setError] = useState("");
++  const [networkError, setNetworkError] = useState("");
++  const [submitting, setSubmitting] = useState(false);
++  const [panel, setPanel] = useState(true);
++  const [report, setReport] = useState<string | null>(null);
++  const [reportHtml, setReportHtml] = useState<string | null>(null);
++  const [selectedCell, setSelectedCell] = useState("coordinator");
++  const [chat, setChat] = useState<{ run: Run; agent: string } | null>(null);
++  const [questionActive, setQuestionActive] = useState<Question | null>(null);
++  const current = runs.find(r => r.id === selected) || runs[0];
++  const active = runs.find(r => busy(r.estado));
++
++  const refresh = useCallback(async () => {
++    try {
++      const data = await api("runs");
++      setRuns(data.runs); setQuestionActive(data.question_active || null); setConnected(true); setNetworkError("");
++    } catch (e) { setConnected(false); setNetworkError(e instanceof Error ? e.message : "Servicio no disponible."); }
++  }, []);
++  useEffect(() => { void refresh(); const timer = window.setInterval(() => void refresh(), 2000); return () => window.clearInterval(timer); }, [refresh]);
++
++  // Avatars always represent the active job, even while viewing an older report.
++  const live = active || runs[0];
++  const agents = useMemo<OfficeAgent[]>(() => roles.map(role => {
++    const cell = live?.celulas?.find(c => c.id === role.id);
++    const state = questionActive?.agent === role.id ? "analizando" : role.id === "coordinator" ? live?.estado : cell?.estado;
++    return { ...role, subtitle: label[state || ""] || "En espera", item: "coding", status: avatarStatus(connected, state) };
++  }), [live, connected, questionActive]);
++
++  async function start(event: React.FormEvent) {
++    event.preventDefault(); setSubmitting(true); setError(""); setReport(null);
++    try {
++      const run = await api("runs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ repository }) });
++      setSelected(run.id); await refresh();
++    } catch (e) { setError(e instanceof Error ? e.message : "No se pudo iniciar la revisión."); }
++    finally { setSubmitting(false); }
++  }
++
++  async function openReport() {
++    if (!current) return;
++    try { const data = await api(`runs/${current.id}/report`); setReportHtml(data.html || null); setReport(data.text); }
++    catch (e) { setError(e instanceof Error ? e.message : "Informe no disponible."); }
++  }
++
++  function consult(agent: string) {
++    if (current?.simulation) { setError("Ejemplo ficticio: consultas desactivadas. No consume tokens."); return; }
++    setSelectedCell(agent); setPanel(true);
++    if (current?.estado === "informacion_insuficiente" || current?.celulas?.find(c => c.id === agent)?.estado === "informacion_insuficiente") return;
++    if (current?.has_report && !busy(current.estado)) setChat({ run: current, agent });
++    else setError("Selecciona una revisión terminada con informe para consultar al equipo.");
++  }
++
++  return <div className="relative h-full w-full bg-slate-950 text-slate-100">
++    <div className={`absolute inset-x-0 top-14 ${panel ? "bottom-1/2 min-[1000px]:bottom-0 min-[1000px]:right-[380px]" : "bottom-0"}`}>
++      <PixelOffice2D agents={agents} renderMode="2d" onRenderModeChange={() => {}} readOnly compact
++        onAgentChatSelect={consult}
++        officeTitle="Equipo de análisis" officeTitleLoaded gatewayStatus={connected ? "connected" : "disconnected"} activeAdapterType="hermes"
++        remoteOfficeEnabled={false} remoteOfficeSourceKind="presence_endpoint" remoteOfficeLabel="" remoteOfficePresenceUrl="" remoteOfficeGatewayUrl="" remoteOfficeTokenConfigured={false}
++        voiceRepliesEnabled={false} voiceRepliesVoiceId={null} voiceRepliesSpeed={1} voiceRepliesLoaded />
++    </div>
++    <header className="absolute inset-x-0 top-0 z-30 flex h-14 items-center justify-between border-b border-white/10 bg-slate-950 px-5">
++      <div className="flex items-center gap-3"><strong className="text-lg font-black tracking-tight">ARKTIC<span className="text-[#42bcc6]">.</span></strong><span className="hidden border-l border-white/20 pl-3 text-xs text-slate-300 sm:block">Oficina de análisis</span><span className="text-xs text-slate-400" aria-label="Versión de la oficina">v{process.env.NEXT_PUBLIC_OFFICE_VERSION || "development"}</span></div>
++      <button className="rounded-lg bg-[#42bcc6] px-4 py-2 text-sm font-semibold text-slate-950" onClick={() => setPanel(!panel)}>{panel ? "Ver oficina" : "Abrir revisión"}</button>
++    </header>
++    {panel && <aside aria-label="Panel de revisión" className="absolute bottom-3 left-3 right-3 top-1/2 z-30 overflow-auto rounded-xl border border-white/15 bg-slate-950/95 p-5 shadow-2xl min-[1000px]:left-auto min-[1000px]:top-16 min-[1000px]:w-[356px]">
++      <h1 className="text-xl font-semibold">Revisión de repositorio</h1>
++      <p className="mt-1 text-sm text-slate-400">Solo lectura de <strong>main</strong> o, si no existe, <strong>master</strong>. El arquitecto evalúa el resultado.</p>
++      <form onSubmit={start} className="mt-5 space-y-3">
++        <label className="block text-sm" htmlFor="repository">Repositorio de GitHub</label>
++        <input id="repository" required type="url" placeholder="https://github.com/propietario/repositorio" value={repository} onChange={e => setRepository(e.target.value)} className="w-full rounded-lg border border-white/20 bg-slate-900 px-3 py-3 text-sm" />
++        <button disabled={!connected || submitting || !!active || !!questionActive} className="w-full rounded-lg bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 disabled:opacity-40">{submitting ? "Iniciando…" : active ? "Revisión en curso" : questionActive ? "Consulta en curso" : "Iniciar revisión"}</button>
++      </form>
++      {(error || networkError) && <p role="alert" className="mt-4 rounded-lg border border-rose-400/30 bg-rose-950 p-3 text-sm text-rose-200">{error || networkError}</p>}
++      {runs.length > 0 && <div className="mt-5"><label htmlFor="runs" className="text-xs text-slate-400">Revisiones guardadas</label><select id="runs" value={current?.id || ""} onChange={e => { setSelected(e.target.value); setReport(null); }} className="mt-1 w-full rounded-lg border border-white/20 bg-slate-900 p-2 text-xs">{runs.map(r => <option key={r.id} value={r.id}>{r.simulation ? "SIMULACIÓN · " : r.report_format === 3 ? "Seguridad · " : r.report_format === 2 ? "Formato 2 · " : ""}{r.derived_from ? "Evidencia guardada · " : r.historical ? "Histórico · " : ""}{r.repository.split("/").slice(-2).join("/")} · {label[r.estado] || r.estado} · {r.id.slice(0, 10)}</option>)}</select></div>}
++      {current && <section className="mt-5 space-y-3" aria-label="Estado de la revisión" aria-live="polite">
++        <div className="flex justify-between"><h2 className="font-semibold">{label[current.estado] || current.estado}</h2><span className="text-xs text-slate-400">{current.simulation ? "Sin análisis · 0 tokens" : current.commit ? `${current.branch || "main"}@${current.commit.slice(0, 12)}` : current.estado === "error" ? "Sin commit leído" : "Preparando evidencia"}</span></div>
++        <p className="break-all text-xs text-slate-400">{current.repository}</p>
++        {current.error && <p role="alert" className="rounded-lg bg-rose-950 p-3 text-sm text-rose-200">{current.error}</p>}
++        {current.mensaje && <p role="status" className="rounded-lg border border-amber-300/25 bg-amber-950/40 p-3 text-sm text-amber-100">{current.mensaje}</p>}
++        {current.evidence_origin && <p className="rounded-lg bg-amber-950 p-3 text-xs text-amber-200">{current.evidence_origin}</p>}
++        {current.has_report && <p className="text-xs text-cyan-200">{current.simulation ? "Contenido ficticio. Consultas desactivadas; no consume tokens." : "Pulsa un personaje o tarjeta para consultar esta revisión."}</p>}
++        {roles.map(role => { const cell = current.celulas?.find(c => c.id === role.id); const status = role.id === "coordinator" ? current.estado : cell?.estado || "pendiente"; return <button key={role.id} onClick={() => consult(role.id)} className={`block w-full rounded-lg border p-3 text-left ${selectedCell === role.id ? "border-cyan-300/70 bg-cyan-950/40" : "border-white/10 bg-slate-900"}`}>
++          <span className="flex justify-between text-sm"><strong>{role.name}</strong><span>{label[status] || status}</span></span>
++          <span className="mt-1 block text-xs text-slate-400">{cell ? `${cell.model} · ${cell.reasoning}` : role.id === "coordinator" ? "Distribuye evidencia y consolida" : "Esperando evidencia"}</span>
++          {cell?.error && <span className="mt-2 block text-xs text-rose-300">{cell.error}</span>}
++          {cell?.mensaje && <span className="mt-2 block text-xs text-amber-200">{cell.mensaje}</span>}
++          {cell?.necesita?.length ? <span className="mt-2 block text-xs text-slate-300">Para avanzar: {cell.necesita.join(" · ")}</span> : null}
++        </button>; })}
++        {current.has_report && <div className="flex gap-2 pt-2"><button onClick={() => void openReport()} className="flex-1 rounded-lg border border-cyan-300/40 px-3 py-3 text-sm text-cyan-200">Leer informe</button><a href={`/api/audit/runs/${current.id}/download`} className="flex-1 rounded-lg bg-emerald-300 px-3 py-3 text-center text-sm font-semibold text-slate-950">Descargar informe</a></div>}
++      </section>}
++      {!current && <p className="mt-6 text-sm text-slate-400">El equipo está listo. Introduce un repositorio para comenzar.</p>}
++    </aside>}
++    {report !== null && <div role="dialog" aria-modal="true" aria-label="Informe de revisión" className="absolute inset-4 top-16 z-40 flex flex-col rounded-xl border border-white/20 bg-slate-950 p-5 shadow-2xl"><div className="mb-4 flex items-center justify-between"><h2 className="font-semibold">Informe para el arquitecto</h2><button onClick={() => setReport(null)} className="rounded border border-white/20 px-3 py-2">Cerrar informe</button></div>{reportHtml ? <ExecutiveReport html={reportHtml} /> : <div className="overflow-auto break-words text-sm leading-relaxed text-slate-200 [&_h1]:mb-4 [&_h1]:text-2xl [&_h2]:my-5 [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:mt-5 [&_h3]:mb-2 [&_h3]:font-semibold [&_p]:my-3 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:my-2 [&_table]:w-full [&_table]:block [&_table]:overflow-x-auto [&_th]:border [&_th]:border-white/20 [&_th]:p-2 [&_td]:border [&_td]:border-white/20 [&_td]:p-2 [&_a]:text-cyan-300 [&_code]:text-cyan-200"><ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml components={{ a: ({ children, href }) => <a href={href} target="_blank" rel="noopener noreferrer">{children}</a> }}>{report}</ReactMarkdown></div>}</div>}
++    {chat && <AgentQuestion key={`${chat.run.id}-${chat.agent}`} run={chat.run} agent={chat.agent} name={roles.find(r => r.id === chat.agent)?.name || chat.agent} active={questionActive} blocked={!!active || !!questionActive} onStarted={setQuestionActive} onClose={() => setChat(null)} />}
++  </div>;
++}
+diff --git a/src/features/audit/ExecutiveReport.tsx b/src/features/audit/ExecutiveReport.tsx
+new file mode 100644
+index 0000000..5b64d92
+--- /dev/null
++++ b/src/features/audit/ExecutiveReport.tsx
+@@ -0,0 +1,54 @@
++"use client";
++
++import { useRef, useState } from "react";
++
++export function ExecutiveReport({ html }: { html: string }) {
++  const frame = useRef<HTMLIFrameElement>(null);
++  const [filter, setFilter] = useState("all");
++  const rules: Record<string, string> = {
++    all: "",
++    urgent: ".risk:not(.critica):not(.alta){display:none}",
++    pending: ".risk:not(.pending){display:none}",
++    confirmed: ".risk:not(.confirmed){display:none}",
++  };
++  const source = html.replace(/<script id="arktic-report-navigation">[\s\S]*?<\/script>/g, "").replace("</head>", `<style>@media screen{${rules[filter]}}</style></head>`);
++  function bindNavigation() {
++    const doc = frame.current?.contentDocument;
++    if (!doc) return;
++    // The iframe cannot run scripts. This trusted parent handles internal anchors only.
++    doc.addEventListener("click", event => {
++      const anchor = (event.target as Element)?.closest?.('a[href^="#"]');
++      const href = anchor?.getAttribute("href");
++      if (!href) return;
++      let id;
++      try { id = decodeURIComponent(href.slice(1)); } catch { return; }
++      const target = doc.getElementById(id);
++      if (!target) return;
++      event.preventDefault();
++      for (let node: HTMLElement | null = target; node; node = node.parentElement) {
++        if (node.tagName === "DETAILS") (node as HTMLDetailsElement).open = true;
++        if (node.classList.contains("risk")) node.style.display = node.tagName === "TR" ? "table-row" : "block";
++      }
++      target.scrollIntoView({ block: "start" });
++      doc.querySelectorAll(".nav a").forEach(item => item.removeAttribute("aria-current"));
++      doc.querySelector(`.nav a[href="#${target.closest(".chapter")?.id || id}"]`)?.setAttribute("aria-current", "location");
++    });
++  }
++  function print() {
++    const doc = frame.current?.contentDocument;
++    if (doc) doc.querySelectorAll("details").forEach(detail => { detail.open = true; });
++    frame.current?.contentWindow?.print();
++  }
++  return <div className="flex min-h-0 flex-1 flex-col gap-3">
++    <div className="flex flex-wrap items-center gap-3 text-sm">
++      <label htmlFor="risk-filter">Ver riesgos</label>
++      <select id="risk-filter" className="rounded border border-white/20 bg-slate-900 p-2" value={filter} onChange={e => setFilter(e.target.value)}>
++        <option value="all">Todos</option><option value="urgent">🔴 Críticos y altos</option>
++        <option value="confirmed">Confirmados en código</option><option value="pending">Indicios por confirmar</option>
++      </select>
++      <button onClick={print} className="rounded bg-cyan-300 px-4 py-2 font-semibold text-slate-950">Imprimir / guardar PDF</button>
++      <span className="text-xs text-slate-400">La impresión incluye todos los hallazgos.</span>
++    </div>
++    <iframe ref={frame} onLoad={bindNavigation} title="Reporte ejecutivo de seguridad" sandbox="allow-same-origin allow-modals allow-popups allow-popups-to-escape-sandbox" srcDoc={source} className="min-h-0 flex-1 rounded-lg border-0 bg-white" />
++  </div>;
++}
+diff --git a/src/features/audit/auditStatus.ts b/src/features/audit/auditStatus.ts
+new file mode 100644
+index 0000000..36e816d
+--- /dev/null
++++ b/src/features/audit/auditStatus.ts
+@@ -0,0 +1,13 @@
++export const statusLabel: Record<string, string> = {
++  simulacion: "Simulación", simulada: "Simulada", preparando: "Leyendo repositorio",
++  analizando: "Analizando", pendiente: "Pendiente", completada: "Completada",
++  completo: "Completado", parcial: "Resultado parcial", error: "Error técnico",
++  sin_evidencia: "Información insuficiente", informacion_insuficiente: "Información insuficiente",
++  sin_resultados: "Sin resultados válidos",
++};
++
++export function avatarStatus(connected: boolean, state?: string): "error" | "working" | "idle" {
++  if (!connected || state === "error") return "error";
++  if (state === "preparando" || state === "analizando") return "working";
++  return "idle";
++}
 diff --git a/src/features/pixel-office/map/arkticOfficeMap.ts b/src/features/pixel-office/map/arkticOfficeMap.ts
 new file mode 100644
 index 0000000..73148ab
@@ -727,57 +813,6 @@ index 0000000..73148ab
 +    spawn: { tx: 9, ty: 19 },
 +  };
 +};
-diff --git a/tests/unit/arkticOfficeMap.test.ts b/tests/unit/arkticOfficeMap.test.ts
-new file mode 100644
-index 0000000..70346f4
---- /dev/null
-+++ b/tests/unit/arkticOfficeMap.test.ts
-@@ -0,0 +1,45 @@
-+import { describe, expect, it } from "vitest";
-+import { buildArkticOfficeMap } from "@/features/pixel-office/map/arkticOfficeMap";
-+import { buildPixelNavGrid, tileCenter } from "@/features/pixel-office/map/navGrid";
-+import { createPixelSimulation } from "@/features/pixel-office/sim/agentSimulation";
-+import { OBJECT_FOOTPRINT, type PixelAgentInput } from "@/features/pixel-office/types";
-+import { astar2D } from "@/lib/office/pathfinding";
-+
-+describe("compact Arktic office", () => {
-+  it("keeps furniture within the map and outside the enclosing walls", () => {
-+    const map = buildArkticOfficeMap();
-+    for (const object of map.objects) {
-+      const [w, h] = OBJECT_FOOTPRINT[object.kind];
-+      expect(object.tx).toBeGreaterThan(1);
-+      expect(object.ty).toBeGreaterThan(1);
-+      expect(object.tx + w).toBeLessThanOrEqual(map.cols - 2);
-+      expect(object.ty + h).toBeLessThanOrEqual(map.rows - 2);
-+    }
-+  });
-+
-+  it("connects all four desks and every room station to the entrance", () => {
-+    const map = buildArkticOfficeMap();
-+    expect(map.desks).toHaveLength(4);
-+    const grid = buildPixelNavGrid(map);
-+    const start = tileCenter(map.spawn.tx, map.spawn.ty);
-+    const targets = [...map.stations.map(s => [s.tx, s.ty]), ...map.desks.map(d => [d.seatTx, d.seatTy])];
-+    for (const [tx, ty] of targets) {
-+      const end = tileCenter(tx, ty);
-+      expect(astar2D(start.x, start.y, end.x, end.y, grid).length, `unreachable ${tx},${ty}`).toBeGreaterThan(0);
-+    }
-+  });
-+
-+  it("lets the four working agents reach different computer seats", () => {
-+    const sim = createPixelSimulation(buildArkticOfficeMap());
-+    const inputs: PixelAgentInput[] = ["coordinator", "security", "architecture", "inventory"].map(id => ({
-+      id, name: id, color: "#42bcc6", status: "working", streaming: false,
-+      thinking: false, awaitingApproval: false, dancing: false, hold: null, standup: false,
-+    }));
-+    let poses = sim.tick({ inputs, nowMs: 100000, dtMs: 50, cleaningActive: false });
-+    for (let tick = 1; tick < 1600; tick++)
-+      poses = sim.tick({ inputs, nowMs: 100000 + tick * 50, dtMs: 50, cleaningActive: false });
-+    expect(poses).toHaveLength(4);
-+    expect(poses.every(p => p.activity === "sitting_desk" && !p.moving)).toBe(true);
-+    expect(new Set(poses.map(p => p.deskId)).size).toBe(4);
-+  });
-+});
 diff --git a/tests/unit/agentQuestionCache.test.ts b/tests/unit/agentQuestionCache.test.ts
 new file mode 100644
 index 0000000..0c8db67
@@ -830,5 +865,132 @@ index 0000000..0c8db67
 +    other.unmount();
 +    render(React.createElement(AgentQuestion, props("cache-test-run-three")));
 +    expect(screen.queryByText(saved.respuesta)).not.toBeInTheDocument();
++  });
++});
+diff --git a/tests/unit/arkticOfficeMap.test.ts b/tests/unit/arkticOfficeMap.test.ts
+new file mode 100644
+index 0000000..70346f4
+--- /dev/null
++++ b/tests/unit/arkticOfficeMap.test.ts
+@@ -0,0 +1,45 @@
++import { describe, expect, it } from "vitest";
++import { buildArkticOfficeMap } from "@/features/pixel-office/map/arkticOfficeMap";
++import { buildPixelNavGrid, tileCenter } from "@/features/pixel-office/map/navGrid";
++import { createPixelSimulation } from "@/features/pixel-office/sim/agentSimulation";
++import { OBJECT_FOOTPRINT, type PixelAgentInput } from "@/features/pixel-office/types";
++import { astar2D } from "@/lib/office/pathfinding";
++
++describe("compact Arktic office", () => {
++  it("keeps furniture within the map and outside the enclosing walls", () => {
++    const map = buildArkticOfficeMap();
++    for (const object of map.objects) {
++      const [w, h] = OBJECT_FOOTPRINT[object.kind];
++      expect(object.tx).toBeGreaterThan(1);
++      expect(object.ty).toBeGreaterThan(1);
++      expect(object.tx + w).toBeLessThanOrEqual(map.cols - 2);
++      expect(object.ty + h).toBeLessThanOrEqual(map.rows - 2);
++    }
++  });
++
++  it("connects all four desks and every room station to the entrance", () => {
++    const map = buildArkticOfficeMap();
++    expect(map.desks).toHaveLength(4);
++    const grid = buildPixelNavGrid(map);
++    const start = tileCenter(map.spawn.tx, map.spawn.ty);
++    const targets = [...map.stations.map(s => [s.tx, s.ty]), ...map.desks.map(d => [d.seatTx, d.seatTy])];
++    for (const [tx, ty] of targets) {
++      const end = tileCenter(tx, ty);
++      expect(astar2D(start.x, start.y, end.x, end.y, grid).length, `unreachable ${tx},${ty}`).toBeGreaterThan(0);
++    }
++  });
++
++  it("lets the four working agents reach different computer seats", () => {
++    const sim = createPixelSimulation(buildArkticOfficeMap());
++    const inputs: PixelAgentInput[] = ["coordinator", "security", "architecture", "inventory"].map(id => ({
++      id, name: id, color: "#42bcc6", status: "working", streaming: false,
++      thinking: false, awaitingApproval: false, dancing: false, hold: null, standup: false,
++    }));
++    let poses = sim.tick({ inputs, nowMs: 100000, dtMs: 50, cleaningActive: false });
++    for (let tick = 1; tick < 1600; tick++)
++      poses = sim.tick({ inputs, nowMs: 100000 + tick * 50, dtMs: 50, cleaningActive: false });
++    expect(poses).toHaveLength(4);
++    expect(poses.every(p => p.activity === "sitting_desk" && !p.moving)).toBe(true);
++    expect(new Set(poses.map(p => p.deskId)).size).toBe(4);
++  });
++});
+diff --git a/tests/unit/auditStatus.test.ts b/tests/unit/auditStatus.test.ts
+new file mode 100644
+index 0000000..57afddb
+--- /dev/null
++++ b/tests/unit/auditStatus.test.ts
+@@ -0,0 +1,16 @@
++import { describe, expect, it } from "vitest";
++import { avatarStatus, statusLabel } from "@/features/audit/auditStatus";
++
++describe("terminal information outcomes", () => {
++  it("finishes insufficient and partial outcomes without a red or working avatar", () => {
++    for (const state of ["informacion_insuficiente", "sin_evidencia", "parcial", "completada"]) {
++      expect(avatarStatus(true, state)).toBe("idle");
++    }
++    expect(statusLabel.informacion_insuficiente).toBe("Información insuficiente");
++  });
++  it("keeps real technical errors and active work distinct", () => {
++    expect(avatarStatus(true, "error")).toBe("error");
++    expect(avatarStatus(false, "completada")).toBe("error");
++    expect(avatarStatus(true, "analizando")).toBe("working");
++  });
++});
+diff --git a/tests/unit/executiveReport.test.ts b/tests/unit/executiveReport.test.ts
+new file mode 100644
+index 0000000..7163d5a
+--- /dev/null
++++ b/tests/unit/executiveReport.test.ts
+@@ -0,0 +1,48 @@
++import React from "react";
++import { afterEach, describe, expect, it, vi } from "vitest";
++import { cleanup, fireEvent, render, screen } from "@testing-library/react";
++import { ExecutiveReport } from "@/features/audit/ExecutiveReport";
++
++afterEach(cleanup);
++
++describe("executive security report", () => {
++  it("filters only on screen, keeps all content for print, and disables scripts", () => {
++    render(React.createElement(ExecutiveReport, { html: "<html><head></head><body>complete evidence</body></html>" }));
++    fireEvent.change(screen.getByLabelText("Ver riesgos"), { target: { value: "urgent" } });
++    const frame = screen.getByTitle("Reporte ejecutivo de seguridad") as HTMLIFrameElement;
++    expect(frame.getAttribute("srcdoc")).toContain("@media screen{.risk:not(.critica):not(.alta){display:none}}");
++    expect(frame.getAttribute("srcdoc")).toContain("complete evidence");
++    expect(frame.getAttribute("sandbox")).not.toContain("allow-scripts");
++  });
++
++  it("navigation reveals nested evidence and keeps the return context without running report scripts", () => {
++    render(React.createElement(ExecutiveReport, { html: '<html><head></head><body><script id="arktic-report-navigation">unsafe()</script></body></html>' }));
++    const frame = screen.getByTitle("Reporte ejecutivo de seguridad") as HTMLIFrameElement;
++    expect(frame.getAttribute("srcdoc")).not.toContain("unsafe()");
++    frame.contentDocument!.body.innerHTML = '<section class="chapter" id="anexos"><details id="registro"><summary>Registro</summary><article id="R01"><details id="tecnico-R01"><summary>Técnico</summary><p id="fuente">Fuente</p></details></article></details></section><div id="resumen-R01">Contexto</div><a href="#fuente">Ver fuente</a><a href="#resumen-R01">Volver</a>';
++    const source = frame.contentDocument!.getElementById("fuente")!;
++    const context = frame.contentDocument!.getElementById("resumen-R01")!;
++    source.scrollIntoView = vi.fn();
++    context.scrollIntoView = vi.fn();
++    fireEvent.load(frame);
++    const anchors = frame.contentDocument!.querySelectorAll("a");
++    fireEvent.click(anchors[0]);
++    expect((frame.contentDocument!.getElementById("registro") as HTMLDetailsElement).open).toBe(true);
++    expect((frame.contentDocument!.getElementById("tecnico-R01") as HTMLDetailsElement).open).toBe(true);
++    expect(source.scrollIntoView).toHaveBeenCalled();
++    fireEvent.click(anchors[1]);
++    expect(context.scrollIntoView).toHaveBeenCalled();
++    expect(frame.getAttribute("sandbox")).not.toContain("allow-scripts");
++  });
++
++  it("opens evidence details before invoking browser print", () => {
++    render(React.createElement(ExecutiveReport, { html: "<html><head></head><body></body></html>" }));
++    const frame = screen.getByTitle("Reporte ejecutivo de seguridad") as HTMLIFrameElement;
++    const detail = frame.contentDocument!.createElement("details");
++    frame.contentDocument!.body.append(detail);
++    const print = vi.spyOn(frame.contentWindow!, "print").mockImplementation(() => {});
++    fireEvent.click(screen.getByRole("button", { name: "Imprimir / guardar PDF" }));
++    expect(detail.open).toBe(true);
++    expect(print).toHaveBeenCalledOnce();
 +  });
 +});

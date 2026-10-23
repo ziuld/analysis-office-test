@@ -6,13 +6,13 @@ import subprocess
 import sys
 from pathlib import PurePosixPath
 
-from repository import AuditError, MANIFESTS, SOURCE_EXT
+from repository import AuditError, MANIFESTS, SOURCE_EXT, LOCKFILES, file_role, balanced_files
 from reporting import evidence_index, make_prompt, validate_report
 from settings import settings, runtime_options
 
 CELLS = (
     {"id": "security", "name": "Seguridad", "focus": "Prioriza acceso a datos, autenticación, exposición y configuraciones inseguras evidentes. Gobernanza y responsables desconocidos quedan como dudas. No afirmes CVE sin prueba ni reproduzcas secretos."},
-    {"id": "architecture", "name": "Arquitectura y migración", "focus": "Prioriza arranque, persistencia/recuperación de datos, estabilidad y conexiones. Configuración de recursos no demuestra consumo real. Explica implicaciones para operar o migrar, sin elegir destino ni suponer infraestructura."},
+    {"id": "architecture", "name": "Arquitectura y migración", "focus": "Prioriza arranque, persistencia/recuperación de datos, estabilidad y conexiones. Configuración de recursos no demuestra consumo real. Añade una propuesta DevOps Azure sencilla, condicionada y separada de los hechos; declara supuestos sin autorizar despliegues."},
     {"id": "inventory", "name": "Inventario tecnológico", "focus": "Identifica componentes principales con tecnología, versiones declaradas y función evidenciada. No enumeres todos los paquetes. Incluye propósito solo si está documentado. Distingue declaración de uso real; no evalúes seguridad ni elijas infraestructura."},
 )
 
@@ -31,19 +31,21 @@ def cell_config(cell):
 def relevance(cell_id, file):
     p = PurePosixPath(file["path"])
     name = p.name.lower()
-    docker = name.startswith("dockerfile") or "compose" in name
+    if p.name in LOCKFILES:
+        return None  # Full lockfiles go to OSV, not to the language model.
+    docker = name.startswith("dockerfile") or name in {"compose.yaml", "compose.yml", "docker-compose.yml", "docker-compose.yaml"}
     manifest = p.name in MANIFESTS
     readme = name.startswith("readme")
     config = p.suffix in {".yaml", ".yml", ".toml", ".xml", ".properties"} or "config" in name
     if cell_id == "inventory":
-        return 0 if manifest else 1 if docker else 2 if readme else None
+        return 0 if manifest else 1 if docker else 2 if readme else 3 if file_role(file["path"]) in {"entry", "data", "routes", "business"} else None
     if cell_id == "architecture":
         if docker or readme:
             return 0
         if p.name in {"index.js", "index.ts", "main.py", "app.py", "server.js", "server.ts", "main.go", "Program.cs", "Application.java"}:
             return 1
-        return 2 if manifest or config else None
-    if any(word in name for word in ("auth", "access", "security", "middleware", "network")):
+        return 2 if manifest or config or file_role(file["path"]) in {"entry", "data", "routes", "business", "config"} else None
+    if any(word in file["path"].lower() for word in ("auth", "access", "security", "middleware", "network", "controller", "route", "service", "repository")):
         return 0
     if docker or config:
         return 1
@@ -58,10 +60,15 @@ def plan_cells(snapshot):
     for cell in CELLS:
         candidates = [(relevance(cell["id"], file), i, file) for i, file in enumerate(snapshot["files"])]
         candidates = sorted((x for x in candidates if x[0] is not None), key=lambda x: (x[0], x[1]))
+        # Two manifest slots cover backend/frontend dependency declarations.
+        roles = {"security": ("security", "routes", "business", "config", "manifest", "manifest", "deployment", "data", "entry", "source", "readme"),
+                 "architecture": ("deployment", "entry", "data", "manifest", "manifest", "routes", "config", "business", "source", "readme"),
+                 "inventory": ("manifest", "manifest", "deployment", "entry", "data", "routes", "business", "readme")}
+        candidates = balanced_files([x[2] for x in candidates], roles[cell["id"]])
         selected, size = [], 0
-        for _, _, file in candidates:
+        for file in candidates:
             length = len(file["text"].encode("utf-8"))
-            if len(selected) >= 6 or size + length > 24000:
+            if len(selected) >= (12 if cell["id"] == "security" else 6) or size + length > (64000 if cell["id"] == "security" else 24000):
                 continue
             selected.append(file)
             size += length
@@ -83,7 +90,12 @@ def invoke_hermes(prompt, config):
     except subprocess.TimeoutExpired:
         raise AuditError("La célula superó 240 segundos; no se reintentó.") from None
     if result.returncode:
-        raise AuditError("Hermes no completó la célula. Revisar sesión, acceso al modelo, límites y conectividad. Sin reintento automático.")
+        reasons = {"quota_or_rate_limit": "cuota o límite de peticiones", "unsupported_model": "modelo no admitido por el proveedor", "authentication": "sesión no válida", "timeout": "tiempo agotado", "incomplete_response": "respuesta incompleta"}
+        try:
+            code = json.loads(result.stderr).get("code")
+        except (ValueError, AttributeError):
+            code = None
+        raise AuditError("Hermes no completó la célula: " + reasons.get(code, "fallo de sesión, modelo o conexión") + ". Sin reintento automático.")
     try:
         envelope = json.loads(result.stdout)
         if not isinstance(envelope, dict) or not isinstance(envelope.get("report"), str):
@@ -110,15 +122,19 @@ def consolidate(results, cells):
             for item in report[section]:
                 key = normalize(item["observacion"])
                 if key not in findings:
-                    findings[key] = {**item, "evidencia": list(item["evidencia"]), "celulas": [cell_id], "section": section}
+                    findings[key] = {**item, "evidencia": list(item["evidencia"]), "celulas": [cell_id], "section": section, "aportaciones": [{"celula": cell_id, "resultado": item}]}
                     continue
                 existing = findings[key]
+                existing["aportaciones"].append({"celula": cell_id, "resultado": item})
                 if cell_id not in existing["celulas"]:
                     existing["celulas"].append(cell_id)
                 merge_refs(existing["evidencia"], item["evidencia"])
-                for field in ("importancia", "pendiente"):
+                for field in ("importancia", "pendiente", "accion", "condiciones"):
                     if item.get(field) and item[field] != existing.get(field):
                         existing[field] = (existing.get(field, "") + " " + item[field]).strip()
+                if item.get("severidad") and existing.get("severidad"):
+                    from security import SEVERITIES
+                    existing["severidad"] = min((existing["severidad"], item["severidad"]), key=SEVERITIES.index)
                 if existing["section"] != section:
                     existing["section"] = "indicios"
                     existing["por_confirmar"] = "Las células discrepan sobre la certeza de esta observación; debe revisarla el arquitecto."
@@ -131,12 +147,32 @@ def consolidate(results, cells):
             if cell_id not in questions[key]["celulas"]:
                 questions[key]["celulas"].append(cell_id)
     output = {"confirmados": [], "indicios": [], "dudas": list(questions.values()), "celulas": cells}
-    if any(report.get("schema_version") == 2 for _, report in results):
+    presentation = {}
+    allowed = {"inventory": {"resumen"}, "architecture": {"flujo_actual", "estado_operativo", "decision"}, "security": set()}
+    for cell_id, report in results:
+        for key, value in report.get("presentacion", {}).items():
+            if key in allowed.get(cell_id, set()):
+                presentation[key] = value
+    if presentation:
+        output["presentacion"] = presentation
+    from editorial import metadata
+    output["estandar_editorial"] = metadata()
+    for cell_id, report in results:
+        if cell_id == "architecture" and "propuesta_azure" in report:
+            output["propuesta_azure"] = report["propuesta_azure"]
+    if any(report.get("schema_version") == 3 for _, report in results):
+        from security import CONTROLS
+        controls = next((report.get("controles", []) for cell_id, report in results if cell_id == "security"), [])
+        found = {c["id"]: c for c in controls}
+        output.update(schema_version=3, controles=[found.get(key, {"id": key, "estado": "no_evaluado", "motivo": "La célula no aportó una evaluación válida de este control.", "evidencia": []}) for key in CONTROLS])
+    if "schema_version" not in output and any(report.get("schema_version") == 2 for _, report in results):
         output["schema_version"] = 2
     for item in findings.values():
         section = item.pop("section")
         output[section].append(item)
-    output["estado"] = "completo" if all(c["estado"] == "completada" for c in cells) else "parcial" if results else "sin_resultados"
+    from outcome import INSUFFICIENT, useful
+    output["estado"] = (INSUFFICIENT if not useful(output) and cells and all(c["estado"] in {INSUFFICIENT, "sin_evidencia"} for c in cells)
+                        else "completo" if all(c["estado"] == "completada" for c in cells) else "parcial" if results else "sin_resultados")
     return output
 
 
@@ -145,14 +181,20 @@ def prepare_response(raw, snapshot):
         data = json.loads(raw)
     except (ValueError, TypeError):
         raise AuditError("La célula no devolvió JSON válido.") from None
-    if not isinstance(data, dict) or set(data) not in ({"confirmados", "indicios", "dudas"}, {"schema_version", "confirmados", "indicios", "dudas"}):
+    base = {"schema_version", "confirmados", "indicios", "dudas", "controles"}
+    new_shape = isinstance(data, dict) and data.get("schema_version") == 3 and base <= set(data) <= base | {"propuesta_azure", "presentacion", "evaluacion"}
+    if not isinstance(data, dict) or not new_shape and set(data) not in ({"confirmados", "indicios", "dudas"}, {"schema_version", "confirmados", "indicios", "dudas"}):
         raise AuditError("La célula no devolvió las tres secciones esperadas.")
     index = evidence_index(snapshot)
     omitted = {}
-    for section, limit in (("confirmados", 2), ("indicios", 1), ("dudas", 2)):
+    v3 = data.get("schema_version") == 3
+    limits = {"confirmados": 12, "indicios": 8, "dudas": 8} if v3 else {"confirmados": 2, "indicios": 1, "dudas": 2}
+    for section, limit in limits.items():
         if not isinstance(data[section], list):
             raise AuditError("Sección de célula inválida.")
         omitted[section] = max(0, len(data[section]) - limit)
+        if v3 and len(data[section]) > limit:
+            raise AuditError("Respuesta excesiva; no se recortan silenciosamente los riesgos.")
         data[section] = data[section][:limit]
         if section == "dudas":
             continue
@@ -172,7 +214,85 @@ def prepare_response(raw, snapshot):
                     # Previously validated reports can be rechecked against the same snapshot.
                     refs.append(ref)
             item["evidencia"] = refs
-    return validate_report(json.dumps(data), snapshot, limits={"confirmados": 2, "indicios": 1, "dudas": 2}), omitted
+    if v3:
+        def resolve_presentation(value):
+            if isinstance(value, dict):
+                for key, child in value.items():
+                    if key == "evidencia" and isinstance(child, list):
+                        refs = []
+                        for ref in child:
+                            if isinstance(ref, str):
+                                if ref not in index:
+                                    raise AuditError("Contenido editorial con fuente inexistente.")
+                                ref = index[ref]
+                            refs.append(ref)
+                        value[key] = refs
+                    else:
+                        resolve_presentation(child)
+            elif isinstance(value, list):
+                for child in value:
+                    resolve_presentation(child)
+        if "presentacion" in data:
+            resolve_presentation(data["presentacion"])
+        if not isinstance(data.get("controles"), list):
+            raise AuditError("Controles inválidos.")
+        for control in data["controles"]:
+            if not isinstance(control, dict) or not isinstance(control.get("evidencia"), list):
+                raise AuditError("Control sin evidencia estructurada.")
+            refs = []
+            for ref in control["evidencia"]:
+                if isinstance(ref, str):
+                    if ref not in index:
+                        raise AuditError("Control con fuente inexistente.")
+                    ref = index[ref]
+                refs.append(ref)
+            control["evidencia"] = refs
+        if "propuesta_azure" in data:
+            proposal = data["propuesta_azure"]
+            if not isinstance(proposal, dict) or not isinstance(proposal.get("evidencia"), list):
+                raise AuditError("Fuentes de propuesta Azure inválidas.")
+            refs = []
+            for ref in proposal["evidencia"]:
+                if isinstance(ref, str):
+                    if ref not in index:
+                        raise AuditError("La propuesta Azure citó una fuente inexistente.")
+                    ref = index[ref]
+                refs.append(ref)
+            proposal["evidencia"] = refs
+    return validate_report(json.dumps(data), snapshot, limits=limits), omitted
+
+
+def prepare_cell_response(raw, snapshot, cell_id):
+    """Optional presentation errors cannot discard an independently valid core."""
+    if cell_id != "architecture":
+        report, omitted = prepare_response(raw, snapshot)
+        return report, omitted, []
+    try:
+        data = json.loads(raw)
+    except (ValueError, TypeError):
+        return (*prepare_response(raw, snapshot), [])
+    if not isinstance(data, dict):
+        return (*prepare_response(raw, snapshot), [])
+    proposal = data.pop("propuesta_azure", None)
+    presentation = data.pop("presentacion", None)
+    report, omitted = prepare_response(json.dumps(data), snapshot)
+    warnings = []
+    parts = [("propuesta_azure", proposal)] if proposal is not None else []
+    if presentation is not None:
+        if not isinstance(presentation, dict):
+            warnings.append("Presentación rechazada: estructura inválida.")
+        else:
+            parts.extend(("presentacion", {key: value}) for key, value in presentation.items())
+    for field, value in parts:
+        try:
+            checked, _ = prepare_response(json.dumps({**data, field: value}), snapshot)
+            if field == "presentacion":
+                report.setdefault(field, {}).update(checked[field])
+            else:
+                report[field] = checked[field]
+        except AuditError as exc:
+            warnings.append(("Propuesta Azure" if field == "propuesta_azure" else "Bloque de presentación") + " rechazado: " + str(exc))
+    return report, omitted, warnings
 
 
 def run_team(snapshot, output, invoke=invoke_hermes, emit=print):
@@ -183,10 +303,11 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print):
     results = []
     (output / "celulas").mkdir()
     for config, state in zip(plan, cells):
-        state["estado"] = "analizando" if config["files"] else "sin_evidencia"
+        state["estado"] = "analizando" if config["files"] else "informacion_insuficiente"
         write_json(output / "estado.json", {"estado": "analizando", "celulas": cells})
         if not config["files"]:
-            state["error"] = "No hay archivos relevantes seleccionados para esta célula. Ampliar o revisar la selección."
+            state["mensaje"] = "La selección no incluye código suficiente para esta especialidad. Hace falta ampliar la lectura."
+            state["necesita"] = ["Archivos de código y configuración relevantes para " + config["name"] + "."]
             write_json(output / "celulas" / (config["id"] + ".json"), state)
             continue
         emit(f"Célula {config['name']}: {len(config['files'])} archivos, {config['bytes']} bytes, {config['model']}/{config['reasoning']}...", flush=True)
@@ -195,10 +316,36 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print):
         try:
             envelope = invoke(prompt, config)
             state["usage"] = envelope.get("usage")
-            report, omitted = prepare_response(envelope["report"], subset)
-            if report.get("schema_version") != 2:
-                raise AuditError("La célula no devolvió el formato 2 con implicaciones y pendientes; no se completó esta célula.")
-            state["estado"] = "completada"
+            report, omitted, warnings = prepare_cell_response(envelope["report"], subset, config["id"])
+            proposal_error = "Algunos apartados no superaron la validación; se conservan las aportaciones válidas. No se reintentó." if warnings else None
+            if warnings:
+                state["advertencias"] = warnings
+            for item in report["confirmados"] + report["indicios"]:
+                if item.get("severidad") != "informativa" and not {"titulo", "resultado_esperado", "detalle_tecnico"} <= set(item):
+                    raise AuditError("La célula no aportó título comprensible, objetivo y detalle técnico para un riesgo nuevo.")
+            owned = {"inventory": {"resumen"}, "architecture": {"flujo_actual", "estado_operativo", "decision"}, "security": set()}
+            if not set(report.get("presentacion", {})) <= owned[config["id"]]:
+                raise AuditError("La célula devolvió bloques editoriales de otra especialidad.")
+            if report.get("schema_version") != 3:
+                raise AuditError("La célula no devolvió el formato 3 con severidad y cobertura; no se completó esta célula.")
+            if config["id"] == "architecture" and "propuesta_azure" not in report:
+                proposal_error = proposal_error or "Arquitectura no aportó una propuesta Azure; se conservan sus resultados válidos."
+            if config["id"] != "architecture" and "propuesta_azure" in report:
+                raise AuditError("Solo Arquitectura puede generar la propuesta Azure.")
+            if config["id"] == "security":
+                from security import CONTROLS
+                if not report["controles"] and report.get("evaluacion", {}).get("estado") == "informacion_insuficiente":
+                    report["controles"] = [{"id": key, "estado": "no_evaluado", "motivo": report["evaluacion"]["motivo"], "evidencia": []} for key in CONTROLS]
+                if {c["id"] for c in report["controles"]} != set(CONTROLS):
+                    raise AuditError("Seguridad no informó los seis controles.")
+            from outcome import INSUFFICIENT, useful
+            insufficient = report.get("evaluacion", {}).get("estado") == INSUFFICIENT or not useful(report)
+            state["estado"] = INSUFFICIENT if not useful(report) else "parcial" if proposal_error or insufficient else "completada"
+            if insufficient:
+                state["mensaje"] = report.get("evaluacion", {}).get("motivo", "La información recibida no permite elaborar una evaluación útil de esta especialidad.")
+                state["necesita"] = report.get("evaluacion", {}).get("necesita", report["dudas"])
+            if proposal_error and useful(report):
+                state["mensaje"] = (state.get("mensaje", "") + " " + proposal_error).strip()
             state["omitidos_por_limite"] = omitted
             if envelope.get("reused_from"):
                 state["reutilizado_de"] = envelope["reused_from"]
@@ -211,6 +358,11 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print):
             write_json(output / "celulas" / (config["id"] + ".json"), state)
         write_json(output / "estado.json", {"estado": "analizando", "celulas": cells})
     data = consolidate(results, cells)
-    data["schema_version"] = 2
+    from security import CONTROLS
+    data["schema_version"] = 3
+    data.setdefault("controles", [{"id": key, "estado": "no_evaluado", "motivo": "Seguridad no completó su evaluación.", "evidencia": []} for key in CONTROLS])
+    data["scanners"] = snapshot.get("scanners", [])
+    from outcome import notice
+    data["mensaje"], data["necesita"], _ = notice(data)
     write_json(output / "estado.json", {"estado": data["estado"], "celulas": cells})
     return data

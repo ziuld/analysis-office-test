@@ -10,11 +10,15 @@ CMD ["node", "server/demo-gateway-adapter.js"]
 
 FROM deps AS builder
 COPY . .
+ARG APP_VERSION=0.0.0-dev
+ENV NEXT_PUBLIC_OFFICE_VERSION=$APP_VERSION
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
 FROM node:22-slim@sha256:c3de60bf2f9dd0ac6370e6117950ff62d6e339527e7472301c9c78a017978392 AS office
 WORKDIR /app
+ARG APP_VERSION=0.0.0-dev
+LABEL org.opencontainers.image.title="Arktic Office Frontend" org.opencontainers.image.version=$APP_VERSION
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1
 # Keep the locked build dependencies: Next loads next.config.ts using TypeScript.
 # This avoids installing dependencies at startup in this first local demo.

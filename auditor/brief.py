@@ -21,6 +21,8 @@ def text(value):
 
 
 def references(item, snapshot):
+    if snapshot.get("simulation"):
+        return ", ".join(dict.fromkeys(text(f"{ref['path']}:{ref['line']} (fuente ficticia)") for ref in item.get("evidencia", [])))
     owner, repo = parse_repo(snapshot["repository"])
     commit = snapshot["commit"]
     labels = []

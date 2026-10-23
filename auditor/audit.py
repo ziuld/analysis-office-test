@@ -39,7 +39,8 @@ def run(url, inspect_only=False, job_id=None):
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
             raise AuditError("Ya existe una revisión activa; espera a que termine.") from None
-        snapshot = collect(url)
+        from scanners import scan
+        snapshot = collect(url, scanner=None if inspect_only else scan)
         snapshot["analyzed_at"] = datetime.now(timezone.utc).isoformat()
         snapshot["runtime"] = {"provider": provider, "model": model,
                                "reasoning": options["reasoning_config"]["effort"],
@@ -60,8 +61,11 @@ def run(url, inspect_only=False, job_id=None):
         model = provider + "/" + model
         (output / "informe.json").write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
         (output / "informe.md").write_text(markdown(data, snapshot, model), encoding="utf-8")
+        if data.get("schema_version") == 3:
+            from executive import render_html
+            (output / "informe.html").write_text(render_html(data, snapshot, model), encoding="utf-8")
         print(f"Informe listo: {output}/informe.md")
-        if data["estado"] != "completo":
+        if data["estado"] != "completo" and any(c["estado"] == "error" for c in data.get("celulas", [])):
             raise AuditError("Se guardó un informe " + data["estado"] + "; revisar las células pendientes. No equivale a una revisión completa del equipo.")
 
 

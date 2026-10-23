@@ -16,6 +16,18 @@ from repository import AuditError
 
 
 class ApiTests(unittest.TestCase):
+    def test_simulation_cannot_start_a_billable_question(self):
+        path = self.root / "demo-ficticio-test"
+        fixture(path)
+        snapshot = json.loads((path / "evidencia.json").read_text())
+        snapshot["simulation"] = True
+        write_json(path / "evidencia.json", snapshot)
+        self.assertTrue(self.jobs.detail(path.name)["simulation"])
+        with self.assertRaisesRegex(AuditError, "ficticio"):
+            self.jobs.ask(path.name, "coordinator", "Explica")
+        self.assertIsNone(self.jobs.question_active)
+        self.assertFalse((path / "consultas").exists())
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name)

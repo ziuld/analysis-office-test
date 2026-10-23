@@ -71,8 +71,9 @@ class Jobs:
         if job["estado"] in ACTIVE and not snapshot:
             job = {**job, "estado": "preparando"}
         return {**job, "commit": snapshot.get("commit"), "branch": snapshot.get("branch"), "celulas": team.get("celulas", report.get("celulas", [])),
+                "mensaje": report.get("mensaje"), "necesita": report.get("necesita", []),
                 "has_report": (path / "informe.md").is_file(), "evidence_origin": snapshot.get("evidence_origin"),
-                "report_format": report.get("schema_version", 1), "derived_from": snapshot.get("source_revision")}
+                "report_format": report.get("schema_version", 1), "derived_from": snapshot.get("source_revision"), "simulation": bool(snapshot.get("simulation"))}
 
     def listing(self):
         items = []
@@ -115,6 +116,8 @@ class Jobs:
             if self.question_active or any(x["estado"] in ACTIVE for x in self.listing()):
                 raise BlockingIOError()
             job = self.detail(job_id)
+            if job.get("simulation"):
+                raise AuditError("Este ejemplo es ficticio y no admite consultas al modelo. No se ha gastado ningún token.")
             if not job["has_report"] or job["estado"] in ACTIVE:
                 raise AuditError("Selecciona una revisión terminada con informe disponible.")
             directory = self.directory(job_id)
@@ -155,6 +158,7 @@ class Jobs:
         path = self.root / job_id
         job = read_json(path / "job.json")
         try:
+            job.pop("error", None)
             job["estado"] = "analizando"
             write_json(path / "job.json", job)
             returncode = self.runner(job_id, repository)
@@ -200,7 +204,7 @@ def handler_for(jobs):
             try:
                 parts = self.path.split("?")[0].strip("/").split("/")
                 if parts == ["health"]:
-                    return self.send(200, {"ok": True})
+                    return self.send(200, {"ok": True, "version": os.environ.get("ARKTIC_BACKEND_VERSION", "development")})
                 if parts == ["runs"]:
                     return self.send(200, {"runs": jobs.listing(), "question_active": jobs.question_active})
                 if len(parts) == 4 and parts[0] == "runs" and parts[2] == "questions":
@@ -212,7 +216,8 @@ def handler_for(jobs):
                     if not path.is_file():
                         raise FileNotFoundError()
                     if parts[2] == "report":
-                        return self.send(200, {"text": path.read_text(encoding="utf-8")})
+                        html = path.with_suffix(".html")
+                        return self.send(200, {"text": path.read_text(encoding="utf-8"), "html": html.read_text(encoding="utf-8") if html.is_file() else None})
                     return self.send(200, path.read_bytes(), "text/markdown; charset=utf-8", "informe-" + parts[1] + ".md")
                 raise FileNotFoundError()
             except AuditError as exc:

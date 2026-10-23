@@ -8,28 +8,26 @@ Publicar nuestro código de `auditor/`, los Dockerfiles, `compose.yaml`, el parc
 
 No se incluye una licencia elegida para nuestro código propio. El aviso de terceros documenta las licencias de los originales; no establece una licencia para todo Arktic Office. Definir esa licencia antes de distribuirlo como proyecto abierto.
 
-## Primera subida
+## Entregas por pull request
 
-Crear un repositorio vacío en el alojamiento elegido y, desde esta carpeta, ejecutar los siguientes comandos cuando se vaya a publicar. No se ha creado ni subido un repositorio remoto durante el cierre documental.
+Repositorio: [ziuld/analysis-office-test](https://github.com/ziuld/analysis-office-test). El commit inicial del MVP ya está en `main`; las siguientes entregas se preparan en ramas `codex/` y se proponen mediante PR.
 
-```powershell
-git init -b main
-git check-ignore .env reports/ artifacts/ vendor/
-git add .
-git status --short
-git diff --cached --stat
-git ls-files .env reports artifacts vendor
-```
+Antes del commit, revisar `git diff --cached` y ejecutar `git ls-files .env reports artifacts vendor`: no debe listar archivos. `.gitignore` no retira archivos que ya estuvieran versionados. No copiar `.env`, sesiones OAuth, evidencias ni informes al repositorio.
 
-La comprobación de exclusiones debe mostrar las cuatro rutas. El último comando no debe listar archivos. Revisar el contenido preparado, además del resumen, antes del primer commit. `.gitignore` no retira archivos que ya estuvieran versionados; si aparecen credenciales o informes, corregirlo antes de continuar.
+## Versiones independientes de la aplicación
 
-```powershell
-git commit -m "Initial Arktic Office MVP"
-git remote add origin URL_DEL_REPOSITORIO_ARKTIC_OFFICE
-git push -u origin main
-```
+| Componente | Versión propia | Imagen Docker | Identificación en ejecución |
+|---|---|---|---|
+| Frontend | `FRONTEND_VERSION`: 0.2.0 | `arktic-hermes3d-office:0.2.0` | Cabecera de la oficina |
+| Backend | `BACKEND_VERSION`: 0.2.0 | `arktic-hermes-auditor:0.2.0` | Campo `version` de `GET /health` en la API interna |
 
-Sustituir la URL del ejemplo por la real. Una vez publicado, probar el clon y seguir la guía rápida con credenciales propias de esa instalación. No copiar `.env` ni sesiones OAuth al repositorio.
+Se usa SemVer: corrección compatible → patch, funcionalidad compatible → minor, cambio incompatible de contrato → major. En versiones 0.x, documentar explícitamente cualquier cambio de contrato. Un cambio exclusivo de frontend no obliga a subir backend, ni a la inversa.
+
+Para una nueva entrega, actualizar el archivo de versión del componente, su etiqueta de imagen y su `APP_VERSION` en `compose.yaml`, y añadir su entrada en `CHANGELOG.md`. Construir, probar y verificar la versión visible. El argumento del frontend se incorpora durante la compilación: reiniciar sin reconstruir no cambia ese número.
+
+Tras fusionar el PR y verificar el commit final, las etiquetas pueden distinguirse como `frontend/v0.2.0` y `backend/v0.2.0`. No se publican etiquetas de versión sobre una rama pendiente de revisión ni se crean releases automáticamente. Las imágenes se construyen localmente; este flujo no las publica en un registro.
+
+Las versiones de los componentes son independientes de los commits de Hermes fijados a continuación. La instalación en otro equipo sigue [Inicio rápido](INICIO_RAPIDO.md) con sus propias credenciales.
 
 ## Versiones fijadas
 

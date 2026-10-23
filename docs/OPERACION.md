@@ -13,11 +13,11 @@ Instalación inicial: [Inicio rápido](INICIO_RAPIDO.md). Todos los comandos se 
 | `AUDIT_REASONING` | `low`, `medium` o `high`; empezar por `low` |
 | `GITHUB_TOKEN` | Token de lectura para los repositorios autorizados; opcional con repositorios públicos |
 | `OPENAI_API_KEY` | Solo para el proveedor `openai`; la API tiene facturación independiente |
-| `AUDIT_MAX_FILES` | 12 por defecto; admite 1–20 |
-| `AUDIT_MAX_TOTAL_BYTES` | 48000 por defecto; admite 12000–90000 |
-| `AUDIT_MAX_OUTPUT_TOKENS` | 2500 por defecto; techo solicitado en API, no aplicado por este backend Codex OAuth |
+| `AUDIT_MAX_FILES` | 24 por defecto; admite 1–40 |
+| `AUDIT_MAX_TOTAL_BYTES` | 120000 por defecto; admite 12000–200000 |
+| `AUDIT_MAX_OUTPUT_TOKENS` | 4500 por defecto; techo solicitado en API, no aplicado por este backend Codex OAuth |
 
-Cada archivo tiene un límite de 12000 bytes. Cada célula recibe como máximo 6 archivos/24000 bytes y devuelve hasta 2 confirmados, 1 indicio y 2 dudas. Aumentar el límite global no elimina esos límites por célula.
+Cada archivo aporta hasta 12000 bytes de texto o extractos con numeración original. Seguridad recibe hasta 12 archivos/64000 bytes; las demás células, 6/24000. Descarga y validación de resultados tienen límites independientes: ver [Seguridad](SEGURIDAD.md).
 
 Para ajustar una sola célula, utilizar `AUDIT_SECURITY_MODEL` / `AUDIT_SECURITY_REASONING`, `AUDIT_ARCHITECTURE_MODEL` / `AUDIT_ARCHITECTURE_REASONING` o `AUDIT_INVENTORY_MODEL` / `AUDIT_INVENTORY_REASONING`. Vacío significa heredar el perfil común. El coordinador usa el perfil común en las consultas y no llama al modelo para consolidar.
 
@@ -104,7 +104,7 @@ Comparte el bloqueo de ejecución con la oficina y las consultas. Los contadores
 Estas pruebas usan datos controlados, sin GitHub ni llamadas al modelo. Prueban nuestro analizador, no la aplicación objetivo:
 
 ```powershell
-docker compose --profile audit run --rm -T --entrypoint python auditor -m unittest -v test_audit test_team test_server test_questions test_brief
+docker compose --profile audit run --rm -T --entrypoint python auditor -m unittest -v test_audit test_team test_server test_questions test_brief test_security test_azure_proposal test_editorial test_selection test_outcome
 ```
 
 La construcción de `office` comprueba la compilación de Next.js y TypeScript. Las verificaciones del piloto están en [PLAN_MVP.md](../PLAN_MVP.md).
@@ -123,4 +123,14 @@ Este comando **sí consume hasta tres llamadas al modelo**, crea otra carpeta e 
 docker compose --profile audit run --rm -T --entrypoint python auditor /app/preview.py ID_EJEMPLO_DERIVADO --render-only
 ```
 
-`--render-only` solo admite ejemplos derivados de formato 2. No utilizar el ejemplo derivado como prueba de haber revisado el estado actual de GitHub.
+`--render-only` solo admite ejemplos derivados de formato 2 o 3. No utilizar el ejemplo derivado como prueba de haber revisado el estado actual de GitHub.
+
+## Estándar editorial y presentación v12
+
+Las reglas comunes y por sección viven en [ESTANDAR_COMUNICACION_INFORMES.md](ESTANDAR_COMUNICACION_INFORMES.md). `auditor/editorial.py` incorpora Común y la especialidad al prompt; la consolidación registra versión y hash. La imagen del auditor incluye ese mismo archivo. No hay agente traductor ni llamadas extra para aplicar el formato.
+
+El esquema conserva compatibilidad con resultados antiguos e incorpora datos estructurados opcionales para resumen, flujo, estado operativo y decisión. El renderizador `auditor/report_view.py` no deduce relaciones ni reescribe observaciones con reglas específicas de un proyecto. Si un campo no existe, lo señala. Los títulos de riesgos y objetivos de mejora se redactan en la célula; las aportaciones originales y discrepancias se consultan en los anexos.
+
+La oficina conserva el iframe sin permiso para ejecutar scripts. Su controlador de navegación abre el desplegable y el detalle técnico enlazados y permite volver al contexto del riesgo. El HTML independiente utiliza un script local y fijo de navegación; no evalúa contenido de modelos o repositorios. Markdown conserva explicaciones, fuentes y vínculos al registro.
+
+Para revisar el formato sin agentes ni scanners, usar [el ejemplo ficticio](../examples/README.md). No ejecutar `preview.py` sin `--render-only` para una revisión meramente visual.

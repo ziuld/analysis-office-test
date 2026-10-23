@@ -24,6 +24,13 @@ def fixture(root):
 
 
 class QuestionTests(unittest.TestCase):
+    def test_simulation_is_rejected_before_preparing_model_context(self):
+        snapshot = json.loads((self.root / "evidencia.json").read_text())
+        snapshot["simulation"] = True
+        write_json(self.root / "evidencia.json", snapshot)
+        with self.assertRaisesRegex(AuditError, "simulación"):
+            prepare_question(self.root, "security", "Explica")
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
