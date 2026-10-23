@@ -49,6 +49,8 @@ class EvidenceSnapshot(TypedDict, total=False):
     runtime: dict
     simulation: bool
     source_revision: str
+    coverage: dict
+    preparation: dict
 
 
 class JobRecord(TypedDict):

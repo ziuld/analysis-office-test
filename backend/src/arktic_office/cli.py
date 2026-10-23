@@ -42,13 +42,27 @@ def run(url, inspect_only=False, job_id=None):
         except BlockingIOError:
             raise AuditError("Ya existe una revisión activa; espera a que termine.") from None
         from arktic_office.adapters.scanners import scan
-        snapshot = collect(url, scanner=None if inspect_only else scan)
+        mode = os.environ.get("AUDIT_PREPARATION_MODE", "legacy")
+        if mode not in {"legacy", "hybrid"}:
+            raise AuditError("AUDIT_PREPARATION_MODE debe ser legacy o hybrid.")
+        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+        import uuid
+        output = RunStore(reports).create(job_id or f"{stamp}-{uuid.uuid4().hex[:8]}", exist_ok=bool(job_id))
+        if mode == "hybrid":
+            from arktic_office.preparation.hybrid import prepare
+            from arktic_office.adapters.invoke import invoke_hermes
+            from arktic_office.storage.jsonio import write_json
+            snapshot = prepare(url, scanner=None if inspect_only else scan,
+                               invoke=None if inspect_only else invoke_hermes,
+                               config={"model": model, "reasoning": options["reasoning_config"]["effort"]},
+                               emit=lambda state: write_json(output / "preparacion.json", {"mode": "hybrid", "exploration": state}))
+            write_json(output / "preparacion.json", snapshot["preparation"])
+        else:
+            snapshot = collect(url, scanner=None if inspect_only else scan)
         snapshot["analyzed_at"] = datetime.now(timezone.utc).isoformat()
         snapshot["runtime"] = {"provider": provider, "model": model,
                                "reasoning": options["reasoning_config"]["effort"],
                                "max_output_tokens": options["max_tokens"]}
-        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
-        output = RunStore(reports).create(job_id or f"{stamp}-{snapshot['commit'][:8]}", exist_ok=bool(job_id))
         (output / "evidencia.json").write_text(json.dumps(snapshot, ensure_ascii=False, indent=2), encoding="utf-8")
         if inspect_only:
             plan = plan_cells(snapshot)
@@ -71,7 +85,7 @@ def run(url, inspect_only=False, job_id=None):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Revisión acotada de main o master con Hermes Agent")
+    parser = argparse.ArgumentParser(description="Revisión acotada de la rama predeterminada con Hermes Agent")
     parser.add_argument("repository", help="https://github.com/propietario/repositorio")
     parser.add_argument("--inspect-only", action="store_true", help="Verificar lectura sin invocar el modelo")
     parser.add_argument("--job-id", type=parse_job_id, help=argparse.SUPPRESS)

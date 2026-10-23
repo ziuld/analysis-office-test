@@ -1,13 +1,14 @@
-"""Bounded GitHub reader: main, or master only when main is absent."""
+"""Immutable acquisition and independent bounded context selection."""
 import base64
 from arktic_office.core.errors import AuditError, GitHubNotFound
 from arktic_office.core.contracts import EvidenceSnapshot
 import json
 import os
 import re
+import time
 from pathlib import PurePosixPath
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, quote
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 MAX_FILES = 24
@@ -193,7 +194,7 @@ def excerpt(content, budget=MAX_FILE_BYTES):
     return "\n".join(selected.get(i, "") for i in range(len(lines))), True
 
 
-def collect(url, fetch=github, scanner=None) -> EvidenceSnapshot:
+def selection_limits():
     try:
         max_files = int(os.environ.get("AUDIT_MAX_FILES", str(MAX_FILES)))
         max_total = int(os.environ.get("AUDIT_MAX_TOTAL_BYTES", str(MAX_TOTAL_BYTES)))
@@ -201,36 +202,45 @@ def collect(url, fetch=github, scanner=None) -> EvidenceSnapshot:
         raise AuditError("Los límites de lectura deben ser números enteros.") from None
     if not 1 <= max_files <= 40 or not 12000 <= max_total <= 200000:
         raise AuditError("Límites admitidos: 1–40 archivos y 12000–200000 bytes totales.")
+    return max_files, max_total
+
+
+def acquire(url, fetch=github, *, hybrid=False):
+    started = time.monotonic()
+    max_files, max_total = selection_limits()
+    if hybrid:
+        max_files, max_total = 120, 1_000_000
     owner, repo = parse_repo(url)
     root = f"/repos/{owner}/{repo}"
-    branch = "main"
-    try:
-        commit = fetch(root + "/branches/main")["commit"]
-    except GitHubNotFound:
-        branch = "master"
-        try:
-            commit = fetch(root + "/branches/master")["commit"]
-        except GitHubNotFound:
-            # Distinguish missing branches from a missing/private repository.
-            fetch(root)
-            raise AuditError("El repositorio no tiene ninguna de las ramas admitidas: main o master.") from None
+    branch = fetch(root).get("default_branch")
+    if not isinstance(branch, str) or not branch:
+        raise AuditError("GitHub no declaró una rama predeterminada válida.")
+    commit = fetch(root + "/branches/" + quote(branch, safe=""))["commit"]
     sha = commit["sha"]
     tree = fetch(root + "/git/trees/" + commit["commit"]["tree"]["sha"] + "?recursive=1")
     if tree.get("truncated"):
         raise AuditError("GitHub devolvió un árbol incompleto; el MVP no lo analizará como si estuviera completo.")
-    files, excluded, used = [], [], 0
+    excluded, used = [], 0
     raw_files, downloaded = [], 0
     blobs = [x for x in tree["tree"] if x["type"] in {"blob", "commit"}]
     ordered = sorted(blobs, key=lambda x: (priority(x["path"]), len(PurePosixPath(x["path"]).parts), x["path"]))
     ordered = balanced_files(ordered, ("manifest", "manifest", "deployment", "entry", "data", "routes", "business", "security", "config", "lock", "source", "readme"))
+    failure = None
     for item in ordered:
         reason = exclusion(item)
-        if not reason and (len(files) >= max_files or used + min(item["size"], MAX_FILE_BYTES) > max_total or downloaded + item["size"] > 1000000):
+        if not reason and (failure or time.monotonic() - started > 180):
+            reason = failure or "tiempo de adquisición agotado"
+        if not reason and (len(raw_files) >= max_files or used + min(item["size"], MAX_FILE_BYTES) > max_total or downloaded + item["size"] > 1000000):
             reason = "límite de archivos o presupuesto de lectura"
         if reason:
             excluded.append({"path": item["path"], "reason": reason})
             continue
-        blob = fetch(root + "/git/blobs/" + item["sha"])
+        try:
+            blob = fetch(root + "/git/blobs/" + item["sha"])
+        except AuditError:
+            failure = "adquisición interrumpida por error de GitHub; evidencia parcial"
+            excluded.append({"path": item["path"], "reason": failure})
+            continue
         try:
             if blob.get("encoding") != "base64":
                 raise ValueError()
@@ -243,13 +253,48 @@ def collect(url, fetch=github, scanner=None) -> EvidenceSnapshot:
             continue
         downloaded += len(raw)
         raw_files.append({"path": item["path"], "text": content})
-        selected, partial = excerpt(redact(content))
-        if len(selected.encode()) > MAX_FILE_BYTES or used + len(selected.encode()) > max_total:
-            excluded.append({"path": item["path"], "reason": "extracto supera presupuesto de texto"})
-            continue
-        used += len(selected.encode())
-        files.append({"path": item["path"], "text": selected, "partial": partial})
+        used += min(len(raw), MAX_FILE_BYTES)
+    return {"repository": f"https://github.com/{owner}/{repo}", "branch": branch, "commit": sha,
+            "files": raw_files, "excluded": excluded, "bytes_downloaded": downloaded,
+            "tree_files": len(blobs), "acquisition_seconds": round(time.monotonic() - started, 3),
+            "acquisition_limits": {"files": max_files, "bytes": 1_000_000, "seconds": 180,
+                                   "request_timeout_seconds": 30}}
+
+
+def select(snapshot, scanner=None) -> EvidenceSnapshot:
+    """No network: scanner input and model selection have explicit, different scopes."""
+    max_files, max_total = selection_limits()
+    raw_files = snapshot["files"]
     scanner_results = scanner(raw_files) if scanner and raw_files else []
+    files, used, excluded = [], 0, list(snapshot["excluded"])
+    for file in raw_files:
+        selected, partial = excerpt(redact(file["text"]))
+        length = len(selected.encode())
+        if len(files) >= max_files or length > MAX_FILE_BYTES or used + length > max_total:
+            excluded.append({"path": file["path"], "reason": "presupuesto de contexto inicial"})
+            continue
+        files.append({"path": file["path"], "text": selected, "partial": partial})
+        used += length
+    mask_findings(files, scanner_results)
+    bounded, used = [], 0
+    for file in files:
+        length = len(file["text"].encode())
+        if length > MAX_FILE_BYTES or used + length > max_total:
+            excluded.append({"path": file["path"], "reason": "ocultación supera presupuesto de contexto"})
+            continue
+        bounded.append(file)
+        used += length
+    files = bounded
+    return {**snapshot, "files": files, "excluded": excluded, "bytes_read": used,
+            "scanners": scanner_results,
+            "coverage": {"acquired": [f["path"] for f in raw_files],
+                         "scanner_input": [f["path"] for f in raw_files] if scanner else [],
+                         "model_candidates": [f["path"] for f in files],
+                         "scanner_executed": bool(scanner and raw_files)},
+            "limits": {"files": max_files, "file_bytes": MAX_FILE_BYTES, "total_bytes": max_total}}
+
+
+def mask_findings(files, scanner_results):
     for tool in scanner_results:
         if tool["name"].startswith("Gitleaks"):
             for finding in tool.get("findings", []):
@@ -259,7 +304,7 @@ def collect(url, fetch=github, scanner=None) -> EvidenceSnapshot:
                         for n in range(max(1, finding["line"]), min(len(lines), finding.get("end_line", finding["line"])) + 1):
                             lines[n - 1] = "[POSIBLE SECRETO OCULTO POR GITLEAKS]"
                         file["text"] = "\n".join(lines)
-    return {"repository": f"https://github.com/{owner}/{repo}", "branch": branch, "commit": sha,
-            "files": files, "excluded": excluded, "bytes_read": used, "bytes_downloaded": downloaded,
-            "scanners": scanner_results,
-            "limits": {"files": max_files, "file_bytes": MAX_FILE_BYTES, "total_bytes": max_total}}
+
+
+def collect(url, fetch=github, scanner=None) -> EvidenceSnapshot:
+    return select(acquire(url, fetch), scanner)

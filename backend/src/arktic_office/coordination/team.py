@@ -329,6 +329,11 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print):
     data["schema_version"] = 3
     data.setdefault("controles", [{"id": key, "estado": "no_evaluado", "motivo": "Seguridad no completó su evaluación.", "evidencia": []} for key in CONTROLS])
     data["scanners"] = snapshot.get("scanners", [])
+    preparation = snapshot.get("preparation")
+    if preparation:
+        data["preparation"] = preparation
+        if data["estado"] == "completo" and preparation["exploration"]["closure"] != "sufficient":
+            data["estado"] = "parcial"
     from arktic_office.core.outcome import notice
     data["mensaje"], data["necesita"], _ = notice(data)
     write_json(output / "estado.json", {"estado": data["estado"], "celulas": cells})

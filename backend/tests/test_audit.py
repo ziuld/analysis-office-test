@@ -14,10 +14,12 @@ class RepositoryTests(unittest.TestCase):
             with self.subTest(url=url), self.assertRaises(AuditError):
                 parse_repo(url)
 
-    def test_main_and_immutable_blob_are_used(self):
+    def test_default_branch_and_immutable_blob_are_used(self):
         calls = []
         def fetch(endpoint):
             calls.append(endpoint)
+            if endpoint == "/repos/acme/app":
+                return {"default_branch": "main"}
             if endpoint.endswith("/branches/main"):
                 return {"commit": {"sha": "a" * 40, "commit": {"tree": {"sha": "tree-sha"}}}}
             if "/git/trees/" in endpoint:
@@ -32,7 +34,7 @@ class RepositoryTests(unittest.TestCase):
         self.assertEqual(result["commit"], "a" * 40)
         self.assertEqual(len(result["files"]), 1)
         self.assertEqual(len(result["excluded"]), 2)
-        self.assertEqual(calls[1], "/repos/acme/app/git/trees/tree-sha?recursive=1")
+        self.assertEqual(calls[2], "/repos/acme/app/git/trees/tree-sha?recursive=1")
 
     def test_no_fallback_on_access_or_network_error(self):
         calls = []
@@ -41,30 +43,28 @@ class RepositoryTests(unittest.TestCase):
             raise AuditError("Acceso denegado")
         with self.assertRaises(AuditError):
             collect("https://github.com/acme/app", fetch)
-        self.assertEqual(calls, ["/repos/acme/app/branches/main"])
+        self.assertEqual(calls, ["/repos/acme/app"])
 
-    def test_master_used_only_when_main_not_found(self):
+    def test_custom_default_branch_is_used_without_fallback(self):
         calls = []
         def fetch(endpoint):
             calls.append(endpoint)
-            if endpoint.endswith("/branches/main"):
-                raise GitHubNotFound()
-            if endpoint.endswith("/branches/master"):
+            if endpoint == "/repos/acme/app":
+                return {"default_branch": "release/stable"}
+            if endpoint.endswith("/branches/release%2Fstable"):
                 return {"commit": {"sha": "b" * 40, "commit": {"tree": {"sha": "master-tree"}}}}
             if "/git/trees/" in endpoint:
                 return {"tree": [{"type": "blob", "mode": "100644", "path": "pom.xml", "size": 2, "sha": "blob"}]}
             return {"encoding": "base64", "content": base64.b64encode(b"{}").decode()}
         result = collect("https://github.com/acme/app", fetch)
-        self.assertEqual(result["branch"], "master")
+        self.assertEqual(result["branch"], "release/stable")
         self.assertEqual(result["commit"], "b" * 40)
-        self.assertEqual(calls[:3], ["/repos/acme/app/branches/main", "/repos/acme/app/branches/master", "/repos/acme/app/git/trees/master-tree?recursive=1"])
+        self.assertEqual(calls[:3], ["/repos/acme/app", "/repos/acme/app/branches/release%2Fstable", "/repos/acme/app/git/trees/master-tree?recursive=1"])
 
-    def test_both_branches_missing_is_explicit(self):
+    def test_missing_default_branch_is_explicit(self):
         def fetch(endpoint):
-            if "/branches/" in endpoint:
-                raise GitHubNotFound()
             return {"name": "app"}
-        with self.assertRaisesRegex(AuditError, "main o master"):
+        with self.assertRaisesRegex(AuditError, "rama predeterminada"):
             collect("https://github.com/acme/app", fetch)
 
     def test_missing_repository_is_not_reported_as_missing_branches(self):
@@ -73,6 +73,8 @@ class RepositoryTests(unittest.TestCase):
 
     def test_truncated_tree_is_rejected(self):
         def fetch(endpoint):
+            if endpoint == "/repos/acme/app":
+                return {"default_branch": "main"}
             return {"commit": {"sha": "a" * 40, "commit": {"tree": {"sha": "t"}}}} if "/branches/" in endpoint else {"truncated": True}
         with self.assertRaises(AuditError):
             collect("https://github.com/acme/app", fetch)
@@ -80,6 +82,8 @@ class RepositoryTests(unittest.TestCase):
     def test_file_and_total_limits_are_enforced(self):
         downloads = []
         def fetch(endpoint):
+            if endpoint == "/repos/acme/app":
+                return {"default_branch": "main"}
             if "/branches/" in endpoint:
                 return {"commit": {"sha": "a" * 40, "commit": {"tree": {"sha": "t"}}}}
             if "/git/trees/" in endpoint:

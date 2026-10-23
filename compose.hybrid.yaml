@@ -1,0 +1,38 @@
+# Optional transition mode; never part of CI or combined with a second audit.
+services:
+  preparator:
+    image: arktic-indexer:graphify-0.9.95
+    build:
+      context: .
+      dockerfile: docker/Indexer.Dockerfile
+    entrypoint: [python, /app/service.py]
+    read_only: true
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=256m,mode=1777"]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    init: true
+    mem_limit: 2g
+    cpus: 2
+    pids_limit: 128
+    networks: [preparation]
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8090/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+  audit-api:
+    environment:
+      AUDIT_PREPARATION_MODE: hybrid
+      AUDIT_INDEXER_URL: http://preparator:8090/index
+    depends_on:
+      preparator:
+        condition: service_healthy
+    networks: [office, preparation]
+  auditor:
+    environment:
+      AUDIT_PREPARATION_MODE: hybrid
+      AUDIT_INDEXER_URL: http://preparator:8090/index
+    networks: [office, preparation]
+networks:
+  preparation:
+    internal: true

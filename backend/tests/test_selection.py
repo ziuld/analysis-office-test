@@ -19,6 +19,8 @@ class SelectionTests(unittest.TestCase):
         if readme:
             paths.append("readme.md")
         def fetch(endpoint):
+            if endpoint == "/repos/acme/app":
+                return {"default_branch": "main"}
             if "/branches/" in endpoint:
                 return {"commit": {"sha": "a" * 40, "commit": {"tree": {"sha": "t"}}}}
             if "/git/trees/" in endpoint:

@@ -58,7 +58,7 @@ Solo se publica [localhost:3000](http://localhost:3000/office). `audit-api` escu
 | Puerto 3000 ocupado | Liberar ese puerto antes del arranque |
 | Oficina sin conexión | Estado y logs de `audit-api`; esperar su healthcheck |
 | GitHub deniega acceso o limita peticiones | Token de lectura, permisos sobre el repositorio y recreación del servicio tras cambiar `.env` |
-| No existe `main` ni `master` | Utilizar un repositorio que tenga una de esas ramas; no se prueban otras |
+| Falla la rama predeterminada | Comprobar la rama declarada en GitHub y el acceso al repositorio; no hay fallback a otra rama |
 | Fallo del modelo | Sesión OAuth, acceso al modelo, cuota y conectividad; no hay reintento automático |
 | Revisión parcial | Leer el error de la célula y aprovechar solo sus resultados válidos; no confundirla con una revisión completa |
 
@@ -134,3 +134,7 @@ El esquema conserva compatibilidad con resultados antiguos e incorpora datos est
 La oficina conserva el iframe sin permiso para ejecutar scripts. Su controlador de navegación abre el desplegable y el detalle técnico enlazados y permite volver al contexto del riesgo. El HTML independiente utiliza un script local y fijo de navegación; no evalúa contenido de modelos o repositorios. Markdown conserva explicaciones, fuentes y vínculos al registro.
 
 Para revisar el formato sin agentes ni scanners, usar [el ejemplo ficticio](../examples/README.md). No ejecutar `preview.py` sin `--render-only` para una revisión meramente visual.
+
+## Preparación híbrida opcional
+
+El Bloque 4 incorpora un recorrido alternativo con preparador independiente y exploración limitada. Activación, vuelta al modo habitual, coste adicional, trazas y límites: [PREPARACION.md](PREPARACION.md). El arranque normal conserva `legacy`; no se lanzan ambos recorridos ni se duplican los especialistas. CI/CD permanece sin ampliaciones.

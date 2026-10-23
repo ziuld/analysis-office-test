@@ -8,11 +8,12 @@ from arktic_office.core.errors import AuditError
 
 def invoke_hermes(prompt, config):
     env = dict(os.environ, AUDIT_MODEL=config["model"], AUDIT_REASONING=config["reasoning"])
+    timeout = max(1, min(float(config.get("timeout", 240)), 240))
     try:
         result = subprocess.run([sys.executable, "-m", "arktic_office.adapters.hermes_runtime"], input=prompt, text=True,
-                                capture_output=True, timeout=240, check=False, env=env)
+                                capture_output=True, timeout=timeout, check=False, env=env)
     except subprocess.TimeoutExpired:
-        raise AuditError("La célula superó 240 segundos; no se reintentó.") from None
+        raise AuditError("Hermes superó el tiempo permitido; no se reintentó.") from None
     if result.returncode:
         reasons = {"quota_or_rate_limit": "cuota o límite de peticiones", "unsupported_model": "modelo no admitido por el proveedor", "authentication": "sesión no válida", "timeout": "tiempo agotado", "incomplete_response": "respuesta incompleta"}
         try:

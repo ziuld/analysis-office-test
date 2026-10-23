@@ -243,6 +243,8 @@ def annex_html(v):
     coverage = '<p>Perfil acotado inspirado en OWASP ASVS 5.0.0 y Top 10:2025; los dominios son una agrupación de Arktic. No hay certificación ni porcentaje de cumplimiento.</p>'
     coverage += paragraph("Origen", snapshot.get("evidence_origin", snapshot["repository"])) + paragraph("Rama y commit", str(snapshot.get("branch", "No registrado")) + ' · ' + str(snapshot.get("commit", "No registrado")))
     coverage += paragraph("Estado del equipo", data.get("estado", "No registrado"))
+    from arktic_office.preparation.coverage import notes
+    coverage += ''.join('<p>' + h(note) + '</p>' for note in notes(snapshot))
     if data.get("estandar_editorial"):
         coverage += paragraph("Estándar editorial utilizado", data["estandar_editorial"]["archivo"] + ' · versión ' + str(data["estandar_editorial"]["version"]))
     coverage += table(["Célula", "Estado", "Modelo / razonamiento", "Resultado o incidencia"], [[h(c.get("nombre", c.get("id", ""))), h(c["estado"]), h(c.get("model", "")) + ' / ' + h(c.get("reasoning", "")), h(c.get("error") or c.get("mensaje", "—"))] for c in data.get("celulas", [])])
@@ -326,6 +328,8 @@ def render_markdown(data, snapshot, model=""):
             if x.get("severidad") == "informativa":
                 lines += ['- ' + text(section + ': ' + x["observacion"]) + ' · ' + references(x, snapshot)]
     lines += ['', '### Cobertura y límites', '', 'Estado del equipo: ' + data.get("estado", "No registrado"), '', 'Perfil acotado inspirado en OWASP ASVS 5.0.0 y Top 10:2025. Sin certificación ni porcentaje de cumplimiento. La aplicación no se ejecutó; acceso real, credenciales, consumo y restauración no se comprobaron.']
+    from arktic_office.preparation.coverage import notes
+    lines += ['- ' + text(note) for note in notes(snapshot)]
     lines += ['', 'Rama: ' + text(snapshot.get("branch", "No registrada")) + ' · Commit: ' + text(snapshot.get("commit", "No registrado")), '', '| Dominio | Estado | Resultado / fuentes |', '|---|---|---|']
     for c in (c for c in data.get("controles", []) if c["estado"] != "no_evaluado"):
         lines.append(f'| {CONTROLS[c["id"]]} | {CONTROL_STATES[c["estado"]]} | {text(c["motivo"])} · {references(c, snapshot)} |')

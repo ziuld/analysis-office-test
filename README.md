@@ -29,7 +29,7 @@ Abrir [la oficina local](http://localhost:3000/office), introducir una URL como 
 
 ## Qué incluye
 
-- Una URL como entrada. Busca `main` y, solo si no existe, utiliza `master`; si faltan ambas, informa del error. Guarda rama y commit.
+- Una URL como entrada. Resuelve la rama predeterminada real de GitHub y fija su commit antes de seleccionar contexto.
 - Lectura estática acotada: por defecto, 24 archivos / 120 KB; Seguridad recibe hasta 12 / 64 KB, las otras células hasta 6 / 24 KB.
 - Tres revisiones secuenciales y consolidación mediante código. Estados reales en la oficina, resultados parciales y errores visibles.
 - Reporte visual de seguridad con indicadores de gravedad, certeza separada, acciones, cobertura e inventario; descarga Markdown e impresión/PDF. Evidencias enlazadas al commit revisado.
@@ -68,7 +68,7 @@ Navegador → office (localhost:3000) → audit-api (red interna)
 
 La configuración propone `openai-codex` mediante OAuth en Hermes: Seguridad con `gpt-6.1-sol` / `medium`, el resto con `gpt-6-luna` / `low`. También existe el modo API con facturación independiente. La sesión del modelo se configura en cada instalación; no viene incluida al clonar. Alcance y comprobaciones en [Seguridad](docs/SEGURIDAD.md).
 
-La revisión normal usa tres llamadas al modelo; cada pregunta añade una llamada al personaje elegido. El coordinador distribuye y consolida mediante código. No hay reintentos ni escalado de modelo automáticos. Con el backend Codex OAuth de esta versión, el límite de salida configurado no constituye un techo duro de tokens. Detalles en [Operación](docs/OPERACION.md).
+El recorrido habitual `legacy` usa tres llamadas al modelo; cada pregunta añade una llamada al personaje elegido. El coordinador distribuye y consolida mediante código. No hay reintentos ni escalado de modelo automáticos. Con el backend Codex OAuth de esta versión, el límite de salida configurado no constituye un techo duro de tokens. El modo híbrido opcional añade hasta ocho llamadas acotadas de preparación: [Preparación híbrida](docs/PREPARACION.md). Detalles en [Operación](docs/OPERACION.md).
 
 ## Datos y despliegue local
 

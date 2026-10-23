@@ -2,7 +2,7 @@
 
 Fecha de registro: 23/10/2026.
 
-Estado: Bloque 1 fusionado; bloques 2 y 3 implementados y comprobados localmente, con evidencia y límites registrados debajo. Los bloques posteriores continúan pendientes. Las decisiones técnicas indicadas como pendientes requieren validación antes de adoptarse. La entrega permanece abierta y las versiones actuales se conservan.
+Estado: Bloque 1 fusionado; bloques 2, 3 y 4 implementados y comprobados localmente, con evidencia y límites registrados debajo. Los bloques posteriores continúan pendientes. Las decisiones técnicas indicadas como pendientes requieren validación antes de adoptarse. La entrega permanece abierta y las versiones actuales se conservan.
 
 ## Relación con el MVP actual
 
@@ -159,11 +159,19 @@ El usuario autorizó sucesivamente los bloques 1, 2 y 3; los siguientes quedan f
 
 ### Bloque 4 — Preparación híbrida
 
-- [ ] F1-10 Separar adquisición del repositorio y selección del contexto; usar la rama predeterminada real y mantener trazabilidad al commit.
-- [ ] F1-11 Integrar reglas locales, mapa estructural, búsquedas y lectura de fragmentos con sus posiciones originales. Declarar por separado la cobertura de scanners y la del modelo.
-- [ ] F1-12 Añadir exploración Hermes con herramientas restringidas, iteraciones y presupuesto acotados, eventos y cierre explícito por suficiencia o límite.
+- [x] F1-10 Separar adquisición del repositorio y selección del contexto; usar la rama predeterminada real y mantener trazabilidad al commit.
+- [x] F1-11 Integrar reglas locales, mapa estructural, búsquedas y lectura de fragmentos con sus posiciones originales. Declarar por separado la cobertura de scanners y la del modelo.
+- [x] F1-12 Añadir exploración Hermes con herramientas restringidas, iteraciones y presupuesto acotados, eventos y cierre explícito por suficiencia o límite.
 
 **Cierre:** recuperación de flujos representativos con evidencias verificables sin enviar todo el repositorio. Carencias, exclusiones, consumo y fallos visibles. No ejecutar el código analizado.
+
+**Registro del Bloque 4 — 23/10/2026:** base de bloques 2–3 guardada previamente en el commit local `a6e3cee`; el Bloque 4 se registra en un commit independiente para revisión. adquisición y selección separadas; rama predeterminada real, codificada correctamente incluso con `/`, árbol y blobs ligados al commit. Recorrido híbrido opcional mediante `compose.hybrid.yaml`, con servicio Graphify independiente sobre texto adquirido y ocultado, sin credenciales, puerto publicado, ejecución del objetivo ni salida a Internet. El recorrido habitual `legacy` permanece disponible y no se ejecutan ambos automáticamente.
+
+Reglas locales, mapa estático, búsqueda literal y fragmentos conservan posiciones originales. La adquisición híbrida admite 120 archivos/1 MB descargado; el contexto final mantiene los límites existentes. Entrada a scanners, entrada al mapa, lecturas del explorador y envíos especializados se registran por separado. Hermes solicita acciones JSON limitadas por Core, sin herramientas de agente habilitadas: máximo 8 llamadas, 180 segundos, 60000 bytes acumulados de prompts, 100 líneas por lectura. Cierres explícitos por suficiencia, insuficiencia, presupuesto o fallo técnico; eventos locales y aportaciones parciales conservadas. No se adelanta la conexión de eventos a la oficina ni el registro de modelos/skills del Bloque 5.
+
+**Comprobaciones mínimas:** suite manual existente más dos casos esenciales; 113 ejecutadas, 112 correctas y 1 referencia visual opcional omitida en 6,799 s. Fixtures anteriores adaptados a la rama predeterminada. Integración con Graphify real dentro de Docker y respuestas GitHub/Hermes ficticias: dos flujos controlador → servicio → repositorio (Python/Java), 6 archivos representados, 15 nodos, 19 relaciones; 6 fragmentos contrastados con sus líneas, búsqueda literal y cierre tras 8 acciones. Ruta `../escape.py` rechazada con HTTP 400. Imágenes construidas, API 0.2.0/oficina/preparador saludables, oficina/proxy HTTP 200, sin trabajos ni autenticación. Red del preparador interna; proyecto y volúmenes temporales retirados. Logs locales: `artifacts/block4-tests-final.log` y `artifacts/block4-integration.log`.
+
+**Limitaciones:** no se analizaron repositorios reales ni se ejecutaron scanners, modelos o código objetivo; no se repitieron los benchmarks del Bloque 2. La integración demuestra recuperación y restricciones, no calidad del explorador real, consumo del proveedor, cobertura de todo el repositorio, carga concurrente ni recuperación tras interrupción abrupta. Los tokens ausentes se conservan como desconocidos y OAuth sigue sin techo duro de salida. Detalle de configuración, presupuestos, trazas y conservación: [PREPARACION.md](PREPARACION.md). No se amplía CI/CD, no se modifica el histórico y se conservan versiones 0.2.0 y pins de Hermes. Entrega abierta, sin publicación ni cierre de versión.
 
 ### Bloque 5 — Coordinador, especialistas y skills
 

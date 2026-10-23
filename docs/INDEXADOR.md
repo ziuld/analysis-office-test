@@ -95,3 +95,7 @@ Mantener el preparador **separado del runtime Hermes/Core API**: aquí se ha pro
 Codebase-Memory queda como alternativa **sin evaluar**: no se instala ni se compara rendimiento o calidad sin datos. No hizo falta activar la alternativa para cumplir esta prueba acotada; reconsiderarla si las carencias anteriores impiden recuperar flujos prioritarios en nuevas muestras. Seleccionar Graphify no valida automáticamente casos que no se midieron.
 
 Resumen revisable sin código ni grafos completos: [evidencia JSON](evidence/indexer-2026-10-23.json), con commits, hashes de archivos descargados/grafos, versiones instaladas, métricas y sondas. Los logs, snapshots y grafos locales están en `artifacts/indexer-20261023-184518-e41e49/`, con log global `artifacts/block2-validation-final.log`; los ensayos iniciales se conservan aparte. La red temporal de la repetición se retiró correctamente. Las versiones frontend/backend y los commits de Hermes no cambian.
+
+## Integración posterior: Bloque 4
+
+El experimento anterior se conserva sin modificar sus mediciones. El modo opcional [de preparación híbrida](PREPARACION.md) reutiliza la imagen fijada como servicio interno sobre el subconjunto adquirido por Core. Su cobertura difiere de los snapshots completos de este experimento y se informa por separado; no se extrapolan sus métricas.
