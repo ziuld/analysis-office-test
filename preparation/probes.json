@@ -1,0 +1,17 @@
+{
+  "arktic-office": [
+    {"source_file":"auditor/server.py","source_label":"server.py","relation":"imports","target_file":"auditor/questions.py","target_label":"prepare_question()","text":"from questions import prepare_question, answer_question"},
+    {"source_file":"auditor/server.py","source_label":".start()","relation":"calls","target_file":"auditor/repository.py","target_label":"parse_repo()","text":"parse_repo(repository)"},
+    {"source_file":"auditor/server.py","source_label":".question_work()","relation":"calls","target_file":"auditor/questions.py","target_label":"answer_question()","text":"self.answerer(context)"}
+  ],
+  "booking-api": [
+    {"source_file":"src/main/java/com/colibridge/api/reservation/controller/ReservationController.java","source_label":".getAllReservation()","relation":"calls","target_file":"src/main/java/com/colibridge/api/reservation/service/ReservationService.java","target_label":".getAllReservation()","text":"reservationService.getAllReservation()"},
+    {"source_file":"src/main/java/com/colibridge/api/reservation/controller/ReservationController.java","source_label":".getReservation()","relation":"calls","target_file":"src/main/java/com/colibridge/api/reservation/service/ReservationService.java","target_label":".getReservationById()","text":"reservationService.getReservationById("},
+    {"source_file":"src/main/java/com/colibridge/api/reservation/service/ReservationService.java","source_label":".getAllReservation()","relation":"calls","target_file":"src/main/java/com/colibridge/api/reservation/repository/ReservationRepository.java","target_label":".findAll()","text":"reservationRepository.findAll()"}
+  ],
+  "office-frontend": [
+    {"source_file":"src/features/audit/AuditOffice.tsx","source_label":"AuditOffice.tsx","relation":"imports","target_file":"src/features/audit/AgentQuestion.tsx","target_label":"AgentQuestion()","text":"import { AgentQuestion, type Question }"},
+    {"source_file":"src/features/audit/AuditOffice.tsx","source_label":"AuditOffice.tsx","relation":"imports","target_file":"src/features/audit/ExecutiveReport.tsx","target_label":"ExecutiveReport()","text":"import { ExecutiveReport }"},
+    {"source_file":"src/app/api/audit/[...path]/route.ts","source_label":"[...path]/route.ts","relation":"contains","target_file":"src/app/api/audit/[...path]/route.ts","target_label":"proxy()","text":"async function proxy("}
+  ]
+}

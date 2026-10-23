@@ -104,10 +104,10 @@ Comparte el bloqueo de ejecución con la oficina y las consultas. Los contadores
 Estas pruebas usan datos controlados, sin GitHub ni llamadas al modelo. Prueban nuestro analizador, no la aplicación objetivo:
 
 ```powershell
-docker compose --profile audit run --rm -T --entrypoint python auditor -m unittest -v test_audit test_team test_server test_questions test_brief test_security test_azure_proposal test_editorial test_selection test_outcome
+pwsh -NoProfile -File scripts/check-backend.ps1
 ```
 
-La construcción de `office` comprueba la compilación de Next.js y TypeScript. Las verificaciones del piloto están en [PLAN_MVP.md](../PLAN_MVP.md).
+Las pruebas se ejecutan manualmente sobre el paquete instalado en una imagen separada; no se distribuyen en la imagen de producción ni amplían CI/CD. La construcción de `office` comprueba Next.js y TypeScript. Las verificaciones del piloto están en [PLAN_MVP.md](../PLAN_MVP.md); organización y compatibilidad actuales en [CORE.md](CORE.md).
 
 ## Herramienta de mantenimiento del formato
 
@@ -127,9 +127,9 @@ docker compose --profile audit run --rm -T --entrypoint python auditor /app/prev
 
 ## Estándar editorial y presentación v12
 
-Las reglas comunes y por sección viven en [ESTANDAR_COMUNICACION_INFORMES.md](ESTANDAR_COMUNICACION_INFORMES.md). `auditor/editorial.py` incorpora Común y la especialidad al prompt; la consolidación registra versión y hash. La imagen del auditor incluye ese mismo archivo. No hay agente traductor ni llamadas extra para aplicar el formato.
+Las reglas comunes y por sección viven en [ESTANDAR_COMUNICACION_INFORMES.md](ESTANDAR_COMUNICACION_INFORMES.md). `backend/src/arktic_office/reporting/editorial.py` incorpora Común y la especialidad al prompt; la consolidación registra versión y hash. El wheel incluye el mismo archivo canónico. No hay agente traductor ni llamadas extra para aplicar el formato.
 
-El esquema conserva compatibilidad con resultados antiguos e incorpora datos estructurados opcionales para resumen, flujo, estado operativo y decisión. El renderizador `auditor/report_view.py` no deduce relaciones ni reescribe observaciones con reglas específicas de un proyecto. Si un campo no existe, lo señala. Los títulos de riesgos y objetivos de mejora se redactan en la célula; las aportaciones originales y discrepancias se consultan en los anexos.
+El esquema conserva compatibilidad con resultados antiguos e incorpora datos estructurados opcionales para resumen, flujo, estado operativo y decisión. El renderizador `backend/src/arktic_office/reporting/view.py` no deduce relaciones ni reescribe observaciones con reglas específicas de un proyecto. Si un campo no existe, lo señala. Los títulos de riesgos y objetivos de mejora se redactan en la célula; las aportaciones originales y discrepancias se consultan en los anexos.
 
 La oficina conserva el iframe sin permiso para ejecutar scripts. Su controlador de navegación abre el desplegable y el detalle técnico enlazados y permite volver al contexto del riesgo. El HTML independiente utiliza un script local y fijo de navegación; no evalúa contenido de modelos o repositorios. Markdown conserva explicaciones, fuentes y vínculos al registro.
 

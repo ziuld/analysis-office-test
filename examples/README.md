@@ -4,10 +4,10 @@
 
 No consulta GitHub, no ejecuta agentes, no utiliza scanners ni llama a modelos. No genera consumo de tokens de los agentes. Los fragmentos son datos ficticios para representar evidencias, no una aplicación ejecutable.
 
-Desde la raíz, con Python disponible:
+Desde la raíz, con la imagen del auditor reconstruida para disponer del paquete instalado:
 
 ```powershell
-python examples/create_fictional_report.py
+docker run --rm --network none --volume "${PWD}:/workspace" --entrypoint python arktic-hermes-auditor:0.2.0 /workspace/examples/create_fictional_report.py
 ```
 
 Abre en la oficina la revisión **SIMULACIÓN · Portal de personal** con identificador `demo-editorial-v12-portal-personal`, o el archivo `reports/demo-editorial-v12-portal-personal/informe.html`. El ejemplo anterior en `reports/demo-ficticio-portal-personal/` se conserva. Los informes generados se excluyen de Git; el ejemplo se reproduce con este script.

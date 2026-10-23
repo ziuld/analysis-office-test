@@ -2,7 +2,7 @@
 
 Fecha de registro: 23/10/2026.
 
-Estado: implementación limitada al Bloque 1 (F1-01 a F1-03); comprobaciones y limitaciones registradas debajo. El resto continúa pendiente. Las decisiones técnicas indicadas como pendientes requieren validación antes de adoptarse. La entrega permanece abierta y las versiones actuales se conservan.
+Estado: Bloque 1 fusionado; bloques 2 y 3 implementados y comprobados localmente, con evidencia y límites registrados debajo. Los bloques posteriores continúan pendientes. Las decisiones técnicas indicadas como pendientes requieren validación antes de adoptarse. La entrega permanece abierta y las versiones actuales se conservan.
 
 ## Relación con el MVP actual
 
@@ -31,6 +31,7 @@ La decisión final corresponde al responsable técnico. No se busca una auditor�
 - Conservar evidencias trazables al commit, resultados parciales útiles y el estado explícito de información insuficiente. Mantener los errores técnicos diferenciados.
 - Vincular animaciones, burbujas, orientación y actividad de la oficina con estados reales del trabajo.
 - Ordenar Python, pruebas, documentación humana, recursos de ejecución y resultados; versionar por entrega y añadir CI mínima.
+- A partir del Bloque 3, por indicación explícita del usuario, conservar CI/CD con la base del Bloque 1 y no ampliarla en los siguientes bloques. Realizar solo las pruebas manuales mínimas necesarias para los cambios, evitando sobreingeniería.
 
 ## Recomendación técnica y decisiones pendientes
 
@@ -38,8 +39,8 @@ La recomendación principal es una aplicación modular dentro del mismo reposito
 
 | Decisión | Propuesta registrada | Estado |
 |---|---|---|
-| Indexador | Probar primero Graphify en extracción de código sin modelo; Codebase-Memory queda como alternativa | Pendiente de prueba comparativa suficiente para decidir |
-| Despliegue | Oficina, Core API y preparador local como tres componentes de Compose | Recomendación; confirmar separación tras comprobar dependencias y recursos |
+| Indexador | Graphify 0.9.95 fijado con overlay PyYAML, como ayuda estructural junto a búsquedas/texto | Seleccionado tras las muestras del Bloque 2; límites en [INDEXADOR.md](INDEXADOR.md). Codebase-Memory queda sin evaluar |
+| Despliegue | Oficina, Core API y preparador local separado | Separación técnica confirmada en Bloque 2; se probó como batch Docker independiente. Integración y topología de ejecución pendientes |
 | Preparación | Snapshot fijado a commit, reglas locales, grafo y exploración Hermes limitada | Dirección acordada; contratos y límites pendientes |
 | Eventos | Publicar estados estructurados para la oficina; valorar SSE conservando REST | Transporte y persistencia pendientes |
 | Persistencia | Archivos para evidencias e informes; valorar SQLite para trabajos, eventos y conversaciones | Pendiente; evitar infraestructura adicional innecesaria |
@@ -90,7 +91,7 @@ La configuración base admite un proceso exterior de hasta 25 minutos y limita e
 
 ## Roadmap y tareas
 
-Solo se implementa el Bloque 1 por encargo del usuario. La finalización de un bloque exige registrar su evidencia, límites y resultado; no basta con cambiar su estado. No se asignan fechas ni duraciones de desarrollo todavía.
+El usuario autorizó sucesivamente los bloques 1, 2 y 3; los siguientes quedan fuera del encargo actual. La finalización de un bloque exige registrar su evidencia, límites y resultado; no basta con cambiar su estado. No se asignan fechas ni duraciones de desarrollo todavía.
 
 ### Bloque 1 — Base reproducible y CI mínima
 
@@ -117,19 +118,44 @@ Solo se implementa el Bloque 1 por encargo del usuario. La finalización de un b
 
 ### Bloque 2 — Validación del indexador dentro de Docker
 
-- [ ] F1-04 Fijar una versión de Graphify y automatizar descarga, extracción de código y consulta del grafo dentro de Docker.
-- [ ] F1-05 Probar repositorios representativos y medir duración, memoria, cobertura de lenguajes, relaciones recuperadas y errores, sin modelos.
-- [ ] F1-06 Decidir Graphify o evaluar Codebase-Memory con los mismos criterios si el primero no encaja. Confirmar límites, licencia, dependencias y separación del preparador.
+- [x] F1-04 Fijar una versión de Graphify y automatizar descarga, extracción de código y consulta del grafo dentro de Docker.
+- [x] F1-05 Probar repositorios representativos y medir duración, memoria, cobertura de lenguajes, relaciones recuperadas y errores, sin modelos.
+- [x] F1-06 Decidir Graphify o evaluar Codebase-Memory con los mismos criterios si el primero no encaja. Confirmar límites, licencia, dependencias y separación del preparador.
 
 **Cierre:** recorrido sin pasos manuales con grafos ni instalación del indexador en el host. Decisión documentada con datos; no solo por estrellas o promesas del proveedor. Este bloque precede a comprometer el núcleo con un indexador.
 
+**Implementación y comprobaciones del 23/10/2026:**
+
+- El usuario confirmó Arktic Office y `ziuld/bookingApi` como muestras. Se fijan los commits de ambas y se incluye como tercera muestra el frontend de Arktic Office reconstruido a partir de Hermes3D fijado y el parche actual. No se ejecutan esos proyectos, sus dependencias o tests, scanners ni modelos.
+- [check-indexer.ps1](../scripts/check-indexer.ps1), [compose.indexer.yaml](../compose.indexer.yaml) y [Indexer.Dockerfile](../docker/Indexer.Dockerfile) automatizan build, recuperación, parche y extracción/consulta en contenedores. No requieren `vendor/`, credenciales ni herramientas de indexación instaladas en el host. La extracción y consulta usan `network_mode: none`; se verificó por `docker inspect` en el contenedor real: 2 CPU, 2 GiB, 128 procesos/hilos, root filesystem de solo lectura, sin privilegios y con todas las capabilities retiradas.
+- Graphify 0.9.95, commit `92741d162b2094ffc2fed58cfbd8ee823e9da62c`, Python 3.12 separado del backend 3.14. Lock upstream más overlay PyYAML 6.0.3 con hash oficial, tras detectar su ausencia del lock. `uv pip check` correcto; las licencias Apache-2.0, MIT anterior y NOTICE se conservan en el repositorio y la imagen. No se instalan extras de modelos, MCP ni transcripción.
+- Ensayos iniciales: corregida la sintaxis YAML del montaje temporal antes de leer las muestras; la primera extracción completa permitió detectar YAML omitido por la dependencia ausente, ambigüedades de clases/constructores y contadores cgroup v1 no recogidos por el primer wrapper. Se corrigieron overlay, consultas acotadas por ID y lectura de métricas v1/v2; los logs iniciales permanecen en `artifacts/block2-validation.log` y `artifacts/block2-validation-second.log`.
+- Repetición final `indexer-20261023-184518-e41e49`, salida 0: cinco pruebas del descargador correctas; recuperación/parche y consultas dentro de Docker. Extracción Python/backend **15,232 s / 119,1 MiB**, Java **18,412 s / 79,9 MiB**, frontend **229,787 s / 211,5 MiB** de pico de contenedor. Grafos de 407/1.361, 321/985 y 4.546/12.898 nodos/aristas, respectivamente. No hubo timeouts ni fallos de asignación de memoria registrados. Logs en `artifacts/block2-validation-final.log` y resultados por muestra bajo `artifacts/indexer-20261023-184518-e41e49/`.
+- Cobertura por archivos representados: Python 32/32, PowerShell 2/2, Java 35/35, TS 451/451 y TSX 86/86; no equivale a cobertura de símbolos/flujo. Graphify avisó de 100 archivos de código sin símbolos en el frontend. Los Compose con etiquetas especiales y `.properties` no se estructuran; deben conservar lectura textual. Las siete sondas estáticas directas se recuperaron; las dos sondas de dependencia dinámica/herencia externa muestran límites. Las nueve consultas fueron útiles, tres tras una única desambiguación determinista por ID; se conservan los errores de ambigüedad originales. Se corrigió y reevaluó una etiqueta de la sonda de ruta del frontend sobre el grafo existente, sin cambiar la extracción.
+- **Decisión:** Graphify seleccionado como ayuda para la preparación híbrida, con búsquedas y texto obligatorios para sus carencias. Mantener preparador separado del runtime, validado aquí como batch Docker/Python 3.12. Codebase-Memory sigue sin evaluar; no se atribuye una comparación inexistente. Evidencia resumida versionada: [indexer-2026-10-23.json](evidence/indexer-2026-10-23.json). Protocolo, dependencias, límites y decisión completa: [Validación del indexador](INDEXADOR.md).
+- Alcance de la medición: Windows/Docker Linux amd64, una repetición final por muestra; no prueba estadística, repositorios grandes, otros hosts ni ejecución del arnés en GitHub Actions. Los contenedores y red temporales se retiraron; snapshots y resultados se conservan fuera de Git. Sin cambios en el analizador, Compose de aplicación, versiones, changelog o histórico del MVP.
+
+**Límites de alcance:** es un arnés experimental de preparación, sin integración en la API/oficina, agentes o contratos de los siguientes bloques. No se ejecuta una evaluación de modelos ni se promete reconstrucción completa de flujos. CD sigue pendiente; versiones frontend/backend en 0.2.0, sin changelog de entrega ni referencias Git de publicación nuevas.
+
 ### Bloque 3 — Organización del núcleo y contratos
 
-- [ ] F1-07 Crear el paquete Python con `pyproject.toml`, módulos por responsabilidad y pruebas fuera del código de producción.
-- [ ] F1-08 Separar almacenamiento, ejecución, configuración y adaptadores; definir contratos de evidencia, estados y eventos.
-- [ ] F1-09 Conservar compatibilidad con informes y trabajos históricos. Preparar una resolución de rutas por identificador para permitir carpetas de resultados organizadas.
+- [x] F1-07 Crear el paquete Python con `pyproject.toml`, módulos por responsabilidad y pruebas fuera del código de producción.
+- [x] F1-08 Separar almacenamiento, ejecución, configuración y adaptadores; definir contratos de evidencia, estados y eventos.
+- [x] F1-09 Conservar compatibilidad con informes y trabajos históricos. Preparar una resolución de rutas por identificador para permitir carpetas de resultados organizadas.
 
 **Cierre:** pruebas relevantes existentes superadas, contratos preservados e informes históricos accesibles. Esta reorganización no cambia por sí sola el comportamiento del análisis.
+
+**Implementación y comprobaciones del 23/10/2026:**
+
+- Paquete `arktic_office` bajo `backend/src/`, con [pyproject.toml](../pyproject.toml) en la raíz para incluir el estándar editorial canónico sin duplicarlo. Se construye e instala como wheel en Docker, con los perfiles y recursos visuales. Las pruebas pasan a `backend/tests/` y solo se copian al target manual `tests`, no a producción. Se conservan los cuatro lanzadores de `auditor/` y sus rutas `/app`; el resto del código se importa por paquete. El runtime Hermes y su lock siguen separados; no se cambian modelos, scanners, presupuestos o versiones.
+- Separadas API REST, ejecución de trabajos/consultas, JSON/almacenamiento, configuración, procesos/adaptadores, preparación, coordinación e informes. [Contratos Python](../backend/src/arktic_office/core/contracts.py) para evidencia y estados actuales, sin imponer una migración al histórico. Evento interno v1 con receptor opcional, emitido tras persistir estados de trabajo/consulta; sin bus, SSE o almacenamiento de eventos añadido. Las rutas y respuestas REST conservan sus campos.
+- [RunStore](../backend/src/arktic_office/storage/runs.py) ofrece catálogo de solo lectura y resolución por ID en histórico plano y grupos anidados. Rechaza IDs inválidos, enlaces de directorio externos y duplicados ambiguos; limita profundidad/directorios. Las escrituras nuevas siguen planas y no se mueve ningún informe; la organización física queda para F1-21.
+- Referencia antes de mover código: **108 pruebas correctas**. Regresión manual del paquete instalado: **111 ejecutadas, 110 correctas y 1 omitida**, en `artifacts/block3-tests-final.log`. Solo se añaden tres casos necesarios: hashes de prompt y Markdown/HTML de formatos 1–3, resolución plana/anidada sin modificar archivos y estados/eventos con un ejecutor falso. La referencia visual opcional no se distribuye en el contenedor; su comprobación queda explícitamente omitida. El primer pase detectó y corrigió únicamente una suposición de ruta de ese test opcional. El runner bloquea procesos externos y conexiones fuera de localhost, además de ejecutarse sin red ni credenciales; no se lanzaron scanners, modelos ni análisis de repositorios.
+- Comprobación manual del arranque con la base existente: backend y oficina reconstruidos y `healthy`, API `/health` con versión 0.2.0, oficina y proxy de listado HTTP 200, sin trabajos ni autenticación. Proyecto temporal `arktic-ci-9c442517d6c3` retirado correctamente; log `artifacts/block3-startup.log`.
+- Histórico real montado en solo lectura: 24 directorios, 19 registros legibles (18 con informe), formatos 1/2/3; **154 archivos JSON/Markdown/HTML mantienen sus hashes**. Cinco directorios incompletos siguen fuera del catálogo, como en el comportamiento anterior; no se completaron ni reescribieron. Resultado local en `artifacts/block3-history.log`.
+- Por corrección del usuario, **no se amplía CI/CD**: se retiró del workflow la prueba añadida durante la implementación; `.github/` queda sin cambios. [check-backend.ps1](../scripts/check-backend.ps1) y su Compose son exclusivamente manuales. Para siguientes bloques, pruebas mínimas necesarias y ninguna ampliación de CI/CD. Detalles de organización, contratos y límites: [CORE.md](CORE.md).
+
+**Limitaciones y entrega:** validado en Docker Linux/amd64 desde Windows, sin ejecución remota de estos cambios ni evaluación de modelos o scanners reales. No se integra aún Graphify con la API ni se conecta el contrato de eventos a la oficina. No se mueve el histórico ni se cambia su formato. Frontend, backend y paquete Python permanecen en 0.2.0; sin changelog de entrega, publicación o cierre de versión.
 
 ### Bloque 4 — Preparación híbrida
 
@@ -161,14 +187,14 @@ Solo se implementa el Bloque 1 por encargo del usuario. La finalización de un b
 
 - [ ] F1-21 Organizar resultados por fecha, hora, título e identificador; distinguir informes del producto de capturas de desarrollo. Definir conservación y limpieza de snapshots e índices.
 - [ ] F1-22 Separar documentación humana de plantillas, esquemas y estándares usados en ejecución; actualizar enlaces e instrucciones.
-- [ ] F1-23 Evaluar utilidad, citas, insuficiencia, consumo y tiempos con muestras representativas. Mantener comprobaciones deterministas sin modelos en CI; las evaluaciones reales serán explícitas y presupuestadas.
+- [ ] F1-23 Evaluar utilidad, citas, insuficiencia, consumo y tiempos con muestras representativas. Conservar la base de CI sin ampliarla; usar pruebas manuales mínimas necesarias. Las evaluaciones reales serán explícitas y presupuestadas.
 - [ ] F1-24 Cerrar la entrega con aceptación humana, manifiesto de versiones, changelog y referencias Git según el flujo de publicación acordado.
 
 **Cierre:** cada informe identifica código revisado, cobertura, modelos, recursos versionados y consumo disponible. La entrega distingue lo medido de lo pendiente y conserva acceso al histórico.
 
 ## Estructura orientativa
 
-Propuesta a concretar en el bloque 3; no describe carpetas ya implementadas.
+Orientación para la fase completa: el núcleo `src/` y las pruebas separadas ya están implementados en el Bloque 3. El manifiesto de entrega, configuración central de modelos/presupuestos, agentes, skills y organización de resultados siguen pendientes; el árbol no afirma que esas capacidades estén disponibles.
 
 ```text
 arktic-office/
@@ -176,12 +202,12 @@ arktic-office/
 ├── PLAN_MVP.md                  # Registro histórico conservado
 ├── LICENSE                     # Cuando se acuerde la licencia propia
 ├── compose.yaml
+├── pyproject.toml              # Paquete backend; incluye el estándar canónico
 ├── release.json                # Manifiesto de entrega propuesto
 ├── config/
 │   ├── models.json
 │   └── budgets.json
 ├── backend/
-│   ├── pyproject.toml
 │   ├── src/arktic_office/
 │   │   ├── api/
 │   │   ├── preparation/
@@ -242,7 +268,7 @@ Capacidades contrastadas en fuentes primarias durante la propuesta del 23/10/202
 - [Codebase-Memory MCP](https://github.com/DeusData/codebase-memory-mcp).
 - [PyPA: src layout y flat layout](https://packaging.python.org/en/latest/discussions/src-layout-vs-flat-layout/).
 - [pytest: prácticas de integración y organización de pruebas](https://docs.pytest.org/en/stable/explanation/goodpractices.html).
-- Base local revisada: [preparación](../auditor/repository.py), [coordinación](../auditor/team.py), [adaptador Hermes](../auditor/runtime.py), [API](../auditor/server.py), [consultas](../auditor/questions.py), [validación e informes](../auditor/reporting.py), [Compose](../compose.yaml) y [parche de la oficina](../docker/hermes3d-local-demo.patch).
+- Base local revisada, con rutas actualizadas tras el Bloque 3: [preparación](../backend/src/arktic_office/preparation/repository.py), [coordinación](../backend/src/arktic_office/coordination/team.py), [adaptador Hermes](../backend/src/arktic_office/adapters/hermes_runtime.py), [API](../backend/src/arktic_office/api/server.py), [consultas](../backend/src/arktic_office/coordination/questions.py), [validación e informes](../backend/src/arktic_office/reporting/reports.py), [Compose](../compose.yaml) y [parche de la oficina](../docker/hermes3d-local-demo.patch).
 
 ## Registro de seguimiento
 
@@ -250,3 +276,5 @@ Capacidades contrastadas en fuentes primarias durante la propuesta del 23/10/202
 |---|---|---|
 | 23/10/2026 | Plan registrado por petición del usuario, separado del MVP 0.2.0; alcance, recomendaciones, tareas y comprobaciones pendientes documentados | Ninguna tarea de la Fase 1 implementada en este registro |
 | 23/10/2026 | Bloque 1 F1-01 a F1-03 implementado: recuperación por commit, CI mínima y arranque aislado sin modelos; evidencia y limitaciones en el bloque | Comprobaciones local y remota satisfactorias; entrega abierta, versiones 0.2.0 conservadas |
+| 23/10/2026 | Bloque 2 F1-04 a F1-06: Graphify fijado, recuperación/extracción/consulta Docker, tres muestras autorizadas y decisión basada en métricas | Comprobado localmente sin scanners ni modelos; Graphify seleccionado con límites; bloques siguientes pendientes y versiones 0.2.0 conservadas |
+| 23/10/2026 | Bloque 3 F1-07 a F1-09: paquete instalado, responsabilidades y contratos separados, IDs independientes del layout e histórico conservado | Regresión y arranque manuales correctos; 154 archivos históricos sin cambios; CI/CD sin ampliar por petición del usuario y versiones 0.2.0 conservadas |

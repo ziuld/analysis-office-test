@@ -15,7 +15,9 @@ Versiones propias: **frontend 0.2.0** y **backend 0.2.0**, gestionadas de forma 
 - **Cómo se redacta el informe:** [Estándar de comunicación compartido](docs/ESTANDAR_COMUNICACION_INFORMES.md).
 - **Preparar la subida y mantener las versiones:** [Repositorio y reproducción](docs/REPOSITORIO.md).
 - **MVP actual e histórico:** [PLAN_MVP.md](PLAN_MVP.md), con el alcance y las verificaciones de la entrega 0.2.0.
-- **Siguiente evolución:** [Plan de Fase 1](docs/PLAN_FASE_1.md), con objetivos, tareas, criterios de cierre y decisiones pendientes. El Bloque 1 incorpora reproducción automatizada y CI de arranque sin modelos; el resto sigue pendiente.
+- **Siguiente evolución:** [Plan de Fase 1](docs/PLAN_FASE_1.md), con objetivos, tareas, criterios de cierre y decisiones pendientes. El Bloque 1 incorpora reproducción y CI; el Bloque 2 prueba el indexador de forma independiente. Los siguientes siguen pendientes.
+- **Experimento del Bloque 2:** [Validación del indexador](docs/INDEXADOR.md), con recuperación y extracción estructural de muestras dentro de Docker, sin modelos ni ejecución de las aplicaciones.
+- **Núcleo del Bloque 3:** [Paquete Python y compatibilidad](docs/CORE.md), con pruebas manuales mínimas y sin ampliar CI/CD.
 
 Con las dependencias recuperadas, `.env` configurado y la sesión del modelo autorizada:
 
@@ -49,7 +51,9 @@ Navegador → office (localhost:3000) → audit-api (red interna)
 
 | Ruta | Contenido |
 |---|---|
-| `auditor/` | Lectura de GitHub, distribución, validación de citas, informe, consultas, API y pruebas |
+| `backend/src/arktic_office/` | Paquete Python: API, ejecución, almacenamiento, preparación, coordinación, adaptadores e informes |
+| `backend/tests/` | Pruebas manuales fuera de la imagen de producción |
+| `auditor/` | Lanzadores de compatibilidad para las rutas Docker actuales |
 | `compose.yaml` | Servicios, red, volúmenes y límites de contenedores |
 | `docker/` | Dockerfiles y parche de Hermes3D con la oficina e integración local |
 | `HERMES3D_VERSION`, `HERMES_AGENT_VERSION` | Commits fijados de los proyectos originales |

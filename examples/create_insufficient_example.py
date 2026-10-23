@@ -4,10 +4,9 @@ import os
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "auditor"))
-from team import run_team, write_json
-from outcome import INSUFFICIENT
-from executive import render_html, render_markdown
+from arktic_office.coordination.team import run_team, write_json
+from arktic_office.core.outcome import INSUFFICIENT
+from arktic_office.reporting.executive import render_html, render_markdown
 
 
 def main():

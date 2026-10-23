@@ -4,7 +4,7 @@ El formato visual y editorial actual sigue la referencia v12: cuatro capítulos 
 
 Los campos opcionales `titulo`, `resultado_esperado`, `detalle_tecnico` y `presentacion` permiten redactar desde origen, estructurar conexiones y separar estado de datos, disponibilidad y capacidad. Los resultados antiguos siguen siendo legibles: sus huecos se muestran como no estructurados y no se rellenan por inferencia. Las variantes de componentes y aportaciones discrepantes se conservan en anexos. Los resultados esperados son objetivos por verificar.
 
-`auditor/report_view.py` produce HTML y Markdown a partir de los mismos registros. Los recursos visuales en `auditor/assets/` se extrajeron de la referencia aprobada, que se conserva intacta. La muestra independiente es `artifacts/informe-arktic-v12-muestra.html`. El ejemplo anterior se conserva; el nuevo se guarda en `reports/demo-editorial-v12-portal-personal/`.
+`backend/src/arktic_office/reporting/view.py` produce HTML y Markdown a partir de los mismos registros. Los recursos visuales en `backend/src/arktic_office/resources/assets/` se extrajeron de la referencia aprobada, que se conserva intacta. La muestra independiente es `artifacts/informe-arktic-v12-muestra.html`. El ejemplo anterior se conserva; el nuevo se guarda en `reports/demo-editorial-v12-portal-personal/`.
 
 El reporte comienza por propósito, construcción y datos; después muestra riesgos por gravedad, controles pendientes, detecciones automáticas, inventario y cobertura. Cada riesgo incluye impacto, condiciones, acción propuesta y fuentes al commit. La oficina permite filtrar riesgos e imprimir el reporte completo o guardarlo como PDF desde el navegador. Markdown sigue disponible para descarga. Los informes anteriores se conservan en su formato original.
 
@@ -39,7 +39,7 @@ Si únicamente falla la validación de la propuesta Azure, se valida de forma in
 
 También se valida por separado cada bloque opcional de presentación de Arquitectura. Un diagrama inválido se omite sin descartar los hallazgos, las decisiones u otros bloques que sí superen validación. La advertencia técnica queda en `advertencias` de la célula; la interfaz muestra un mensaje de resultado parcial.
 
-`auditor/profiles/security-v1.md` se carga explícitamente en las instrucciones de Seguridad. Es una guía propia y acotada inspirada en [OWASP ASVS 5.0.0](https://asvs.owasp.org/) y [OWASP Top 10:2025](https://top10.owasp.org/2025/); no es certificación ni cobertura completa de sus requisitos.
+`backend/src/arktic_office/resources/profiles/security-v1.md` se carga explícitamente en las instrucciones de Seguridad. Es una guía propia y acotada inspirada en [OWASP ASVS 5.0.0](https://asvs.owasp.org/) y [OWASP Top 10:2025](https://top10.owasp.org/2025/); no es certificación ni cobertura completa de sus requisitos.
 
 Revisa acceso; entradas/inyección/archivos/red; secretos/datos; dependencias; configuración/exposición; errores/registros/continuidad. Cada control indica hallazgo, evidencia favorable limitada, no evaluado o no aplica justificado. Los estados evaluados requieren citas contrastadas. Una cita correcta no valida automáticamente la interpretación del modelo.
 
@@ -60,7 +60,7 @@ Semgrep queda para una ampliación posterior con reglas revisadas para los lengu
 
 ```powershell
 docker compose --profile audit build auditor
-docker compose --profile audit run --rm -T --entrypoint python auditor -m unittest test_audit test_team test_server test_questions test_brief test_security
+pwsh -NoProfile -File scripts/check-backend.ps1
 docker compose up -d --build --wait
 ```
 
@@ -70,6 +70,6 @@ Validación del 22/10/2026: 66 pruebas del auditor y 4 de interfaz superadas; re
 
 ## Propuesta DevOps Azure
 
-Arquitectura añade una recomendación preliminar con una opción principal, justificación, evidencia técnica, supuestos, hasta cinco servicios y cinco pasos, y pendientes antes de aceptarla. El perfil `auditor/profiles/azure-v1.md` favorece App Service o Container Apps para cargas sencillas; AKS exige una razón concreta y la hipótesis de plataforma corporativa existente. No se inventan SKU, recursos, precios ni infraestructura disponible. Incluye preparación, entrega con Azure Pipelines, aprobación humana y reversión, tratando cambios de BD por separado. Se obtiene en la misma llamada de Arquitectura; no añade llamadas de consolidación.
+Arquitectura añade una recomendación preliminar con una opción principal, justificación, evidencia técnica, supuestos, hasta cinco servicios y cinco pasos, y pendientes antes de aceptarla. El perfil `backend/src/arktic_office/resources/profiles/azure-v1.md` favorece App Service o Container Apps para cargas sencillas; AKS exige una razón concreta y la hipótesis de plataforma corporativa existente. No se inventan SKU, recursos, precios ni infraestructura disponible. Incluye preparación, entrega con Azure Pipelines, aprobación humana y reversión, tratando cambios de BD por separado. Se obtiene en la misma llamada de Arquitectura; no añade llamadas de consolidación.
 
 Los informes antiguos no se reinterpretan automáticamente. El [ejemplo ficticio](../examples/README.md) muestra esta sección sin ejecutar agentes ni scanners. La generación real de la nueva propuesta queda pendiente por decisión del usuario de no consumir más tokens.
