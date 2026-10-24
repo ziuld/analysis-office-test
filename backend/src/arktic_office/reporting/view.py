@@ -253,6 +253,8 @@ def annex_html(v):
     if data.get("estandar_editorial"):
         coverage += paragraph("Estándar editorial utilizado", data["estandar_editorial"]["archivo"] + ' · versión ' + str(data["estandar_editorial"]["version"]))
     coverage += table(["Célula", "Estado", "Modelo / razonamiento", "Resultado o incidencia"], [[h(c.get("nombre", c.get("id", ""))), h(c["estado"]), h(c.get("model", "")) + ' / ' + h(c.get("reasoning", "")), h(c.get("error") or c.get("mensaje", "—"))] for c in data.get("celulas", [])])
+    if data.get("coverage"):
+        coverage += table(["Célula", "Ejecución", "Cobertura", "Motivo / carencias"], [[h(c.get("nombre", c["id"])), h(c.get("execution", c["estado"])), h(c.get("coverage", "insufficient")), h(c.get("reason", c.get("mensaje", ""))) + " · " + h("; ".join(c.get("missing", c.get("necesita", []))))] for c in data.get("celulas", [])])
     for tool in data.get("scanners", []):
         coverage += '<h4>' + h(tool["name"]) + ' · ' + h(tool["status"]) + '</h4><p>' + h(tool["detail"]) + '</p><ul>' + ''.join('<li>' + h(f.get("summary", "")) + ' · ' + h(f.get("path", "")) + '</li>' for f in tool.get("findings", [])) + '</ul>'
     coverage += '<p>No se ejecutó la aplicación ni se comprobaron acceso real, credenciales válidas, consumo o restauración. Ausencia de hallazgos no acredita seguridad.</p><h4>Archivos seleccionados</h4><ul>' + ''.join('<li>' + h(f["path"]) + (' · extractos; líneas omitidas' if f.get("partial") else '') + '</li>' for f in snapshot.get("files", [])) + '</ul><h4>Exclusiones</h4><ul>' + ''.join('<li>' + h(f["path"]) + ' · ' + h(f["reason"]) + '</li>' for f in snapshot.get("excluded", [])) + '</ul>'
@@ -344,6 +346,9 @@ def render_markdown(data, snapshot, model=""):
         lines.append(f'| {CONTROLS[c["id"]]} | {CONTROL_STATES[c["estado"]]} | {text(c["motivo"])} · {references(c, snapshot)} |')
     for c in data.get("celulas", []):
         lines.append('- ' + text(c.get("nombre", c.get("id", "")) + ': ' + c["estado"] + ' · ' + c.get("error", "")))
+    if data.get("coverage"):
+        for c in data.get("celulas", []):
+            lines.append("- " + text(c["id"] + ": ejecución=" + c.get("execution", c["estado"]) + "; cobertura=" + c.get("coverage", "insufficient") + "; " + c.get("reason", c.get("mensaje", "")) + "; falta: " + "; ".join(c.get("missing", c.get("necesita", [])))))
     for tool in data.get("scanners", []):
         lines += ['- ' + text(tool["name"] + ': ' + tool["status"] + ' · ' + tool["detail"])] + ['  - ' + text(x.get("summary", "") + ' · ' + x.get("path", "")) for x in tool.get("findings", [])]
     lines += ['- Archivo: ' + text(f["path"]) + (' · extractos; líneas omitidas' if f.get("partial") else '') for f in snapshot.get("files", [])]

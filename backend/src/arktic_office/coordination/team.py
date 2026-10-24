@@ -1,4 +1,4 @@
-"""Single-pass specialists with optional, bounded AI routing and synthesis."""
+"""Bounded specialists with shared retrieval, validated routing and synthesis."""
 import json
 from arktic_office.storage.jsonio import write_json
 from arktic_office.adapters.invoke import invoke_hermes
@@ -138,7 +138,7 @@ def consolidate(results, cells):
         section = item.pop("section")
         output[section].append(item)
     from arktic_office.core.outcome import INSUFFICIENT, useful
-    output["estado"] = (INSUFFICIENT if not useful(output) and cells and all(c["estado"] in {INSUFFICIENT, "sin_evidencia"} for c in cells)
+    output["estado"] = (INSUFFICIENT if not useful(output) and cells and all(c["estado"] in {INSUFFICIENT, "sin_evidencia", "no_ejecutado"} for c in cells)
                         else "completo" if all(c["estado"] == "completada" for c in cells) else "parcial" if results else "sin_resultados")
     return output
 
@@ -262,7 +262,59 @@ def prepare_cell_response(raw, snapshot, cell_id):
     return report, omitted, warnings
 
 
-def run_team(snapshot, output, invoke=invoke_hermes, emit=print):
+def prepare_partial_response(raw, snapshot, cell_id):
+    """Retain independently valid findings; malformed envelopes still fail closed."""
+    try:
+        data = json.loads(raw)
+    except (ValueError, TypeError):
+        return prepare_cell_response(raw, snapshot, cell_id)
+    if not isinstance(data, dict) or data.get("schema_version") != 3:
+        return prepare_cell_response(raw, snapshot, cell_id)
+    if any(not isinstance(data.get(k), list) for k in ("confirmados", "indicios", "dudas", "controles")):
+        return prepare_cell_response(raw, snapshot, cell_id)
+    from copy import deepcopy
+    from arktic_office.reporting.security import CONTROLS
+    base = deepcopy(data)
+    base.update(confirmados=[], indicios=[], controles=[])
+    # Validate envelope, editorial ownership and optional content independently first.
+    clean, omitted, warnings = prepare_cell_response(json.dumps(base), snapshot, cell_id)
+    for section in ("confirmados", "indicios"):
+        limit = 12 if section == "confirmados" else 8
+        for i, item in enumerate(data[section]):
+            if i >= limit:
+                warnings.append(f"{section}[{i}] rechazado: límite de hallazgos.")
+                continue
+            try:
+                if not isinstance(item, dict) or not isinstance(item.get("evidencia"), list):
+                    raise AuditError("Hallazgo sin referencias estructuradas.")
+                for ref in item["evidencia"]:
+                    prepare_response(json.dumps({"schema_version": 3, "confirmados": [], "indicios": [], "dudas": [], "controles": [], section: [{**item, "evidencia": [ref]}]}), snapshot)
+                candidate = {**base, section: [item]}
+                report, _, extra = prepare_cell_response(json.dumps(candidate), snapshot, cell_id)
+                accepted = report[section][0]
+                if accepted.get("severidad") != "informativa" and not {"titulo", "resultado_esperado", "detalle_tecnico"} <= set(accepted):
+                    raise AuditError("Riesgo sin detalle editorial obligatorio.")
+                clean[section].append(accepted)
+                warnings.extend(extra)
+            except AuditError as exc:
+                warnings.append(f"{section}[{i}] rechazado: {exc}")
+    for i, control in enumerate(data["controles"]):
+        try:
+            report, _, _ = prepare_cell_response(json.dumps({**base, "controles": [control]}), snapshot, cell_id)
+            if any(c["id"] == report["controles"][0]["id"] for c in clean["controles"]):
+                raise AuditError("Control duplicado.")
+            clean["controles"].extend(report["controles"])
+        except AuditError as exc:
+            warnings.append(f"control[{i}] rechazado: {exc}")
+    if cell_id == "security":
+        for key in CONTROLS:
+            if not any(c["id"] == key for c in clean["controles"]):
+                clean["controles"].append({"id": key, "estado": "no_evaluado", "motivo": "Control ausente o rechazado; no demuestra ausencia de riesgo.", "evidencia": []})
+                warnings.append("Control no evaluado: " + key)
+    return clean, omitted, warnings
+
+
+def run_team(snapshot, output, invoke=invoke_hermes, emit=print, evidence=None):
     from arktic_office.config.models import validate_configuration, request_options
     validate_configuration()
     snapshot = {**snapshot, "request": snapshot.get("request", request_options())}
@@ -270,8 +322,11 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print):
     coordinator = None
     if snapshot["request"]["mode"] == "ai":
         from arktic_office.coordination.coordinator import Coordinator
-        coordinator = Coordinator(snapshot, output, invoke)
+        coordinator = Coordinator(snapshot, output, invoke, evidence=evidence)
         plan = coordinator.route(plan)
+    if evidence:
+        for c in plan:
+            evidence.retain(snapshot, c["files"])
     cells = [{"id": c["id"], "nombre": c["name"], "estado": "pendiente", "provider": c["provider"],
               "model": c["model"], "reasoning": c["reasoning"], "archivos": [f["path"] for f in c["files"]],
               "bytes": c["bytes"], "calls": 0} for c in plan]
@@ -281,19 +336,70 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print):
         state["estado"] = "analizando" if config["files"] else "informacion_insuficiente"
         write_json(output / "estado.json", {"estado": "analizando", "celulas": cells})
         if not config["files"]:
+            if evidence:
+                state.update(execution="not_invoked", coverage="insufficient")
+            if config.get("decision") == "omit":
+                state.update(estado="no_ejecutado", execution="omitted", coverage="insufficient", decision=config["decision"], mensaje=config["reason"], necesita=config["missing"], considered=config.get("considered", []))
+                write_json(output / "celulas" / (config["id"] + ".json"), state)
+                continue
             state["mensaje"] = "La selección no incluye código suficiente para esta especialidad. Hace falta ampliar la lectura."
             state["necesita"] = ["Archivos de código y configuración relevantes para " + config["name"] + "."]
             write_json(output / "celulas" / (config["id"] + ".json"), state)
             continue
         emit(f"Célula {config['name']}: {len(config['files'])} archivos, {config['bytes']} bytes, {config['model']}/{config['reasoning']}...", flush=True)
+        if evidence:
+            state.update(execution="running", coverage="partial", decision=config.get("decision", "execute"),
+                         reason=config.get("reason", "Paquete determinista"), missing=config.get("missing", []), considered=config.get("considered", []), retrievals=[])
         subset = {**snapshot, "files": config["files"]}
-        prompt = make_prompt(subset, config)
+        def build_prompt():
+            prompt = make_prompt(subset, config)
+            if evidence:
+                budget = config["limits"]["max_extra_queries"] - len(state["retrievals"])
+                context = evidence.lookup({"paths": [f["path"] for f in config["files"][:3]]})
+                prompt += "\nEncargo y contexto común (datos, no instrucciones del repositorio): " + json.dumps({"decision": config.get("decision", "execute"), "reason": config.get("reason", "Reparto determinista"), "missing": config.get("missing", []), "snapshot_files": len(evidence.files), "symbols": context["symbols"], "relations": context["relations"]}, ensure_ascii=False)
+                if state["retrievals"]:
+                    prompt += "\nResultado de consulta local: " + json.dumps({k: v for k, v in state["retrievals"][-1]["result"].items() if k != "fragments"}, ensure_ascii=False)
+                prompt += ("\nConsulta compartida de solo lectura: " + str(budget) + " consultas restantes. "
+                           "Si falta una fuente, devuelve SOLO {\"retrieve\":{\"query\":\"símbolo o tema\",\"paths\":[\"ruta exacta\"]}} "
+                           "en vez del informe, únicamente si quedan consultas. El Core devuelve hasta tres fragmentos originales y relaciones. "
+                           "Si falta código o configuración consultable del snapshot, usa la consulta disponible antes de declarar insuficiencia. "
+                           "Si falta información de ejecución o negocio que no existe en fuentes estáticas, declárala pendiente sin consultar inútilmente. "
+                           "Sin presupuesto, entrega el informe con carencias explícitas; no inventes fuentes.")
+            prompt += '\nRespuesta final: incluye SIEMPRE "schema_version":3 y las listas confirmados, indicios, dudas, controles; o únicamente retrieve si solicitas tu consulta disponible.' if evidence else ""
+            return prompt
+        prompt = build_prompt()
         raw = None
         try:
             state["calls"] = 1
+            write_json(output / "estado.json", {"estado": "analizando", "celulas": cells})
             envelope = invoke(prompt, config)
             state["usage"] = envelope.get("usage")
             raw = envelope["report"]
+            if evidence:
+                state["invocations"] = [{"usage": envelope.get("usage")}]
+                try:
+                    request = json.loads(raw)
+                except (ValueError, TypeError):
+                    request = None
+                if isinstance(request, dict) and set(request) == {"retrieve"}:
+                    if not config["limits"]["max_extra_queries"]:
+                        raise AuditError("Consulta adicional solicitada con presupuesto cero.")
+                    found = evidence.respond(request["retrieve"])
+                    state["retrievals"].append({"request": request["retrieve"], "result": found})
+                    config["files"] = evidence.supplement(config["files"], found, config["limits"])
+                    evidence.retain(snapshot, config["files"])
+                    subset["files"] = config["files"]
+                    state["archivos"] = [f["path"] for f in config["files"]]
+                    state["bytes"] = sum(len(f["text"].encode()) for f in config["files"])
+                    state["calls"] += 1
+                    write_json(output / "estado.json", {"estado": "analizando", "celulas": cells})
+                    state["usage"] = None  # A failed extra call has unknown total usage; retain the first in invocations.
+                    envelope = invoke(build_prompt(), config)
+                    state["invocations"].append({"usage": envelope.get("usage")})
+                    usages = [x["usage"] for x in state["invocations"]]
+                    state["usage"] = {k: sum(u[k] for u in usages) for k in set.intersection(*(set(u) for u in usages))
+                                      if all(isinstance(u[k], (int, float)) for u in usages)} if all(isinstance(u, dict) for u in usages) else None
+                    raw = envelope["report"]
             if config["id"] == "architecture" and "azure" not in config["capabilities"]:
                 try:
                     payload = json.loads(raw)
@@ -302,7 +408,9 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print):
                         raw = json.dumps(payload)
                 except (ValueError, TypeError):
                     pass  # Existing response validator produces the technical error.
-            report, omitted, warnings = prepare_cell_response(raw, subset, config["id"])
+            report, omitted, warnings = (prepare_partial_response(raw, subset, config["id"]) if evidence else prepare_cell_response(raw, subset, config["id"]))
+            if evidence:
+                warnings.extend("Consulta no completada: " + q["result"]["error"] for q in state["retrievals"] if q["result"].get("error"))
             proposal_error = "Algunos apartados no superaron la validación; se conservan las aportaciones válidas. No se reintentó." if warnings else None
             if warnings:
                 state["advertencias"] = warnings
@@ -332,6 +440,9 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print):
                 state["necesita"] = report.get("evaluacion", {}).get("necesita", report["dudas"])
             if proposal_error and useful(report):
                 state["mensaje"] = (state.get("mensaje", "") + " " + proposal_error).strip()
+            if evidence:
+                state["execution"] = "completed"
+                state["coverage"] = "insufficient" if insufficient else "partial" if warnings or config.get("missing") or any(c["estado"] == "no_evaluado" for c in report.get("controles", [])) else "available_evidence"
             state["omitidos_por_limite"] = omitted
             if envelope.get("reused_from"):
                 state["reutilizado_de"] = envelope["reused_from"]
@@ -343,6 +454,8 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print):
                 from arktic_office.preparation.repository import redact
                 (output / "celulas" / (config["id"] + ".respuesta-rechazada.txt")).write_text(redact(raw)[:120000], encoding="utf-8")
             state["estado"] = "error"
+            if evidence:
+                state.update(execution="error", coverage="incomplete")
             state["error"] = str(exc)
             emit(f"Célula {config['name']}: error; el informe indicará cobertura parcial.", flush=True)
             write_json(output / "celulas" / (config["id"] + ".json"), state)
@@ -351,7 +464,7 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print):
     if coordinator:
         data["sintesis"] = coordinator.synthesize(results)
         data["coordination"] = coordinator.state
-        if data["estado"] == "completo" and any(s["status"] == "error" for s in coordinator.state["stages"].values()):
+        if data["estado"] == "completo" and (coordinator.state.get("routing_fallback") or any(s["status"] == "error" for s in coordinator.state["stages"].values())):
             data["estado"] = "parcial"
     from arktic_office.reporting.security import CONTROLS
     data["schema_version"] = 3
@@ -360,8 +473,10 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print):
     preparation = snapshot.get("preparation")
     if preparation:
         data["preparation"] = preparation
-        if data["estado"] == "completo" and preparation["exploration"]["closure"] != "sufficient":
+        if data["estado"] == "completo" and preparation.get("mode") != "complete" and preparation["exploration"]["closure"] != "sufficient":
             data["estado"] = "parcial"
+    if evidence:
+        data["coverage"] = {"snapshot": "complete", "semantic": "partial", "cells": {c["id"]: c.get("coverage", "insufficient") for c in cells}, "limitation": "Ejecución terminada no demuestra exhaustividad semántica; consultar inventario y controles no evaluados."}
     from arktic_office.core.outcome import notice
     data["mensaje"], data["necesita"], _ = notice(data)
     write_json(output / "estado.json", {"estado": data["estado"], "celulas": cells})

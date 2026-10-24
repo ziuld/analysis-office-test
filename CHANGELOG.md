@@ -1,5 +1,12 @@
 # Cambios por componente
 
+## Bloque 8 — arquitectura completa (entrega abierta, 24/10/2026)
+
+- Snapshot íntegro verificado al commit, mapas sin modelos y scanners sobre todo su input compatible; fallos de capacidad/integridad detienen la preparación.
+- Paquetes originales para tres especialistas en una llamada del coordinador; recuperación compartida de solo lectura 0/1, omisiones justificadas y estados separados de ejecución/cobertura.
+- Conservación individual de hallazgos válidos, condiciones y citas; cleanup de temporales y registros de consultas/consumo.
+- Catorce pruebas mínimas correctas y pilotos económicos de bookingApi/Arktic; advertencias y cobertura parcial documentadas. Afinado trasladado al Bloque 9, sin cambios de CI/CD, pins ni versiones 0.2.0.
+
 ## Sin publicar — candidata de Fase 1
 
 - Reparto con base explícita y protección frente a asignaciones vacías que omitían especialistas. Verificación real del recorrido de siete llamadas con los tres especialistas y síntesis válidos, Gitleaks activo y límites de cobertura explícitos.
@@ -8,7 +15,7 @@
 
 - Clasificación de fallos OAuth estructurados sin inspeccionar prompts/conversaciones; sesión local recuperada y una respuesta real de Inventario con bookingApi validada, con consumo comunicado.
 
-- Pasadas adicionales de preparación parametrizadas (`AUDIT_PREPARATION_MAX_LOOPS`, 1 por defecto) y perfil mínimo común de pruebas; afinado posterior registrado como Bloque 8.
+- Pasadas adicionales de preparación parametrizadas (`AUDIT_PREPARATION_MAX_LOOPS`, 1 por defecto) y perfil mínimo común de pruebas; afinado posterior registrado como Bloque 9.
 
 - Preparación híbrida opcional con Graphify fijado, búsquedas y exploración limitada dentro de Docker.
 - Backend modular, perfiles centrales y skills; reparto y síntesis con IA opcionales, Azure bajo encargo.

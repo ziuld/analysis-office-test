@@ -38,27 +38,28 @@ def run(url, inspect_only=False, job_id=None):
             raise AuditError("Falta iniciar sesión: docker compose --profile audit run --rm --entrypoint python auditor -m hermes_cli.main auth add openai-codex")
     reports = reports_root()
     reports.mkdir(parents=True, exist_ok=True)
-    with (reports / ".audit.lock").open("w") as lock:
+    from contextlib import ExitStack
+    with ExitStack() as lifetime, (reports / ".audit.lock").open("w") as lock:
         try:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
             raise AuditError("Ya existe una revisión activa; espera a que termine.") from None
+        from arktic_office.preparation.snapshot import snapshot_workspace
+        workspace = lifetime.enter_context(snapshot_workspace())
         from arktic_office.adapters.scanners import scan
         scanner = scan if not inspect_only and scanners_enabled() else None
-        mode = os.environ.get("AUDIT_PREPARATION_MODE", "legacy")
+        mode = os.environ.get("AUDIT_PREPARATION_MODE", "hybrid")
         if mode not in {"legacy", "hybrid"}:
             raise AuditError("AUDIT_PREPARATION_MODE debe ser legacy o hybrid.")
         stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
         import uuid
         output = RunStore(reports).create(job_id or f"{stamp}-{uuid.uuid4().hex[:8]}", exist_ok=bool(job_id), repository=url)
+        evidence = None
         if mode == "hybrid":
-            from arktic_office.preparation.hybrid import prepare
-            from arktic_office.adapters.invoke import invoke_hermes
+            from arktic_office.preparation.evidence import prepare_complete
             from arktic_office.storage.jsonio import write_json
-            snapshot = prepare(url, scanner=scanner,
-                               invoke=None if inspect_only else invoke_hermes,
-                               config=profiles["preparation"],
-                               emit=lambda state: write_json(output / "preparacion.json", {"mode": "hybrid", "exploration": state}))
+            write_json(output / "preparacion.json", {"mode": "complete", "status": "running"})
+            snapshot, evidence = prepare_complete(url, Path(workspace), scanner=scanner)
             write_json(output / "preparacion.json", snapshot["preparation"])
         else:
             snapshot = collect(url, scanner=scanner)
@@ -80,7 +81,11 @@ def run(url, inspect_only=False, job_id=None):
             print(f"Solo lectura verificada: {len(snapshot['files'])} archivos, {snapshot['branch']}@{snapshot['commit']}. Evidencia: {output}. Sin llamada al modelo.")
             return
         print(f"Revisando {len(snapshot['files'])} archivos de {snapshot['branch']}@{snapshot['commit']} con Hermes Agent...", flush=True)
-        data = run_team(snapshot, output)
+        data = run_team(snapshot, output, evidence=evidence)
+        if evidence:
+            snapshot["coverage"]["retained_paths"] = [f["path"] for f in snapshot["files"]]
+            snapshot["coverage"]["retained_bytes"] = sum(len(f["text"].encode()) for f in snapshot["files"])
+        (output / "evidencia.json").write_text(json.dumps(snapshot, ensure_ascii=False, indent=2), encoding="utf-8")
         write_manifest(output, snapshot, data)
         model = provider + "/" + model
         (output / "informe.json").write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -108,6 +113,10 @@ def main():
             except FileNotFoundError:
                 destination = None
             if destination is not None:
+                from arktic_office.storage.jsonio import read_json, write_json
+                preparation = read_json(destination / "preparacion.json", {})
+                if preparation.get("status") == "running":
+                    write_json(destination / "preparacion.json", {**preparation, "status": "error", "reason": str(exc)})
                 (destination / "error.json").write_text(json.dumps({"error": str(exc)}, ensure_ascii=False), encoding="utf-8")
         print("ERROR: " + str(exc), file=sys.stderr)
         sys.exit(1)

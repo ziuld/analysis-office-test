@@ -36,7 +36,7 @@ def notice(data):
     unknown = [c["id"] for c in data.get("controles", []) if c.get("estado") == "no_evaluado"]
     if not useful(data):
         message = "No hay información validada suficiente para elaborar una evaluación técnica útil. Hace falta una lectura más profunda del código y la configuración; no puede valorarse su seguridad ni su despliegue."
-    elif any(c.get("estado") in {INSUFFICIENT, "sin_evidencia", "parcial", "error"} for c in cells) or unknown or data.get("estado") == "parcial":
+    elif any(c.get("estado") in {INSUFFICIENT, "sin_evidencia", "parcial", "error", "no_ejecutado"} for c in cells) or unknown or data.get("estado") == "parcial":
         message = "La lectura permite describir los resultados que se muestran, pero no cerrar la evaluación. Se conservan las aportaciones válidas y se concentra aquí la información que falta."
     else:
         message = "Los resultados corresponden al código seleccionado. La evaluación y la decisión de despliegue requieren revisión humana."

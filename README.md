@@ -15,14 +15,14 @@ Versiones propias: **frontend 0.2.0** y **backend 0.2.0**, gestionadas de forma 
 - **Cómo se redacta el informe:** [Estándar de comunicación compartido](docs/ESTANDAR_COMUNICACION_INFORMES.md).
 - **Preparar la subida y mantener las versiones:** [Repositorio y reproducción](docs/REPOSITORIO.md).
 - **MVP actual e histórico:** [PLAN_MVP.md](PLAN_MVP.md), con el alcance y las verificaciones de la entrega 0.2.0.
-- **Siguiente evolución:** [Plan de Fase 1](docs/PLAN_FASE_1.md), con objetivos, tareas, criterios de cierre y decisiones pendientes. El Bloque 1 incorpora reproducción y CI; el Bloque 2 prueba el indexador de forma independiente. Los siguientes siguen pendientes.
+- **Siguiente evolución:** [Plan de Fase 1](docs/PLAN_FASE_1.md), con objetivos, tareas, criterios de cierre y decisiones pendientes. El Bloque 1 incorpora reproducción y CI; el Bloque 2 prueba el indexador de forma independiente. Los bloques 2–8 incorporan núcleo, coordinación, oficina y snapshot completo; el afinado de modelos queda en el Bloque 9.
 - **Experimento del Bloque 2:** [Validación del indexador](docs/INDEXADOR.md), con recuperación y extracción estructural de muestras dentro de Docker, sin modelos ni ejecución de las aplicaciones.
 - **Núcleo del Bloque 3:** [Paquete Python y compatibilidad](docs/CORE.md), con pruebas manuales mínimas y sin ampliar CI/CD.
 
 Con las dependencias recuperadas, `.env` configurado y la sesión del modelo autorizada:
 
 ```powershell
-docker compose up -d --build --wait
+docker compose -f compose.yaml -f compose.hybrid.yaml up -d --build --wait
 ```
 
 Abrir [la oficina local](http://localhost:3000/office), introducir una URL como `https://github.com/ziuld/bookingApi` y pulsar **Iniciar revisión**. Después, **Leer informe**, **Descargar informe** o pulsar un personaje para preguntar sobre el resultado.
@@ -30,10 +30,10 @@ Abrir [la oficina local](http://localhost:3000/office), introducir una URL como 
 ## Qué incluye
 
 - Una URL como entrada. Resuelve la rama predeterminada real de GitHub y fija su commit antes de seleccionar contexto.
-- Lectura estática acotada: por defecto, 24 archivos / 120 KB; Seguridad recibe hasta 12 / 64 KB, las otras células hasta 6 / 24 KB.
+- Snapshot íntegro verificado al commit, mapas y scanners sobre todo el conjunto compatible. Contexto inicial de modelos acotado a 24 archivos / 120 KB; Seguridad recibe hasta 12 / 64 KB, las otras células hasta 6 / 24 KB.
 - Tres revisiones secuenciales y consolidación mediante código. Estados reales en la oficina, resultados parciales y errores visibles.
 - Reporte visual de seguridad con indicadores de gravedad, certeza separada, acciones, cobertura e inventario; descarga Markdown e impresión/PDF. Evidencias enlazadas al commit revisado.
-- Gitleaks para posibles secretos y OSV-Scanner para dependencias, sobre la descarga acotada y sin ejecutar el proyecto.
+- Gitleaks para posibles secretos y OSV-Scanner para dependencias, sobre todo el input compatible del snapshot y sin ejecutar el proyecto.
 - Consultas independientes al coordinador o a una célula, usando únicamente resultados y evidencia guardados.
 - Propuesta DevOps Azure preliminar de Arquitectura: opción sencilla, motivos, supuestos, servicios, entrega y validaciones.
 - [Ejemplo ficticio sin agentes](examples/README.md), con consultas bloqueadas para evitar consumo de tokens.
@@ -66,9 +66,9 @@ Navegador → office (localhost:3000) → audit-api (red interna)
 
 ## Acceso y coste
 
-La configuración propone `openai-codex` mediante OAuth en Hermes: Seguridad con `gpt-6.1-sol` / `medium`, el resto con `gpt-6-luna` / `low`. También existe el modo API con facturación independiente. La sesión del modelo se configura en cada instalación; no viene incluida al clonar. Alcance y comprobaciones en [Seguridad](docs/SEGURIDAD.md).
+La configuración propone `openai-codex` mediante OAuth en Hermes: todos los roles con `gpt-6-luna` / `low` para pruebas funcionales económicas; el afinado posterior se acuerda en el Bloque 9. También existe el modo API con facturación independiente. La sesión del modelo se configura en cada instalación; no viene incluida al clonar. Alcance y comprobaciones en [Seguridad](docs/SEGURIDAD.md).
 
-El recorrido habitual `legacy` usa tres llamadas al modelo; cada pregunta añade una llamada al personaje elegido. El modo opcional de [coordinación con IA](docs/COORDINACION.md) añade hasta dos llamadas para reparto y síntesis; conserva los originales y usa la base determinista si falla. Azure se genera solo cuando se solicita como capacidad del encargo. No hay reintentos ni escalado de modelo automáticos. Con el backend Codex OAuth de esta versión, el límite de salida configurado no constituye un techo duro de tokens. El modo híbrido opcional añade hasta ocho llamadas acotadas de preparación: [Preparación híbrida](docs/PREPARACION.md). Detalles en [Operación](docs/OPERACION.md).
+El recorrido híbrido actual prepara el snapshot y grafo sin modelos. Con coordinación IA usa cinco llamadas de base (reparto, tres especialistas y síntesis); permite una consulta local adicional por agente, configurable 0/1, con su llamada para finalizar. El perfil de prueba admite hasta siete llamadas; habilitando todos los extras, hasta nueve. Las omisiones justificadas reducen ese número. Cada pregunta posterior añade una llamada independiente. No hay escalado automático de modelos ni reintentos de proveedor. El límite de salida Codex OAuth no es un techo duro de tokens. Configuración y limitaciones: [preparación completa](docs/PREPARACION.md) y [coordinación](docs/COORDINACION.md). `legacy` permanece disponible expresamente como recorrido parcial de compatibilidad.
 
 ## Datos y despliegue local
 

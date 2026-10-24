@@ -14,15 +14,16 @@ from arktic_office.config.models import registry, profile
 LIMITS = dict(registry()["roles"]["preparation"])
 
 
-def index_files(files):
+def index_files(files, *, complete=False):
     url = os.environ.get("AUDIT_INDEXER_URL", "http://preparator:8090/index")
-    body = json.dumps({"files": files}, ensure_ascii=False).encode()
-    if len(body) > 2_000_000:
+    body = json.dumps({"files": files, "complete": complete}, ensure_ascii=False).encode()
+    maximum = 64_000_000 if complete else 3_000_000
+    if len(body) > (maximum if complete else 2_000_000):
         return {"status": "error", "reason": "index_request_budget"}
     try:
         with build_opener(NoRedirect()).open(Request(url, data=body, headers={"Content-Type": "application/json"}), timeout=310) as response:
-            raw = response.read(3_000_001)
-        if len(raw) > 3_000_000:
+            raw = response.read(maximum + 1)
+        if len(raw) > maximum:
             raise ValueError()
         result = json.loads(raw)
         if not isinstance(result, dict) or result.get("status") not in {"ready", "partial", "error"}:

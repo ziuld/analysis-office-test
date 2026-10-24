@@ -2,7 +2,7 @@
 from arktic_office.storage.jsonio import read_json
 from arktic_office.core.contracts import ACTIVE_STATES
 
-LABELS = {"preparando": "Preparando evidencia", "analizando": "Revisando evidencia", "completo": "Revisión completada",
+LABELS = {"no_ejecutado": "Omitido con justificación","preparando": "Preparando evidencia", "analizando": "Revisando evidencia", "completo": "Revisión completada",
           "completada": "Aportación completada", "parcial": "Resultado parcial", "error": "Trabajo interrumpido o con error",
           "informacion_insuficiente": "Información insuficiente", "pendiente": "Esperando evidencia"}
 
@@ -27,6 +27,10 @@ def project(directory, job, cells):
                 text = "Explorando evidencia con límites"
             elif any(c["estado"] == "analizando" for c in cells):
                 state, text = "pendiente", "Contexto entregado a los especialistas"
+        cell = next((c for c in cells if c["id"] == agent), {})
+        if cell.get("coverage"):
+            coverage = {"partial": "cobertura parcial", "insufficient": "evidencia insuficiente", "incomplete": "cobertura incompleta", "available_evidence": "evidencia disponible evaluada"}
+            text += " · " + coverage.get(cell["coverage"], cell["coverage"])
         result[agent] = {"state": state, "text": text, "meeting": meeting,
                          "working": active and state in ACTIVE_STATES}
     return result

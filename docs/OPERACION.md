@@ -26,7 +26,7 @@ El modo API admite `AUDIT_PROVIDER=openai`, un modelo disponible para la cuenta 
 Después de editar `.env`, recrear el servicio; un simple reinicio no actualiza sus variables:
 
 ```powershell
-docker compose up -d --force-recreate --wait audit-api
+docker compose -f compose.yaml -f compose.hybrid.yaml up -d --force-recreate --wait audit-api
 ```
 
 Hacerlo sin trabajos activos. Las próximas ejecuciones por comando también leerán el `.env` actualizado.
@@ -34,17 +34,17 @@ Hacerlo sin trabajos activos. Las próximas ejecuciones por comando también lee
 ## Inicio, parada y diagnóstico
 
 ```powershell
-docker compose up -d --wait
-docker compose ps
-docker compose logs --tail 100 office audit-api
-docker compose stop
+docker compose -f compose.yaml -f compose.hybrid.yaml up -d --wait
+docker compose -f compose.yaml -f compose.hybrid.yaml ps
+docker compose -f compose.yaml -f compose.hybrid.yaml logs --tail 100 office audit-api
+docker compose -f compose.yaml -f compose.hybrid.yaml stop
 ```
 
 Para reconstruir después de cambios en el código o el parche:
 
 ```powershell
-docker compose --profile audit build auditor office
-docker compose up -d --wait
+docker compose -f compose.yaml -f compose.hybrid.yaml --profile audit build auditor office
+docker compose -f compose.yaml -f compose.hybrid.yaml up -d --wait
 ```
 
 Solo se publica [localhost:3000](http://localhost:3000/office). `audit-api` escucha en el puerto 8080 de la red interna. `auditor` es un servicio de ejecución puntual; el gateway `demo` es un perfil opcional y no participa en el flujo real ni se inicia por defecto.
@@ -65,7 +65,7 @@ Solo se publica [localhost:3000](http://localhost:3000/office). `audit-api` escu
 Para autorizar de nuevo el proveedor OAuth, completar personalmente el flujo que muestre:
 
 ```powershell
-docker compose --profile audit run --rm --entrypoint python auditor -m hermes_cli.main auth add openai-codex
+docker compose -f compose.yaml -f compose.hybrid.yaml --profile audit run --rm --entrypoint python auditor -m hermes_cli.main auth add openai-codex
 ```
 
 ## Persistencia y cambio de ordenador
@@ -77,7 +77,7 @@ docker compose --profile audit run --rm --entrypoint python auditor -m hermes_cl
 | Volumen `studio` | Estado local de la interfaz | Se crea de nuevo |
 | Sesión de la pestaña | Última pregunta/respuesta visible por agente y revisión | No se traslada |
 
-`docker compose down` conserva los volúmenes y la carpeta `reports/`. `down -v` elimina los volúmenes del proyecto, incluida la sesión del modelo. Un reinicio del servicio interrumpe los trabajos en curso y no los reanuda.
+`docker compose -f compose.yaml -f compose.hybrid.yaml down` conserva los volúmenes y la carpeta `reports/`. `down -v` elimina los volúmenes del proyecto, incluida la sesión del modelo. Un reinicio del servicio interrumpe los trabajos en curso y no los reanuda.
 
 Para conservar informes, detener los trabajos y copiar `reports/` a una ubicación autorizada para ese código. No es necesario mover sesiones OAuth: iniciar sesión personalmente en el otro ordenador. No compartir los volúmenes de autenticación ni publicar los informes como parte del repositorio.
 
@@ -86,7 +86,7 @@ Para conservar informes, detener los trabajos y copiar `reports/` a una ubicaci�
 La inspección consume peticiones a GitHub pero ninguna llamada al modelo:
 
 ```powershell
-docker compose --profile audit run --rm -T auditor https://github.com/propietario/repositorio --inspect-only
+docker compose -f compose.yaml -f compose.hybrid.yaml --profile audit run --rm -T auditor https://github.com/propietario/repositorio --inspect-only
 ```
 
 Revisar `evidencia.json` y `distribucion.json` en la nueva carpeta de `reports/`. Si faltan arranque, manifiestos o configuración de datos, ajustar primero la selección o los límites antes de subir el modelo.
@@ -94,7 +94,7 @@ Revisar `evidencia.json` y `distribucion.json` en la nueva carpeta de `reports/`
 Para una revisión real desde la terminal:
 
 ```powershell
-docker compose --profile audit run --rm -T auditor https://github.com/propietario/repositorio
+docker compose -f compose.yaml -f compose.hybrid.yaml --profile audit run --rm -T auditor https://github.com/propietario/repositorio
 ```
 
 Comparte el bloqueo de ejecución con la oficina y las consultas. Los contadores `usage` son los reportados por Hermes; no representan una factura de la suscripción.
@@ -114,13 +114,13 @@ Las pruebas se ejecutan manualmente sobre el paquete instalado en una imagen sep
 Los informes antiguos conservan su formato. Para probar el formato nuevo sobre una revisión guardada, sin volver a leer GitHub:
 
 ```powershell
-docker compose --profile audit run --rm -T --entrypoint python auditor /app/preview.py ID_REVISION_ORIGINAL
+docker compose -f compose.yaml -f compose.hybrid.yaml --profile audit run --rm -T --entrypoint python auditor /app/preview.py ID_REVISION_ORIGINAL
 ```
 
 Este comando **sí consume hasta tres llamadas al modelo**, crea otra carpeta e identifica la evidencia guardada. Conserva los originales. Para actualizar solo la presentación de ese ejemplo derivado, sin modelo:
 
 ```powershell
-docker compose --profile audit run --rm -T --entrypoint python auditor /app/preview.py ID_EJEMPLO_DERIVADO --render-only
+docker compose -f compose.yaml -f compose.hybrid.yaml --profile audit run --rm -T --entrypoint python auditor /app/preview.py ID_EJEMPLO_DERIVADO --render-only
 ```
 
 `--render-only` solo admite ejemplos derivados de formato 2 o 3. No utilizar el ejemplo derivado como prueba de haber revisado el estado actual de GitHub.
@@ -137,7 +137,7 @@ Para revisar el formato sin agentes ni scanners, usar [el ejemplo ficticio](../e
 
 ## Preparación híbrida opcional
 
-El Bloque 4 incorpora un recorrido alternativo con preparador independiente y exploración limitada. Activación, vuelta al modo habitual, coste adicional, trazas y límites: [PREPARACION.md](PREPARACION.md). El arranque normal conserva `legacy`; no se lanzan ambos recorridos ni se duplican los especialistas. CI/CD permanece sin ampliaciones.
+El Bloque 8 utiliza el preparador independiente sobre el snapshot completo, sin explorador de modelos obligatorio. Las instrucciones anteriores incluyen ambos archivos Compose. `legacy` exige configurarlo expresamente y mantiene adquisición parcial de compatibilidad. Trazas, consultas 0/1 y límites: [PREPARACION.md](PREPARACION.md). No se duplican recorridos; CI/CD permanece sin cambios.
 
 ## Coordinación y capacidades del Bloque 5
 

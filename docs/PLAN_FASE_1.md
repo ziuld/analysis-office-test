@@ -2,7 +2,7 @@
 
 Fecha de registro: 23/10/2026.
 
-Estado: Bloque 1 fusionado; bloques 2, 3, 4, 5 y 6 implementados y comprobados localmente, con evidencia y límites registrados debajo. El Bloque 7 está implementado técnicamente; F1-23 dispone de verificación funcional real del equipo completo; cobertura y calibración semántica de muestras continúan en el Bloque 8 y F1-24 requiere aceptación humana. Las decisiones técnicas indicadas como pendientes requieren validación antes de adoptarse. La entrega permanece abierta y las versiones actuales se conservan.
+Estado: Bloque 1 fusionado; bloques 2, 3, 4, 5 y 6 implementados y comprobados localmente, con evidencia y límites registrados debajo. El Bloque 7 está implementado técnicamente; F1-23 dispone de verificación funcional real del equipo completo; el Bloque 8 está implementado y comprobado con snapshot completo y recuperación compartida, con límites explícitos; la calibración semántica de muestras pasa al Bloque 9 y F1-24 requiere aceptación humana. Las decisiones técnicas indicadas como pendientes requieren validación antes de adoptarse. La entrega permanece abierta y las versiones actuales se conservan.
 
 ## Relación con el MVP actual
 
@@ -25,7 +25,7 @@ La decisión final corresponde al responsable técnico. No se busca una auditor�
 - Evolucionar el repositorio actual por entregas revisables, conservando la oficina, Hermes y el diseño útil de los informes.
 - Mantener la instalación local con Docker Compose y los modelos online. La preparación e indexación también deben ejecutarse dentro de Docker, sin generar grafos manualmente en el host.
 - Combinar reglas y búsquedas locales, mapa estructural y exploración dirigida con Hermes. Usar IA solo donde aporte valor y reutilizar herramientas existentes.
-- Permitir iteraciones acotadas en preparación. Los especialistas reciben un encargo y trabajan sin rondas adicionales de búsqueda, reintentos o solicitudes de evidencia.
+- Preparar evidencia sobre el snapshot completo del commit mediante mapas y scanners sin modelos. La selección parcial se aplica al contexto enviado a los agentes. El Bloque 8 incorpora recuperación compartida y configurable por especialista; el recorrido anterior se conserva como compatibilidad explícita `legacy`.
 - Incorporar un coordinador con IA y especialistas de Seguridad, Arquitectura/operación e Inventario, con instrucciones y skills reutilizables.
 - Separar modelos, proveedor, razonamiento y presupuestos de las instrucciones reutilizables.
 - Conservar evidencias trazables al commit, resultados parciales útiles y el estado explícito de información insuficiente. Mantener los errores técnicos diferenciados.
@@ -41,7 +41,7 @@ La recomendación principal es una aplicación modular dentro del mismo reposito
 |---|---|---|
 | Indexador | Graphify 0.9.95 fijado con overlay PyYAML, como ayuda estructural junto a búsquedas/texto | Seleccionado tras las muestras del Bloque 2; límites en [INDEXADOR.md](INDEXADOR.md). Codebase-Memory queda sin evaluar |
 | Despliegue | Oficina, Core API y preparador local separado | Preparador separado integrado opcionalmente mediante `compose.hybrid.yaml`; base legacy conservada |
-| Preparación | Snapshot fijado a commit, reglas locales, grafo y exploración Hermes limitada | Implementada y comprobada con respuestas ficticias en Bloque 4; calidad real pendiente |
+| Preparación | Snapshot completo fijado a commit; mapas y scanners locales sobre todo el conjunto compatible; contexto selectivo para modelos | Bloque 8 implementado: snapshot íntegro, compatibilidad por herramienta y recuperación local acotada; semántica parcial |
 | Eventos | Publicar estados estructurados para la oficina; valorar SSE conservando REST | Estados persistidos y sondeo REST existente en Bloque 6; sin SSE adicional |
 | Persistencia | Archivos para evidencias e informes; valorar SQLite para trabajos, eventos y conversaciones | Archivos JSON y catálogo acotado; sin SQLite ni infraestructura adicional |
 | Modelos | Registro central validado, con perfiles por rol y excepciones explícitas | Perfiles instalados y validados en Bloque 5; disponibilidad real condicionada por sesión/cuota |
@@ -60,13 +60,14 @@ Codebase-Memory no se descarta por funcionar localmente: una herramienta local p
 | Core API | Gestionar trabajos, presupuesto, coordinador Hermes, especialistas, validación, síntesis y eventos |
 | Preparador local | Obtener el código, aplicar reglas y comprobaciones locales, generar el mapa y ofrecer búsquedas y fragmentos |
 
-1. Recibir la URL, resolver la rama predeterminada real y fijar un commit. Obtener una copia de trabajo acotada sin necesitar todo el historial. Declarar exclusiones y límites de descarga.
-2. Extraer inventario, documentación, dependencias, configuración, puntos de entrada y mapa estructural mediante herramientas locales. Separar el conjunto que se inspecciona localmente del contexto enviado al modelo.
-3. Permitir al coordinador Hermes buscar, consultar relaciones y leer fragmentos relevantes. Repetir de forma limitada cuando falte cobertura de un aspecto prioritario, como acceso o persistencia.
-4. Cerrar la preparación con paquetes de evidencia por especialista: commit, rutas, líneas originales, citas, cobertura y carencias. No enviar el grafo completo al modelo por defecto.
-5. Ejecutar una vez cada especialista con su modelo y skills autorizadas. Si no puede aportar un resultado útil, declarar qué información falta y terminar su intervención.
-6. Sintetizar mediante el coordinador y validar fuentes y contrato antes de generar HTML, Markdown y JSON. Conservar aportaciones válidas, desacuerdos y límites; usar la consolidación determinista como respaldo si la síntesis falla.
-7. Permitir consultas posteriores sobre los resultados conservados, sin relanzar automáticamente el análisis ni buscar nueva evidencia.
+Flujo del Bloque 8 implementado para nuevas revisiones híbridas; `legacy` conserva adquisición selectiva de compatibilidad:
+
+1. Resolver la rama predeterminada y fijar el commit; obtener todo su snapshot y verificar integridad antes de analizar. Si falta contenido o se supera capacidad, detener la preparación sin sustituirlo por un subconjunto.
+2. Ejecutar inventario, mapas y scanners sin modelos sobre todo el conjunto compatible; documentar incompatibilidades y errores por archivo/herramienta.
+3. El coordinador prepara tres paquetes de evidencia original en una llamada; una segunda llamada de preparación es opcional y configurable.
+4. Ejecutar las especialidades con base relevante y registrar las omisiones justificadas. Cada especialista puede recuperar evidencia adicional del snapshot/mapas mediante la skill compartida, con presupuesto 0/1.
+5. Validar citas y aportaciones, conservar parciales útiles y sintetizar condiciones, acciones y pendientes sin elevar certeza.
+6. Publicar informes y trazas; las consultas posteriores sobre resultados guardados siguen siendo independientes, sin relanzar el equipo.
 
 El grafo es una ayuda para localizar relaciones, no una prueba de que se ha reconstruido un flujo completo. Mantener búsquedas textuales y lectura dirigida para relaciones dinámicas, configuración o lenguajes con cobertura incompleta.
 
@@ -77,7 +78,7 @@ El grafo es una ayuda para localizar relaciones, no una prueba de que se ha reco
 - Mantener credenciales fuera de imágenes y artefactos. Aplicar controles de ocultación antes de enviar fragmentos al proveedor; documentar sus límites.
 - Presupuestar descarga, espacio temporal, indexación, duración, iteraciones, contexto y salida por ejecución y rol. Mostrar consumo reportado y distinguirlo de estimaciones.
 - Comprobar qué límites puede imponer realmente cada proveedor. Un límite configurado no constituye una garantía de tokens si el runtime o proveedor no lo aplica.
-- Al alcanzar un límite, terminar con cobertura y resultados parciales explícitos; no ampliar automáticamente el modelo o presupuesto.
+- Los límites de contexto o llamadas de modelos permiten resultados parciales explícitos. Los límites operativos que impidan adquirir o procesar por completo el conjunto compatible detienen la preparación; no se continúa automáticamente con una muestra ni se amplía el presupuesto.
 - Evitar llamadas de modelo para etiquetas, burbujas de estado y animaciones. Una skill no requiere modelo propio por defecto; cualquier llamada adicional debe estar declarada y presupuestada.
 
 | Métrica | Objetivo inicial, no garantía | Comprobación pendiente |
@@ -222,14 +223,7 @@ El usuario confirmó el historial de las últimas diez consultas por revisión y
 
 **F1-24 abierta:** manifiesto [release.json](../release.json) de candidata para revisión y changelog sin publicar preparados. El PR no cierra aceptación ni versión. No se amplía CI/CD; frontend, backend y paquete Python permanecen en 0.2.0. Pendientes validación semántica tras resolver sesión/cuota, aceptación humana, decisión de versión y merge del usuario. Sin etiquetas, release ni publicación de imágenes.
 
-### Bloque 8 — Afinado (finetuning) de configuración y resultados
-
-Este bloque afina configuración, instrucciones y utilidad observada; no implica entrenar pesos de un modelo. Primero se prueba el funcionamiento con perfiles mínimos, sin buscar todavía el resultado óptimo.
-
-- [ ] F1-25 Resolver y comprobar sesión/cuota con evaluación real acotada y presupuesto explícito, sin scanners salvo autorización independiente. Completar la validación semántica pendiente de F1-23.
-- [ ] F1-26 Acordar y elevar modelos/razonamiento por rol para analizar un repositorio real; conservar el perfil económico para pruebas funcionales.
-- [ ] F1-27 Evaluar utilidad, citas, insuficiencia, cobertura, llamadas, tiempos y consumo comunicado. Afinar prompts, selección y loops según fallos observados, con cambios pequeños y comprobaciones mínimas.
-- [ ] F1-28 Registrar configuración final, límites y resultados; aceptación humana y decisión de versión para completar F1-24. El usuario conserva el merge.
+**Seguimiento histórico de la candidata de bloques 1–7:** los registros siguientes preceden a la reorganización. Sus menciones al Bloque 8 de afinado corresponden al actual Bloque 9; no prueban implementación del nuevo Bloque 8.
 
 **Preparación del 24/10/2026:** `AUDIT_PREPARATION_MAX_LOOPS` añade pasadas a la inicial: 0 → 1 llamada, 1 → 2, 2 → 3, 3 → 4; predeterminado 1, rango 0–20. Validación previa al consumo; tiempo/contexto mantienen sus techos. El explorador puede cerrar antes y al agotar llamadas conserva evidencia parcial. No repite el equipo ni amplía reparto/síntesis. Todos los roles de pruebas heredan el modelo común y `low`; se retira la elevación de Seguridad del ejemplo y de la configuración local. Esto no resuelve por sí solo los errores anteriores de sesión/cuota. CI/CD y versiones conservados. Comprobaciones: 119 pruebas ejecutadas, 118 correctas y una referencia visual opcional omitida en 6,706 s; un único caso nuevo comprueba 0/1/2/3 loops y cierre anticipado, y el caso existente de configuración inválida cubre límites erróneos antes de consumir modelo. Log local `artifacts/preparation-loops-tests.log`. Imágenes reconstruidas y preparación híbrida activada localmente sin trabajos activos; perfiles efectivos de los seis roles comprobados como `gpt-6-luna`/`low`, con dos llamadas máximas de preparación. Un bloqueo de metadatos temporales de Compose en Windows obligó a repetir el build del backend directamente con Docker, correctamente. API, preparador y oficina saludables; HTTP de oficina y proxy comprobados. Sin nuevas llamadas reales, scanners ni ampliación de CI/CD. La CI del PR #3 sobre el commit anterior `61d4dcb` había finalizado correctamente; la actualización se validará en su propio commit. Evidencia resumida: [preparation-loops-2026-10-24.json](evidence/preparation-loops-2026-10-24.json).
 
@@ -252,6 +246,117 @@ Correcciones preparadas: contrato final de salida por célula que distingue tema
 El usuario autorizó después la prueba completa sin restricciones de intentos y la resolución de errores, incluidos scanners. Ejecución final `bb23e6e3-f995-4748-8ff2-47304b8f57cc`, bookingApi `master@c0d247e3226d77a83471c7a1b32afdb0981eb7f1`: adquisición nueva; Graphify real; dos llamadas del explorador, reparto, Seguridad, Arquitectura, Inventario y síntesis. Los tres especialistas y ambas etapas del coordinador finalizaron correctamente, sin errores de formato o citas, sin fallback y sin etapas de modelos omitidas. Todos usaron `gpt-6-luna`/`low`. Siete llamadas, 40020 tokens comunicados (36768 entrada, 3252 salida; 44 de razonamiento comunicados), sin medidas desconocidas, y unos 104,95 s hasta el estado final. Siete observaciones informativas confirmadas, un indicio de severidad media y cinco elementos de síntesis. Veinte referencias únicas contrastadas nuevamente con el snapshot. JSON, Markdown, HTML y manifiesto generados y leídos mediante la API/proxy de la oficina; servicios saludables y sin trabajo activo.
 
 **Límites conservados:** el informe sigue `parcial` porque la preparación agotó las dos llamadas; no se modifica el histórico ni se declara suficiencia ficticia. Gitleaks terminó sin detecciones en los archivos seleccionados. OSV está habilitado, pero no dispone de un archivo de versiones resueltas compatible en bookingApi: dependencias `no_evaluado`, sin fingir una ejecución ni generar un lockfile instalando dependencias. La validación demuestra el recorrido funcional completo con esta muestra y perfil económico; utilidad óptima, cobertura profunda y modelos finales siguen en el Bloque 8. No se ejecutó bookingApi, no se ampliaron CI/CD ni versiones. Evidencia final: [full-pilot-final-2026-10-24.json](evidence/full-pilot-final-2026-10-24.json). Los tres intentos anteriores y sus informes se conservan; sumaron 17 llamadas y 81112 tokens comunicados, aparte de la autorización inicial de cinco llamadas.
+
+### Bloque 8 — Snapshot completo, evidencia compartida y recuperación por especialista
+
+**Estado: planificado, sin implementar. Acuerdo del 24/10/2026:** la adquisición y las herramientas locales trabajan sobre el snapshot completo del commit. La selección parcial se aplica al contexto enviado a modelos. Este bloque sustituye para el nuevo recorrido las restricciones anteriores de adquisición selectiva y especialistas sin recuperación; no atribuye esas capacidades a la implementación de bloques 1–7. El afinado de modelos se traslada al Bloque 9 y no comienza hasta validar esta arquitectura.
+
+- [x] F1-29 Obtener dentro de Docker todo el contenido versionado del commit fijado, sin selección por relevancia, extensión, categoría o presupuesto del modelo. Verificar integridad y completitud contra el árbol; contemplar submódulos y contenido LFS cuando existan.
+- [x] F1-30 Construir inventario, mapas y grafo sin modelos sobre todo el snapshot; aplicar scanners al conjunto completo compatible con cada herramienta. Registrar por archivo y herramienta procesamiento, incompatibilidad y error; eliminar los límites actuales de subconjunto del recorrido que se declare completo.
+- [x] F1-31 Mantener snapshot y mapas disponibles durante toda la revisión, con consultas de lectura controladas por Core y una skill compartida de recuperación. Conservar evidencia citada, trazas y cobertura; definir limpieza al terminar o interrumpirse.
+- [x] F1-32 Preparar en una única llamada inicial del coordinador los tres paquetes de evidencia: contexto común breve, fuentes originales específicas, encargo, relaciones observadas y carencias. Permitir una segunda llamada de preparación solo si se necesita y está habilitada.
+- [x] F1-33 Decidir por especialidad ejecutar, ejecutar parcialmente u omitir con motivo verificable, evidencia considerada y elementos faltantes. Sustituir la obligación actual de asignar archivos por una comprobación de relevancia mínima; una omisión justificada registra cero llamadas.
+- [x] F1-34 Permitir a cada especialista cero o una recuperación adicional configurable sobre la misma evidencia completa, sin nueva descarga ni ejecución. Devolver relaciones y fragmentos con rutas y líneas en una sola respuesta de recuperación; mantener independientes las conclusiones.
+- [x] F1-35 Separar ejecución y cobertura en estados persistidos, oficina e informes. Distinguir error técnico, omisión justificada, incompatibilidad de herramienta e información insuficiente; conservar resultados parciales útiles y rechazar individualmente elementos inválidos cuando el JSON permita hacerlo.
+- [x] F1-36 Incluir en la síntesis certeza, severidad, condiciones, acciones y pendientes de las aportaciones validadas. Validar las fuentes conservadas y evitar pérdidas de condiciones, afirmaciones nuevas o elevación de certeza; mantener los originales.
+- [x] F1-37 Comprobar el recorrido completo con modelos económicos y las pruebas manuales mínimas; medir adquisición, mapas, scanners, recuperación, llamadas y tokens. Documentar resultados, límites, configuración y limpieza en este plan antes de iniciar el Bloque 9.
+
+Los identificadores F1-25 a F1-28 del afinado se conservan en el Bloque 9 para no romper referencias anteriores. El orden de ejecución lo determina el bloque: primero 8, después 9.
+
+**Condición de adquisición completa**
+
+- Descargar un snapshot completo del commit, sin necesitar todo el historial Git. Incluir archivos versionados de código, configuración, documentación, pruebas, fixtures, archivos ocultos, lockfiles y recursos. Las exclusiones actuales por heurística no se aplican a la adquisición.
+- El inventario debe poder reconciliar rutas, tipos, tamaños e integridad con el árbol esperado. Un puntero LFS no sustituye su contenido; un submódulo no se declara adquirido solo por registrar el gitlink. Si no se pueden recuperar, el estado es incompleto y se informa.
+- Mantener límites operativos de descarga, disco, memoria y duración independientes del contexto de modelos. Si impiden obtener el snapshot entero, detener la preparación con causa explícita y no iniciar automáticamente el análisis sobre un subconjunto. No eliminar los controles del contenedor ni seguir enlaces fuera del snapshot.
+
+**Mapas y scanners de alcance global**
+
+Todo archivo adquirido figura en el inventario y se ofrece a las herramientas que soportan su formato. Graphify opera sobre el conjunto completo de código compatible en modo sin modelos; el inventario y las búsquedas locales cubren también archivos que no producen relaciones AST. Binarios y formatos no soportados conservan identidad y motivo de incompatibilidad; no se inventan relaciones ni se declara cobertura semántica universal. No se añaden motores redundantes por defecto.
+
+Gitleaks recibe el conjunto completo compatible, sin el recorte para modelos. OSV recibe todos los archivos compatibles de dependencias resueltas presentes en el snapshot; si faltan, registra que las dependencias no se evaluaron. No se fabrica un lockfile ni se instalan dependencias para conseguir un resultado verde. Las omisiones nativas de herramientas y los errores deben quedar visibles. Un recorte por tamaño, nodos o tiempo que deje trabajo compatible pendiente no se presenta como preparación completa ni permite continuar automáticamente como si lo fuera.
+
+Scanners procesan el snapshot aislado; los mapas y las herramientas expuestas a modelos usan texto ocultado y conservan trazabilidad a las posiciones originales. Ninguna herramienta ejecuta la aplicación analizada, sus tests o scripts. No se da acceso al socket Docker ni a credenciales del anfitrión. Los mapas locales no realizan llamadas a modelos.
+
+**Flujo y paquetes de evidencia**
+
+1. Adquirir y verificar el snapshot entero; completar inventario, scanners y mapas deterministas con sus estados de cobertura.
+2. Preparar localmente un contexto inicial compacto: estructura, relaciones relevantes y pequeños fragmentos originales. Mantener todo el snapshot consultable; no enviarlo entero al modelo.
+3. Una llamada del coordinador devuelve los tres paquetes diferentes a la vez. Core materializa los archivos o fragmentos referenciados y verifica que existan y quepan en el presupuesto de cada rol. Archivos pequeños completos, grandes por fragmentos; no sustituirlos por resúmenes generados.
+4. Si el coordinador identifica una carencia concreta, puede consultar la evidencia y realizar hasta una llamada adicional para completar los paquetes, si está habilitada. No hay una llamada de empaquetado por especialista ni otra etapa de exploración obligatoria separada. La síntesis final tiene presupuesto propio.
+5. Cada especialista recibe su paquete, evalúa la evidencia y puede solicitar una recuperación local adicional. Core devuelve relaciones y unos pocos fragmentos pertinentes; el especialista dispone de una llamada adicional para finalizar. Si no consulta, responde en su primera llamada.
+6. Validar, conservar aportaciones útiles y sintetizar con las condiciones y carencias visibles. Una cita inexistente se rechaza; no se repara inventando una fuente.
+7. Guardar informes, manifiestos y consumo real; liberar los temporales conforme a la política acordada.
+
+Los paquetes pueden compartir un archivo cuando sea relevante para varios roles. Las consultas operan solo sobre el snapshot de esa revisión, no sobre conversaciones o conclusiones de otros agentes. La skill describe uso y contratos; Core impone herramientas, rutas, permisos y presupuestos. No se requiere un nuevo servicio por agente ni un servidor MCP adicional.
+
+**Elegibilidad por especialidad**
+
+| Evidencia recuperada | Decisión | Registro |
+|---|---|---|
+| Ninguna base relevante para el encargo | Omitir sin invocar especialista | Motivo, fuentes consideradas, qué falta y cero llamadas |
+| Base útil para algunas preguntas | Ejecutar parcialmente | Alcance posible y carencias concretas |
+| Base razonable que requiere interpretación técnica | Ejecutar | El especialista determina qué conclusiones puede sostener |
+
+No basta con contar archivos ni con sus nombres para afirmar suficiencia. Tampoco se omite Arquitectura solo porque falten copias o despliegue si hay código que permite evaluar parte del flujo. La omisión describe la evidencia que se consiguió, no prueba que el repositorio carezca del control buscado. La oficina distingue «no ejecutado» de «ejecutado con información insuficiente» y de «error».
+
+**Presupuestos propuestos para implementar y medir**
+
+| Control | Propuesta inicial | Significado |
+|---|---|---|
+| Coordinador de preparación | Una llamada inicial | Genera los tres paquetes en una respuesta |
+| Llamadas adicionales de preparación | Configurable 0 o 1; empezar con 0 | Una segunda llamada solo ante una carencia concreta; no es síntesis |
+| Recuperación por especialista | Configurable 0 o 1; base 0 | Una recuperación habilita como máximo una llamada de modelo adicional |
+| Perfil de prueba del Bloque 8 | Seguridad 1, Arquitectura 1, Inventario 0 | Contrastar utilidad y coste con la base de cero recuperaciones |
+| Síntesis | Hasta una llamada | Solo si hay aportaciones válidas; omisión justificada si no las hay |
+| Modelo y razonamiento | Perfiles económicos actuales | Las elevaciones corresponden al Bloque 9 |
+
+Controles implementados como `AUDIT_<ROL>_MAX_EXTRA_QUERIES` (coordinator, security, architecture, inventory), rango 0/1 y base 0. `AUDIT_PREPARATION_MAX_LOOPS` queda solo para los helpers antiguos. Una consulta local al grafo no consume modelo por sí sola, pero reenviar su respuesta al especialista sí puede añadir entrada y una llamada. Con los tres especialistas ejecutados: base de cinco llamadas (coordinador + tres especialistas + síntesis); perfil de prueba hasta siete; con una recuperación en cada especialista y una segunda llamada del coordinador, hasta nueve. Las omisiones justificadas reducen llamadas. No hay reintentos de proveedor ni ampliación automática de modelos o presupuesto.
+
+**Conservación y comprobaciones mínimas**
+
+El snapshot completo y sus mapas permanecen disponibles hasta terminar la revisión, incluso mientras trabajan los especialistas. Se conservan en los resultados el manifiesto, la cobertura, las decisiones de reparto/omisión y los fragmentos citados necesarios para contrastar el informe. Los datos temporales completos se limpian al finalizar y ante errores gestionados, con recuperación de limpieza tras interrupción; no se prometen consultas posteriores al grafo completo una vez retirado. Los informes históricos no se reescriben.
+
+Comprobar con casos dirigidos: igualdad con el árbol completo y fallo sin continuación parcial ante una descarga incompleta; cobertura de herramientas; omisión justificada frente a reparto vacío incorrecto; recuperación 0/1 y límites de lectura; conservación de un hallazgo válido junto a otro rechazado. Después realizar una prueba real con bookingApi y, para comprobar mayor tamaño y heterogeneidad, Arktic Office. Registrar exactamente qué pudo procesar cada herramienta, las llamadas intentadas/omitidas, tokens comunicados y evidencia recuperada. Los formatos no compatibles son una limitación visible, no un éxito ficticio. No repetir benchmarks o suites más amplias sin una causa concreta.
+
+**Cierre del Bloque 8:** snapshot íntegro disponible, herramientas locales aplicadas a todo su conjunto compatible con contabilidad por archivo, paquetes trazables y recuperación acotada operativos, decisiones de omisión visibles y flujo real comprobado. Aceptación de cobertura y límites antes de afinar modelos. Sin ampliaciones de CI/CD, cambios de versiones, publicación ni cierre de entrega.
+
+**Implementación y comprobación del Bloque 8 — 24/10/2026**
+
+Snapshot íntegro con comprobación SHA de blobs y manifiesto SHA256, sin filtros de adquisición. El Core mantiene el texto ocultado y el grafo locales; el coordinador empaqueta los tres encargos en una llamada y los especialistas pueden consultar directamente mediante la skill compartida. Las decisiones, las fuentes consideradas, los fragmentos originales y las consultas quedan trazados. Un JSON parcialmente válido conserva hallazgos correctos con advertencias; omisión, insuficiencia, ejecución y cobertura se distinguen en oficina, JSON, HTML y Markdown.
+
+| Prueba real | bookingApi | Arktic Office |
+|---|---|---|
+| Ejecución | `cd87e221-9549-4699-9591-dec1ca256360` | `5a9eaa6e-29ee-4dc7-9144-6a00d53a0543` |
+| Commit remoto | `c0d247e3226d77a83471c7a1b32afdb0981eb7f1` (`master`) | `b6b8adec2a36a43248ed5194bdc86b38bfeaccb6` (`main`) |
+| Archivos verificados / árbol | 44 / 44 (43 textos, 1 binario) | 69 / 69 (68 textos, 1 binario) |
+| Bytes / adquisición | 161303 / 2.17 s | 1603313 / 2,130 s |
+| Mapa sin modelos | 38 procesados, 6 incompatibles; 335 nodos, 1102 relaciones | 50 procesados, 19 incompatibles; 493 nodos, 1487 relaciones |
+| Relaciones externas no resueltas | 82 conservadas | 194 conservadas |
+| Gitleaks | 44 archivos ofrecidos, sin detecciones | 69 ofrecidos, sin detecciones |
+| OSV | Sin input resuelto compatible; no evaluado | Sin input resuelto compatible; no evaluado |
+| Modelos | Todos `gpt-6-luna/low` | Todos `gpt-6-luna/low` |
+| Llamadas / tokens comunicados / duración | 6 / 55627 / 88,038 s | 5 / 46182 / 80,030 s |
+| Recuperación de especialistas | Arquitectura: una consulta, tres fragmentos, segunda llamada | Cero consultas solicitadas |
+| Resultados retenidos | 8 observaciones, 1 indicio, 5 conclusiones; 22 citas únicas recontrastadas | 3 observaciones, 3 conclusiones; 6 citas únicas recontrastadas |
+
+Los tres especialistas y reparto/síntesis se invocaron en ambas pruebas; ninguna célula se omitió. En bookingApi los tres terminaron con aportaciones útiles, sin errores técnicos finales; el informe sigue **parcial** por elementos rechazados, seis controles no evaluados y carencias declaradas. Arquitectura recuperó `application.properties`, `ReservationRepository.java` y `ReservationService.java`. En Arktic, Arquitectura se ejecutó pero sus cinco hallazgos citaron identificadores inválidos y se rechazaron todos: quedó con información insuficiente; Seguridad e Inventario conservaron aportaciones y advertencias. Esto comprueba el tratamiento del resultado insuficiente, **no valida la calidad de Arquitectura en esa muestra**. La muestra Arktic es el `main` remoto, no esta rama local aún sin fusionar.
+
+**Correcciones detectadas con las pruebas:** conservar relaciones externas sin confundirlas con recortes; clasificar los dialectos YAML de Compose no soportados como incompatibles visibles; reforzar `schema_version` obligatorio; devolver las rutas existentes aunque una consulta incluya una ruta relativa ausente; devolver los errores de herramienta como observaciones que consumen la única consulta y permiten finalizar con el paquete previo. Una consulta demasiado larga o insegura no realiza la lectura ni obtiene una nueva consulta. Las aportaciones inválidas nunca se hacen pasar por válidas.
+
+**Intentos y consumo:** ocho ejecuciones registradas, dos detenidas durante preparación antes de consumir modelo. Las otras seis suman 32 llamadas y 282555 tokens comunicados, incluyendo pruebas fallidas/intermedias; no se atribuye solo el consumo final al trabajo entero. Los informes anteriores se conservan. No hay una comparación controlada que demuestre ahorro de tokens: la recuperación añade una llamada y puede reenviar contexto. Evidencia, IDs, advertencias, consumo, tiempos de herramientas y límites: [block8-architecture-2026-10-24.json](evidence/block8-architecture-2026-10-24.json).
+
+**Comprobaciones mínimas:** 14 pruebas dirigidas (`test_complete_flow`, `test_coordinator`, `test_compatibility`), todas correctas en 0,170 s; no se ejecutó la suite completa. Incluyen integridad/descarga incompleta/LFS, fallo del mapa sin continuación, aislamiento, consultas 0/1 y errores, omisión justificada, conservación de hallazgos y limpieza de temporales abandonados. El extra del coordinador y las omisiones se probaron con respuestas controladas, sin forzar llamadas reales adicionales. Comprobación nativa de Graphify: ocultos y tests procesados; Compose `!reset` incompatible; YAML inválido detiene la preparación. La revisión final añadió un caso dirigido de fallo de la segunda llamada: consumo total desconocido (`null`), conservando el primero en `invocations`, sin repetir pilotos por ese cambio del camino de error. Skill validada, imágenes construidas y parche frontend contrastado en reversa. API/oficina/preparador saludables; oficina, lectura y descarga de ambos informes HTTP 200, tabla de ejecución/cobertura presente y cero trabajos activos. Sin directorios temporales de snapshots o índices al terminar; recuperación de un directorio propio abandonado comprobada en test. No se afirma una inspección visual completa de la disposición de la interfaz.
+
+**Límites y cierre técnico:** no se hidratan LFS ni submódulos: se detiene el análisis y se informa, sin declarar adquirido su contenido. Graphify conserva sus límites semánticos nativos (incluidos profundidad 6 y 500 claves YAML); «procesado» significa extracción ejecutada, no todas las relaciones posibles. Los dialectos sin soporte y binarios quedan inventariados y consultables cuando tienen texto. Gitleaks/OSV no proporcionan cobertura por byte/archivo: se registra su entrada y resultado real, sin inventar procesamiento individual. Un límite global o un error de extracción compatible detiene la preparación, sin pasar una muestra al modelo. No se ejecutaron los objetivos, sus tests ni instaladores. CI/CD, pins y versiones 0.2.0 intactos. Arquitectura técnica del Bloque 8 comprobada; utilidad semántica, selección fina de contexto y modelos finales siguen pendientes del **Bloque 9**, sin cerrar F1-24 ni la entrega.
+
+### Bloque 9 — Afinado (finetuning) de configuración y resultados
+
+Este bloque afina configuración, instrucciones y utilidad observada; no implica entrenar pesos de un modelo. Primero se prueba el funcionamiento con perfiles mínimos, sin buscar todavía el resultado óptimo.
+
+- [ ] F1-25 Resolver y comprobar sesión/cuota con evaluación real acotada y presupuesto explícito, sin scanners salvo autorización independiente. Completar la validación semántica pendiente de F1-23.
+- [ ] F1-26 Acordar y elevar modelos/razonamiento por rol para analizar un repositorio real; conservar el perfil económico para pruebas funcionales.
+- [ ] F1-27 Evaluar utilidad, citas, insuficiencia, cobertura, llamadas, tiempos y consumo comunicado. Afinar prompts, selección y loops según fallos observados, con cambios pequeños y comprobaciones mínimas.
+- [ ] F1-28 Registrar configuración final, límites y resultados; aceptación humana y decisión de versión para completar F1-24. El usuario conserva el merge.
 
 ## Estructura implementada
 
@@ -307,3 +412,7 @@ Capacidades contrastadas en fuentes primarias durante la propuesta del 23/10/202
 | 23/10/2026 | Bloque 3 F1-07 a F1-09: paquete instalado, responsabilidades y contratos separados, IDs independientes del layout e histórico conservado | Regresión y arranque manuales correctos; 154 archivos históricos sin cambios; CI/CD sin ampliar por petición del usuario y versiones 0.2.0 conservadas |
 
 | 24/10/2026 | Bloques 4–6 implementados y comprobados; Bloque 7 con layout, manifiestos y recursos separados | Candidata para PR; F1-23 parcial por sesión/cuota y F1-24 pendiente de aceptación; versiones conservadas |
+
+| 24/10/2026 | Reorganización acordada: nuevo Bloque 8 de snapshot completo, mapas/scanners globales y recuperación compartida; afinado trasladado al Bloque 9 con IDs F1-25 a F1-28 conservados | Solo planificación; nueva arquitectura sin implementar, versiones y CI/CD conservados |
+
+| 24/10/2026 | Bloque 8 F1-29 a F1-37: snapshot completo, mapas globales, paquetes originales, recuperación compartida 0/1 y cobertura separada | 14 pruebas dirigidas y pilotos económicos de bookingApi/Arktic registrados; informes parciales y límites explícitos; afinado pendiente en Bloque 9, CI/CD y versiones conservados |

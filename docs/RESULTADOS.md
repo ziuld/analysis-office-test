@@ -1,3 +1,11 @@
+# Resultados del Bloque 8
+
+Los nuevos informes híbridos incluyen el inventario íntegro al commit en `evidencia.json`, hashes de blobs y SHA256, cobertura por herramienta y fuentes originales realmente suministradas. `coordinacion.json` conserva decisiones y consultas; `celulas/*.json` distingue ejecución, cobertura, llamadas y advertencias. `manifest.json` conserva consumo y perfiles efectivos. HTML, Markdown y oficina muestran omisiones, carencias y cobertura separada de la ejecución. Los históricos no se reescriben.
+
+Que el snapshot esté completo no significa que todos los archivos tengan parser ni que los modelos hayan leído todo su contenido. La evaluación semántica sigue acotada. Las comprobaciones reales, intentos y límites se registran en [PLAN_FASE_1.md](PLAN_FASE_1.md).
+
+## Documentación y resultados anteriores
+
 # Resultados y candidata de entrega
 
 Las revisiones nuevas de API y CLI se guardan bajo `/reports/AAAA-MM-DD/HHMMSS-repositorio/identificador/`, con fecha y hora UTC. El título deriva del nombre del repositorio y se normaliza para usarlo como carpeta. El identificador sigue siendo la referencia de las rutas HTTP. El catálogo admite también los directorios planos anteriores y no mueve ni reescribe informes históricos; rechaza identificadores duplicados y enlaces de carpetas. La creación sin repositorio conserva el comportamiento plano de compatibilidad.
@@ -27,4 +35,4 @@ El adaptador desactiva los reintentos y recuperación internos del Hermes fijado
 
 Tras recuperar la sesión y corregir contratos y reparto, la prueba real `bb23e6e3-f995-4748-8ff2-47304b8f57cc` completó reparto, Seguridad, Arquitectura, Inventario y síntesis sin errores ni etapas de modelos omitidas. Dos llamadas de preparación más cinco del equipo, todas `gpt-6-luna`/`low`: 40020 tokens comunicados, unos 105 s, siete observaciones informativas, un indicio medio y cinco conclusiones de síntesis. Veinte citas únicas contrastadas con el snapshot; informes y manifiesto accesibles mediante la oficina. La autorización posterior incluyó scanners: Gitleaks sin detecciones en la selección; OSV sin entrada compatible y dependencias no evaluadas.
 
-Se mantiene el estado parcial por el límite de dos llamadas de preparación. No se borra el histórico de intentos fallidos ni se declara seguridad o calidad óptima. Evidencia y trazabilidad: [full-pilot-final-2026-10-24.json](evidence/full-pilot-final-2026-10-24.json). La revisión humana y el afinado del Bloque 8 continúan pendientes.
+Se mantiene el estado parcial por el límite de dos llamadas de preparación. No se borra el histórico de intentos fallidos ni se declara seguridad o calidad óptima. Evidencia y trazabilidad: [full-pilot-final-2026-10-24.json](evidence/full-pilot-final-2026-10-24.json). La revisión humana y el afinado del Bloque 9 continúan pendientes.

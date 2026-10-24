@@ -82,10 +82,37 @@
       "note": "Dos intentos de siete llamadas y un tercero de tres, con reparto vacío; no se confunden etapas omitidas con llamadas sin consumo comunicado."
     },
     "initial_budget_authorized_model_calls_used": 5,
-    "initial_budget_authorized_model_calls_remaining": 0
+    "initial_budget_authorized_model_calls_remaining": 0,
+    "block8": {
+      "status": "implemented_functional_flow_verified_with_partial_semantic_coverage",
+      "tasks": [
+        "F1-29",
+        "F1-30",
+        "F1-31",
+        "F1-32",
+        "F1-33",
+        "F1-34",
+        "F1-35",
+        "F1-36",
+        "F1-37"
+      ],
+      "targeted_tests": {
+        "run": 14,
+        "passed": 14,
+        "full_suite": false
+      },
+      "booking_final": "cd87e221-9549-4699-9591-dec1ca256360",
+      "arktic_final": "5a9eaa6e-29ee-4dc7-9144-6a00d53a0543",
+      "booking_final_model_calls": 6,
+      "booking_final_tokens": 55627,
+      "all_attempts_model_calls": 32,
+      "all_attempts_reported_tokens": 282555,
+      "evidence": "docs/evidence/block8-architecture-2026-10-24.json",
+      "limitations": "Informes parciales; Arktic Arquitectura sin hallazgos con citas válidas; OSV no evaluado; LFS/submódulos no hidratados bloquean preparación."
+    }
   },
   "pending": [
-    "semantic_calibration_on_representative_repositories_block8",
+    "semantic_calibration_on_representative_repositories_block9",
     "human_acceptance",
     "delivery_version_decision",
     "user_merge"
@@ -102,12 +129,15 @@
   },
   "revision": "Identificada por el commit y la cabecera del PR; este archivo no se firma a sí mismo.",
   "trial_configuration": {
-    "preparation_max_loops": 1,
-    "preparation_max_calls": 2,
     "codex_model": "gpt-6-luna",
     "reasoning": "low",
     "per_role_model_overrides": false,
-    "tuning_block": 8,
-    "scanners_enabled": true
+    "tuning_block": 9,
+    "scanners_enabled": true,
+    "preparation_model_calls": 0,
+    "coordinator_max_extra_queries": 0,
+    "security_max_extra_queries": 1,
+    "architecture_max_extra_queries": 1,
+    "inventory_max_extra_queries": 0
   }
 }

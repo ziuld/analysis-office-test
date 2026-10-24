@@ -6,6 +6,14 @@ def notes(snapshot):
     if not preparation:
         return []
     coverage = snapshot.get("coverage", {})
+    if preparation.get("mode") == "complete":
+        inventory = snapshot.get("inventory", [])
+        processed = sum(x.get("map", {}).get("status") == "processed" for x in inventory)
+        unsupported = sum(x.get("map", {}).get("status") == "unsupported" for x in inventory)
+        return [f"Snapshot completo verificado: {len(inventory)} de {snapshot.get('tree_files', '?')} archivos al commit; incluye ocultos, tests y binarios.",
+                f"Mapa estático: {processed} archivos procesados; {unsupported} sin parser compatible. Todos constan en el inventario; relaciones estáticas no garantizan exhaustividad semántica.",
+                f"Contexto de modelos: {len(snapshot['files'])} archivos con fragmentos originales retenidos; paquetes y consultas registrados por célula.",
+                "Preparación local sin llamadas a modelos. Scanners sobre todo el input compatible; ofrecido no significa evaluado. LFS y submódulos no hidratados detienen la revisión."] + preparation.get("limitations", [])
     exploration, graph = preparation["exploration"], preparation["graph"]
     closures = {"sufficient": "el explorador declaró suficiente la lectura parcial",
                 "insufficient": "lectura insuficiente", "iteration_limit": "límite de iteraciones",

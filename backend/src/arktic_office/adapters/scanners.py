@@ -5,6 +5,7 @@ from pathlib import Path, PurePosixPath
 import re
 import subprocess
 import tempfile
+import time
 from arktic_office.preparation.repository import LOCKFILES, redact
 
 
@@ -19,21 +20,24 @@ def run(command, output):
     return json.loads(output.read_text(encoding="utf-8"))
 
 
-def scan(files, runner=run):
+def scan(files, runner=run, *, source_root=None):
     results = []
     with tempfile.TemporaryDirectory(prefix="arktic-scan-") as temp:
         root = Path(temp)
-        source = root / "source"
-        source.mkdir()
+        source = Path(source_root) if source_root is not None else root / "source"
+        if source_root is None:
+            source.mkdir()
         safe = {}
         for f in files:
             relative = PurePosixPath(f["path"])
             if relative.is_absolute() or ".." in relative.parts or "\\" in f["path"] or ":" in f["path"]:
                 continue
             path = source.joinpath(*relative.parts)
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(f["text"], encoding="utf-8")
+            if source_root is None:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(f["text"], encoding="utf-8")
             safe[str(path)] = f["path"]
+        started = time.monotonic()
         output = root / "gitleaks.json"
         config = root / "trusted-gitleaks.toml"
         config.write_text("[extend]\nuseDefault = true\n", encoding="utf-8")
@@ -50,7 +54,12 @@ def scan(files, runner=run):
             item["status"] = "detecciones_por_validar" if item["findings"] else "sin_detecciones_en_seleccion"
         except (OSError, ValueError, KeyError, TypeError, subprocess.TimeoutExpired):
             item.update(status="error", detail="Gitleaks no completó la comprobación; no se interpreta como ausencia de secretos.")
+        item["seconds"] = round(time.monotonic() - started, 3)
+        item["input_files"] = list(safe.values())
+        if source_root is not None:
+            item["detail"] = "Snapshot completo ofrecido a Gitleaks; reglas y límites nativos, sin historial Git. Binarios y enlaces no equivalen a texto analizable."
         results.append(item)
+        started = time.monotonic()
         locks = [path for path in safe if Path(path).name in LOCKFILES | {"requirements.txt"}]
         item = {"name": "OSV-Scanner 2.7.0", "status": "no_evaluado", "findings": [], "detail": "No hay archivos de versiones resueltas admitidos en la selección. Revisar dependencias queda pendiente."}
         if locks:
@@ -76,5 +85,7 @@ def scan(files, runner=run):
                             detail=f"{packages} paquetes con versión en la respuesta; {len(locks)} archivos enviados. Consulta OSV en línea con metadatos de paquetes. Sin instalar dependencias ni analizar llamadas; no demuestra ausencia de vulnerabilidades.")
             except (OSError, ValueError, KeyError, TypeError, AttributeError, subprocess.TimeoutExpired):
                 item.update(status="error", detail="OSV no completó la comprobación (formato, acceso o tiempo). Dependencias pendientes de evaluación.")
+        item["seconds"] = round(time.monotonic() - started, 3)
+        item["input_files"] = [safe[p] for p in locks]
         results.append(item)
-    return results
+        return results

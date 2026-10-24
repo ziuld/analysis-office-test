@@ -299,10 +299,10 @@ index 0000000..9441f36
 +}
 diff --git a/src/features/audit/AuditOffice.tsx b/src/features/audit/AuditOffice.tsx
 new file mode 100644
-index 0000000..91d18c7
+index 0000000..89aa955
 --- /dev/null
 +++ b/src/features/audit/AuditOffice.tsx
-@@ -0,0 +1,127 @@
+@@ -0,0 +1,130 @@
 +"use client";
 +
 +import { useCallback, useEffect, useMemo, useState } from "react";
@@ -313,7 +313,7 @@ index 0000000..91d18c7
 +import { AgentQuestion, type Question } from "./AgentQuestion";
 +import { ExecutiveReport } from "./ExecutiveReport";
 +
-+interface Cell { id: string; nombre: string; estado: string; model: string; reasoning: string; error?: string; mensaje?: string; necesita?: string[] }
++interface Cell { id: string; nombre: string; estado: string; model: string; reasoning: string; error?: string; mensaje?: string; necesita?: string[]; coverage?: string; reason?: string; missing?: string[] }
 +interface Activity { state: string; text: string; working: boolean; meeting: boolean }
 +interface Run { activity?: Record<string, Activity>; id: string; repository: string; estado: string; commit?: string; branch?: string; celulas: Cell[]; error?: string; mensaje?: string; necesita?: string[]; has_report: boolean; historical?: boolean; evidence_origin?: string; report_format?: number; derived_from?: string; simulation?: boolean }
 +const roles = [{ id: "coordinator", name: "Coordinador", color: "#38bdf8" }, { id: "security", name: "Seguridad", color: "#fbbf24" }, { id: "architecture", name: "Arquitectura", color: "#a78bfa" }, { id: "inventory", name: "Inventario", color: "#34d399" }];
@@ -418,6 +418,9 @@ index 0000000..91d18c7
 +        {roles.map(role => { const cell = current.celulas?.find(c => c.id === role.id); const status = role.id === "coordinator" ? current.estado : cell?.estado || "pendiente"; return <button key={role.id} onClick={() => consult(role.id)} className={`block w-full rounded-lg border p-3 text-left ${selectedCell === role.id ? "border-cyan-300/70 bg-cyan-950/40" : "border-white/10 bg-slate-900"}`}>
 +          <span className="flex justify-between text-sm"><strong>{role.name}</strong><span>{label[status] || status}</span></span>
 +          <span className="mt-1 block text-xs text-slate-400">{cell ? `${cell.model} · ${cell.reasoning}` : role.id === "coordinator" ? "Distribuye evidencia y consolida" : "Esperando evidencia"}</span>
++          {cell?.coverage && <span className="mt-2 block text-xs text-slate-300">Cobertura: {({partial: "parcial", insufficient: "información insuficiente", incomplete: "incompleta", available_evidence: "evidencia disponible evaluada"} as Record<string, string>)[cell.coverage] || cell.coverage}</span>}
++          {cell?.reason && <span className="mt-2 block text-xs text-slate-300">{cell.reason}</span>}
++          {cell?.missing?.length ? <span className="mt-2 block text-xs text-amber-200">Falta: {cell.missing.join(" · ")}</span> : null}
 +          {cell?.error && <span className="mt-2 block text-xs text-rose-300">{cell.error}</span>}
 +          {cell?.mensaje && <span className="mt-2 block text-xs text-amber-200">{cell.mensaje}</span>}
 +          {cell?.necesita?.length ? <span className="mt-2 block text-xs text-slate-300">Para avanzar: {cell.necesita.join(" · ")}</span> : null}
@@ -492,15 +495,16 @@ index 0000000..5b64d92
 +}
 diff --git a/src/features/audit/auditStatus.ts b/src/features/audit/auditStatus.ts
 new file mode 100644
-index 0000000..36e816d
+index 0000000..af1e44a
 --- /dev/null
 +++ b/src/features/audit/auditStatus.ts
-@@ -0,0 +1,13 @@
+@@ -0,0 +1,14 @@
 +export const statusLabel: Record<string, string> = {
 +  simulacion: "Simulación", simulada: "Simulada", preparando: "Leyendo repositorio",
 +  analizando: "Analizando", pendiente: "Pendiente", completada: "Completada",
 +  completo: "Completado", parcial: "Resultado parcial", error: "Error técnico",
 +  sin_evidencia: "Información insuficiente", informacion_insuficiente: "Información insuficiente",
++  no_ejecutado: "Omitido con justificación",
 +  sin_resultados: "Sin resultados válidos",
 +};
 +

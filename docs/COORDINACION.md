@@ -1,3 +1,28 @@
+# Coordinación y recuperación compartida — Bloque 8
+
+En el modo híbrido actual, la preparación completa es determinista y no consume modelo. `AUDIT_COORDINATION_MODE=ai` hace una llamada inicial que prepara simultáneamente los tres paquetes; el Core materializa fuentes originales del snapshot y respeta los límites por rol. El coordinador recibe un índice compacto, muestras originales, relaciones y una base de reparto; nunca todo el repositorio en el prompt. El índice para modelos puede ser parcial aunque el snapshot y la búsqueda local sean completos.
+
+Cada paquete declara `execute`, `partial` u `omit`, motivo y carencias. Se conservan las fuentes consideradas y el contexto del reparto. Una omisión justificada llama cero veces al especialista y aparece como `no_ejecutado`, distinta de insuficiencia y error. Un reparto inválido conserva una base determinista y registra el fallback, sin reintentar ni ampliar presupuesto.
+
+```dotenv
+AUDIT_COORDINATOR_MAX_EXTRA_QUERIES=0
+AUDIT_SECURITY_MAX_EXTRA_QUERIES=0
+AUDIT_ARCHITECTURE_MAX_EXTRA_QUERIES=0
+AUDIT_INVENTORY_MAX_EXTRA_QUERIES=0
+```
+
+Todos admiten solo 0 o 1. Cero permite una respuesta inicial; uno permite una consulta local y una llamada adicional para finalizar. La síntesis final del coordinador tiene su llamada separada. El perfil local de prueba habilita Seguridad 1, Arquitectura 1 e Inventario 0, con coordinador 0 y todos los modelos `gpt-6-luna/low`. Presupuesto base de cinco llamadas; perfil de prueba hasta siete; todos los extras habilitados, hasta nueve. Una consulta no utilizada no consume llamada. Las preguntas posteriores al informe son independientes.
+
+La [skill compartida](../backend/src/arktic_office/resources/skills/arktic-review/SKILL.md) explica la solicitud JSON `{"retrieve":{"query":"símbolo o tema","paths":["ruta exacta"]}}`. Core permite únicamente búsquedas en texto ocultado y relaciones de esta revisión; devuelve hasta tres fragmentos de 100 líneas/6000 bytes cada uno y hasta doce relaciones, dentro del presupuesto total del rol. Un fragmento con relleno de líneas originales debe caber en 12000 bytes; si no cabe, no se entrega. La recuperación es acotada y puede quedar insuficiente en archivos con posiciones muy altas. Las posiciones originales se conservan, incluidos huecos de líneas, para validar citas. Rutas relativas ausentes se devuelven como `unavailable_paths` sin perder las presentes. Una consulta insegura o excesiva no realiza la lectura y devuelve un error de herramienta: consume la única consulta y permite finalizar con el paquete previo, sin reintentar ni elevar límites; el informe conserva la advertencia. Ni skill ni modelo obtienen shell, red o acceso a otros repositorios. No existe un servicio nuevo por agente.
+
+Cada especialista recibe fuentes, encargo, carencias y contexto de mapa; las consultas no comparten conclusiones de otros especialistas. `calls`, `invocations`, `retrievals`, `execution` y `coverage` permiten distinguir ejecución y suficiencia. Si un JSON estructurado contiene un hallazgo válido junto a otro inválido, se publica el válido con advertencias; no se inventa una cita para salvar el otro. Los controles ausentes o inválidos quedan no evaluados. Un sobre o JSON inválido sigue siendo error técnico.
+
+La síntesis usa solo aportaciones validadas, incluidas severidad, condiciones, acción y pendientes; el Core conserva esos campos vinculados a las aportaciones y vuelve a validar fuentes. Mantiene la certeza más prudente y los originales. Validar citas demuestra correspondencia con fuentes, no corrección semántica de la interpretación. La calidad óptima y la calibración de modelos quedan en el Bloque 9.
+
+`AUDIT_PREPARATION_MAX_LOOPS` se conserva únicamente para los antiguos helpers de exploración; ya no añade una etapa exploradora en el recorrido híbrido completo. Los nuevos controles no multiplican análisis ni descargan otra copia del repositorio. El timeout global API de 1500 s prevalece sobre los presupuestos individuales.
+
+## Registro anterior (Bloques 5 y 7; contratos anteriores conservados para compatibilidad)
+
 # Coordinador, perfiles y skills — Bloque 5
 
 La revisión conserva las tres células de una pasada. El coordinador puede añadir un reparto inicial y una síntesis final con IA, sin búsqueda, herramientas de agente, reintentos ni ampliación de evidencia. Se activa expresamente para controlar el consumo; la configuración predeterminada continúa siendo determinista.
@@ -65,10 +90,10 @@ Se construyeron imágenes y se reutilizó el comprobador de arranque existente: 
 
 No se ejecutaron análisis de repositorios reales, scanners ni modelos del proyecto. No se evaluaron calidad semántica del reparto/síntesis reales, consumo del proveedor, disponibilidad de modelos, carga concurrente ni recuperación de una llamada interrumpida. La prueba valida contratos y conservación con respuestas deterministas, no esas propiedades. CI/CD conserva su base sin ampliaciones; frontend/backend permanecen en 0.2.0, sin cierre de entrega.
 
-El límite de loops corresponde a la exploración híbrida; véase [PREPARACION.md](PREPARACION.md). No multiplica especialistas ni reparto/síntesis. El Bloque 8 separa la calibración posterior de modelos de estas pruebas funcionales.
+El límite de loops corresponde a la exploración híbrida; véase [PREPARACION.md](PREPARACION.md). No multiplica especialistas ni reparto/síntesis. El Bloque 9 separa la calibración posterior de modelos de estas pruebas funcionales.
 
 ## Verificación funcional real posterior — 24/10/2026
 
 El reparto recibe ahora la selección base de cada célula y no puede vaciar una célula con evidencia disponible. Un reparto vacío inválido conserva la base determinista, deja constancia del fallo y permite que el especialista evalúe su propia suficiencia. Cada célula registra `calls` para distinguir una invocación real de una etapa sin entrada.
 
-La prueba final real de bookingApi ejecutó siete llamadas de `gpt-6-luna`/`low`: dos de exploración, reparto, tres especialistas y síntesis. Especialistas y coordinación válidos, cero etapas de modelos omitidas; 40020 tokens comunicados y unos 105 s. El informe es parcial por el límite de preparación, no por errores de especialistas. Gitleaks activo sin detecciones; OSV sin entrada compatible, dependencias no evaluadas. Resultados, intentos anteriores y límites en el [plan](PLAN_FASE_1.md) y la [evidencia final](evidence/full-pilot-final-2026-10-24.json). Esto valida el recorrido funcional de esta muestra, sin cerrar la calibración del Bloque 8.
+La prueba final real de bookingApi ejecutó siete llamadas de `gpt-6-luna`/`low`: dos de exploración, reparto, tres especialistas y síntesis. Especialistas y coordinación válidos, cero etapas de modelos omitidas; 40020 tokens comunicados y unos 105 s. El informe es parcial por el límite de preparación, no por errores de especialistas. Gitleaks activo sin detecciones; OSV sin entrada compatible, dependencias no evaluadas. Resultados, intentos anteriores y límites en el [plan](PLAN_FASE_1.md) y la [evidencia final](evidence/full-pilot-final-2026-10-24.json). Esto valida el recorrido funcional de esta muestra, sin cerrar la calibración del Bloque 9.

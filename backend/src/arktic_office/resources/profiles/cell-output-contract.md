@@ -1,5 +1,7 @@
 Comprobación obligatoria del JSON antes de responder (sin llamadas adicionales):
 
+La respuesta final del informe incluye SIEMPRE en la raíz "schema_version":3, "confirmados", "indicios", "dudas" y "controles". No omitas schema_version aunque todas las listas estén vacías.
+
 - `tema` y `control` son campos distintos. `tema` SOLO admite: proposito, componentes,
   arranque, datos, recuperacion, estabilidad, recursos, servicios, acceso, responsabilidades.
   No uses seguridad, secretos, dependencias, configuracion u operacion como `tema`.
