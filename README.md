@@ -6,6 +6,16 @@ El MVP entrega un informe con evidencia del código, indicios por confirmar y pr
 
 Versiones propias: **frontend 0.3.0** y **backend 0.3.0**, gestionadas de forma independiente en `FRONTEND_VERSION` y `BACKEND_VERSION`. Cambios de cada componente: [CHANGELOG.md](CHANGELOG.md). Los archivos `HERMES3D_VERSION` y `HERMES_AGENT_VERSION` fijan las dependencias originales, no la versión de Arktic Office.
 
+## Planes del proyecto
+
+Solo hay tres planes canónicos. Las guías de `docs/` describen la operación; no añaden roadmaps independientes.
+
+| Plan | Estado | Alcance |
+|---|---|---|
+| [MVP](PLAN_MVP.md) | Cerrado, 0.2.0 | Alcance e histórico inicial |
+| [Fase 1](docs/PLAN_FASE_1.md) | Cerrada y aceptada, 0.3.0 | Base integrada y límites aceptados |
+| [Fase 2](docs/PLAN_FASE_2.md) | Propuesta | Auditar agentes Hermes/Arktic y mejorar recuperación y calidad según feedback |
+
 ## Empezar
 
 - **Otro ordenador:** [Inicio rápido](docs/INICIO_RAPIDO.md), desde los requisitos hasta la primera revisión.

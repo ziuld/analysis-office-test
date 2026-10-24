@@ -1,31 +1,32 @@
 # Cómo trabaja el equipo
 
-La oficina representa el estado de un trabajo real. Los personajes no ejecutan conversaciones entre sí: el coordinador distribuye la evidencia y las células trabajan una detrás de otra.
+La oficina representa un trabajo real. El coordinador asigna objetivos y los especialistas trabajan consecutivamente; no se representan conversaciones inventadas.
 
 ```mermaid
 flowchart TD
-    A[URL de GitHub · Iniciar revisión] --> B[Coordinador: main o master y commit fijo]
-    B --> C[Seleccionar y guardar archivos acotados]
-    C --> S[Gitleaks y OSV sobre archivos descargados]
-    S --> D[Seguridad con perfil de controles]
-    D --> E[Arquitectura y migración]
-    E --> F[Inventario tecnológico]
-    F --> G[Validar citas y consolidar mediante código]
-    G --> H[Un informe para el arquitecto]
-    H --> I[Evaluación humana]
-    H --> J[Pregunta a un personaje]
-    J --> K[Respuesta sobre la evidencia guardada]
+    A[URL de GitHub] --> B[Rama predeterminada y commit fijo]
+    B --> C[Snapshot completo verificado]
+    C --> D[Inventario, Graphify y scanners compatibles]
+    D --> E[Coordinador: contexto común y tres objetivos]
+    E --> F[Seguridad: elegir fuentes y analizar]
+    F --> G[Arquitectura: elegir fuentes y analizar]
+    G --> H[Inventario: elegir fuentes y analizar]
+    H --> I[Validación y síntesis de aportaciones válidas]
+    I --> J[Informe, manifiesto y limpieza]
+    J --> K[Evaluación humana y consultas independientes]
 ```
 
 ## Desde «Iniciar revisión» hasta el informe
 
-1. **Se valida la URL.** Debe ser un repositorio de GitHub, sin una ruta a ramas o archivos. Solo se admite una revisión o consulta activa.
-2. **Se fija la versión.** Se busca `main`; si no existe se busca `master`. Si ninguna existe, o no hay acceso, se muestra el error. El commit elegido identifica exactamente el contenido leído, aunque la rama cambie después.
-3. **Se prepara la evidencia.** Se seleccionan documentación, manifiestos, configuración y código relevante. Se excluyen archivos sensibles reconocidos por nombre, binarios, dependencias, generados y archivos fuera de los límites. Una ocultación heurística evita mostrar algunos posibles secretos; no es un detector completo.
-4. **Se distribuye la lectura.** Cada célula recibe los archivos pertinentes dentro de su límite. Los textos del repositorio son datos para analizar, no instrucciones que los agentes deban ejecutar.
-5. **Se ejecutan tres células secuenciales.** Cada una entrega observaciones, su importancia, verificaciones pendientes y referencias. Los estados visibles corresponden a la ejecución; no son una demo.
-6. **Se valida y consolida.** El código comprueba que las referencias coincidan con líneas realmente enviadas, agrupa duplicados reconocibles y genera Markdown y HTML visual. No añade una llamada al modelo para redactar el documento final. No garantiza detectar todas las repeticiones o contradicciones semánticas.
-7. **La persona evalúa.** Lee el informe, abre evidencias en el commit revisado, plantea consultas y decide qué verificaciones adicionales necesita. El sistema no aprueba migraciones ni despliegues.
+1. **Validar la URL y configuración.** Repositorio GitHub y una sola revisión o consulta activa.
+2. **Fijar el commit de la rama predeterminada real.** El recorrido híbrido verifica todo su snapshot, sin descargar el historial. Contenido incompleto, LFS/submódulos sin hidratar o capacidad excedida detienen la preparación.
+3. **Preparar evidencia sin modelos.** Inventario y herramientas sobre toda su entrada compatible, con ocultación heurística de credenciales y cobertura explícita. El repositorio analizado no se ejecuta.
+4. **Asignar objetivos.** Una llamada del coordinador da tres encargos sobre contexto común acotado, sin seleccionar archivos.
+5. **Investigar y analizar por especialidad.** Cada especialista consulta el mismo snapshot/grafo bajo sus límites. Una ronda agrupada por defecto y otra opcional si está configurada. Los textos son datos, nunca instrucciones del repositorio.
+6. **Validar y sintetizar.** Core contrasta citas con el texto entregado y conserva aportaciones válidas; el coordinador sintetiza en una llamada solo si las hay. Citas válidas no garantizan interpretación semántica correcta.
+7. **Guardar y evaluar.** Informes Markdown/HTML, manifiesto, cobertura y trazas; limpieza de temporales completos. La persona revisa las evidencias y decide qué verificar. El sistema no aprueba despliegues.
+
+Detalles y presupuestos: [preparación](PREPARACION.md) y [coordinación](COORDINACION.md). El recorrido `legacy` conserva compatibilidad con adquisición selectiva; no equivale al híbrido completo.
 
 ## Responsabilidades
 

@@ -10,13 +10,13 @@ Que el snapshot esté completo no significa que todos los archivos tengan parser
 
 El coordinador ahora da objetivos, sin elegir archivos. Cada especialista selecciona fuentes del snapshot/grafo dentro de rondas y presupuestos configurables. La repetición completa `f7043007-40a9-42a3-8b1e-a1478688c25c` terminó sin bloqueos ni errores técnicos: tres especialistas, síntesis, 8 llamadas económicas, 52.366 tokens, 7 observaciones y 22 citas conservadas verificadas. Sigue parcial por un hallazgo de Seguridad rechazado por tema no admitido y por controles pendientes. El primer intento falló en la investigación de Inventario por respuesta incompleta del runtime; ambos resultados se preservan. [Métricas, comprobaciones y límites](evidence/orchestrator-research-2026-10-24.json). Citas válidas no certifican interpretación semántica; afinado pendiente.
 
-## Revisión posterior del propio repositorio
+## Histórico de revisiones anteriores al cierre
 
-La repetición del 24/10/2026 encontró avisos duplicados en el validador, corregidos con un caso nuevo (15 pruebas dirigidas correctas). Los pilotos completos de `main` adquirieron 69/69 archivos. La última ejecución sigue parcial: Arquitectura perdió todos sus hallazgos por fuentes inexistentes; Seguridad e Inventario conservaron dos observaciones en total. No se aprueba la calidad como evaluación completa ni se publica el cambio: commit/PR pendientes por la condición del usuario. Métricas, intentos y errores en [la evidencia](evidence/arktic-recheck-2026-10-24.json) y el [plan](PLAN_FASE_1.md).
+La repetición del 24/10/2026 encontró avisos duplicados en el validador, corregidos con un caso nuevo (15 pruebas dirigidas correctas). Los pilotos completos de `main` adquirieron 69/69 archivos. En aquel intento, la ejecución fue parcial: Arquitectura perdió todos sus hallazgos por fuentes inexistentes; Seguridad e Inventario conservaron dos observaciones en total. En ese momento el commit/PR quedó pendiente por la condición del usuario; posteriormente se aceptó el cierre funcional descrito arriba. Métricas, intentos y errores en [la evidencia](evidence/arktic-recheck-2026-10-24.json) y el [plan](PLAN_FASE_1.md).
 
 ## Documentación y resultados anteriores
 
-# Resultados y candidata de entrega
+### Registro histórico de candidata de entrega
 
 Las revisiones nuevas de API y CLI se guardan bajo `/reports/AAAA-MM-DD/HHMMSS-repositorio/identificador/`, con fecha y hora UTC. El título deriva del nombre del repositorio y se normaliza para usarlo como carpeta. El identificador sigue siendo la referencia de las rutas HTTP. El catálogo admite también los directorios planos anteriores y no mueve ni reescribe informes históricos; rechaza identificadores duplicados y enlaces de carpetas. La creación sin repositorio conserva el comportamiento plano de compatibilidad.
 
@@ -37,12 +37,12 @@ Snapshots y mapas del preparador son temporales: se liberan al finalizar la peti
 - Evaluación autorizada: hasta cinco invocaciones con `ziuld/bookingApi`, sin scanners ni ejecución del proyecto. Se reutilizó el snapshot fijado del Bloque 2, commit `c0d247e3226d77a83471c7a1b32afdb0981eb7f1`, con 24 archivos seleccionados. No se afirma evaluar el último commit remoto.
 - Se hicieron cuatro invocaciones en 27,654 s: reparto y Seguridad fallaron por sesión no válida; Arquitectura e Inventario por cuota/límite. No hubo contenido válido y se omitió síntesis. Tokens desconocidos. No se realizaron más intentos. Logs y ledger locales: `artifacts/block7-evaluation.log` y la carpeta indicada en `artifacts/block7-evaluation-path.txt`.
 
-El adaptador desactiva los reintentos y recuperación internos del Hermes fijado, además de herramientas y fallback, para mantener una tentativa por invocación. Esa integración depende del pin actual. Las pruebas con respuestas ficticias validan contratos, citas e insuficiencia; los cuatro errores reales no permiten medir utilidad semántica ni consumo efectivo. F1-23 sigue parcialmente pendiente.
+El adaptador desactiva los reintentos y recuperación internos del Hermes fijado, además de herramientas y fallback, para mantener una tentativa por invocación. Esa integración depende del pin actual. Las pruebas con respuestas ficticias validan contratos, citas e insuficiencia; los cuatro errores reales no permiten medir utilidad semántica ni consumo efectivo. Este fue un resultado inicial, anterior a los pilotos completos y al cierre aceptado.
 
-[release.json](../release.json) registra una candidata para revisión y [CHANGELOG.md](../CHANGELOG.md) contiene cambios sin publicar. Frontend/backend siguen en 0.2.0. F1-24 requiere aceptación humana y decisión de versión; el usuario realizará el merge. No se crean etiquetas, releases ni publicación de imágenes.
+[release.json](../release.json) registra una candidata para revisión y [CHANGELOG.md](../CHANGELOG.md) contiene cambios sin publicar. Frontend/backend siguen en 0.2.0. Ese estado de candidata quedó sustituido por la aceptación de Fase 1 0.3.0; el usuario conserva el merge. No se crean etiquetas, releases ni publicación de imágenes.
 
 ## Verificación posterior del recorrido completo
 
 Tras recuperar la sesión y corregir contratos y reparto, la prueba real `bb23e6e3-f995-4748-8ff2-47304b8f57cc` completó reparto, Seguridad, Arquitectura, Inventario y síntesis sin errores ni etapas de modelos omitidas. Dos llamadas de preparación más cinco del equipo, todas `gpt-6-luna`/`low`: 40020 tokens comunicados, unos 105 s, siete observaciones informativas, un indicio medio y cinco conclusiones de síntesis. Veinte citas únicas contrastadas con el snapshot; informes y manifiesto accesibles mediante la oficina. La autorización posterior incluyó scanners: Gitleaks sin detecciones en la selección; OSV sin entrada compatible y dependencias no evaluadas.
 
-Se mantiene el estado parcial por el límite de dos llamadas de preparación. No se borra el histórico de intentos fallidos ni se declara seguridad o calidad óptima. Evidencia y trazabilidad: [full-pilot-final-2026-10-24.json](evidence/full-pilot-final-2026-10-24.json). La revisión humana y el afinado del Bloque 9 continúan pendientes.
+Se mantiene el estado parcial por el límite de dos llamadas de preparación. No se borra el histórico de intentos fallidos ni se declara seguridad o calidad óptima. Evidencia y trazabilidad: [full-pilot-final-2026-10-24.json](evidence/full-pilot-final-2026-10-24.json). La mejora semántica se propone en Fase 2; la base funcional de Fase 1 fue aceptada.

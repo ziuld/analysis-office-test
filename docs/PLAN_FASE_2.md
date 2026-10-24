@@ -1,6 +1,6 @@
 # Fase 2 — Mejora de agentes, recuperación y calidad
 
-Estado: **propuesta, sin ejecutar cambios de afinado**. Parte de la Fase 1 0.3.0 aceptada el 24/10/2026. El usuario conserva el merge a main. Esta fase mejora configuración y funcionamiento según evidencia y feedback; no presupone entrenamiento de pesos ni actualización de dependencias.
+Estado: **único plan activo de trabajo futuro; propuesta, sin ejecutar cambios de afinado**. Parte de la Fase 1 0.3.0 aceptada el 24/10/2026. El usuario conserva el merge a main. Esta fase mejora configuración y funcionamiento según evidencia y feedback; no presupone entrenamiento de pesos ni actualización de dependencias.
 
 ## Objetivo
 
@@ -14,9 +14,19 @@ Conseguir respuestas más útiles, precisas y propias de cada especialidad, loca
 - Las últimas consultas fueron por rutas exactas, con relaciones del grafo adjuntas. Esto no demuestra navegación eficiente por símbolos/grafo. Las ventanas de 100 líneas pueden omitir rutas/middleware posteriores; Arquitectura agotó su cap de seis archivos. El padding de líneas consume presupuesto. Aumentar archivos o modelo sin localizar el cuello de botella no garantiza mejor resultado.
 - Baseline `f7043007-40a9-42a3-8b1e-a1478688c25c`: tres especialistas y síntesis, 8 llamadas gpt-6-luna/low, 52.366 tokens comunicados, 7 observaciones y 22 citas verificadas. Informe parcial: un tema inválido rechazado, cinco controles no evaluados, una formulación sobre recuperación de trabajos demasiado amplia. [Evidencia](evidence/orchestrator-research-2026-10-24.json).
 
+## Orden y entregables
+
+| Paso | Qué revisar primero | Decisión que debe permitir |
+|---|---|---|
+| 1. Agentes e instrucciones | Perfil visible en Hermes frente al agente que realmente invoca Arktic; prompt completo, idioma, responsabilidad y contrato | Qué instrucciones se están usando y cuáles conviene corregir |
+| 2. Evidencia y límites | Consulta realizada, símbolo/relación, región de código recibida, fuente omitida y motivo | Si falta información real o falló su localización/entrega |
+| 3. Calidad y coste | Mismas preguntas y commit, una variable por comparación, feedback humano | Conservar el cambio útil y decidir si hace falta otro modelo o una actualización |
+
+No comenzar elevando modelos o número global de archivos. La primera entrega será una ficha de la configuración efectiva por agente y una propuesta breve de correcciones, antes de ejecutar pilotos nuevos. No cambiar código funcional al consolidar estos planes.
+
 ## 1. Revisar configuración efectiva de Hermes y agentes
 
-- [ ] F2-01 Trazar cómo el Hermes fijado compone el prompt: sistema base, prompt efímero, perfil, identidad, idioma, archivos de contexto, memoria y herramientas. Contrastar los flags del adaptador con el código de Hermes instalado, sin mostrar credenciales ni conversaciones privadas. Distinguir perfiles visibles en Hermes de los agentes efímeros del análisis.
+- [ ] F2-01 Trazar cómo el Hermes fijado compone el prompt: sistema base, prompt efímero, perfil, identidad, idioma, archivos de contexto, memoria y herramientas. Contrastar los flags del adaptador con el código de Hermes instalado, sin mostrar credenciales ni conversaciones privadas. Distinguir perfiles visibles en Hermes de los agentes efímeros del análisis, indicando qué configuración sí se carga, cuál se ignora y qué instrucciones heredadas permanecen. No asumir que cambiar la UI o un SOUL cambia el análisis.
 - [ ] F2-02 Inventariar las instrucciones realmente enviadas por rol y detectar duplicidades, contradicciones o huecos: objetivo, idioma español, qué constituye evidencia suficiente, cuándo buscar, cómo declarar límites, enums y esquema de salida. No modificar todavía varios prompts a la vez.
 - [ ] F2-03 Proponer focos breves y criterios claros por especialidad, con ejemplos pequeños: Seguridad evalúa controles/riesgos; Arquitectura describe estructura y operación; Inventario identifica tecnología/función. Orquestador distribuye objetivos y sintetiza sin ampliar las conclusiones. Probar el cambio mínimo que corrija el problema identificado.
 
@@ -34,7 +44,7 @@ Conseguir respuestas más útiles, precisas y propias de cada especialidad, loca
 
 - [ ] F2-07 Definir un conjunto pequeño de preguntas esperadas sobre repositorios representativos y sus fuentes, incluyendo casos de insuficiencia legítima. Comparar una variable por vez sobre el mismo commit. Acordar un presupuesto acotado antes de una tanda de pruebas reales; no introducir bucles de evaluación automáticos.
 - [ ] F2-08 Medir utilidad por rol, interpretación fiel, citas, rechazos de formato, carencias resolubles, consultas útiles, bytes, llamadas, tiempo y tokens comunicados. Que una cita exista no valida la conclusión; que haya más hallazgos no demuestra más calidad. Conservar también intentos fallidos.
-- [ ] F2-09 Ajustar modelo/razonamiento por rol solo cuando se distinga un fallo de razonamiento de falta de fuentes o instrucciones. Conservar perfil económico; revisar modelos/proveedor disponibles y consumo en el momento, sin fijar ahora una elevación general.
+- [ ] F2-09 Ajustar modelo/razonamiento por rol solo cuando se distinga un fallo de razonamiento de falta de fuentes o instrucciones. Conservar perfil económico; revisar modelos/proveedor disponibles y consumo en el momento, sin fijar ahora una elevación general. Valorar una actualización de Hermes/Graphify únicamente si resuelve una carencia comprobada, contrastando compatibilidad con los pins y la misma muestra antes de adoptarla.
 - [ ] F2-10 Incorporar feedback visual y sobre informes con cambios pequeños. Cerrar esta fase mediante aceptación humana, resultados comparables y decisión de versión independiente; merge manual del usuario.
 
 **Criterio de cierre propuesto:** los roles respetan su responsabilidad, acceden al código necesario dentro del presupuesto acordado y distinguen carencias reales de fallos de recuperación. Resultados y límites comprensibles y aceptados por el usuario. Las comprobaciones se limitan a contratos/caminos afectados y pilotos representativos; sin nuevos pipelines ni una plataforma de evaluación.

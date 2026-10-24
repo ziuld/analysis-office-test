@@ -1,5 +1,7 @@
 # Plan MVP — Oficina de agentes para revisión de repositorios
 
+**Estado: MVP cerrado y validado; referencia histórica de la entrega 0.2.0.** Su alcance y comprobaciones inferiores describen esa versión. La evolución entregada está consolidada en [Fase 1 — 0.3.0](docs/PLAN_FASE_1.md); el único trabajo futuro se propone en [Fase 2](docs/PLAN_FASE_2.md). Las notas antiguas de «después del MVP» no constituyen tareas abiertas ni planes adicionales.
+
 ## Objetivo
 Aprender a utilizar Hermes Agent y Hermes3D con un caso útil: entender una aplicación y entregar al arquitecto un resumen breve para valorar su posible migración a VPS o Kubernetes. El arquitecto decide y solicita las verificaciones adicionales.
 
