@@ -2,6 +2,8 @@
 
 ## Sin publicar — candidata de Fase 1
 
+- Control explícito para pruebas con modelos sin scanners; contrato de salida reforzado y lecturas recortadas sin ampliar presupuestos. Dos pruebas completas reales registradas como parciales, con errores visibles y repetición corregida pendiente de presupuesto.
+
 - Clasificación de fallos OAuth estructurados sin inspeccionar prompts/conversaciones; sesión local recuperada y una respuesta real de Inventario con bookingApi validada, con consumo comunicado.
 
 - Pasadas adicionales de preparación parametrizadas (`AUDIT_PREPARATION_MAX_LOOPS`, 1 por defecto) y perfil mínimo común de pruebas; afinado posterior registrado como Bloque 8.

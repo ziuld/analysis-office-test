@@ -62,7 +62,18 @@
       "seconds": 12.24
     },
     "authorized_model_calls_used": 5,
-    "authorized_model_calls_remaining": 0
+    "authorized_model_calls_remaining": 0,
+    "full_economic_pilot": {
+      "status": "partial",
+      "runs": 2,
+      "model_calls": 14,
+      "reported_total_tokens": 74396,
+      "all_model_stages_attempted": true,
+      "all_specialists_valid_together": false,
+      "scanners": false,
+      "evidence": "docs/evidence/full-pilot-2026-10-24.json",
+      "repeat_pending_explicit_budget": 7
+    }
   },
   "pending": [
     "real_response_quality_and_consumption_validation",

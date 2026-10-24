@@ -69,13 +69,17 @@ class Retrieval:
             raise AuditError("Herramienta de preparación no permitida.")
         path, start, end = action.get("path"), action.get("start"), action.get("end")
         if (path not in self.pool or type(start) is not int or type(end) is not int
-                or start < 1 or end < start or end - start >= LIMITS["read_lines"]):
+                or start < 1 or end < start):
             raise AuditError("Fragmento fuera de los límites de lectura.")
         lines = self.pool[path].splitlines()
-        if end > len(lines):
+        if start > len(lines):
             raise AuditError("Fragmento fuera del archivo adquirido.")
+        requested_end = end
+        end = min(end, start + LIMITS["read_lines"] - 1, len(lines))
         fragment = "\n".join(lines[start - 1:end])
         result = {"path": path, "start": start, "end": end, "text": fragment}
+        if end != requested_end:
+            result.update(limited=True, requested_end=requested_end)
         if len(json.dumps(result, ensure_ascii=False).encode()) > LIMITS["tool_bytes"]:
             raise AuditError("Fragmento supera el presupuesto; solicita menos líneas.")
         # Keep original line positions for existing evidence validators/renderers.

@@ -59,7 +59,7 @@ class HybridTests(unittest.TestCase):
         retrieval = Retrieval([{"path": "src/a.py", "text": "one\ntwo\nthree"}], snapshot,
                               {"status": "error", "reason": "index_unavailable"})
         for action in ({"tool": "shell"}, {"tool": "read", "path": "../a", "start": 1, "end": 1},
-                       {"tool": "read", "path": "src/a.py", "start": 1, "end": 101}):
+                       {"tool": "read", "path": "src/a.py", "start": 4, "end": 101}):
             with self.assertRaises(AuditError):
                 retrieval.tool(action)
         result = retrieval.tool({"tool": "read", "path": "src/a.py", "start": 2, "end": 2})
@@ -67,6 +67,9 @@ class HybridTests(unittest.TestCase):
         self.assertEqual(snapshot["files"][0]["text"], "\ntwo\n")
         self.assertEqual(retrieval.tool({"tool": "search", "query": "two"})["hits"][0]["line"], 2)
         self.assertEqual(retrieval.tool({"tool": "graph", "query": "two"})["status"], "error")
+        clipped = retrieval.tool({"tool": "read", "path": "src/a.py", "start": 1, "end": 101})
+        self.assertEqual((clipped["start"], clipped["end"], clipped["requested_end"]), (1, 3, 101))
+        self.assertTrue(clipped["limited"])
         state = explore(retrieval, lambda *a: {"report": '{"tool":"search","query":"two"}'}, {})
         self.assertEqual(state["closure"], "iteration_limit")
         self.assertEqual(state["iterations"], state["limits"]["iterations"])
@@ -80,6 +83,10 @@ class HybridTests(unittest.TestCase):
         with patch.dict(LIMITS, {"seconds": 0}):
             state = explore(retrieval, lambda *a: self.fail("No time: must not invoke"), {})
         self.assertEqual(state["closure"], "time_limit")
+        retrieval.pool["src/a.py"] = "\n".join(str(n) for n in range(220))
+        clipped = retrieval.tool({"tool": "read", "path": "src/a.py", "start": 95, "end": 197})
+        self.assertEqual(clipped["end"], 194)
+        self.assertEqual(len(clipped["text"].splitlines()), 100)
 
     def test_extra_loops_add_to_initial_pass_and_finish_can_stop_early(self):
         for loops in (0, 1, 2, 3):

@@ -36,7 +36,8 @@ def make_prompt(snapshot, cell=None):
         if "azure" not in cell.get("capabilities", []):
             contract = "\n".join(line for line in contract.split("\n") if "Para Azure" not in line)
             request = "\n".join(line for line in request.split("\n") if not line.startswith("Solo Arquitectura añade propuesta_azure"))
-    return editorial + "\n" + profile + "\n" + contract + focus + f"Rama revisada: {snapshot.get('branch', 'main')}.\n" + request + json.dumps(evidence, ensure_ascii=False, separators=(",", ":"))
+    final_contract = "\nFIN DE LOS ARCHIVOS.\n" + resource_path("profiles", "cell-output-contract.md").read_text(encoding="utf-8") if cell else ""
+    return editorial + "\n" + profile + "\n" + contract + focus + f"Rama revisada: {snapshot.get('branch', 'main')}.\n" + request + json.dumps(evidence, ensure_ascii=False, separators=(",", ":")) + final_contract
 
 
 def validate_report(raw, snapshot, limits=None):

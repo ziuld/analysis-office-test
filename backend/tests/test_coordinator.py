@@ -15,7 +15,8 @@ class CoordinatorTests(unittest.TestCase):
         for settings in ({"AUDIT_INVENTORY_MODEL": "invalid model"},
                          {"AUDIT_ARCHITECTURE_REASONING": "invalid"},
                          {"AUDIT_COORDINATION_MODE": "invalid"}, {"AUDIT_CAPABILITIES": "unknown"},
-                         *({"AUDIT_PREPARATION_MAX_LOOPS": value} for value in ("-1", "1.5", "abc", "21"))):
+                         *({"AUDIT_PREPARATION_MAX_LOOPS": value} for value in ("-1", "1.5", "abc", "21")),
+                         {"AUDIT_SCANNERS_ENABLED": "2"}, {"AUDIT_SCANNERS_ENABLED": "false"}):
             with self.subTest(settings=settings), patch.dict("os.environ", settings), tempfile.TemporaryDirectory() as temp:
                 with self.assertRaises(AuditError):
                     run_team(snapshot(), Path(temp), invoke=lambda *a: self.fail("Unexpected call"))

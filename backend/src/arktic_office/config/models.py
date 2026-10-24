@@ -76,4 +76,9 @@ def request_options():
 def validate_configuration():
     """Validate every role before preparation or the first coordination call."""
     request_options()
+    scanners_enabled()
     return {role: profile(role) for role in registry()["roles"]}
+
+
+def scanners_enabled():
+    return bool(integer("AUDIT_SCANNERS_ENABLED", 1, 0, 1))

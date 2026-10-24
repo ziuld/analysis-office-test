@@ -288,6 +288,7 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print):
         emit(f"Célula {config['name']}: {len(config['files'])} archivos, {config['bytes']} bytes, {config['model']}/{config['reasoning']}...", flush=True)
         subset = {**snapshot, "files": config["files"]}
         prompt = make_prompt(subset, config)
+        raw = None
         try:
             envelope = invoke(prompt, config)
             state["usage"] = envelope.get("usage")
@@ -336,6 +337,10 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print):
             results.append((config["id"], report))
             write_json(output / "celulas" / (config["id"] + ".json"), {**state, "resultado": report})
         except AuditError as exc:
+            if isinstance(raw, str):
+                # Diagnostic only: never rendered or reused as a validated contribution.
+                from arktic_office.preparation.repository import redact
+                (output / "celulas" / (config["id"] + ".respuesta-rechazada.txt")).write_text(redact(raw)[:120000], encoding="utf-8")
             state["estado"] = "error"
             state["error"] = str(exc)
             emit(f"Célula {config['name']}: error; el informe indicará cobertura parcial.", flush=True)

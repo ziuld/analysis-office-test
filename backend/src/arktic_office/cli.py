@@ -27,7 +27,7 @@ def parse_job_id(value):
 
 
 def run(url, inspect_only=False, job_id=None):
-    from arktic_office.config.models import validate_configuration
+    from arktic_office.config.models import validate_configuration, scanners_enabled
     profiles = validate_configuration()
     provider, model = settings()
     options = runtime_options()
@@ -44,6 +44,7 @@ def run(url, inspect_only=False, job_id=None):
         except BlockingIOError:
             raise AuditError("Ya existe una revisión activa; espera a que termine.") from None
         from arktic_office.adapters.scanners import scan
+        scanner = scan if not inspect_only and scanners_enabled() else None
         mode = os.environ.get("AUDIT_PREPARATION_MODE", "legacy")
         if mode not in {"legacy", "hybrid"}:
             raise AuditError("AUDIT_PREPARATION_MODE debe ser legacy o hybrid.")
@@ -54,13 +55,13 @@ def run(url, inspect_only=False, job_id=None):
             from arktic_office.preparation.hybrid import prepare
             from arktic_office.adapters.invoke import invoke_hermes
             from arktic_office.storage.jsonio import write_json
-            snapshot = prepare(url, scanner=None if inspect_only else scan,
+            snapshot = prepare(url, scanner=scanner,
                                invoke=None if inspect_only else invoke_hermes,
                                config=profiles["preparation"],
                                emit=lambda state: write_json(output / "preparacion.json", {"mode": "hybrid", "exploration": state}))
             write_json(output / "preparacion.json", snapshot["preparation"])
         else:
-            snapshot = collect(url, scanner=None if inspect_only else scan)
+            snapshot = collect(url, scanner=scanner)
         snapshot["analyzed_at"] = datetime.now(timezone.utc).isoformat()
         from arktic_office.config.models import request_options
         snapshot["request"] = request_options()

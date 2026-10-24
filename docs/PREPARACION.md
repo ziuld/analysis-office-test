@@ -65,8 +65,12 @@ Los límites y el perfil de preparación se centralizan ahora en el registro de 
 
 ## Pasadas de preparación para pruebas — 24/10/2026
 
+Para ejecutar el recorrido completo con modelos y sin scanners, usar `AUDIT_SCANNERS_ENABLED=0`. El valor `1` conserva el comportamiento anterior; cualquier otro valor se rechaza antes de adquirir código o consumir modelo. La cobertura registra que los scanners no se ejecutaron. Esto es independiente de `--inspect-only`, que además omite las llamadas de modelo. La coordinación completa requiere `AUDIT_COORDINATION_MODE=ai` y el override híbrido indicado arriba.
+
 En `.env`, `AUDIT_PREPARATION_MAX_LOOPS=1` limita las pasadas adicionales del coordinador explorador. `0` permite solo la llamada inicial; `1`, hasta dos; `2`, hasta tres; `3`, hasta cuatro. Se admiten enteros entre 0 y 20, validados antes de adquirir el repositorio o consumir modelo. Predeterminado: 1. Tiempo y contexto pueden cortar antes; incrementar loops no los amplía.
 
 Cada pasada solicita una acción de lectura/búsqueda/mapa o `finish`. Es el loop de preparación híbrida, no una repetición del equipo completo. El modelo debe terminar cuando tenga suficiente evidencia; puede necesitar una pasada para comunicar `finish`. Si agota llamadas tras una lectura, se conserva lo recuperado y se declara el límite. Reparto y síntesis opcionales siguen siendo una llamada cada uno; cada especialista mantiene una pasada. En modo `legacy` este parámetro no añade llamadas.
 
 La traza registra `limits.max_loops`, `limits.iterations` (inicial + adicionales) e `iterations` usadas. Cambiar `.env` requiere recrear la API con el override híbrido para probar esta preparación. Los perfiles de prueba heredan el modelo común y razonamiento `low`; `.env.example` usa `gpt-6-luna` sin elevar Seguridad. La calibración de modelos y calidad se pospone al Bloque 8.
+
+Las lecturas se recortan al máximo de 100 líneas y al final del archivo; la respuesta indica `limited` y `requested_end` cuando se recorta, conservando las posiciones reales. Rutas no adquiridas, tipos inválidos e inicios fuera del archivo se rechazan. No se amplían los límites de bytes o archivos. Una respuesta de especialista rechazada se conserva, ocultada y acotada a 120000 caracteres, en `celulas/<rol>.respuesta-rechazada.txt`: es diagnóstico sin validar, no se publica ni se reutiliza como una aportación válida.
