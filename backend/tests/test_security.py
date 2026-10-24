@@ -67,6 +67,11 @@ class SecurityTests(unittest.TestCase):
         from arktic_office.adapters.hermes_runtime import failure_code
         self.assertEqual(failure_code("401 unauthorized secret-value"), "authentication")
         self.assertEqual(failure_code("arbitrary secret-value"), "incomplete_response")
+        error = RuntimeError("No stored session")
+        error.code = "codex_auth_missing"
+        self.assertEqual(failure_code(error), "authentication")
+        self.assertEqual(failure_code({"error": "codex_auth_invalid_shape", "messages": [{"content": "quota 429"}]}), "authentication")
+        self.assertEqual(failure_code({"error": "connection failed", "messages": [{"content": "401 quota 429"}]}), "incomplete_response")
 
     def test_indications_do_not_inflate_confirmed_counters(self):
         s, d = fixture()

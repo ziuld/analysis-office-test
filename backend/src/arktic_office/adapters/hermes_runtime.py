@@ -10,10 +10,16 @@ from arktic_office.config.settings import settings, runtime_options
 
 
 def failure_code(value):
-    value = str(value).lower()
+    if isinstance(value, dict):
+        # Conversation messages can contain repository text mentioning 401/quota/etc.
+        # Classify only the runtime's failure fields, never the prompt or transcript.
+        value = " ".join(str(value.get(key, "")) for key in ("error", "failure_reason", "code", "status_code"))
+    else:
+        value = str(getattr(value, "code", "") or "") + " " + str(value)
+    value = value.lower()
     for pattern, code in ((r"quota|rate.limit|usage.limit|429", "quota_or_rate_limit"),
                           (r"not.supported|unsupported|model.not.found|model_not_found", "unsupported_model"),
-                          (r"401|unauthorized|authentication|expired.token", "authentication"),
+                          (r"\b401\b|unauthorized|authentication|(?:codex|oauth)_auth|(?:expired|invalid|revoked)[ _.-]?token|refresh[_ .-]?(?:failed|token)", "authentication"),
                           (r"timeout|timed.out|time.budget", "timeout")):
         if re.search(pattern, value):
             return code
@@ -49,7 +55,7 @@ def _run():
         try:
             result = agent.run_conversation(prompt)
             if not result.get("completed", False):
-                raise RuntimeError(failure_code(str(result) + captured.getvalue()))
+                raise RuntimeError(failure_code(result))
             output = result.get("final_response", "")
             usage = {key: result.get(key) for key in ("input_tokens", "output_tokens", "reasoning_tokens", "total_tokens", "api_calls")}
         finally:

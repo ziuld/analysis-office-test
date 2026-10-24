@@ -2,6 +2,8 @@
 
 ## Sin publicar — candidata de Fase 1
 
+- Clasificación de fallos OAuth estructurados sin inspeccionar prompts/conversaciones; sesión local recuperada y una respuesta real de Inventario con bookingApi validada, con consumo comunicado.
+
 - Pasadas adicionales de preparación parametrizadas (`AUDIT_PREPARATION_MAX_LOOPS`, 1 por defecto) y perfil mínimo común de pruebas; afinado posterior registrado como Bloque 8.
 
 - Preparación híbrida opcional con Graphify fijado, búsquedas y exploración limitada dentro de Docker.

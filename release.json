@@ -38,7 +38,31 @@
       "scanners": false,
       "target_executed": false
     },
-    "startup": "build_and_health_passed_without_credentials_or_jobs"
+    "startup": "build_and_health_passed_without_credentials_or_jobs",
+    "post_login_verification": {
+      "repository": "https://github.com/ziuld/bookingApi",
+      "commit": "c0d247e3226d77a83471c7a1b32afdb0981eb7f1",
+      "role": "inventory",
+      "model": "gpt-6-luna",
+      "reasoning": "low",
+      "attempted_calls": 1,
+      "scanners": false,
+      "target_executed": false,
+      "usage": {
+        "input_tokens": 9685,
+        "output_tokens": 418,
+        "reasoning_tokens": 0,
+        "total_tokens": 10103,
+        "api_calls": 1
+      },
+      "status": "validated",
+      "confirmed": 2,
+      "indications": 0,
+      "warnings": [],
+      "seconds": 12.24
+    },
+    "authorized_model_calls_used": 5,
+    "authorized_model_calls_remaining": 0
   },
   "pending": [
     "real_response_quality_and_consumption_validation",
