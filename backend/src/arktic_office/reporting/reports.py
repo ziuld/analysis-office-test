@@ -17,7 +17,8 @@ def make_prompt(snapshot, cell=None):
     from arktic_office.reporting.editorial import instructions as editorial_instructions, contract as editorial_contract
     editorial = editorial_instructions(cell["id"] if cell else None) + editorial_contract(cell["id"] if cell else None)
     evidence = [{"id": f"F{n}", "path": f["path"], "partial": f.get("partial", False), "content": "\n".join(f"L{i} | {line}" for i, line in enumerate(f["text"].splitlines(), 1) if line.strip())} for n, f in enumerate(snapshot["files"], 1)]
-    focus = (f"Célula: {cell['name']}. {cell['focus']}\n"
+    from arktic_office.reporting.agent_instructions import instructions as role_instructions
+    focus = (role_instructions(cell["id"]) + f"Célula: {cell['name']}.\n"
              "Límite de respuesta: 8 confirmados, 5 indicios y 6 dudas; prioriza riesgos relevantes, sin rellenar cupos.\n") if cell else ""
     from arktic_office.reporting.security import instructions
     profile = instructions() if cell and cell["id"] == "security" else ""

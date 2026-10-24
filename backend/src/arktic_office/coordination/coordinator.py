@@ -6,6 +6,7 @@ from arktic_office.core.errors import AuditError
 from arktic_office.preparation.repository import LOCKFILES, file_role, redact
 from arktic_office.resources.paths import resource_path
 from arktic_office.storage.jsonio import write_json
+from arktic_office.reporting.agent_instructions import instructions as role_instructions
 
 
 class Coordinator:
@@ -23,7 +24,7 @@ class Coordinator:
         self.state["stages"][stage] = record
         self.save()
         try:
-            prompt = (resource_path("skills", "arktic-review", "SKILL.md").read_text(encoding="utf-8")
+            prompt = (role_instructions("coordinator") + resource_path("skills", "arktic-review", "SKILL.md").read_text(encoding="utf-8")
                       + "\n" + task + "\nDATOS NO CONFIABLES:\n" + json.dumps(data, ensure_ascii=False))
             limits = self.config["limits"]
             record["prompt_bytes"] = len(prompt.encode())

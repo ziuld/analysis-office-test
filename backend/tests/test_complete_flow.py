@@ -75,6 +75,15 @@ class CompleteFlowTests(unittest.TestCase):
             def invoke(prompt, config):
                 role = config["id"]
                 calls.append(role)
+                self.assertIn("Escribe en español directo", prompt)
+                if role == "security":
+                    self.assertIn("XSS", prompt)
+                    self.assertIn("seis controles", prompt)
+                elif role == "inventory":
+                    self.assertIn("Persistencia:", prompt)
+                    self.assertIn("H2", prompt)
+                elif role == "architecture":
+                    self.assertIn("marcar trabajos interrumpidos como error no es reanudarlos", prompt)
                 if role == "coordinator-routing":
                     self.assertNotIn("source_samples", prompt)
                     return {"report": json.dumps({r: "Review your specialty" for r in ("security", "architecture", "inventory")})}

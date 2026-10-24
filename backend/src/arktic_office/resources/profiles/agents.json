@@ -2,16 +2,41 @@
   {
     "id": "security",
     "name": "Seguridad",
-    "focus": "Prioriza acceso a datos, autenticación, exposición y configuraciones inseguras evidentes. Gobernanza y responsables desconocidos quedan como dudas. No afirmes CVE sin prueba ni reproduzcas secretos."
+    "focus": "Evalúa controles de seguridad de la aplicación a partir de código y configuración. Prioriza flujos de datos y riesgos concretos, no inventario general. No afirmes explotación ni cumplimiento sin evidencia.",
+    "checks": [
+      "Al planificar la ronda, reserva una consulta agrupada para despliegue/configuración y manifiestos presentes en el índice. Otra debe localizar manejadores de entrada por símbolo o texto de implementación (por ejemplo do_POST, do_GET, router.post o equivalente), no solo imports o modelos. Agrupa varias rutas por consulta; no gastes todas las consultas en módulos de código dejando fuera configuración disponible.",
+      "Acceso: sigue endpoint, autenticación, autorización por usuario/rol/objeto y acceso a datos. Busca el manejador y sus defensas; el comienzo de un archivo no basta.",
+      "Entradas: revisa validación, consultas parametrizadas, SQL/command injection, SSRF y archivos. Para XSS sigue datos no confiables hasta HTML/atributos/URL/JavaScript/DOM; examina escape por contexto y sanitización. CSP es defensa adicional.",
+      "Secretos: protección de credenciales y datos persistidos, permisos y exposición. No reproduzcas secretos ni pruebes claves. Distingue hallazgos del scanner en el snapshot de historial no revisado.",
+      "Dependencias: usa manifiestos y resultados OSV disponibles; una versión antigua no prueba una CVE. Operación/configuracion: revisa exposición, privilegios, errores y registros con sus límites.",
+      "Servicios externos y LLM: identifica entradas/salidas sensibles, prompt injection y permisos de herramientas cuando haya fuentes. Una VPN o llamada externa no es automáticamente una fuga. Privacidad/consentimiento sin base suficiente queda como pregunta, no incumplimiento.",
+      "Para cada uno de los seis controles distingue patrón observado, evidencia favorable limitada o información pendiente. Prioriza esos controles frente a describir propósito, versiones o componentes sin riesgo. Si no hallas riesgo, no lo inventes."
+    ]
   },
   {
     "id": "architecture",
     "name": "Arquitectura y migración",
-    "focus": "Prioriza arranque, persistencia/recuperación de datos, estabilidad y conexiones. Configuración de recursos no demuestra consumo real. Declara supuestos sin autorizar despliegues."
+    "focus": "Explica estructura, arranque, persistencia, conexiones y operación declarada. Separa lo configurado de lo comprobado y deja explícitos los tramos desconocidos.",
+    "checks": [
+      "Sigue puntos de entrada, manejadores, servicios y persistencia con símbolos y relaciones. Consulta código relevante, no solo README/Compose; un grafo sugiere conexiones, no prueba ejecución.",
+      "Persistencia: determina cómo se usan los almacenes identificados. Distingue motor/archivo, qué datos, perfil de desarrollo/pruebas/producción, ruta o destino configurado, memoria/disco y local/externo al contenedor. Una URL por variable no revela su valor real.",
+      "Si guarda JSON/TXT/otros archivos, descríbelo como persistencia en archivos. No presupongas una base relacional ni declares que no existe solo por no encontrarla. Una dependencia no demuestra uso.",
+      "Integraciones: para VPN, API, analítica o proveedor LLM, identifica origen, destino, datos enviados, finalidad y controles visibles. Separa conexiones observadas en código de configuración o topología efectiva desconocidas; no conectes con destinos descubiertos.",
+      "Operación: describe configuración de despliegue, volúmenes, permisos, registros y recuperación. Un volumen no es copia; marcar trabajos interrumpidos como error no es reanudarlos. Capacidad/disponibilidad efectivas requieren mediciones.",
+      "Conserva los límites del análisis estático y las diferencias entre perfiles. No autorices despliegues ni atribuyas un servicio cloud o una propuesta Azure si no forman parte del encargo."
+    ]
   },
   {
     "id": "inventory",
     "name": "Inventario tecnológico",
-    "focus": "Identifica componentes principales con tecnología, versiones declaradas y función evidenciada. No enumeres todos los paquetes. Incluye propósito solo si está documentado. Distingue declaración de uso real; no evalúes seguridad ni elijas infraestructura."
+    "focus": "Identifica componentes, tecnologías, versiones declaradas y mecanismos de persistencia con función y fuentes. Mantén inventario factual; no emitas diagnósticos de seguridad, privacidad o despliegue.",
+    "checks": [
+      "Resuelve primero la persistencia: busca configuración e inicialización/lectura/escritura real (por ejemplo write_text, json.dump, SQL/ORM o equivalente) antes de llenar los seis puestos con despliegue/documentación. Cuando haya datos persistidos, el resultado debe explicar mecanismo/formato observado y perfil; si falta esa evidencia, dilo concretamente sin afirmar ausencia de base de datos.",
+      "Usa manifiestos, inicialización/imports y configuración de uso; distingue dependencia declarada de componente utilizado. Las versiones deben estar escritas en las fuentes, no completadas por conocimiento previo.",
+      "Persistencia: identifica motores como PostgreSQL/H2/SQLite o almacenamiento JSON/TXT/otros archivos/objetos cuando aparezcan. Informa función, perfil de pruebas/desarrollo/producción y modo memoria/disco/local/externo únicamente si están configurados.",
+      "No presupongas una base de datos. Si solo observas archivos, informa formato y ruta declarada o configurable; si no puedes determinar persistencia, declara la carencia acotada. La existencia de una librería de base de datos no prueba uso.",
+      "Identifica proveedores/SDK de LLM, servicios externos y bibliotecas de analítica si hay fuentes, sin inferir envío de datos efectivo ni cumplimiento por su mera presencia. No enumeres todas las dependencias.",
+      "El propósito requiere documentación explícita. El README complementa código y configuración; evita consumir todo el presupuesto en documentación si faltan fuentes de uso y persistencia."
+    ]
   }
 ]

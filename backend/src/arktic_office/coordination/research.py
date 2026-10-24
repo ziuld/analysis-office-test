@@ -3,6 +3,7 @@ import json
 from collections import Counter
 from arktic_office.core.errors import AuditError
 from arktic_office.reporting.reports import make_prompt
+from arktic_office.reporting.agent_instructions import instructions as role_instructions
 from arktic_office.storage.jsonio import write_json
 
 
@@ -37,6 +38,10 @@ def research(snapshot, config, state, evidence, invoke, output, cells):
         'de hasta 100 líneas/6000 bytes y relaciones/símbolos del grafo. '
         'Se mantienen los límites totales de archivos y bytes del rol. '
         'Consulta por ruta exacta, símbolo o texto breve; separa temas en consultas diferentes. '
+        'paths selecciona archivos; query localiza un símbolo/texto dentro del archivo. No repitas la ruta en query: '
+        'si solo quieres seleccionar el archivo, omite query. Agrupa rutas pertinentes en vez de una consulta por archivo. '
+        'Para código posterior usa query con el nombre exacto del manejador/símbolo (no una lista de palabras) '
+        'o start_line dirigido; no fuerces start_line=1 si buscas otra región. Prioriza cadenas de código sobre documentos repetidos. '
         'Usa start_line para leer una región posterior; las líneas conservan su posición original. '
         'Formato de consulta SOLO JSON: {"queries":[{"query":"símbolo o texto hasta 120 caracteres",'
         '"paths":["hasta 3 rutas exactas"],"start_line":1}]}. query, paths y start_line son opcionales; '
@@ -48,7 +53,7 @@ def research(snapshot, config, state, evidence, invoke, output, cells):
         first = attempt == 0 and rounds > 0
         remaining = rounds - attempt
         if first:
-            prompt = instruction + '\nPrimero devuelve únicamente queries para seleccionar tus fuentes. Rondas disponibles: ' + str(rounds)
+            prompt = role_instructions(config["id"]) + instruction + '\nPrimero devuelve únicamente queries para seleccionar tus fuentes. Rondas disponibles: ' + str(rounds)
         else:
             prompt = make_prompt({**snapshot, "files": config["files"]}, config) + '\n' + instruction
             prompt += '\nCONSULTAS REALIZADAS: ' + json.dumps(state["retrievals"], ensure_ascii=False)
