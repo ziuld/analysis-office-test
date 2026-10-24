@@ -1,25 +1,22 @@
-# Coordinación y recuperación compartida — Bloque 8
+# Coordinación y recuperación compartida — 0.3.0
 
-En el modo híbrido actual, la preparación completa es determinista y no consume modelo. `AUDIT_COORDINATION_MODE=ai` hace una llamada inicial que prepara simultáneamente los tres paquetes; el Core materializa fuentes originales del snapshot y respeta los límites por rol. El coordinador recibe un índice compacto, muestras originales, relaciones y una base de reparto; nunca todo el repositorio en el prompt. El índice para modelos puede ser parcial aunque el snapshot y la búsqueda local sean completos.
-
-Cada paquete declara `execute`, `partial` u `omit`, motivo y carencias. Se conservan las fuentes consideradas y el contexto del reparto. Una omisión justificada llama cero veces al especialista y aparece como `no_ejecutado`, distinta de insuficiencia y error. Un reparto inválido conserva una base determinista y registra el fallback, sin reintentar ni ampliar presupuesto.
+El recorrido híbrido prepara un snapshot íntegro y mapas/scanners deterministas. El coordinador recibe contexto común acotado y da tres objetivos en una llamada; no selecciona archivos ni omite especialidades. Cada especialista elige fuentes del mismo snapshot/grafo. El índice del prompt puede ser parcial; la búsqueda local dispone del conjunto completo compatible.
 
 ```dotenv
-AUDIT_COORDINATOR_MAX_EXTRA_QUERIES=0
-AUDIT_SECURITY_MAX_EXTRA_QUERIES=0
-AUDIT_ARCHITECTURE_MAX_EXTRA_QUERIES=0
-AUDIT_INVENTORY_MAX_EXTRA_QUERIES=0
+AUDIT_SECURITY_RESEARCH_ROUNDS=1
+AUDIT_ARCHITECTURE_RESEARCH_ROUNDS=1
+AUDIT_INVENTORY_RESEARCH_ROUNDS=1
 ```
 
-Todos admiten solo 0 o 1. Cero permite una respuesta inicial; uno permite una consulta local y una llamada adicional para finalizar. La síntesis final del coordinador tiene su llamada separada. El perfil local de prueba habilita Seguridad 1, Arquitectura 1 e Inventario 0, con coordinador 0 y todos los modelos `gpt-6-luna/low`. Presupuesto base de cinco llamadas; perfil de prueba hasta siete; todos los extras habilitados, hasta nueve. Una consulta no utilizada no consume llamada. Las preguntas posteriores al informe son independientes.
+Rango 0–2: cero genera un informe sin lecturas de código y con carencias explícitas; uno exige una ronda inicial de consultas y después el informe; dos permite una segunda ronda opcional. Cada ronda admite 1–4 consultas, cada una hasta tres fragmentos de 100 líneas/6000 bytes, símbolos y relaciones. Se conservan topes acumulados de archivos/bytes por rol: Seguridad 12/64000, Arquitectura e Inventario 6/24000. El padding de posiciones originales también cuenta; un fragmento con padding no puede superar 12000 bytes. Si una lectura nueva no cabe, se registra la omisión y se conserva la evidencia anterior.
 
-La [skill compartida](../backend/src/arktic_office/resources/skills/arktic-review/SKILL.md) explica la solicitud JSON `{"retrieve":{"query":"símbolo o tema","paths":["ruta exacta"]}}`. Core permite únicamente búsquedas en texto ocultado y relaciones de esta revisión; devuelve hasta tres fragmentos de 100 líneas/6000 bytes cada uno y hasta doce relaciones, dentro del presupuesto total del rol. Un fragmento con relleno de líneas originales debe caber en 12000 bytes; si no cabe, no se entrega. La recuperación es acotada y puede quedar insuficiente en archivos con posiciones muy altas. Las posiciones originales se conservan, incluidos huecos de líneas, para validar citas. Rutas relativas ausentes se devuelven como `unavailable_paths` sin perder las presentes. Una consulta insegura o excesiva no realiza la lectura y devuelve un error de herramienta: consume la única consulta y permite finalizar con el paquete previo, sin reintentar ni elevar límites; el informe conserva la advertencia. Ni skill ni modelo obtienen shell, red o acceso a otros repositorios. No existe un servicio nuevo por agente.
+La skill compartida explica `{"queries":[{"query":"símbolo o texto","paths":["ruta exacta"],"start_line":1}]}`. Los campos son opcionales, pero hacen falta query o paths. El Core valida rutas y opera únicamente sobre evidencia ocultada de esta revisión: sin shell, red ni ejecución del objetivo. Consulta insegura/ausente y omisión por presupuesto quedan trazadas. Los antiguos `MAX_EXTRA_QUERIES` no controlan este recorrido.
 
-Cada especialista recibe fuentes, encargo, carencias y contexto de mapa; las consultas no comparten conclusiones de otros especialistas. `calls`, `invocations`, `retrievals`, `execution` y `coverage` permiten distinguir ejecución y suficiencia. Si un JSON estructurado contiene un hallazgo válido junto a otro inválido, se publica el válido con advertencias; no se inventa una cita para salvar el otro. Los controles ausentes o inválidos quedan no evaluados. Un sobre o JSON inválido sigue siendo error técnico.
+Con una ronda por rol, hasta ocho llamadas: orquestación + tres investigaciones + tres análisis + síntesis. Con dos, hasta once; con cero, hasta cinco sin código para los especialistas. No hay reintentos automáticos ni subida de modelo. Los roles trabajan consecutivamente y no se pasan conclusiones entre sí. Las preguntas posteriores son independientes.
 
-La síntesis usa solo aportaciones validadas, incluidas severidad, condiciones, acción y pendientes; el Core conserva esos campos vinculados a las aportaciones y vuelve a validar fuentes. Mantiene la certeza más prudente y los originales. Validar citas demuestra correspondencia con fuentes, no corrección semántica de la interpretación. La calidad óptima y la calibración de modelos quedan en el Bloque 9.
+Los campos `calls`, `invocations`, `retrievals`, `execution` y `coverage` registran uso y carencias. Las citas se contrastan con lo realmente suministrado; un hallazgo inválido no elimina otros válidos. La síntesis utiliza únicamente aportaciones validadas y conserva certeza, condiciones, acciones y pendientes. Validar citas no prueba corrección semántica. Base funcional aceptada en Fase 1; mejoras propuestas en [Fase 2](PLAN_FASE_2.md).
 
-`AUDIT_PREPARATION_MAX_LOOPS` se conserva únicamente para los antiguos helpers de exploración; ya no añade una etapa exploradora en el recorrido híbrido completo. Los nuevos controles no multiplican análisis ni descargan otra copia del repositorio. El timeout global API de 1500 s prevalece sobre los presupuestos individuales.
+Los apartados siguientes describen la configuración común y el reparto legacy sin evidencia compartida.
 
 ## Registro anterior (Bloques 5 y 7; contratos anteriores conservados para compatibilidad)
 

@@ -1,13 +1,13 @@
 name: arktic-backend-regression
 services:
   backend-tests:
-    image: arktic-backend-tests:0.2.0
+    image: arktic-backend-tests:0.3.0
     build:
       context: .
       dockerfile: docker/Auditor.Dockerfile
       target: tests
       args:
-        APP_VERSION: "0.2.0"
+        APP_VERSION: "0.3.0"
     network_mode: none
     read_only: true
     tmpfs: ["/tmp:rw,noexec,nosuid,size=128m,mode=1777"]

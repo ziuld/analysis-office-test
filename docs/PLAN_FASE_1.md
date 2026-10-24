@@ -2,7 +2,8 @@
 
 Fecha de registro: 23/10/2026.
 
-Estado: Bloque 1 fusionado; bloques 2, 3, 4, 5 y 6 implementados y comprobados localmente, con evidencia y límites registrados debajo. El Bloque 7 está implementado técnicamente; F1-23 dispone de verificación funcional real del equipo completo; el Bloque 8 está implementado y comprobado con snapshot completo y recuperación compartida, con límites explícitos; la calibración semántica de muestras pasa al Bloque 9 y F1-24 requiere aceptación humana. Las decisiones técnicas indicadas como pendientes requieren validación antes de adoptarse. La entrega permanece abierta y las versiones actuales se conservan.
+Estado: **Fase 1 cerrada y aceptada por el usuario el 24/10/2026 como versión 0.3.0** de frontend/backend/paquete Python, con cobertura parcial y límites conocidos aceptados. Bloques 1–8 terminados; F1-24 cerrado por esta aceptación. La integración a main queda pendiente del merge manual del usuario. No se publican tags, imágenes ni release. El afinado sale de esta fase y se planifica aparte en [Fase 2](PLAN_FASE_2.md). Los registros inferiores conservan fechas, versiones y resultados históricos; sus menciones a entrega abierta o al antiguo Bloque 9 describen el estado de entonces.
+
 
 ## Relación con el MVP actual
 
@@ -11,7 +12,7 @@ Esta es la siguiente etapa de producto después del MVP, no la fase interna núm
 - El [PLAN_MVP.md](../PLAN_MVP.md) conserva el alcance, seguimiento, verificaciones y cierre del MVP. No se sustituye ni se reescribe con este roadmap.
 - Base de esta evolución: frontend **0.2.0** y backend **0.2.0**, commit `eb71fb71586e299cd5d3dea3474b1be382ee2a1d` (`Release frontend 0.2.0 and backend 0.2.0`).
 - El [CHANGELOG.md](../CHANGELOG.md) registra las entregas realizadas; este documento registra trabajo futuro.
-- «Fase 1» no asigna una versión de software. El número de la siguiente entrega se decidirá al cerrarla. Los archivos de versión actuales permanecen en 0.2.0.
+- La entrega de Fase 1 se cierra como 0.3.0 para frontend, backend y paquete Python; las versiones y resultados históricos 0.2.0 se conservan.
 - La revisión que origina este plan fue estática. No se ejecutaron servicios, pruebas, scanners ni llamadas a modelos para elaborar la propuesta. Las verificaciones del MVP son históricas y siguen documentadas en su propio plan.
 
 ## Objetivo
@@ -46,7 +47,7 @@ La recomendación principal es una aplicación modular dentro del mismo reposito
 | Persistencia | Archivos para evidencias e informes; valorar SQLite para trabajos, eventos y conversaciones | Archivos JSON y catálogo acotado; sin SQLite ni infraestructura adicional |
 | Modelos | Registro central validado, con perfiles por rol y excepciones explícitas | Perfiles instalados y validados en Bloque 5; disponibilidad real condicionada por sesión/cuota |
 | Conversación | Consultar evidencia guardada con historial acotado por revisión y personaje | Confirmada: últimas diez consultas por revisión/personaje, independientes y solo lectura al abrir historial |
-| Versión global | Manifiesto de entrega que relacione versiones de aplicación, componentes, skills, plantillas y dependencias | Manifiesto candidato y manifiestos por revisión implementados; siguiente número y cierre pendientes |
+| Versión global | Manifiesto de entrega que relacione versiones de aplicación, componentes, skills, plantillas y dependencias | Manifiesto de cierre 0.3.0 aceptado y manifiestos por revisión implementados; merge manual pendiente |
 
 Graphify no es GraphQL. Su extracción `--code-only` está documentada sin necesidad de clave de modelo. Su Dockerfile consultado sirve un grafo existente mediante MCP; no resuelve por sí solo la descarga y generación automática del grafo. La integración deberá cubrir ese recorrido dentro de Docker. Su mayor popularidad no prueba estabilidad ni rendimiento para nuestros repositorios.
 
@@ -64,8 +65,8 @@ Flujo del Bloque 8 implementado para nuevas revisiones híbridas; `legacy` conse
 
 1. Resolver la rama predeterminada y fijar el commit; obtener todo su snapshot y verificar integridad antes de analizar. Si falta contenido o se supera capacidad, detener la preparación sin sustituirlo por un subconjunto.
 2. Ejecutar inventario, mapas y scanners sin modelos sobre todo el conjunto compatible; documentar incompatibilidades y errores por archivo/herramienta.
-3. El coordinador prepara tres paquetes de evidencia original en una llamada; una segunda llamada de preparación es opcional y configurable.
-4. Ejecutar las especialidades con base relevante y registrar las omisiones justificadas. Cada especialista puede recuperar evidencia adicional del snapshot/mapas mediante la skill compartida, con presupuesto 0/1.
+3. El coordinador recibe un contexto común pequeño y emite tres encargos en una llamada, sin seleccionar fuentes ni omitir especialistas.
+4. Cada especialista elige fuentes directamente del snapshot/mapas: una ronda inicial agrupada y después su informe; una segunda ronda solo si está configurada y hace falta. Registrar consultas, fuentes, límites y carencias.
 5. Validar citas y aportaciones, conservar parciales útiles y sintetizar condiciones, acciones y pendientes sin elevar certeza.
 6. Publicar informes y trazas; las consultas posteriores sobre resultados guardados siguen siendo independientes, sin relanzar el equipo.
 
@@ -211,7 +212,7 @@ El usuario confirmó el historial de las últimas diez consultas por revisión y
 - [x] F1-21 Organizar resultados por fecha, hora, título e identificador; distinguir informes del producto de capturas de desarrollo. Definir conservación y limpieza de snapshots e índices.
 - [x] F1-22 Separar documentación humana de plantillas, esquemas y estándares usados en ejecución; actualizar enlaces e instrucciones.
 - [ ] F1-23 Evaluar utilidad, citas, insuficiencia, consumo y tiempos con muestras representativas. Conservar la base de CI sin ampliarla; usar pruebas manuales mínimas necesarias. Las evaluaciones reales serán explícitas y presupuestadas.
-- [ ] F1-24 Cerrar la entrega con aceptación humana, manifiesto de versiones, changelog y referencias Git según el flujo de publicación acordado.
+- [x] F1-24 Entrega 0.3.0 aceptada el 24/10/2026: manifiesto, changelog y PR #3; merge manual reservado al usuario, sin publicación de tags ni imágenes.
 
 **Cierre:** cada informe identifica código revisado, cobertura, modelos, recursos versionados y consumo disponible. La entrega distingue lo medido de lo pendiente y conserva acceso al histórico.
 
@@ -249,7 +250,7 @@ El usuario autorizó después la prueba completa sin restricciones de intentos y
 
 ### Bloque 8 — Snapshot completo, evidencia compartida y recuperación por especialista
 
-**Estado: planificado, sin implementar. Acuerdo del 24/10/2026:** la adquisición y las herramientas locales trabajan sobre el snapshot completo del commit. La selección parcial se aplica al contexto enviado a modelos. Este bloque sustituye para el nuevo recorrido las restricciones anteriores de adquisición selectiva y especialistas sin recuperación; no atribuye esas capacidades a la implementación de bloques 1–7. El afinado de modelos se traslada al Bloque 9 y no comienza hasta validar esta arquitectura.
+**Estado: implementado y aceptado. Diseño acordado el 24/10/2026:** la adquisición y las herramientas locales trabajan sobre el snapshot completo del commit. La selección parcial se aplica al contexto enviado a modelos. Este bloque sustituye para el nuevo recorrido las restricciones anteriores de adquisición selectiva y especialistas sin recuperación; no atribuye esas capacidades a la implementación de bloques 1–7. El afinado sale de Fase 1 y se propone en la Fase 2 independiente.
 
 - [x] F1-29 Obtener dentro de Docker todo el contenido versionado del commit fijado, sin selección por relevancia, extensión, categoría o presupuesto del modelo. Verificar integridad y completitud contra el árbol; contemplar submódulos y contenido LFS cuando existan.
 - [x] F1-30 Construir inventario, mapas y grafo sin modelos sobre todo el snapshot; aplicar scanners al conjunto completo compatible con cada herramienta. Registrar por archivo y herramienta procesamiento, incompatibilidad y error; eliminar los límites actuales de subconjunto del recorrido que se declare completo.
@@ -259,9 +260,9 @@ El usuario autorizó después la prueba completa sin restricciones de intentos y
 - [x] F1-34 Permitir a cada especialista cero o una recuperación adicional configurable sobre la misma evidencia completa, sin nueva descarga ni ejecución. Devolver relaciones y fragmentos con rutas y líneas en una sola respuesta de recuperación; mantener independientes las conclusiones.
 - [x] F1-35 Separar ejecución y cobertura en estados persistidos, oficina e informes. Distinguir error técnico, omisión justificada, incompatibilidad de herramienta e información insuficiente; conservar resultados parciales útiles y rechazar individualmente elementos inválidos cuando el JSON permita hacerlo.
 - [x] F1-36 Incluir en la síntesis certeza, severidad, condiciones, acciones y pendientes de las aportaciones validadas. Validar las fuentes conservadas y evitar pérdidas de condiciones, afirmaciones nuevas o elevación de certeza; mantener los originales.
-- [x] F1-37 Comprobar el recorrido completo con modelos económicos y las pruebas manuales mínimas; medir adquisición, mapas, scanners, recuperación, llamadas y tokens. Documentar resultados, límites, configuración y limpieza en este plan antes de iniciar el Bloque 9.
+- [x] F1-37 Comprobar el recorrido completo con modelos económicos y las pruebas manuales mínimas; medir adquisición, mapas, scanners, recuperación, llamadas y tokens. Documentar resultados, límites, configuración y limpieza en este plan; mejoras posteriores en Fase 2.
 
-Los identificadores F1-25 a F1-28 del afinado se conservan en el Bloque 9 para no romper referencias anteriores. El orden de ejecución lo determina el bloque: primero 8, después 9.
+Los antiguos identificadores F1-25 a F1-28 quedan retirados del alcance al eliminar el Bloque 9. La Fase 2 tiene identificadores propios; las referencias históricas se preservan.
 
 **Condición de adquisición completa**
 
@@ -299,7 +300,7 @@ Los paquetes pueden compartir un archivo cuando sea relevante para varios roles.
 
 No basta con contar archivos ni con sus nombres para afirmar suficiencia. Tampoco se omite Arquitectura solo porque falten copias o despliegue si hay código que permite evaluar parte del flujo. La omisión describe la evidencia que se consiguió, no prueba que el repositorio carezca del control buscado. La oficina distingue «no ejecutado» de «ejecutado con información insuficiente» y de «error».
 
-**Presupuestos propuestos para implementar y medir**
+**Presupuestos iniciales del Bloque 8 (sustituidos por el ajuste de orquestación registrado debajo)**
 
 | Control | Propuesta inicial | Significado |
 |---|---|---|
@@ -308,7 +309,7 @@ No basta con contar archivos ni con sus nombres para afirmar suficiencia. Tampoc
 | Recuperación por especialista | Configurable 0 o 1; base 0 | Una recuperación habilita como máximo una llamada de modelo adicional |
 | Perfil de prueba del Bloque 8 | Seguridad 1, Arquitectura 1, Inventario 0 | Contrastar utilidad y coste con la base de cero recuperaciones |
 | Síntesis | Hasta una llamada | Solo si hay aportaciones válidas; omisión justificada si no las hay |
-| Modelo y razonamiento | Perfiles económicos actuales | Las elevaciones corresponden al Bloque 9 |
+| Modelo y razonamiento | Perfiles económicos actuales | Las elevaciones se valorarán en Fase 2 |
 
 Controles implementados como `AUDIT_<ROL>_MAX_EXTRA_QUERIES` (coordinator, security, architecture, inventory), rango 0/1 y base 0. `AUDIT_PREPARATION_MAX_LOOPS` queda solo para los helpers antiguos. Una consulta local al grafo no consume modelo por sí sola, pero reenviar su respuesta al especialista sí puede añadir entrada y una llamada. Con los tres especialistas ejecutados: base de cinco llamadas (coordinador + tres especialistas + síntesis); perfil de prueba hasta siete; con una recuperación en cada especialista y una segunda llamada del coordinador, hasta nueve. Las omisiones justificadas reducen llamadas. No hay reintentos de proveedor ni ampliación automática de modelos o presupuesto.
 
@@ -319,6 +320,22 @@ El snapshot completo y sus mapas permanecen disponibles hasta terminar la revisi
 Comprobar con casos dirigidos: igualdad con el árbol completo y fallo sin continuación parcial ante una descarga incompleta; cobertura de herramientas; omisión justificada frente a reparto vacío incorrecto; recuperación 0/1 y límites de lectura; conservación de un hallazgo válido junto a otro rechazado. Después realizar una prueba real con bookingApi y, para comprobar mayor tamaño y heterogeneidad, Arktic Office. Registrar exactamente qué pudo procesar cada herramienta, las llamadas intentadas/omitidas, tokens comunicados y evidencia recuperada. Los formatos no compatibles son una limitación visible, no un éxito ficticio. No repetir benchmarks o suites más amplias sin una causa concreta.
 
 **Cierre del Bloque 8:** snapshot íntegro disponible, herramientas locales aplicadas a todo su conjunto compatible con contabilidad por archivo, paquetes trazables y recuperación acotada operativos, decisiones de omisión visibles y flujo real comprobado. Aceptación de cobertura y límites antes de afinar modelos. Sin ampliaciones de CI/CD, cambios de versiones, publicación ni cierre de entrega.
+
+**Ajuste de orquestación — 24/10/2026**
+
+El recorrido compartido sustituye el reparto de archivos por tres objetivos, sin llamadas de lectura del coordinador. Cada especialista recibe el mismo índice acotado (160 rutas/10 KB, directorios y estados/candidatos de scanners) y elige evidencia mediante búsquedas de rutas/texto/símbolos, relaciones del grafo y lectura por líneas. El índice puede ser parcial: la consulta usa el snapshot/grafo completos locales. No se omite un especialista por una selección inicial vacía.
+
+`AUDIT_SECURITY_RESEARCH_ROUNDS`, `AUDIT_ARCHITECTURE_RESEARCH_ROUNDS` y `AUDIT_INVENTORY_RESEARCH_ROUNDS`: **0–2, base 1**. Cero genera un informe sin lectura de código, con insuficiencia explícita; uno obliga a seleccionar fuentes en una ronda y después analizar; dos permite otra ronda opcional. Cada ronda agrupa **1–4 consultas**, cada una hasta tres fragmentos de 100 líneas/6000 bytes; se conservan límites acumulados por rol (Seguridad 12 archivos/64 KB, otros 6/24 KB), posiciones originales y rechazo de rutas inseguras. El padding para conservar líneas también cuenta contra bytes; una ventana demasiado lejana puede no caber (límite actual 12 KB por fragmento con padding). No se amplían estos topes para este ajuste.
+
+Con una ronda por rol: hasta **8 llamadas** (1 orquestación + 3 investigación + 3 análisis + 1 síntesis). Con dos: hasta 11; con cero: hasta 5, sin fuentes de código para especialistas. Hasta 240 s por llamada de especialista, sin reintentos ni elevación de modelo. Los antiguos `MAX_EXTRA_QUERIES` dejan de controlar este recorrido; `PREPARATION_MAX_LOOPS` sigue siendo legacy. La consulta local no consume modelo; decidir qué consultar y analizar la respuesta sí. Las trazas conservan peticiones, resultados y omisiones por presupuesto, fuentes realmente entregadas, bytes de prompt y consumo de cada invocación. No se afirma un ahorro antes de medirlo.
+
+15 pruebas dirigidas correctas en 0,179 s (`test_complete_flow`, `test_coordinator`, `test_compatibility`): elección autónoma fuera de selección inicial, rondas 0/1/2, fallo de análisis conservando uso previo y total desconocido, aislamiento/rutas, ventanas con líneas originales, caps y compatibilidad. Imagen del backend reconstruida y servicios saludables. Pilotos reales: [evidencia completa](evidence/orchestrator-research-2026-10-24.json). Primero `3c39e932-022d-42b7-9bf5-ce27fb712e96`: 7 llamadas, 39.373 tokens conocidos más consumo desconocido de Inventario, 93,236 s; respuesta incompleta del runtime en su fase de investigación, sin detalle suficiente para precisar la causa. El resto continuó y produjo informe parcial. Se repitió manualmente una vez, sin reintento automático ni cambio de modelo.
+
+Segundo `f7043007-40a9-42a3-8b1e-a1478688c25c`: **tres especialistas y síntesis terminados, 8 llamadas, 52.366 tokens comunicados, 106,366 s, 7 observaciones informativas y 4 conclusiones**, 22 citas originales comprobadas sin referencias inválidas conservadas. Seguridad eligió 12 archivos/30.313 bytes (incluido `auditor/server.py`), Arquitectura 6/12.504 bytes (incluido código Python) e Inventario 6/7.182 bytes. Hicieron 4, 3 y 2 consultas locales respectivamente, dentro de una ronda por rol. Seguridad conserva un hallazgo válido y rechaza otro por tema no admitido: informe global **parcial**, cinco controles no evaluados y uno con evidencia favorable limitada. No se quedó bloqueado ni se omitió ningún especialista en la repetición. Se verificó el snapshot de 69/69 archivos del mismo `main` remoto `b6b8adec2a36a43248ed5194bdc86b38bfeaccb6`, no el PR local sin fusionar; Graphify 50 procesados/19 sin soporte, Gitleaks sin detecciones y OSV sin entradas compatibles.
+
+Frente al piloto anterior de 5 llamadas/46.452 tokens, la selección autónoma recuperó fuentes antes ausentes y produjo aportaciones en las tres especialidades, con mayor consumo (52.366 tokens). Una comparación de estas ejecuciones variables no demuestra ahorro ni mejora semántica general. Citas válidas no garantizan interpretación correcta: «recupera trabajos» debe leerse con cautela, pues el código marca los interrumpidos como error; no demuestra reanudación. La calibración semántica queda propuesta en Fase 2.
+
+Comprobación final: API/preparador/oficina saludables, informe HTML y descarga HTTP 200, cero trabajos activos y cero temporales propios de snapshot/índice. El pequeño ajuste posterior que conserva evidencia previa si una ventana nueva agota bytes se verificó en las pruebas dirigidas; imagen final reconstruida y desplegada, sin repetir modelos por ese caso. Sin inspección visual en navegador ni ejecución del repositorio objetivo. Ambos intentos se conservan: **15 llamadas intentadas, 91.739 tokens conocidos más un consumo desconocido**. CI/CD, versiones, pins e histórico conservados.
 
 **Implementación y comprobación del Bloque 8 — 24/10/2026**
 
@@ -347,22 +364,31 @@ Los tres especialistas y reparto/síntesis se invocaron en ambas pruebas; ningun
 
 **Comprobaciones mínimas:** 14 pruebas dirigidas (`test_complete_flow`, `test_coordinator`, `test_compatibility`), todas correctas en 0,170 s; no se ejecutó la suite completa. Incluyen integridad/descarga incompleta/LFS, fallo del mapa sin continuación, aislamiento, consultas 0/1 y errores, omisión justificada, conservación de hallazgos y limpieza de temporales abandonados. El extra del coordinador y las omisiones se probaron con respuestas controladas, sin forzar llamadas reales adicionales. Comprobación nativa de Graphify: ocultos y tests procesados; Compose `!reset` incompatible; YAML inválido detiene la preparación. La revisión final añadió un caso dirigido de fallo de la segunda llamada: consumo total desconocido (`null`), conservando el primero en `invocations`, sin repetir pilotos por ese cambio del camino de error. Skill validada, imágenes construidas y parche frontend contrastado en reversa. API/oficina/preparador saludables; oficina, lectura y descarga de ambos informes HTTP 200, tabla de ejecución/cobertura presente y cero trabajos activos. Sin directorios temporales de snapshots o índices al terminar; recuperación de un directorio propio abandonado comprobada en test. No se afirma una inspección visual completa de la disposición de la interfaz.
 
-**Límites y cierre técnico:** no se hidratan LFS ni submódulos: se detiene el análisis y se informa, sin declarar adquirido su contenido. Graphify conserva sus límites semánticos nativos (incluidos profundidad 6 y 500 claves YAML); «procesado» significa extracción ejecutada, no todas las relaciones posibles. Los dialectos sin soporte y binarios quedan inventariados y consultables cuando tienen texto. Gitleaks/OSV no proporcionan cobertura por byte/archivo: se registra su entrada y resultado real, sin inventar procesamiento individual. Un límite global o un error de extracción compatible detiene la preparación, sin pasar una muestra al modelo. No se ejecutaron los objetivos, sus tests ni instaladores. CI/CD, pins y versiones 0.2.0 intactos. Arquitectura técnica del Bloque 8 comprobada; utilidad semántica, selección fina de contexto y modelos finales siguen pendientes del **Bloque 9**, sin cerrar F1-24 ni la entrega.
+**Límites y cierre técnico:** no se hidratan LFS ni submódulos: se detiene el análisis y se informa, sin declarar adquirido su contenido. Graphify conserva sus límites semánticos nativos (incluidos profundidad 6 y 500 claves YAML); «procesado» significa extracción ejecutada, no todas las relaciones posibles. Los dialectos sin soporte y binarios quedan inventariados y consultables cuando tienen texto. Gitleaks/OSV no proporcionan cobertura por byte/archivo: se registra su entrada y resultado real, sin inventar procesamiento individual. Un límite global o un error de extracción compatible detiene la preparación, sin pasar una muestra al modelo. No se ejecutaron los objetivos, sus tests ni instaladores. CI/CD, pins y versiones 0.2.0 intactos. Arquitectura técnica del Bloque 8 comprobada; utilidad semántica, selección fina de contexto y modelos finales quedan fuera del cierre aceptado y se proponen en la **Fase 2**.
 
-### Bloque 9 — Afinado (finetuning) de configuración y resultados
+**Repetición del propio repositorio solicitada por el usuario — 24/10/2026**
 
-Este bloque afina configuración, instrucciones y utilidad observada; no implica entrenar pesos de un modelo. Primero se prueba el funcionamiento con perfiles mínimos, sin buscar todavía el resultado óptimo.
+Se analizaron nuevamente los 69/69 archivos del `main` remoto `b6b8adec2a36a43248ed5194bdc86b38bfeaccb6`, no los cambios sin fusionar del PR. Se mantuvieron modelos `gpt-6-luna/low`, scanners activos y límites 0/1. Primera ejecución `6d581c46-01b0-4c4f-8257-21d77060b054`: cinco llamadas, 48783 tokens, 89,634 s; cinco observaciones, un indicio y cinco conclusiones, con 16 citas válidas. Detectó un error del Core: la validación por hallazgo repetía el mismo rechazo de presentación. Se corrigió validando los bloques opcionales una sola vez. Se aclararon únicamente las claves exactas de componentes e IDs de flujo permitidos, sin relajar las comprobaciones ni elevar modelos.
 
-- [ ] F1-25 Resolver y comprobar sesión/cuota con evaluación real acotada y presupuesto explícito, sin scanners salvo autorización independiente. Completar la validación semántica pendiente de F1-23.
-- [ ] F1-26 Acordar y elevar modelos/razonamiento por rol para analizar un repositorio real; conservar el perfil económico para pruebas funcionales.
-- [ ] F1-27 Evaluar utilidad, citas, insuficiencia, cobertura, llamadas, tiempos y consumo comunicado. Afinar prompts, selección y loops según fallos observados, con cambios pequeños y comprobaciones mínimas.
-- [ ] F1-28 Registrar configuración final, límites y resultados; aceptación humana y decisión de versión para completar F1-24. El usuario conserva el merge.
+Un solo caso de regresión nuevo; 15 pruebas dirigidas correctas en 0,135 s, sin suite completa. Repetición `c1d57919-c0d9-4d6b-8072-a647d042d4ea`: seis llamadas, 68192 tokens, 81,608 s; Seguridad realizó una recuperación y una segunda llamada. Los tres especialistas y reparto/síntesis se ejecutaron; se conservaron dos observaciones y una conclusión, con seis citas únicas recontrastadas. Seguridad e Inventario completados sin advertencias de formato; Arquitectura devolvió tres hallazgos y dos bloques editoriales con fuentes inexistentes, rechazados todos. Su estado `informacion_insuficiente` refleja aquí pérdida por validación y no prueba que falte código en el repositorio. El resultado sigue **parcial y no satisfactorio como evaluación completa**; no se afirma una mejora semántica por las aclaraciones de esquema. Los seis dominios de seguridad siguen no evaluados.
+
+Ambas pruebas adquirieron íntegramente el árbol: Graphify procesó 50 archivos; 19 inventariados como incompatibles. Gitleaks recibió los 69 archivos sin detecciones; OSV sin entrada compatible. Total de esta petición: 11 llamadas / 116975 tokens comunicados. Oficina, informe y descarga accesibles, sin trabajos ni temporales de snapshots/índices al terminar. Sin ejecutar el objetivo, instalar dependencias, modificar CI/CD, pins o versiones. **No se hace commit ni se actualiza el PR**, respetando la condición del usuario de hacerlo solo si no aparecen errores. La corrección y el registro quedan preparados localmente; citas y utilidad de Arquitectura continúan pendientes. Evidencia: [arktic-recheck-2026-10-24.json](evidence/arktic-recheck-2026-10-24.json).
+
+**Corrección visual y nueva repetición — 24/10/2026**
+
+La selección predeterminada del coordinador mantenía su bocadillo terminal visible. Se limita el texto flotante a trabajo/consulta activos y se mantiene fija la orientación del escritorio al seleccionar personajes. Se reutilizó la prueba de simulación de puestos, cambiando la expectativa de giro por orientación estable: seis pruebas dirigidas de interfaz correctas; compilación y parche en reversa correctos. Solo se recreó `office`, sin interrumpir el analizador. El navegador automatizado no pudo inicializarse por un error del entorno; no se afirma inspección visual completa y hace falta recargar la página para recibir el nuevo cliente.
+
+Nuevo flujo real `61862d6d-701f-4801-9acb-b4f99f40e5f0` sobre `main@b6b8adec2a36a43248ed5194bdc86b38bfeaccb6`: 69/69 archivos verificados; cinco llamadas `gpt-6-luna/low`, 46452 tokens y 78,711 s. Reparto, tres especialistas y síntesis ejecutados. Seguridad no produjo hallazgos útiles, dejó los seis dominios no evaluados y no solicitó recuperación aunque tenía una disponible. Arquitectura conservó dos observaciones y rechazó un hallazgo y dos bloques editoriales por fuentes inexistentes. Inventario conservó dos observaciones sin advertencias. Informe parcial: cuatro observaciones informativas y cinco elementos de síntesis, con ocho citas únicas recontrastadas. No se identificaron vulnerabilidades confirmadas; tampoco se completó la evaluación de seguridad.
+
+**No hubo bloqueo del flujo:** reparto y síntesis `complete`, tres células con ejecución terminada, cero trabajos activos, cuatro agentes con `working=false` y `meeting=false`, informe/descarga HTTP 200 y cero temporales de snapshots/índices. Gitleaks sobre los 69 archivos sin detecciones; OSV no evaluado por falta de input compatible. No se repite la suite backend ni se modifica CI/CD o versiones. Sin commit/actualización del PR; errores de citas y suficiencia pendientes. Registro: [office-visual-recheck-2026-10-24.json](evidence/office-visual-recheck-2026-10-24.json).
+
+**Ajuste posterior de reposo visual — 24/10/2026:** a petición del usuario, los agentes de auditoría dejan de estar fijados al escritorio cuando no trabajan. Se reutiliza su paseo entre zonas de descanso, incluidos finales con error; la selección no gira su orientación mientras trabajan. Se adapta el caso de simulación para verificar puesto durante trabajo y liberación al pasar a reposo/error. Seis pruebas dirigidas de interfaz correctas y compilación correcta; solo se actualiza `office`, sin repetir análisis, consumir modelo, modificar CI/CD ni versiones.
 
 ## Estructura implementada
 
 ```text
 arktic-office/
-├── release.json                 # Candidata, entrega abierta
+├── release.json                 # Fase 1 aceptada; merge manual pendiente
 ├── backend/
 │   ├── src/arktic_office/
 │   │   ├── preparation/ coordination/ reporting/ storage/ adapters/
@@ -416,3 +442,11 @@ Capacidades contrastadas en fuentes primarias durante la propuesta del 23/10/202
 | 24/10/2026 | Reorganización acordada: nuevo Bloque 8 de snapshot completo, mapas/scanners globales y recuperación compartida; afinado trasladado al Bloque 9 con IDs F1-25 a F1-28 conservados | Solo planificación; nueva arquitectura sin implementar, versiones y CI/CD conservados |
 
 | 24/10/2026 | Bloque 8 F1-29 a F1-37: snapshot completo, mapas globales, paquetes originales, recuperación compartida 0/1 y cobertura separada | 14 pruebas dirigidas y pilotos económicos de bookingApi/Arktic registrados; informes parciales y límites explícitos; afinado pendiente en Bloque 9, CI/CD y versiones conservados |
+
+## Cierre aceptado — 24/10/2026
+
+El usuario acepta el funcionamiento integrado con modelos económicos y resultados parciales como entrega **0.3.0**. Se elimina el Bloque 9 de tareas de esta fase; sus antiguos IDs F1-25 a F1-28 quedan retirados del alcance, sin marcarlos realizados. La siguiente fase tiene IDs propios y comienza por auditar la configuración efectiva de agentes en Hermes/Arktic, no por elevar modelos automáticamente. Las referencias históricas al bloque eliminado se conservan como trazabilidad.
+
+La aceptación no convierte controles pendientes ni fallos de modelos en éxitos. Se conservan ambos pilotos del ajuste de orquestación, las limitaciones de Graphify/OSV, los rechazos de formato y la imprecisión semántica documentada. Quince pruebas dirigidas de flujo correctas; seis de interfaz de estados/mapa ya registradas. Para el cierre se añaden únicamente las comprobaciones existentes de manifiesto/versiones y la construcción/arranque de las imágenes 0.3.0, sin nuevas llamadas a modelos ni ampliación de CI/CD. Los pilotos históricos permanecen con su versión 0.2.0. PR #3 hacia main actualizado; el usuario hará el merge. [Manifiesto](../release.json), [changelog](../CHANGELOG.md), [plan siguiente](PLAN_FASE_2.md).
+
+Comprobaciones de cierre 0.3.0: **17 pruebas dirigidas correctas en 0,161 s**, incluidas las dos de almacenamiento/manifiestos existentes. Imágenes frontend/backend 0.3.0 construidas y script existente `scripts/check-startup.ps1` correcto: red interna aislada, volúmenes temporales nuevos sin credenciales, cero revisiones y HTTP saludable, con limpieza al terminar. Parche frontend contrastado en reversa. No se repitieron modelos, scanners ni suites amplias por el cierre. Evidencia de cierre en [phase1-close-2026-10-24.json](evidence/phase1-close-2026-10-24.json). La CI existente se ejecutará sobre el commit subido; su estado remoto se consulta en el PR.

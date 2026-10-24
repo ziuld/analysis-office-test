@@ -12,7 +12,7 @@ class Evidence:
         self.graph = graph
 
     def lookup(self, request):
-        if not isinstance(request, dict) or set(request) - {"query", "paths"}:
+        if not isinstance(request, dict) or set(request) - {"query", "paths", "start_line"}:
             raise AuditError("Consulta de evidencia inválida.")
         query, paths = request.get("query", ""), request.get("paths", [])
         if not isinstance(query, str) or len(query) > 120 or not isinstance(paths, list) or len(paths) > 3:
@@ -20,6 +20,9 @@ class Evidence:
         if any(not isinstance(p, str) or len(p) > 500 or not p or PurePosixPath(p).is_absolute()
                or ".." in PurePosixPath(p).parts or ".git" in PurePosixPath(p).parts or "\\" in p or ":" in p for p in paths):
             raise AuditError("Ruta de consulta insegura; solo se permite el espacio de esta revisión.")
+        start_line = request.get("start_line")
+        if start_line is not None and (type(start_line) is not int or not 1 <= start_line <= 100000 or not paths):
+            raise AuditError("Lectura por líneas inválida; indica rutas y una línea positiva hasta 100000.")
         unavailable = [p for p in paths if p not in self.files]
         paths = [p for p in paths if p in self.files]
         if not query.strip() and not paths and not unavailable:
@@ -39,10 +42,11 @@ class Evidence:
         for path in paths:
             lines = self.files[path]["text"].splitlines()
             hit = next((i for i, line in enumerate(lines) if query and query.casefold() in line.casefold()), 0)
-            start, end = max(0, hit - 8), min(len(lines), max(0, hit - 8) + 100)
+            start = start_line - 1 if start_line is not None else max(0, hit - 8)
+            end = min(len(lines), start + 100)
             while end > start and len("\n".join(lines[start:end]).encode()) > 6000:
                 end -= 1
-            if end == start:
+            if end <= start:
                 continue
             text = "\n".join([""] * start + lines[start:end])
             if len(text.encode()) > 12000:
@@ -59,6 +63,41 @@ class Evidence:
             return self.lookup(request)
         except AuditError as exc:
             return {"fragments": [], "relations": [], "symbols": [], "error": str(exc)}
+
+    def batch(self, requests, limits, initial=None):
+        """At most four bounded local lookups; return exactly the fragments delivered."""
+        if not isinstance(requests, list) or not 1 <= len(requests) <= 4:
+            raise AuditError("Una ronda admite entre una y cuatro consultas.")
+        results, files = [], list(initial or [])
+        for request in requests:
+            result = self.respond(request)
+            # Merge same-file windows instead of silently losing earlier evidence.
+            candidates = {f["path"]: dict(f) for f in files}
+            size = sum(len(f["text"].encode()) for f in files)
+            for fragment in result["fragments"]:
+                previous = candidates.get(fragment["path"])
+                candidate = dict(fragment)
+                if previous:
+                    holder = {"files": [previous]}
+                    self.retain(holder, [fragment])
+                    candidate = holder["files"][0]
+                old_size = len(previous["text"].encode()) if previous else 0
+                next_size = size - old_size + len(candidate["text"].encode())
+                if next_size <= limits["bytes"] and (previous or len(candidates) < limits["files"]):
+                    candidates[fragment["path"]] = candidate
+                    size = next_size
+            selected = list(candidates.values())
+            retained = {f["path"]: f["text"].splitlines() for f in selected}
+            def supplied(fragment):
+                lines = retained.get(fragment["path"], [])
+                return all(i < len(lines) and lines[i] == line for i, line in enumerate(fragment["text"].splitlines()) if line)
+            delivered = {f["path"] for f in result["fragments"] if supplied(f)}
+            result["omitted_by_budget"] = [f["path"] for f in result["fragments"] if f["path"] not in delivered]
+            # Sources are supplied once through make_prompt with verified line IDs.
+            result["fragments"] = [{k: v for k, v in f.items() if k != "text"} for f in result["fragments"] if f["path"] in delivered]
+            results.append({"request": request, "result": result})
+            files = selected
+        return files, results
 
     def retain(self, snapshot, files):
         """Persist only supplied fragments, keeping original line numbers for citations."""

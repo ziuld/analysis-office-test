@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
-  "status": "review_candidate",
-  "delivery_closed": false,
+  "status": "accepted_pending_user_merge",
+  "delivery_closed": true,
   "phase": 1,
   "versions": {
-    "frontend": "0.2.0",
-    "backend": "0.2.0",
-    "python_package": "0.2.0"
+    "frontend": "0.3.0",
+    "backend": "0.3.0",
+    "python_package": "0.3.0"
   },
   "dependencies": {
     "hermes3d_commit": "beb76292747b816ef317aa6f9a3992e0014f81d9",
@@ -109,12 +109,43 @@
       "all_attempts_reported_tokens": 282555,
       "evidence": "docs/evidence/block8-architecture-2026-10-24.json",
       "limitations": "Informes parciales; Arktic Arquitectura sin hallazgos con citas válidas; OSV no evaluado; LFS/submódulos no hidratados bloquean preparación."
+    },
+    "orchestrator_research": {
+      "targeted_tests": 15,
+      "run": "f7043007-40a9-42a3-8b1e-a1478688c25c",
+      "model_calls": 8,
+      "reported_total_tokens": 52366,
+      "confirmed_observations": 7,
+      "synthesis_items": 4,
+      "validated_unique_citations": 22,
+      "all_specialists_executed": true,
+      "report_state": "parcial",
+      "evidence": "docs/evidence/orchestrator-research-2026-10-24.json",
+      "limitations": [
+        "Un hallazgo de Seguridad rechazado por tema inválido; cinco controles no evaluados.",
+        "El primer intento falló en Inventario por respuesta incompleta y se conserva.",
+        "Pilotos ejecutados con backend 0.2.0 antes del cierre de versión; no se reetiquetan informes históricos."
+      ]
+    },
+    "closure_0_3_0": {
+      "targeted_tests": {
+        "run": 17,
+        "passed": 17,
+        "seconds": 0.161,
+        "full_suite": false
+      },
+      "image_builds": [
+        "arktic-hermes-auditor:0.3.0",
+        "arktic-hermes3d-office:0.3.0"
+      ],
+      "isolated_startup": "existing_check_startup_script_passed_without_credentials_or_jobs",
+      "model_calls_for_closure": 0,
+      "scanners_for_closure": false,
+      "ci_workflow_changes": false,
+      "evidence": "docs/evidence/phase1-close-2026-10-24.json"
     }
   },
   "pending": [
-    "semantic_calibration_on_representative_repositories_block9",
-    "human_acceptance",
-    "delivery_version_decision",
     "user_merge"
   ],
   "publication": {
@@ -132,12 +163,15 @@
     "codex_model": "gpt-6-luna",
     "reasoning": "low",
     "per_role_model_overrides": false,
-    "tuning_block": 9,
     "scanners_enabled": true,
     "preparation_model_calls": 0,
-    "coordinator_max_extra_queries": 0,
-    "security_max_extra_queries": 1,
-    "architecture_max_extra_queries": 1,
-    "inventory_max_extra_queries": 0
-  }
+    "research_rounds": {
+      "security": 1,
+      "architecture": 1,
+      "inventory": 1
+    }
+  },
+  "accepted_on": "2026-10-24",
+  "acceptance": "Usuario acepta la Fase 1 funcional y sus resultados parciales; merge manual a main pendiente.",
+  "next_phase": "docs/PLAN_FASE_2.md"
 }

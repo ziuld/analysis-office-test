@@ -1,6 +1,6 @@
 # Núcleo Python — Bloque 3
 
-El backend es el paquete `arktic_office`, construido como wheel desde [pyproject.toml](../pyproject.toml). Conserva la versión **0.2.0**. El paquete propio no añade dependencias Python: el adaptador Hermes sigue utilizando el runtime fijado y su lock dentro de Docker, sin incorporarlo al paquete ni cambiar modelos o presupuestos.
+El backend es el paquete `arktic_office`, construido como wheel desde [pyproject.toml](../pyproject.toml). Versión de la entrega aceptada: **0.3.0**. El paquete propio no añade dependencias Python: el adaptador Hermes sigue utilizando el runtime fijado y su lock dentro de Docker, sin incorporarlo al paquete ni cambiar modelos o presupuestos.
 
 ## Organización
 

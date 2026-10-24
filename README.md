@@ -4,7 +4,7 @@ Oficina virtual 2D para entender una aplicación a partir de su repositorio de G
 
 El MVP entrega un informe con evidencia del código, indicios por confirmar y preguntas pendientes. Ayuda al responsable técnico a valorar seguridad, operación y una posible migración a VPS o Kubernetes. La decisión de despliegue corresponde al arquitecto.
 
-Versiones propias: **frontend 0.2.0** y **backend 0.2.0**, gestionadas de forma independiente en `FRONTEND_VERSION` y `BACKEND_VERSION`. Cambios de cada componente: [CHANGELOG.md](CHANGELOG.md). Los archivos `HERMES3D_VERSION` y `HERMES_AGENT_VERSION` fijan las dependencias originales, no la versión de Arktic Office.
+Versiones propias: **frontend 0.3.0** y **backend 0.3.0**, gestionadas de forma independiente en `FRONTEND_VERSION` y `BACKEND_VERSION`. Cambios de cada componente: [CHANGELOG.md](CHANGELOG.md). Los archivos `HERMES3D_VERSION` y `HERMES_AGENT_VERSION` fijan las dependencias originales, no la versión de Arktic Office.
 
 ## Empezar
 
@@ -15,7 +15,7 @@ Versiones propias: **frontend 0.2.0** y **backend 0.2.0**, gestionadas de forma 
 - **Cómo se redacta el informe:** [Estándar de comunicación compartido](docs/ESTANDAR_COMUNICACION_INFORMES.md).
 - **Preparar la subida y mantener las versiones:** [Repositorio y reproducción](docs/REPOSITORIO.md).
 - **MVP actual e histórico:** [PLAN_MVP.md](PLAN_MVP.md), con el alcance y las verificaciones de la entrega 0.2.0.
-- **Siguiente evolución:** [Plan de Fase 1](docs/PLAN_FASE_1.md), con objetivos, tareas, criterios de cierre y decisiones pendientes. El Bloque 1 incorpora reproducción y CI; el Bloque 2 prueba el indexador de forma independiente. Los bloques 2–8 incorporan núcleo, coordinación, oficina y snapshot completo; el afinado de modelos queda en el Bloque 9.
+- **Fase 1 cerrada (0.3.0):** [alcance, aceptación y evidencias](docs/PLAN_FASE_1.md). **Siguiente fase propuesta:** [mejora de agentes y recuperación](docs/PLAN_FASE_2.md), empezando por revisar la configuración efectiva en Hermes/Arktic.
 - **Experimento del Bloque 2:** [Validación del indexador](docs/INDEXADOR.md), con recuperación y extracción estructural de muestras dentro de Docker, sin modelos ni ejecución de las aplicaciones.
 - **Núcleo del Bloque 3:** [Paquete Python y compatibilidad](docs/CORE.md), con pruebas manuales mínimas y sin ampliar CI/CD.
 

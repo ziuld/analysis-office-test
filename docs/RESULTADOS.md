@@ -1,8 +1,18 @@
-# Resultados del Bloque 8
+# Resultados de Fase 1 — 0.3.0
+
+Fase aceptada y cerrada el 24/10/2026 por el usuario con resultados parciales y límites conocidos. Frontend/backend/paquete 0.3.0; merge manual pendiente, sin publicación. El afinado queda fuera de esta entrega y se propone en [Fase 2](PLAN_FASE_2.md). Los registros de candidatas abiertas que siguen son históricos; los informes 0.2.0 no se reescriben.
 
 Los nuevos informes híbridos incluyen el inventario íntegro al commit en `evidencia.json`, hashes de blobs y SHA256, cobertura por herramienta y fuentes originales realmente suministradas. `coordinacion.json` conserva decisiones y consultas; `celulas/*.json` distingue ejecución, cobertura, llamadas y advertencias. `manifest.json` conserva consumo y perfiles efectivos. HTML, Markdown y oficina muestran omisiones, carencias y cobertura separada de la ejecución. Los históricos no se reescriben.
 
 Que el snapshot esté completo no significa que todos los archivos tengan parser ni que los modelos hayan leído todo su contenido. La evaluación semántica sigue acotada. Las comprobaciones reales, intentos y límites se registran en [PLAN_FASE_1.md](PLAN_FASE_1.md).
+
+## Orquestación y selección autónoma de evidencia
+
+El coordinador ahora da objetivos, sin elegir archivos. Cada especialista selecciona fuentes del snapshot/grafo dentro de rondas y presupuestos configurables. La repetición completa `f7043007-40a9-42a3-8b1e-a1478688c25c` terminó sin bloqueos ni errores técnicos: tres especialistas, síntesis, 8 llamadas económicas, 52.366 tokens, 7 observaciones y 22 citas conservadas verificadas. Sigue parcial por un hallazgo de Seguridad rechazado por tema no admitido y por controles pendientes. El primer intento falló en la investigación de Inventario por respuesta incompleta del runtime; ambos resultados se preservan. [Métricas, comprobaciones y límites](evidence/orchestrator-research-2026-10-24.json). Citas válidas no certifican interpretación semántica; afinado pendiente.
+
+## Revisión posterior del propio repositorio
+
+La repetición del 24/10/2026 encontró avisos duplicados en el validador, corregidos con un caso nuevo (15 pruebas dirigidas correctas). Los pilotos completos de `main` adquirieron 69/69 archivos. La última ejecución sigue parcial: Arquitectura perdió todos sus hallazgos por fuentes inexistentes; Seguridad e Inventario conservaron dos observaciones en total. No se aprueba la calidad como evaluación completa ni se publica el cambio: commit/PR pendientes por la condición del usuario. Métricas, intentos y errores en [la evidencia](evidence/arktic-recheck-2026-10-24.json) y el [plan](PLAN_FASE_1.md).
 
 ## Documentación y resultados anteriores
 

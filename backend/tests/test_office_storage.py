@@ -48,8 +48,8 @@ class OfficeStorageTests(unittest.TestCase):
             snapshot = {"repository": "https://github.com/acme/app", "commit": "a" * 40, "files": []}
             write_manifest(directory, snapshot)
             manifest = json.loads((directory / "manifest.json").read_text())
-            self.assertEqual(manifest["backend_version"], "0.2.0")
-            self.assertEqual(manifest["delivery"], "open")
+            self.assertEqual(manifest["backend_version"], "0.3.0")
+            self.assertEqual(manifest["delivery"], "closed")
             self.assertIn("editorial/standard.md", manifest["resource_sha256"])
             self.assertEqual(original, {p: p.read_bytes() for p in original})
             guarded, outside = root / "guarded", root / "outside"

@@ -22,10 +22,10 @@ def write_manifest(directory, snapshot, report=None):
     for path in sorted(package.rglob("*.py")):
         digest.update(path.relative_to(package).as_posix().encode())
         digest.update(hashlib.sha256(path.read_bytes()).digest())
-    write_json(directory / "manifest.json", {"schema_version": 1, "delivery": "open", "backend_version": version("arktic-office-backend"),
+    write_json(directory / "manifest.json", {"schema_version": 1, "delivery": "closed", "backend_version": version("arktic-office-backend"),
         "backend_source_sha256": digest.hexdigest(),
         "hermes_agent": HERMES_COMMIT, "repository": snapshot["repository"], "branch": snapshot.get("branch"),
         "commit": snapshot["commit"], "analyzed_at": snapshot.get("analyzed_at"), "profiles": snapshot.get("model_profiles", {}),
         "request": snapshot.get("request", {}), "resource_sha256": resources, "coverage": snapshot.get("coverage", {}),
         "usage": usage, "status": (report or {}).get("estado", "inspection"),
-        "limitations": ["Sin consumo comunicado no se asume cero.", "Entrega abierta; no equivale a un manifiesto de publicación."]})
+        "limitations": ["Sin consumo comunicado no se asume cero.", "Fase 1 aceptada; no equivale a una publicación ni demuestra exhaustividad semántica."]})

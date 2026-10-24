@@ -18,14 +18,14 @@ Antes del commit, revisar `git diff --cached` y ejecutar `git ls-files .env repo
 
 | Componente | Versión propia | Imagen Docker | Identificación en ejecución |
 |---|---|---|---|
-| Frontend | `FRONTEND_VERSION`: 0.2.0 | `arktic-hermes3d-office:0.2.0` | Cabecera de la oficina |
-| Backend | `BACKEND_VERSION`: 0.2.0 | `arktic-hermes-auditor:0.2.0` | Campo `version` de `GET /health` en la API interna |
+| Frontend | `FRONTEND_VERSION`: 0.3.0 | `arktic-hermes3d-office:0.3.0` | Cabecera de la oficina |
+| Backend | `BACKEND_VERSION`: 0.3.0 | `arktic-hermes-auditor:0.3.0` | Campo `version` de `GET /health` en la API interna |
 
 Se usa SemVer: corrección compatible → patch, funcionalidad compatible → minor, cambio incompatible de contrato → major. En versiones 0.x, documentar explícitamente cualquier cambio de contrato. Un cambio exclusivo de frontend no obliga a subir backend, ni a la inversa.
 
 Para una nueva entrega acordada, actualizar el archivo de versión del componente, su etiqueta de imagen y su `APP_VERSION` en `compose.yaml`, y añadir su entrada en `CHANGELOG.md`. La versión del paquete backend en `pyproject.toml` debe coincidir con `BACKEND_VERSION`; también mantener alineada la imagen manual de pruebas en `compose.backend-tests.yaml`. Construir, probar y verificar la versión visible. El argumento del frontend se incorpora durante la compilación: reiniciar sin reconstruir no cambia ese número.
 
-Tras fusionar el PR y verificar el commit final, las etiquetas pueden distinguirse como `frontend/v0.2.0` y `backend/v0.2.0`. No se publican etiquetas de versión sobre una rama pendiente de revisión ni se crean releases automáticamente. Las imágenes se construyen localmente; este flujo no las publica en un registro.
+Tras fusionar el PR y verificar el commit final, las etiquetas pueden distinguirse como `frontend/v0.3.0` y `backend/v0.3.0`. No se publican etiquetas de versión sobre una rama pendiente de revisión ni se crean releases automáticamente. Las imágenes se construyen localmente; este flujo no las publica en un registro.
 
 Las versiones de los componentes son independientes de los commits de Hermes fijados a continuación. La instalación en otro equipo sigue [Inicio rápido](INICIO_RAPIDO.md) con sus propias credenciales.
 

@@ -52,6 +52,9 @@ def profile(role):
     if role != "preparation":
         limits["max_extra_queries"] = integer(prefix + "_MAX_EXTRA_QUERIES", 0, 0, 1)
         limits["calls"] = (2 if role == "coordinator" else 1) + limits["max_extra_queries"]
+    if role in {"security", "architecture", "inventory"}:
+        limits["research_rounds"] = integer(prefix + "_RESEARCH_ROUNDS", 1, 0, 2)
+        limits["calls"] = 1 + limits["research_rounds"]
     if role == "preparation":
         limits["max_loops"] = integer(prefix + "_MAX_LOOPS", limits["max_loops"], 0, 20)
         limits["iterations"] = 1 + limits["max_loops"]

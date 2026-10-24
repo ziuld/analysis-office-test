@@ -80,77 +80,25 @@ class Coordinator:
                  "bytes": sum(len(files[p]["text"].encode()) for p in assignment[c["id"]])} for c in plan]
 
     def route_complete(self, plan):
-        """One structured assignment; optional single read followed by final assignment."""
+        """Delegate objectives only; specialists own evidence selection."""
+        from arktic_office.coordination.research import common_context
+        context = common_context(self.snapshot, self.evidence)
         def validate(value):
-            if isinstance(value, dict) and set(value) == {"retrieve"}:
-                return value
             if not isinstance(value, dict) or set(value) != {c["id"] for c in plan}:
-                raise AuditError("Reparto incompleto.")
-            result = {}
-            for cell in plan:
-                item = value[cell["id"]]
-                if (not isinstance(item, dict) or set(item) != {"decision", "paths", "reason", "missing"}
-                    or item["decision"] not in {"execute", "partial", "omit"}
-                    or not isinstance(item["reason"], str) or not 1 <= len(item["reason"]) <= 600
-                    or not isinstance(item["missing"], list) or len(item["missing"]) > 6
-                    or any(not isinstance(x, str) or len(x) > 300 for x in item["missing"])
-                    or not isinstance(item["paths"], list) or len(set(item["paths"])) != len(item["paths"])):
-                    raise AuditError("Decisión de reparto inválida.")
-                if item["decision"] == "omit":
-                    if item["paths"] or not item["missing"]:
-                        raise AuditError("Omisión sin carencia explícita.")
-                    files = []
-                else:
-                    files = self.evidence.package(item["paths"], cell["limits"])
-                    if not files:
-                        raise AuditError("Invocación sin fuentes.")
-                result[cell["id"]] = {**item, "reason": redact(item["reason"]), "missing": [redact(x) for x in item["missing"]], "considered": [f["path"] for f in cell["files"]], "files": files}
-            return result
-        budget = self.config["limits"]["max_extra_queries"]
-        task = ('Prepara simultáneamente los tres paquetes usando fuentes originales y el inventario. '
-                'El Core entregará a cada especialista el texto original de sus rutas (fragmentos si es grande), no solo estas muestras. No declares ausente un archivo que consta en el índice. '
-                'No redactes hallazgos. Devuelve SOLO JSON con claves security, architecture, inventory; '
-                'cada valor {"decision":"execute|partial|omit","paths":["ruta"],"reason":"justificación basada en evidencia considerada",'
-                '"missing":["información necesaria ausente"]}. Usa partial si faltan fuentes relevantes; '
-                'omite solo con motivo y carencias explícitas. Respeta presupuestos. '
-                + ('Puedes pedir UNA consulta previa con {"retrieve":{"query":"símbolo o tema","paths":["ruta exacta"]}}. ' if budget else 'No hay consultas adicionales disponibles. '))
-        # Inventory and full graph stay local. Bound only the model-facing index.
-        paths = list(self.evidence.files)
-        baseline = {c["id"]: [f["path"] for f in c["files"]] for c in plan}
-        path_index, index_bytes = [], 0
-        for path in paths:
-            length = len(path.encode()) + 4
-            if len(path_index) >= 160 or index_bytes + length > 10000:
-                break
-            path_index.append(path)
-            index_bytes += length
-        data = {"commit": self.snapshot["commit"], "inventory_count": len(paths),
-                "path_index": path_index, "path_index_truncated": len(paths) > len(path_index),
-                "baseline": baseline, "cells": [{k: c[k] for k in ("id", "focus", "limits", "capabilities")} for c in plan],
-                "source_samples": [{"path": f["path"], "text": f["text"][:700]} for f in self.snapshot["files"][:8]],
-                "map_context": self.evidence.lookup({"paths": list(dict.fromkeys(p for values in baseline.values() for p in values))[:3]})["relations"]}
-        self.state["context"] = {"baseline": baseline, "inventory_count": len(paths), "indexed_paths": data["path_index"], "index_truncated": data["path_index_truncated"]}
-        assignment = self.call("routing", task, data, validate)
-        if assignment and "retrieve" in assignment:
-            if budget:
-                try:
-                    found = self.evidence.respond(assignment["retrieve"])
-                    self.state["retrieval"] = {"request": assignment["retrieve"], "result": found}
-                    assignment = self.call("routing_extra", task + ' Ya agotaste la consulta: devuelve los tres paquetes.',
-                                           {**data, "retrieved": found}, validate)
-                except AuditError as exc:
-                    self.state["retrieval"] = {"error": str(exc)}
-                    assignment = None
-            else:
-                assignment = None
-            if assignment and "retrieve" in assignment:
-                assignment = None
-        if assignment is None:
-            self.state["routing_fallback"] = "Reparto determinista: respuesta o consulta inválida."
-            self.save()
-            return [{**c, "decision": "partial", "reason": self.state["routing_fallback"], "missing": ["Reparto válido del coordinador"]} for c in plan]
+                raise AuditError("Encargos incompletos.")
+            if any(not isinstance(v, str) or not 1 <= len(v.strip()) <= 600 for v in value.values()):
+                raise AuditError("Encargo inválido; solo se admiten objetivos, no paquetes.")
+            return {k: redact(v.strip()) for k, v in value.items()}
+        tasks = self.call("routing", 'Actúa como orquestador. Define un encargo breve por especialidad. '
+                          'Cada especialista elegirá sus fuentes consultando el snapshot y grafo compartidos. '
+                          'No selecciones archivos ni redactes hallazgos ni omitas especialistas. '
+                          'Devuelve SOLO JSON {"security":"objetivo","architecture":"objetivo","inventory":"objetivo"}.',
+                          {"context": context, "roles": [{k: c[k] for k in ("id", "focus", "limits")} for c in plan]}, validate)
+        self.state["context"] = context
+        if tasks is None:
+            self.state["routing_fallback"] = "Encargos por especialidad conservados; respuesta del orquestador inválida."
         self.save()
-        return [{**c, **assignment[c["id"]], "bytes": sum(len(f["text"].encode()) for f in assignment[c["id"]]["files"])} for c in plan]
+        return [{**c, "task": tasks[c["id"]] if tasks else c["focus"]} for c in plan]
 
     def synthesize(self, results):
         contributions = {}

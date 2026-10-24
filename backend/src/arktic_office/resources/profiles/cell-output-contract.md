@@ -15,3 +15,11 @@ La respuesta final del informe incluye SIEMPRE en la raíz "schema_version":3, "
 - Cada hallazgo necesita de una a tres referencias F#:L# existentes. No inventes fuentes
   para completar el formato. Si falta evidencia, omite el hallazgo y explica la carencia.
 - Devuelve una sola respuesta JSON, sin Markdown, respetando los límites de texto.
+
+- Si tema="componentes", añade componente como objeto con EXACTAMENTE nombre,
+  tecnologia y funcion, los tres textos de hasta 160 caracteres. Ejemplo:
+  "componente":{"nombre":"API","tecnologia":"Python, versión declarada","funcion":"Recibe revisiones"}.
+  No uses una cadena, lista ni claves adicionales; incluye versiones dentro de tecnologia.
+- En presentacion.flujo_actual, usa IDs únicos con letras ASCII, números o guion
+  bajo, por ejemplo oficina_web y audit_api. No uses guiones medios, espacios ni
+  caracteres acentuados. origen y destino deben coincidir exactamente con esos IDs.

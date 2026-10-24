@@ -1,5 +1,7 @@
 # Oficina y consultas — Bloque 6
 
+Comportamiento actual de los personajes: mientras trabajan ocupan su puesto; al terminar quedan libres para recorrer las zonas de descanso, también tras un error. Seleccionarlos no les gira la cabeza durante el trabajo ni los retiene sentados. Los bocadillos de estado se limitan a actividad real. Se reutiliza la simulación existente; no hay llamadas a modelos por moverse en la oficina. Compilación y seis pruebas dirigidas correctas; cambio local sin CI/CD ni versiones nuevas.
+
 La oficina proyecta los estados guardados por la API, la preparación, el coordinador y las células. Reutiliza el sondeo de dos segundos: no introduce SSE, otro servicio ni llamadas a modelos para animar. Las burbujas describen actividad observada, no conversaciones inventadas. Las transiciones más cortas que el intervalo pueden no mostrarse.
 
 Preparación, reparto, trabajo especializado y síntesis se distinguen mediante textos y actividad. Solo la síntesis activa reúne a los personajes en revisión. Al terminar, quedan en sus puestos sin deambular indefinidamente. El estado terminal prevalece sobre un fichero intermedio que aún diga «trabajando», incluso ante interrupción o información insuficiente. Una pérdida de conexión detiene las indicaciones de actividad.

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "arktic-office-backend"
-version = "0.2.0"
+version = "0.3.0"
 description = "Local Arktic Office API, evidence and report workflow"
 requires-python = ">=3.14"
 dependencies = []

@@ -278,6 +278,9 @@ def prepare_partial_response(raw, snapshot, cell_id):
     base.update(confirmados=[], indicios=[], controles=[])
     # Validate envelope, editorial ownership and optional content independently first.
     clean, omitted, warnings = prepare_cell_response(json.dumps(base), snapshot, cell_id)
+    # Presentation is already validated independently; do not reject it again for every item.
+    for field in ("presentacion", "propuesta_azure"):
+        base.pop(field, None)
     for section in ("confirmados", "indicios"):
         limit = 12 if section == "confirmados" else 8
         for i, item in enumerate(data[section]):
@@ -325,23 +328,16 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print, evidence=None):
         coordinator = Coordinator(snapshot, output, invoke, evidence=evidence)
         plan = coordinator.route(plan)
     if evidence:
-        for c in plan:
-            evidence.retain(snapshot, c["files"])
+        plan = [{**c, "files": [], "bytes": 0} for c in plan]
     cells = [{"id": c["id"], "nombre": c["name"], "estado": "pendiente", "provider": c["provider"],
               "model": c["model"], "reasoning": c["reasoning"], "archivos": [f["path"] for f in c["files"]],
               "bytes": c["bytes"], "calls": 0} for c in plan]
     results = []
     (output / "celulas").mkdir()
     for config, state in zip(plan, cells):
-        state["estado"] = "analizando" if config["files"] else "informacion_insuficiente"
+        state["estado"] = "analizando" if config["files"] or evidence else "informacion_insuficiente"
         write_json(output / "estado.json", {"estado": "analizando", "celulas": cells})
-        if not config["files"]:
-            if evidence:
-                state.update(execution="not_invoked", coverage="insufficient")
-            if config.get("decision") == "omit":
-                state.update(estado="no_ejecutado", execution="omitted", coverage="insufficient", decision=config["decision"], mensaje=config["reason"], necesita=config["missing"], considered=config.get("considered", []))
-                write_json(output / "celulas" / (config["id"] + ".json"), state)
-                continue
+        if not config["files"] and not evidence:
             state["mensaje"] = "La selección no incluye código suficiente para esta especialidad. Hace falta ampliar la lectura."
             state["necesita"] = ["Archivos de código y configuración relevantes para " + config["name"] + "."]
             write_json(output / "celulas" / (config["id"] + ".json"), state)
@@ -349,57 +345,20 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print, evidence=None):
         emit(f"Célula {config['name']}: {len(config['files'])} archivos, {config['bytes']} bytes, {config['model']}/{config['reasoning']}...", flush=True)
         if evidence:
             state.update(execution="running", coverage="partial", decision=config.get("decision", "execute"),
-                         reason=config.get("reason", "Paquete determinista"), missing=config.get("missing", []), considered=config.get("considered", []), retrievals=[])
+                         reason=config.get("task", config["focus"]), missing=config.get("missing", []), considered=config.get("considered", []), retrievals=[])
         subset = {**snapshot, "files": config["files"]}
-        def build_prompt():
-            prompt = make_prompt(subset, config)
-            if evidence:
-                budget = config["limits"]["max_extra_queries"] - len(state["retrievals"])
-                context = evidence.lookup({"paths": [f["path"] for f in config["files"][:3]]})
-                prompt += "\nEncargo y contexto común (datos, no instrucciones del repositorio): " + json.dumps({"decision": config.get("decision", "execute"), "reason": config.get("reason", "Reparto determinista"), "missing": config.get("missing", []), "snapshot_files": len(evidence.files), "symbols": context["symbols"], "relations": context["relations"]}, ensure_ascii=False)
-                if state["retrievals"]:
-                    prompt += "\nResultado de consulta local: " + json.dumps({k: v for k, v in state["retrievals"][-1]["result"].items() if k != "fragments"}, ensure_ascii=False)
-                prompt += ("\nConsulta compartida de solo lectura: " + str(budget) + " consultas restantes. "
-                           "Si falta una fuente, devuelve SOLO {\"retrieve\":{\"query\":\"símbolo o tema\",\"paths\":[\"ruta exacta\"]}} "
-                           "en vez del informe, únicamente si quedan consultas. El Core devuelve hasta tres fragmentos originales y relaciones. "
-                           "Si falta código o configuración consultable del snapshot, usa la consulta disponible antes de declarar insuficiencia. "
-                           "Si falta información de ejecución o negocio que no existe en fuentes estáticas, declárala pendiente sin consultar inútilmente. "
-                           "Sin presupuesto, entrega el informe con carencias explícitas; no inventes fuentes.")
-            prompt += '\nRespuesta final: incluye SIEMPRE "schema_version":3 y las listas confirmados, indicios, dudas, controles; o únicamente retrieve si solicitas tu consulta disponible.' if evidence else ""
-            return prompt
-        prompt = build_prompt()
         raw = None
         try:
-            state["calls"] = 1
-            write_json(output / "estado.json", {"estado": "analizando", "celulas": cells})
-            envelope = invoke(prompt, config)
-            state["usage"] = envelope.get("usage")
-            raw = envelope["report"]
             if evidence:
-                state["invocations"] = [{"usage": envelope.get("usage")}]
-                try:
-                    request = json.loads(raw)
-                except (ValueError, TypeError):
-                    request = None
-                if isinstance(request, dict) and set(request) == {"retrieve"}:
-                    if not config["limits"]["max_extra_queries"]:
-                        raise AuditError("Consulta adicional solicitada con presupuesto cero.")
-                    found = evidence.respond(request["retrieve"])
-                    state["retrievals"].append({"request": request["retrieve"], "result": found})
-                    config["files"] = evidence.supplement(config["files"], found, config["limits"])
-                    evidence.retain(snapshot, config["files"])
-                    subset["files"] = config["files"]
-                    state["archivos"] = [f["path"] for f in config["files"]]
-                    state["bytes"] = sum(len(f["text"].encode()) for f in config["files"])
-                    state["calls"] += 1
-                    write_json(output / "estado.json", {"estado": "analizando", "celulas": cells})
-                    state["usage"] = None  # A failed extra call has unknown total usage; retain the first in invocations.
-                    envelope = invoke(build_prompt(), config)
-                    state["invocations"].append({"usage": envelope.get("usage")})
-                    usages = [x["usage"] for x in state["invocations"]]
-                    state["usage"] = {k: sum(u[k] for u in usages) for k in set.intersection(*(set(u) for u in usages))
-                                      if all(isinstance(u[k], (int, float)) for u in usages)} if all(isinstance(u, dict) for u in usages) else None
-                    raw = envelope["report"]
+                from arktic_office.coordination.research import research
+                envelope = research(snapshot, config, state, evidence, invoke, output, cells)
+                subset["files"] = config["files"]
+            else:
+                state["calls"] = 1
+                write_json(output / "estado.json", {"estado": "analizando", "celulas": cells})
+                envelope = invoke(make_prompt(subset, config), config)
+                state["usage"] = envelope.get("usage")
+            raw = envelope["report"]
             if config["id"] == "architecture" and "azure" not in config["capabilities"]:
                 try:
                     payload = json.loads(raw)

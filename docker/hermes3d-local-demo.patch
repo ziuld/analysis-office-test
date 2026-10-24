@@ -299,7 +299,7 @@ index 0000000..9441f36
 +}
 diff --git a/src/features/audit/AuditOffice.tsx b/src/features/audit/AuditOffice.tsx
 new file mode 100644
-index 0000000..89aa955
+index 0000000..e42f508
 --- /dev/null
 +++ b/src/features/audit/AuditOffice.tsx
 @@ -0,0 +1,130 @@
@@ -360,7 +360,7 @@ index 0000000..89aa955
 +    return { ...role, subtitle: label[state || ""] || "En espera", item: "coding", status: avatarStatus(connected, state) };
 +  }), [live, connected, questionActive]);
 +
-+  const activityText = Object.fromEntries(roles.map(role => [role.id, !connected ? "" : questionActive?.agent === role.id ? "Consultando evidencia guardada" : live?.activity?.[role.id]?.working || (chat?.agent || selectedCell) === role.id ? live?.activity?.[role.id]?.text || "" : ""]));
++  const activityText = Object.fromEntries(roles.map(role => [role.id, !connected ? "" : questionActive?.agent === role.id ? "Consultando evidencia guardada" : live?.activity?.[role.id]?.working ? live?.activity?.[role.id]?.text || "" : ""]));
 +
 +  async function start(event: React.FormEvent) {
 +    event.preventDefault(); setSubmitting(true); setError(""); setReport(null);
@@ -940,7 +940,7 @@ index 4708d1d..5ebd129 100644
        // Nameplate pill with the status dot.
        const name = input?.name ?? "Janitor";
 diff --git a/src/features/pixel-office/sim/agentSimulation.ts b/src/features/pixel-office/sim/agentSimulation.ts
-index cd4b188..ba2a6a1 100644
+index cd4b188..0909f59 100644
 --- a/src/features/pixel-office/sim/agentSimulation.ts
 +++ b/src/features/pixel-office/sim/agentSimulation.ts
 @@ -218,6 +218,7 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
@@ -951,12 +951,14 @@ index cd4b188..ba2a6a1 100644
      if (targetTx !== agent.targetTx || targetTy !== agent.targetTy) {
        agent.targetTx = targetTx;
        agent.targetTy = targetTy;
-@@ -333,7 +334,7 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
+@@ -332,8 +333,8 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
+       return;
      }
 
-     // Priority d: working/error agents head to their assigned desk seat.
+-    // Priority d: working/error agents head to their assigned desk seat.
 -    if (input.status === "working" || input.status === "error") {
-+    if (input.status === "working" || input.status === "error" || input.controlled) {
++    // Priority d: audit avatars use desks only while actually working.
++    if (input.status === "working" || (input.status === "error" && !input.controlled)) {
        const deskId = state.deskByAgentId[input.id];
        const deskSlot = deskId ? deskById.get(deskId) : undefined;
        if (deskSlot) {
@@ -965,7 +967,7 @@ index cd4b188..ba2a6a1 100644
          }
          const seat = tileCenter(deskSlot.seatTx, deskSlot.seatTy);
 -        setTarget(agent, seat.x, seat.y, deskSlot.facing);
-+        setTarget(agent, seat.x, seat.y, input.selected ? "down" : deskSlot.facing);
++        setTarget(agent, seat.x, seat.y, input.selected && !input.controlled ? "down" : deskSlot.facing);
          return;
        }
        // No free desk: fall through to wander behavior.
@@ -1047,10 +1049,10 @@ index 0000000..12454fe
 +});
 diff --git a/tests/unit/arkticOfficeMap.test.ts b/tests/unit/arkticOfficeMap.test.ts
 new file mode 100644
-index 0000000..2336d8a
+index 0000000..8fb984e
 --- /dev/null
 +++ b/tests/unit/arkticOfficeMap.test.ts
-@@ -0,0 +1,61 @@
+@@ -0,0 +1,67 @@
 +import { describe, expect, it } from "vitest";
 +import { buildArkticOfficeMap } from "@/features/pixel-office/map/arkticOfficeMap";
 +import { buildPixelNavGrid, tileCenter } from "@/features/pixel-office/map/navGrid";
@@ -1096,20 +1098,26 @@ index 0000000..2336d8a
 +    expect(new Set(poses.map(p => p.deskId)).size).toBe(4);
 +  });
 +
-+  it("parks controlled agents after completion and faces the selected person without wandering", () => {
-+    const sim = createPixelSimulation(buildArkticOfficeMap());
-+    const inputs: PixelAgentInput[] = ["coordinator", "security"].map(id => ({
-+      id, name: id, color: "#42bcc6", status: "idle", controlled: true, selected: false,
-+      streaming: false, thinking: false, awaitingApproval: false, dancing: false, hold: null, standup: false,
-+    }));
-+    let poses = sim.tick({ inputs, nowMs: 0, dtMs: 50, cleaningActive: false });
-+    for (let tick = 1; tick < 1000; tick++) poses = sim.tick({ inputs, nowMs: tick * 50, dtMs: 50, cleaningActive: false });
-+    const parked = poses.map(p => [p.x, p.y]);
-+    inputs[1].selected = true;
-+    for (let tick = 1000; tick < 2000; tick++) poses = sim.tick({ inputs, nowMs: tick * 50, dtMs: 50, cleaningActive: false });
-+    expect(poses.map(p => [p.x, p.y])).toEqual(parked);
-+    expect(poses.every(p => !p.moving && p.activity === "sitting_desk")).toBe(true);
-+    expect(poses[1].facing).toBe("down");
++  it("keeps desk orientation during work and releases finished agents", () => {
++    for (const finishedStatus of ["idle", "error"] as const) {
++      const sim = createPixelSimulation(buildArkticOfficeMap());
++      const inputs: PixelAgentInput[] = ["coordinator", "security"].map(id => ({
++        id, name: id, color: "#42bcc6", status: "working", controlled: true, selected: false,
++        streaming: false, thinking: false, awaitingApproval: false, dancing: false, hold: null, standup: false,
++      }));
++      let poses = sim.tick({ inputs, nowMs: 0, dtMs: 50, cleaningActive: false });
++      for (let tick = 1; tick < 1000; tick++) poses = sim.tick({ inputs, nowMs: tick * 50, dtMs: 50, cleaningActive: false });
++      const parked = poses.map(p => [p.x, p.y]);
++      const facing = poses.map(p => p.facing);
++      inputs[1].selected = true;
++      for (let tick = 1000; tick < 1200; tick++) poses = sim.tick({ inputs, nowMs: tick * 50, dtMs: 50, cleaningActive: false });
++      expect(poses.map(p => [p.x, p.y])).toEqual(parked);
++      expect(poses.map(p => p.facing)).toEqual(facing);
++      for (const input of inputs) input.status = finishedStatus;
++      for (let tick = 1200; tick < 2200; tick++) poses = sim.tick({ inputs, nowMs: tick * 50, dtMs: 50, cleaningActive: false });
++      expect(poses.map(p => [p.x, p.y])).not.toEqual(parked);
++      expect(poses.every(p => p.activity !== "sitting_desk")).toBe(true);
++    }
 +  });
 +});
 diff --git a/tests/unit/auditStatus.test.ts b/tests/unit/auditStatus.test.ts

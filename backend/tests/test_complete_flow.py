@@ -67,32 +67,39 @@ class CompleteFlowTests(unittest.TestCase):
         self.assertEqual(len(report["confirmados"]), 1)
         self.assertTrue(warnings)
 
-    def test_specialist_budget_and_justified_omission(self):
-        for budget, fail_extra in ((0, False), (1, False), (1, True)):
+    def test_specialists_choose_sources_with_bounded_rounds(self):
+        for budget, fail_extra in ((0, False), (1, False), (2, False), (1, True)):
             value = snapshot(); value["request"] = {"mode": "ai", "capabilities": []}
-            evidence = Evidence(value["files"], {"nodes": [], "edges": []})
+            evidence = Evidence(value["files"] + [{"path": "hidden/entry.py", "text": "start = True"}], {"nodes": [], "edges": []})
             calls = []
             def invoke(prompt, config):
-                calls.append(config["id"])
-                if config["id"] == "coordinator-routing":
-                    decision = {role: {"decision": "execute", "paths": ["Dockerfile"], "reason": "Deployment present", "missing": []} for role in ("security", "architecture", "inventory")}
-                    decision["inventory"] = {"decision": "omit", "paths": [], "reason": "No dependency manifest supplied", "missing": ["dependency manifest"]}
-                    return {"report": json.dumps(decision)}
-                if config["id"] == "security" and calls.count("security") == 1:
-                    return {"report": json.dumps({"retrieve": {"paths": ["auth.py"]}}), "usage": {"total_tokens": 1}}
-                if config["id"] == "security" and fail_extra:
-                    raise AuditError("Controlled extra-call failure")
-                if config["id"] == "coordinator-synthesis":
+                role = config["id"]
+                calls.append(role)
+                if role == "coordinator-routing":
+                    self.assertNotIn("source_samples", prompt)
+                    return {"report": json.dumps({r: "Review your specialty" for r in ("security", "architecture", "inventory")})}
+                if role == "coordinator-synthesis":
                     return {"report": json.dumps({"resumen": [{"texto": "Architecture observation", "aportaciones": ["architecture:confirmados:0"]}]})}
+                if budget and calls.count(role) == 1:
+                    self.assertEqual(config["files"], [])
+                    return {"report": json.dumps({"queries": [{"paths": ["hidden/entry.py"]}]}), "usage": {"total_tokens": 1}}
+                if fail_extra and role == "security":
+                    raise AuditError("Controlled analysis failure")
+                if budget == 2 and calls.count(role) == 2:
+                    return {"report": json.dumps({"queries": [{"paths": ["auth.py"]}]}), "usage": {"total_tokens": 1}}
+                if not budget:
+                    return {"report": json.dumps({"schema_version": 3, "confirmados": [], "indicios": [], "dudas": ["No source budget"], "controles": []})}
+                self.assertIn("hidden/entry.py", [f["path"] for f in config["files"]])
                 return fake_invoke(prompt, config)
-            with patch.dict(os.environ, {"AUDIT_SECURITY_MAX_EXTRA_QUERIES": str(budget)}, clear=False), tempfile.TemporaryDirectory() as temp:
+            env = {"AUDIT_" + role + "_RESEARCH_ROUNDS": str(budget) for role in ("SECURITY", "ARCHITECTURE", "INVENTORY")}
+            with patch.dict(os.environ, env), tempfile.TemporaryDirectory() as temp:
                 report = run_team(value, Path(temp), invoke=invoke, evidence=evidence, emit=lambda *a, **k: None)
                 cells = {c["id"]: c for c in report["celulas"]}
-                self.assertEqual(cells["inventory"]["estado"], "no_ejecutado")
-                self.assertEqual(cells["inventory"]["calls"], 0)
-                self.assertEqual(calls.count("security"), 1 + budget)
-                self.assertEqual(cells["security"]["execution"], "completed" if budget and not fail_extra else "error")
-                if budget and not fail_extra: self.assertEqual(cells["security"]["usage"]["total_tokens"], 51)
+                self.assertEqual(cells["inventory"]["calls"], 1 + budget)
+                self.assertEqual(cells["inventory"]["execution"], "completed")
+                self.assertEqual(cells["security"]["execution"], "error" if fail_extra else "completed")
+                if budget and not fail_extra:
+                    self.assertEqual(cells["security"]["usage"]["total_tokens"], 50 + budget)
                 if fail_extra:
                     self.assertIsNone(cells["security"]["usage"])
                     self.assertEqual(cells["security"]["invocations"][0]["usage"]["total_tokens"], 1)
@@ -116,22 +123,31 @@ class CompleteFlowTests(unittest.TestCase):
             self.assertTrue(second.exists())
         self.assertFalse(second.exists())
 
-    def test_coordinator_can_use_only_one_extra_query(self):
-        from arktic_office.coordination.coordinator import Coordinator
-        from arktic_office.coordination.team import plan_cells
+    def test_research_batch_safety_lines_and_caps(self):
+        evidence = Evidence([{"path": "app.py", "text": "\n".join(["padding"] * 110 + ["target = 1"])}], {"nodes": [], "edges": []})
+        files, trace = evidence.batch([{"paths": ["../escape.py"]}, {"paths": ["app.py"], "start_line": 105}], {"files": 1, "bytes": 12000})
+        self.assertIn("error", trace[0]["result"])
+        self.assertEqual(files[0]["text"].splitlines()[110], "target = 1")
+        self.assertEqual(files[0]["start"], 105)
+        with self.assertRaises(AuditError):
+            evidence.batch([{}] * 5, {"files": 1, "bytes": 12000})
+        files, trace = evidence.batch([{"paths": ["app.py"]}], {"files": 0, "bytes": 0})
+        self.assertEqual(files, [])
+        self.assertEqual(trace[0]["result"]["omitted_by_budget"], ["app.py"])
+        initial = [{"path": "app.py", "text": "padding"}]
+        files, trace = evidence.batch([{"paths": ["app.py"], "start_line": 105}], {"files": 1, "bytes": 100}, initial=initial)
+        self.assertEqual(files, initial)
+        self.assertEqual(trace[0]["result"]["omitted_by_budget"], ["app.py"])
+
+
+    def test_bad_presentation_is_reported_once_without_discarding_core(self):
         value = snapshot()
-        evidence = Evidence(value["files"], {"nodes": [], "edges": []})
-        for budget in (0, 1):
-            calls = []
-            def invoke(prompt, config):
-                calls.append(config["id"])
-                if len(calls) == 1:
-                    response = {"retrieve": {"paths": ["Dockerfile"]}}
-                else:
-                    response = {role: {"decision": "execute", "paths": ["Dockerfile"], "reason": "Deployment source", "missing": []} for role in ("security", "architecture", "inventory")}
-                return {"report": json.dumps(response)}
-            with tempfile.TemporaryDirectory() as temp, patch.dict(os.environ, {"AUDIT_COORDINATOR_MAX_EXTRA_QUERIES": str(budget)}):
-                coordinator = Coordinator(value, Path(temp), invoke, evidence=evidence)
-                plan = coordinator.route(plan_cells(value))
-                self.assertEqual(len(calls), 1 + budget)
-                self.assertEqual(bool(coordinator.state.get("routing_fallback")), not bool(budget))
+        cell = {"id": "architecture", "name": "Architecture", "files": value["files"]}
+        data = json.loads(fake_invoke("", cell)["report"])
+        data["confirmados"] *= 2
+        data["presentacion"] = {"flujo_actual": {"componentes": [{"id": "invalid-id", "nombre": "API", "descripcion": "Entry", "evidencia": ["F1:L1"]}], "conexiones": []}}
+        report, _, warnings = prepare_partial_response(json.dumps(data), value, "architecture")
+        self.assertEqual(len(report["confirmados"]), 2)
+        self.assertEqual(len(warnings), 1)
+        self.assertIn("Identificador de flujo", warnings[0])
+        self.assertNotIn("flujo_actual", report.get("presentacion", {}))

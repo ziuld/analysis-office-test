@@ -1,5 +1,15 @@
 # Cambios por componente
 
+## 0.3.0 — Fase 1 aceptada, 24/10/2026
+
+- Snapshot íntegro verificado, Graphify y scanners sin modelos sobre su entrada compatible; recuperación compartida con fuentes originales y citas verificables.
+- Coordinador como orquestador de objetivos; tres especialistas seleccionan evidencia bajo rondas y presupuestos configurables. Resultados parciales útiles, cobertura, errores y consumo visibles.
+- Backend empaquetado, manifiestos por revisión, consultas independientes con historial acotado y oficina que libera personajes al terminar, sin burbuja persistente ni giro de cabeza al seleccionar.
+- Aceptación humana de la base funcional con modelos económicos; límites y pilotos fallidos conservados. Quince pruebas dirigidas del flujo y seis de interfaz registradas. El afinado se retira de Fase 1 y pasa a una Fase 2 independiente.
+- Frontend/backend/paquete Python 0.3.0. CI/CD y pins conservados. Merge a main reservado al usuario; sin tags, publicación de imágenes ni GitHub Release.
+
+Los apartados siguientes son registros históricos anteriores al cierre.
+
 ## Bloque 8 — arquitectura completa (entrega abierta, 24/10/2026)
 
 - Snapshot íntegro verificado al commit, mapas sin modelos y scanners sobre todo su input compatible; fallos de capacidad/integridad detienen la preparación.
