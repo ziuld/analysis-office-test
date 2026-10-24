@@ -49,7 +49,7 @@ def run(url, inspect_only=False, job_id=None):
             raise AuditError("AUDIT_PREPARATION_MODE debe ser legacy o hybrid.")
         stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
         import uuid
-        output = RunStore(reports).create(job_id or f"{stamp}-{uuid.uuid4().hex[:8]}", exist_ok=bool(job_id))
+        output = RunStore(reports).create(job_id or f"{stamp}-{uuid.uuid4().hex[:8]}", exist_ok=bool(job_id), repository=url)
         if mode == "hybrid":
             from arktic_office.preparation.hybrid import prepare
             from arktic_office.adapters.invoke import invoke_hermes
@@ -69,6 +69,8 @@ def run(url, inspect_only=False, job_id=None):
                                "reasoning": options["reasoning_config"]["effort"],
                                "max_output_tokens": options["max_tokens"]}
         (output / "evidencia.json").write_text(json.dumps(snapshot, ensure_ascii=False, indent=2), encoding="utf-8")
+        from arktic_office.storage.manifest import write_manifest
+        write_manifest(output, snapshot)
         if inspect_only:
             plan = plan_cells(snapshot)
             routing = [{"id": c["id"], "modelo": c["model"], "razonamiento": c["reasoning"],
@@ -78,6 +80,7 @@ def run(url, inspect_only=False, job_id=None):
             return
         print(f"Revisando {len(snapshot['files'])} archivos de {snapshot['branch']}@{snapshot['commit']} con Hermes Agent...", flush=True)
         data = run_team(snapshot, output)
+        write_manifest(output, snapshot, data)
         model = provider + "/" + model
         (output / "informe.json").write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
         (output / "informe.md").write_text(markdown(data, snapshot, model), encoding="utf-8")

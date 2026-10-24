@@ -61,11 +61,11 @@ class CompatibilityTests(unittest.TestCase):
             events = []
 
             def runner(run_id, _repository):
-                write_json(root / run_id / "informe.json", {"estado": "completo"})
+                write_json(jobs.directory(run_id) / "informe.json", {"estado": "completo"})
                 return 0
 
             def sink(event):
-                persisted = json.loads((root / event.run_id / "job.json").read_text())
+                persisted = json.loads((jobs.directory(event.run_id) / "job.json").read_text())
                 self.assertEqual(event.state, persisted["estado"])
                 self.assertEqual(event.to_dict()["version"], 1)
                 events.append(event.state)

@@ -1,6 +1,6 @@
 # Reporte de seguridad · formato 3
 
-El formato visual y editorial actual sigue la referencia v12: cuatro capítulos (resumen, diagnóstico, mejoras y anexos). La fuente única de redacción es [ESTANDAR_COMUNICACION_INFORMES.md](ESTANDAR_COMUNICACION_INFORMES.md), cargada explícitamente por cada célula y por las consultas. La consolidación guarda la versión y el hash del estándar utilizado, sin una llamada adicional.
+El formato visual y editorial actual sigue la referencia v12: cuatro capítulos (resumen, diagnóstico, mejoras y anexos). La fuente única de redacción es [resources/editorial/standard.md](../backend/src/arktic_office/resources/editorial/standard.md), cargada explícitamente por cada célula y por las consultas. La consolidación guarda la versión y el hash del estándar utilizado, sin una llamada adicional.
 
 Los campos opcionales `titulo`, `resultado_esperado`, `detalle_tecnico` y `presentacion` permiten redactar desde origen, estructurar conexiones y separar estado de datos, disponibilidad y capacidad. Los resultados antiguos siguen siendo legibles: sus huecos se muestran como no estructurados y no se rellenan por inferencia. Las variantes de componentes y aportaciones discrepantes se conservan en anexos. Los resultados esperados son objetivos por verificar.
 

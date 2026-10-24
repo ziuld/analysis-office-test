@@ -23,7 +23,4 @@ where = ["backend/src"]
 include = ["arktic_office*"]
 
 [tool.setuptools.package-data]
-"arktic_office.resources" = ["assets/*", "profiles/*", "skills/*/SKILL.md"]
-
-[tool.setuptools.data-files]
-"share/arktic-office/docs" = ["docs/ESTANDAR_COMUNICACION_INFORMES.md"]
+"arktic_office.resources" = ["assets/*", "profiles/*", "skills/*/SKILL.md", "editorial/*"]

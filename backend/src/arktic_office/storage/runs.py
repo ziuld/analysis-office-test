@@ -55,13 +55,24 @@ class RunStore:
             raise FileNotFoundError()
         return matches[0]
 
-    def create(self, run_id, *, exist_ok=False):
+    def create(self, run_id, *, exist_ok=False, repository=None):
         self.validate_id(run_id)
         try:
             path = self.resolve(run_id)
         except FileNotFoundError:
             path = self.root / run_id
+            if repository:
+                now = datetime.now(timezone.utc)
+                title = re.sub(r"[^a-zA-Z0-9_-]+", "-", repository.rstrip('/').split('/')[-1])[:60] or "revision"
+                path = self.root / now.strftime("%Y-%m-%d") / (now.strftime("%H%M%S") + "-" + title) / run_id
             # An unmarked folder or link is not safe to reuse as a new result.
+            if not path.resolve().is_relative_to(self.root.resolve()):
+                raise AuditError("La carpeta de resultados sale del directorio configurado.")
+            for parent in (path, *path.parents):
+                if parent == self.root:
+                    break
+                if parent.is_symlink():
+                    raise AuditError("No se reutilizan enlaces en carpetas de resultados.")
             if path.exists() or path.is_symlink():
                 raise FileExistsError(path)
             path.mkdir(parents=True)

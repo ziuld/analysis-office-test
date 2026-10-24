@@ -127,7 +127,7 @@ docker compose --profile audit run --rm -T --entrypoint python auditor /app/prev
 
 ## Estándar editorial y presentación v12
 
-Las reglas comunes y por sección viven en [ESTANDAR_COMUNICACION_INFORMES.md](ESTANDAR_COMUNICACION_INFORMES.md). `backend/src/arktic_office/reporting/editorial.py` incorpora Común y la especialidad al prompt; la consolidación registra versión y hash. El wheel incluye el mismo archivo canónico. No hay agente traductor ni llamadas extra para aplicar el formato.
+Las reglas comunes y por sección viven en [resources/editorial/standard.md](../backend/src/arktic_office/resources/editorial/standard.md). `backend/src/arktic_office/reporting/editorial.py` incorpora Común y la especialidad al prompt; la consolidación registra versión y hash. El wheel incluye el mismo archivo canónico. No hay agente traductor ni llamadas extra para aplicar el formato.
 
 El esquema conserva compatibilidad con resultados antiguos e incorpora datos estructurados opcionales para resumen, flujo, estado operativo y decisión. El renderizador `backend/src/arktic_office/reporting/view.py` no deduce relaciones ni reescribe observaciones con reglas específicas de un proyecto. Si un campo no existe, lo señala. Los títulos de riesgos y objetivos de mejora se redactan en la célula; las aportaciones originales y discrepancias se consultan en los anexos.
 

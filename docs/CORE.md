@@ -17,7 +17,7 @@ El backend es el paquete `arktic_office`, construido como wheel desde [pyproject
 | `core/` | Errores comunes, suficiencia y contratos de datos/estados/eventos |
 | `resources/` | Perfiles y recursos visuales incluidos en el wheel |
 
-`backend/tests/` contiene las pruebas fuera del código de producción. La imagen normal no copia esa carpeta. El estándar editorial sigue siendo el único archivo canónico `docs/ESTANDAR_COMUNICACION_INFORMES.md`: el wheel lo instala en `share/arktic-office/docs/` del entorno Python. No se duplican sus reglas ni se cambia su contenido o hash. Su mención a `auditor/editorial.py` corresponde a la ubicación anterior; la implementación actual está en `reporting/editorial.py`.
+`backend/tests/` contiene las pruebas fuera del código de producción. La imagen normal no copia esa carpeta. Desde el Bloque 7, el estándar canónico está en `backend/src/arktic_office/resources/editorial/standard.md`, incluido en el wheel. `docs/ESTANDAR_COMUNICACION_INFORMES.md` es la guía humana de ese recurso. No se duplican sus reglas ni se cambia su contenido o hash. Su mención a `auditor/editorial.py` corresponde a la ubicación anterior; la implementación actual está en `reporting/editorial.py`.
 
 Se mantienen `/app/audit.py`, `/app/server.py`, `/app/preview.py` y `/app/runtime.py` como lanzadores de compatibilidad. También existen las entradas `arktic-audit`, `arktic-api` y `arktic-preview`. Los procesos internos usan `python -m arktic_office...`, por lo que no dependen de encontrar módulos sueltos en `/app`.
 

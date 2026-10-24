@@ -4,7 +4,6 @@ COPY --from=uv /uv /usr/local/bin/uv
 WORKDIR /build
 COPY pyproject.toml ./
 COPY backend/src/ ./backend/src/
-COPY docs/ESTANDAR_COMUNICACION_INFORMES.md ./docs/ESTANDAR_COMUNICACION_INFORMES.md
 RUN uv build --wheel --out-dir /wheels .
 
 FROM python:3.14-slim@sha256:a2b82f3c48559aa0a8446d9af49826b6e2b2016f4cd2afabfe6013ec53729170 AS backend-base

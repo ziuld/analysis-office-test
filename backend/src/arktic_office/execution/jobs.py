@@ -56,7 +56,7 @@ class Jobs:
             if self.question_active or any(x["estado"] in ACTIVE for x in self.listing()):
                 raise BlockingIOError()
             job_id = str(uuid.uuid4())
-            path = self.store.create(job_id)
+            path = self.store.create(job_id, repository=repository)
             job: JobRecord = {"id": job_id, "repository": repository, "estado": "preparando",
                    "created": datetime.now(timezone.utc).isoformat()}
             write_json(path / "job.json", job)

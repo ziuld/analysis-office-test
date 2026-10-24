@@ -2,7 +2,7 @@
 
 Fecha de registro: 23/10/2026.
 
-Estado: Bloque 1 fusionado; bloques 2, 3, 4, 5 y 6 implementados y comprobados localmente, con evidencia y límites registrados debajo. Los bloques posteriores continúan pendientes. Las decisiones técnicas indicadas como pendientes requieren validación antes de adoptarse. La entrega permanece abierta y las versiones actuales se conservan.
+Estado: Bloque 1 fusionado; bloques 2, 3, 4, 5 y 6 implementados y comprobados localmente, con evidencia y límites registrados debajo. El Bloque 7 está implementado técnicamente; F1-23 sigue parcialmente pendiente por fallos de sesión/cuota y F1-24 requiere aceptación humana. Las decisiones técnicas indicadas como pendientes requieren validación antes de adoptarse. La entrega permanece abierta y las versiones actuales se conservan.
 
 ## Relación con el MVP actual
 
@@ -40,13 +40,13 @@ La recomendación principal es una aplicación modular dentro del mismo reposito
 | Decisión | Propuesta registrada | Estado |
 |---|---|---|
 | Indexador | Graphify 0.9.95 fijado con overlay PyYAML, como ayuda estructural junto a búsquedas/texto | Seleccionado tras las muestras del Bloque 2; límites en [INDEXADOR.md](INDEXADOR.md). Codebase-Memory queda sin evaluar |
-| Despliegue | Oficina, Core API y preparador local separado | Separación técnica confirmada en Bloque 2; se probó como batch Docker independiente. Integración y topología de ejecución pendientes |
-| Preparación | Snapshot fijado a commit, reglas locales, grafo y exploración Hermes limitada | Dirección acordada; contratos y límites pendientes |
-| Eventos | Publicar estados estructurados para la oficina; valorar SSE conservando REST | Transporte y persistencia pendientes |
-| Persistencia | Archivos para evidencias e informes; valorar SQLite para trabajos, eventos y conversaciones | Pendiente; evitar infraestructura adicional innecesaria |
-| Modelos | Registro central validado, con perfiles por rol y excepciones explícitas | Formato y valores pendientes |
-| Conversación | Consultar evidencia guardada con historial acotado por revisión y personaje | Ampliación recomendada; presupuesto y comportamiento pendientes |
-| Versión global | Manifiesto de entrega que relacione versiones de aplicación, componentes, skills, plantillas y dependencias | Mecanismo y siguiente número pendientes |
+| Despliegue | Oficina, Core API y preparador local separado | Preparador separado integrado opcionalmente mediante `compose.hybrid.yaml`; base legacy conservada |
+| Preparación | Snapshot fijado a commit, reglas locales, grafo y exploración Hermes limitada | Implementada y comprobada con respuestas ficticias en Bloque 4; calidad real pendiente |
+| Eventos | Publicar estados estructurados para la oficina; valorar SSE conservando REST | Estados persistidos y sondeo REST existente en Bloque 6; sin SSE adicional |
+| Persistencia | Archivos para evidencias e informes; valorar SQLite para trabajos, eventos y conversaciones | Archivos JSON y catálogo acotado; sin SQLite ni infraestructura adicional |
+| Modelos | Registro central validado, con perfiles por rol y excepciones explícitas | Perfiles instalados y validados en Bloque 5; disponibilidad real condicionada por sesión/cuota |
+| Conversación | Consultar evidencia guardada con historial acotado por revisión y personaje | Confirmada: últimas diez consultas por revisión/personaje, independientes y solo lectura al abrir historial |
+| Versión global | Manifiesto de entrega que relacione versiones de aplicación, componentes, skills, plantillas y dependencias | Manifiesto candidato y manifiestos por revisión implementados; siguiente número y cierre pendientes |
 
 Graphify no es GraphQL. Su extracción `--code-only` está documentada sin necesidad de clave de modelo. Su Dockerfile consultado sirve un grafo existente mediante MCP; no resuelve por sí solo la descarga y generación automática del grafo. La integración deberá cubrir ese recorrido dentro de Docker. Su mayor popularidad no prueba estabilidad ni rendimiento para nuestros repositorios.
 
@@ -91,7 +91,7 @@ La configuración base admite un proceso exterior de hasta 25 minutos y limita e
 
 ## Roadmap y tareas
 
-El usuario autorizó sucesivamente los bloques 1, 2 y 3; los siguientes quedan fuera del encargo actual. La finalización de un bloque exige registrar su evidencia, límites y resultado; no basta con cambiar su estado. No se asignan fechas ni duraciones de desarrollo todavía.
+El usuario autorizó sucesivamente todos los bloques y la preparación del PR hacia main; realizará el merge personalmente. La finalización de un bloque exige registrar su evidencia, límites y resultado; no basta con cambiar su estado. No se asignan fechas ni duraciones de desarrollo todavía.
 
 ### Bloque 1 — Base reproducible y CI mínima
 
@@ -207,64 +207,38 @@ El usuario confirmó el historial de las últimas diez consultas por revisión y
 
 ### Bloque 7 — Resultados, documentación y entrega
 
-- [ ] F1-21 Organizar resultados por fecha, hora, título e identificador; distinguir informes del producto de capturas de desarrollo. Definir conservación y limpieza de snapshots e índices.
-- [ ] F1-22 Separar documentación humana de plantillas, esquemas y estándares usados en ejecución; actualizar enlaces e instrucciones.
+- [x] F1-21 Organizar resultados por fecha, hora, título e identificador; distinguir informes del producto de capturas de desarrollo. Definir conservación y limpieza de snapshots e índices.
+- [x] F1-22 Separar documentación humana de plantillas, esquemas y estándares usados en ejecución; actualizar enlaces e instrucciones.
 - [ ] F1-23 Evaluar utilidad, citas, insuficiencia, consumo y tiempos con muestras representativas. Conservar la base de CI sin ampliarla; usar pruebas manuales mínimas necesarias. Las evaluaciones reales serán explícitas y presupuestadas.
 - [ ] F1-24 Cerrar la entrega con aceptación humana, manifiesto de versiones, changelog y referencias Git según el flujo de publicación acordado.
 
 **Cierre:** cada informe identifica código revisado, cobertura, modelos, recursos versionados y consumo disponible. La entrega distingue lo medido de lo pendiente y conserva acceso al histórico.
 
-## Estructura orientativa
+**Registro del Bloque 7 — 24/10/2026:** retomado por autorización del usuario tras el cierre del Bloque 6. Resultados nuevos por fecha/hora UTC, repositorio e ID; catálogo compatible con el histórico sin migración, con rechazo de enlaces y duplicados. Manifiesto por revisión con commit, perfiles, hashes de fuentes/recursos y consumo disponible. Conservación manual de informes y separación de temporales/capturas descritas en [RESULTADOS.md](RESULTADOS.md). Estándar editorial instalado dentro del paquete; bytes y hash anteriores conservados. Documentación y enlaces actualizados.
 
-Orientación para la fase completa: el núcleo `src/` y las pruebas separadas ya están implementados en el Bloque 3. El manifiesto de entrega, configuración central de modelos/presupuestos, agentes, skills y organización de resultados siguen pendientes; el árbol no afirma que esas capacidades estén disponibles.
+**Comprobaciones:** 118 pruebas de backend ejecutadas, 117 correctas y una referencia visual opcional omitida en 7,081 s. Imagen del backend construida. Logs locales `artifacts/block7-tests.log` y `artifacts/block7-image.log`. Se desactivaron reintentos y recuperación internos del runtime Hermes fijado para mantener una tentativa por invocación; no se cambian versiones ni pins. Construcción y arranque finales correctos con `scripts/check-startup.ps1`: API y oficina saludables, HTTP 200 en oficina/proxy/API, sin trabajos, informes ni autenticación, red interna y recursos temporales retirados; log `artifacts/block7-startup.log`. Evidencia resumida versionada en [block7-2026-10-24.json](evidence/block7-2026-10-24.json).
+
+**F1-23 parcialmente pendiente:** el usuario autorizó hasta cinco llamadas reales con bookingApi, sin scanners. Sobre el snapshot del Bloque 2, commit `c0d247e3226d77a83471c7a1b32afdb0981eb7f1`, se seleccionaron 24 archivos. Cuatro invocaciones en 27,654 s: reparto y Seguridad fallaron por sesión no válida; Arquitectura e Inventario por cuota/límite. Síntesis omitida al no haber contenido válido. Consumo desconocido, sin nuevos intentos automáticos. Sin ejecución del objetivo, sus dependencias o tests. Los casos ficticios comprueban citas, insuficiencia y conservación de parciales; no validan utilidad semántica real. Ledger y trazas excluidos de Git en la ruta referida por `artifacts/block7-evaluation-path.txt`.
+
+**F1-24 abierta:** manifiesto [release.json](../release.json) de candidata para revisión y changelog sin publicar preparados. El PR no cierra aceptación ni versión. No se amplía CI/CD; frontend, backend y paquete Python permanecen en 0.2.0. Pendientes validación semántica tras resolver sesión/cuota, aceptación humana, decisión de versión y merge del usuario. Sin etiquetas, release ni publicación de imágenes.
+
+## Estructura implementada
 
 ```text
 arktic-office/
-├── README.md
-├── PLAN_MVP.md                  # Registro histórico conservado
-├── LICENSE                     # Cuando se acuerde la licencia propia
-├── compose.yaml
-├── pyproject.toml              # Paquete backend; incluye el estándar canónico
-├── release.json                # Manifiesto de entrega propuesto
-├── config/
-│   ├── models.json
-│   └── budgets.json
+├── release.json                 # Candidata, entrega abierta
 ├── backend/
 │   ├── src/arktic_office/
-│   │   ├── api/
-│   │   ├── preparation/
-│   │   ├── coordination/
-│   │   ├── evidence/
-│   │   ├── reporting/
-│   │   ├── conversations/
-│   │   ├── storage/
-│   │   └── adapters/
+│   │   ├── preparation/ coordination/ reporting/ storage/ adapters/
+│   │   └── resources/           # profiles, skills, editorial, assets
 │   └── tests/
-│       ├── unit/
-│       ├── integration/
-│       └── fixtures/
-├── frontend/
-├── agents/
-├── skills/
-├── resources/
-│   ├── templates/
-│   ├── schemas/
-│   └── editorial/
-├── docs/
-│   └── PLAN_FASE_1.md
-├── docker/
-├── .github/workflows/
-└── artifacts/                  # Generados, excluidos de Git
-    └── runs/2026-10-23/1530-tienda-online-id/
-        ├── manifest.json
-        ├── evidence/
-        ├── specialists/
-        └── reports/
+├── docs/                        # Documentación humana
+├── docker/                      # Imágenes y parche del frontend fijado
+├── .github/workflows/           # Base del Bloque 1 conservada
+└── artifacts/                   # Evidencia de desarrollo; excluida de Git
 ```
 
-No hay un estándar único de organización de sistemas de IA en Python. Se propone `src/`, pruebas separadas, módulos por responsabilidad y adaptadores para dependencias externas. Evitar una arquitectura hexagonal completa si no aporta una separación útil. Los snapshots e índices temporales vivirán en un volumen con limpieza definida, separado de informes conservados.
-
-El frontend actual se distribuye como parche sobre Hermes3D. Primero se hará reproducible ese mecanismo; después se decidirá cómo mantener el frontend adaptado como fuente propia versionada, conservando atribuciones y origen. No copiar `vendor/` sin revisar dependencias y licencias.
+Los resultados del producto se conservan aparte en `/reports/AAAA-MM-DD/HHMMSS-repositorio/id/`; el catálogo admite los antiguos directorios planos. El frontend sigue distribuyéndose como parche reproducible sobre Hermes3D fijado. No se copia `vendor/` al repositorio. Política de temporales e histórico en [RESULTADOS.md](RESULTADOS.md).
 
 ## Versionado y preservación del histórico
 
@@ -300,3 +274,5 @@ Capacidades contrastadas en fuentes primarias durante la propuesta del 23/10/202
 | 23/10/2026 | Bloque 1 F1-01 a F1-03 implementado: recuperación por commit, CI mínima y arranque aislado sin modelos; evidencia y limitaciones en el bloque | Comprobaciones local y remota satisfactorias; entrega abierta, versiones 0.2.0 conservadas |
 | 23/10/2026 | Bloque 2 F1-04 a F1-06: Graphify fijado, recuperación/extracción/consulta Docker, tres muestras autorizadas y decisión basada en métricas | Comprobado localmente sin scanners ni modelos; Graphify seleccionado con límites; bloques siguientes pendientes y versiones 0.2.0 conservadas |
 | 23/10/2026 | Bloque 3 F1-07 a F1-09: paquete instalado, responsabilidades y contratos separados, IDs independientes del layout e histórico conservado | Regresión y arranque manuales correctos; 154 archivos históricos sin cambios; CI/CD sin ampliar por petición del usuario y versiones 0.2.0 conservadas |
+
+| 24/10/2026 | Bloques 4–6 implementados y comprobados; Bloque 7 con layout, manifiestos y recursos separados | Candidata para PR; F1-23 parcial por sesión/cuota y F1-24 pendiente de aceptación; versiones conservadas |

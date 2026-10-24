@@ -28,4 +28,4 @@ def contract(cell_id):
 
 def metadata():
     instructions()  # Require the shared consolidation section to be installed.
-    return {"version": 1, "archivo": "docs/ESTANDAR_COMUNICACION_INFORMES.md", "sha256": hashlib.sha256(standard_path().read_bytes()).hexdigest()}
+    return {"version": 1, "archivo": "backend/src/arktic_office/resources/editorial/standard.md", "sha256": hashlib.sha256(standard_path().read_bytes()).hexdigest()}

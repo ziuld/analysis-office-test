@@ -47,7 +47,7 @@ class ApiTests(unittest.TestCase):
 
     def fake_runner(self, job_id, repository):
         self.release.wait(3)
-        directory = self.root / job_id
+        directory = self.jobs.directory(job_id)
         if repository.endswith("/missing"):
             write_json(directory / "error.json", {"error": "No existe main; no se probará otra rama."})
             return 1
