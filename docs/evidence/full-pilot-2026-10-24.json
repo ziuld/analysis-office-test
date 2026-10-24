@@ -105,13 +105,13 @@
   "model_calls": 14,
   "reported_total_tokens": 74396,
   "pending": [
-    "Third complete run after format and read-boundary fixes requires explicit renewed model-call budget; automatic approval review rejected it.",
-    "Full real validation of all specialists together remains pending."
+    "Histórico de los dos primeros intentos; la autorización posterior y el resultado funcional final se documentan en full-pilot-final-2026-10-24.json."
   ],
   "local_regression": {
     "run": 119,
     "passed": 118,
     "skipped": 1,
     "seconds": 6.66
-  }
+  },
+  "follow_up": "docs/evidence/full-pilot-final-2026-10-24.json"
 }

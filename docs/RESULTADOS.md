@@ -22,3 +22,9 @@ Snapshots y mapas del preparador son temporales: se liberan al finalizar la peti
 El adaptador desactiva los reintentos y recuperación internos del Hermes fijado, además de herramientas y fallback, para mantener una tentativa por invocación. Esa integración depende del pin actual. Las pruebas con respuestas ficticias validan contratos, citas e insuficiencia; los cuatro errores reales no permiten medir utilidad semántica ni consumo efectivo. F1-23 sigue parcialmente pendiente.
 
 [release.json](../release.json) registra una candidata para revisión y [CHANGELOG.md](../CHANGELOG.md) contiene cambios sin publicar. Frontend/backend siguen en 0.2.0. F1-24 requiere aceptación humana y decisión de versión; el usuario realizará el merge. No se crean etiquetas, releases ni publicación de imágenes.
+
+## Verificación posterior del recorrido completo
+
+Tras recuperar la sesión y corregir contratos y reparto, la prueba real `bb23e6e3-f995-4748-8ff2-47304b8f57cc` completó reparto, Seguridad, Arquitectura, Inventario y síntesis sin errores ni etapas de modelos omitidas. Dos llamadas de preparación más cinco del equipo, todas `gpt-6-luna`/`low`: 40020 tokens comunicados, unos 105 s, siete observaciones informativas, un indicio medio y cinco conclusiones de síntesis. Veinte citas únicas contrastadas con el snapshot; informes y manifiesto accesibles mediante la oficina. La autorización posterior incluyó scanners: Gitleaks sin detecciones en la selección; OSV sin entrada compatible y dependencias no evaluadas.
+
+Se mantiene el estado parcial por el límite de dos llamadas de preparación. No se borra el histórico de intentos fallidos ni se declara seguridad o calidad óptima. Evidencia y trazabilidad: [full-pilot-final-2026-10-24.json](evidence/full-pilot-final-2026-10-24.json). La revisión humana y el afinado del Bloque 8 continúan pendientes.

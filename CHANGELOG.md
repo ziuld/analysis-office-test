@@ -2,6 +2,8 @@
 
 ## Sin publicar — candidata de Fase 1
 
+- Reparto con base explícita y protección frente a asignaciones vacías que omitían especialistas. Verificación real del recorrido de siete llamadas con los tres especialistas y síntesis válidos, Gitleaks activo y límites de cobertura explícitos.
+
 - Control explícito para pruebas con modelos sin scanners; contrato de salida reforzado y lecturas recortadas sin ampliar presupuestos. Dos pruebas completas reales registradas como parciales, con errores visibles y repetición corregida pendiente de presupuesto.
 
 - Clasificación de fallos OAuth estructurados sin inspeccionar prompts/conversaciones; sesión local recuperada y una respuesta real de Inventario con bookingApi validada, con consumo comunicado.

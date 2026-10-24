@@ -11,6 +11,23 @@ from test_team import snapshot, fake_invoke
 
 
 class CoordinatorTests(unittest.TestCase):
+    def test_empty_ai_assignment_keeps_specialists_with_available_evidence(self):
+        calls = []
+        def invoke(prompt, config):
+            calls.append(config["id"])
+            if config["id"] == "coordinator-routing":
+                return {"report": '{"security":[],"architecture":[],"inventory":[]}'}
+            if config["id"] == "coordinator-synthesis":
+                return {"report": '{"resumen":[{"texto":"Arranque declarado, sin comprobar ejecución.","aportaciones":["architecture:confirmados:0"]}]}'}
+            return fake_invoke(prompt, config)
+        with patch.dict("os.environ", {"AUDIT_COORDINATION_MODE": "ai", "AUDIT_CAPABILITIES": ""}), tempfile.TemporaryDirectory() as temp:
+            data = run_team(snapshot(), Path(temp), invoke, emit=lambda *a, **k: None)
+            self.assertEqual(calls, ["coordinator-routing", "security", "architecture", "inventory", "coordinator-synthesis"])
+            self.assertTrue(all(c["calls"] == 1 and c["archivos"] for c in data["celulas"]))
+            self.assertTrue(all(c["estado"] == "completada" for c in data["celulas"]))
+            self.assertEqual(data["coordination"]["stages"]["routing"]["fallback"], "deterministic")
+            self.assertEqual(data["estado"], "parcial")
+
     def test_invalid_configuration_spends_no_calls(self):
         for settings in ({"AUDIT_INVENTORY_MODEL": "invalid model"},
                          {"AUDIT_ARCHITECTURE_REASONING": "invalid"},

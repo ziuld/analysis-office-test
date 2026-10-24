@@ -58,14 +58,18 @@ class Coordinator:
                         or len(set(paths)) != len(paths) or len(paths) > cell["limits"]["files"]
                         or sum(len(files[p]["text"].encode()) for p in paths) > cell["limits"]["bytes"]):
                     raise AuditError("Reparto fuera de la evidencia o del presupuesto.")
+                if cell["files"] and not paths:
+                    raise AuditError("El reparto descarta evidencia disponible para una célula; se conserva la base determinista.")
                 result[cell["id"]] = paths
             return result
         task = ('Reparte el contexto existente según el foco y presupuesto de cada célula. No pidas archivos nuevos. '
                 'Devuelve SOLO JSON {"security":["ruta"],"architecture":["ruta"],"inventory":["ruta"]}. '
-                'Puedes usar [] si falta evidencia. Los nombres de archivo no prueban su contenido.')
+                'Conserva archivos para cada célula que tenga una base no vacía; no la dejes sin ejecutar. '
+                'Usa [] solo cuando la base de esa célula esté vacía. Repartir por rutas y roles no confirma hallazgos.')
         assignment = self.call("routing", task, {
             "commit": self.snapshot["commit"],
             "files": [{"path": p, "role": file_role(p), "bytes": len(f["text"].encode())} for p, f in files.items()],
+            "baseline": {c["id"]: [f["path"] for f in c["files"]] for c in plan},
             "cells": [{k: c[k] for k in ("id", "focus", "limits", "capabilities")} for c in plan]}, validate)
         if assignment is None:
             return plan

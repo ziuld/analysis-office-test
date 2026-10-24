@@ -66,3 +66,9 @@ Se construyeron imágenes y se reutilizó el comprobador de arranque existente: 
 No se ejecutaron análisis de repositorios reales, scanners ni modelos del proyecto. No se evaluaron calidad semántica del reparto/síntesis reales, consumo del proveedor, disponibilidad de modelos, carga concurrente ni recuperación de una llamada interrumpida. La prueba valida contratos y conservación con respuestas deterministas, no esas propiedades. CI/CD conserva su base sin ampliaciones; frontend/backend permanecen en 0.2.0, sin cierre de entrega.
 
 El límite de loops corresponde a la exploración híbrida; véase [PREPARACION.md](PREPARACION.md). No multiplica especialistas ni reparto/síntesis. El Bloque 8 separa la calibración posterior de modelos de estas pruebas funcionales.
+
+## Verificación funcional real posterior — 24/10/2026
+
+El reparto recibe ahora la selección base de cada célula y no puede vaciar una célula con evidencia disponible. Un reparto vacío inválido conserva la base determinista, deja constancia del fallo y permite que el especialista evalúe su propia suficiencia. Cada célula registra `calls` para distinguir una invocación real de una etapa sin entrada.
+
+La prueba final real de bookingApi ejecutó siete llamadas de `gpt-6-luna`/`low`: dos de exploración, reparto, tres especialistas y síntesis. Especialistas y coordinación válidos, cero etapas de modelos omitidas; 40020 tokens comunicados y unos 105 s. El informe es parcial por el límite de preparación, no por errores de especialistas. Gitleaks activo sin detecciones; OSV sin entrada compatible, dependencias no evaluadas. Resultados, intentos anteriores y límites en el [plan](PLAN_FASE_1.md) y la [evidencia final](evidence/full-pilot-final-2026-10-24.json). Esto valida el recorrido funcional de esta muestra, sin cerrar la calibración del Bloque 8.

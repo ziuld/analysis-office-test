@@ -16,8 +16,8 @@
   },
   "validation": {
     "backend": {
-      "run": 119,
-      "passed": 118,
+      "run": 120,
+      "passed": 119,
       "skipped": 1
     },
     "frontend_block6": {
@@ -61,22 +61,31 @@
       "warnings": [],
       "seconds": 12.24
     },
-    "authorized_model_calls_used": 5,
-    "authorized_model_calls_remaining": 0,
     "full_economic_pilot": {
-      "status": "partial",
-      "runs": 2,
-      "model_calls": 14,
-      "reported_total_tokens": 74396,
-      "all_model_stages_attempted": true,
-      "all_specialists_valid_together": false,
-      "scanners": false,
-      "evidence": "docs/evidence/full-pilot-2026-10-24.json",
-      "repeat_pending_explicit_budget": 7
-    }
+      "status": "functional_end_to_end_passed_with_partial_coverage",
+      "final_run": "bb23e6e3-f995-4748-8ff2-47304b8f57cc",
+      "model_calls": 7,
+      "reported_total_tokens": 40020,
+      "all_specialists_valid_together": true,
+      "routing_and_synthesis_valid": true,
+      "model_stage_skips": 0,
+      "scanners_enabled": true,
+      "gitleaks": "sin_detecciones_en_seleccion",
+      "osv": "no_evaluado_sin_entrada_compatible",
+      "report_state": "parcial",
+      "evidence": "docs/evidence/full-pilot-final-2026-10-24.json"
+    },
+    "earlier_complete_test_attempts": {
+      "runs": 3,
+      "model_calls": 17,
+      "reported_total_tokens": 81112,
+      "note": "Dos intentos de siete llamadas y un tercero de tres, con reparto vacío; no se confunden etapas omitidas con llamadas sin consumo comunicado."
+    },
+    "initial_budget_authorized_model_calls_used": 5,
+    "initial_budget_authorized_model_calls_remaining": 0
   },
   "pending": [
-    "real_response_quality_and_consumption_validation",
+    "semantic_calibration_on_representative_repositories_block8",
     "human_acceptance",
     "delivery_version_decision",
     "user_merge"
@@ -98,6 +107,7 @@
     "codex_model": "gpt-6-luna",
     "reasoning": "low",
     "per_role_model_overrides": false,
-    "tuning_block": 8
+    "tuning_block": 8,
+    "scanners_enabled": true
   }
 }

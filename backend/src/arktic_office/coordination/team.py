@@ -274,7 +274,7 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print):
         plan = coordinator.route(plan)
     cells = [{"id": c["id"], "nombre": c["name"], "estado": "pendiente", "provider": c["provider"],
               "model": c["model"], "reasoning": c["reasoning"], "archivos": [f["path"] for f in c["files"]],
-              "bytes": c["bytes"]} for c in plan]
+              "bytes": c["bytes"], "calls": 0} for c in plan]
     results = []
     (output / "celulas").mkdir()
     for config, state in zip(plan, cells):
@@ -290,6 +290,7 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print):
         prompt = make_prompt(subset, config)
         raw = None
         try:
+            state["calls"] = 1
             envelope = invoke(prompt, config)
             state["usage"] = envelope.get("usage")
             raw = envelope["report"]

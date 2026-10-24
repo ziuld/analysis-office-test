@@ -1,0 +1,171 @@
+{
+  "date": "2026-10-24",
+  "status": "functional_end_to_end_passed_with_partial_coverage",
+  "authorization": "El usuario autorizó ejecutar la prueba completa sin restricciones de intentos y resolver errores; incluidos scanners.",
+  "run_id": "bb23e6e3-f995-4748-8ff2-47304b8f57cc",
+  "repository": "https://github.com/ziuld/bookingApi",
+  "branch": "master",
+  "commit": "c0d247e3226d77a83471c7a1b32afdb0981eb7f1",
+  "profile": {
+    "all_roles": "gpt-6-luna",
+    "reasoning": "low",
+    "coordination": "ai",
+    "preparation_max_loops": 1,
+    "scanners_enabled": true
+  },
+  "files": {
+    "tree": 44,
+    "acquired": 36,
+    "context": 12,
+    "graph_input": 36,
+    "graph_represented": 33
+  },
+  "preparation": {
+    "calls": 2,
+    "closure": "iteration_limit",
+    "actions": [
+      {
+        "tool": "read",
+        "path": "src/main/java/com/colibridge/api/reservation/controller/ReservationController.java",
+        "start": 1,
+        "end": 100
+      },
+      {
+        "tool": "read",
+        "path": "src/main/java/com/colibridge/api/reservation/controller/ReservationController.java",
+        "start": 91,
+        "end": 197
+      }
+    ],
+    "effective_reads": [
+      {
+        "path": "src/main/java/com/colibridge/api/reservation/controller/ReservationController.java",
+        "start": 1,
+        "end": 100
+      },
+      {
+        "path": "src/main/java/com/colibridge/api/reservation/controller/ReservationController.java",
+        "start": 91,
+        "end": 190
+      }
+    ],
+    "seconds": 18.641
+  },
+  "coordination": {
+    "routing": {
+      "status": "complete",
+      "calls": 1,
+      "usage": {
+        "input_tokens": 1973,
+        "output_tokens": 275,
+        "reasoning_tokens": 0,
+        "total_tokens": 2248,
+        "api_calls": 1
+      }
+    },
+    "synthesis": {
+      "status": "complete",
+      "calls": 1,
+      "usage": {
+        "input_tokens": 2224,
+        "output_tokens": 274,
+        "reasoning_tokens": 0,
+        "total_tokens": 2498,
+        "api_calls": 1
+      }
+    }
+  },
+  "cells": [
+    {
+      "id": "security",
+      "estado": "completada",
+      "calls": 1,
+      "model": "gpt-6-luna",
+      "reasoning": "low",
+      "usage": {
+        "input_tokens": 11202,
+        "output_tokens": 935,
+        "reasoning_tokens": 0,
+        "total_tokens": 12137,
+        "api_calls": 1
+      }
+    },
+    {
+      "id": "architecture",
+      "estado": "completada",
+      "calls": 1,
+      "model": "gpt-6-luna",
+      "reasoning": "low",
+      "usage": {
+        "input_tokens": 6497,
+        "output_tokens": 1017,
+        "reasoning_tokens": 0,
+        "total_tokens": 7514,
+        "api_calls": 1
+      }
+    },
+    {
+      "id": "inventory",
+      "estado": "completada",
+      "calls": 1,
+      "model": "gpt-6-luna",
+      "reasoning": "low",
+      "usage": {
+        "input_tokens": 9971,
+        "output_tokens": 596,
+        "reasoning_tokens": 0,
+        "total_tokens": 10567,
+        "api_calls": 1
+      }
+    }
+  ],
+  "scanners": [
+    {
+      "name": "Gitleaks 8.30.1",
+      "status": "sin_detecciones_en_seleccion",
+      "findings": [],
+      "detail": "Solo archivos seleccionados; no historial, .env ni archivos excluidos. Posibles secretos requieren validación y rotación si son reales."
+    },
+    {
+      "name": "OSV-Scanner 2.7.0",
+      "status": "no_evaluado",
+      "findings": [],
+      "detail": "No hay archivos de versiones resueltas admitidos en la selección. Revisar dependencias queda pendiente."
+    }
+  ],
+  "model_calls": 7,
+  "usage": {
+    "input_tokens": 36768,
+    "output_tokens": 3252,
+    "reasoning_tokens": 44,
+    "total_tokens": 40020,
+    "api_calls": 7
+  },
+  "unknown_usage_calls": 0,
+  "approximate_elapsed_seconds": 104.95,
+  "outputs": {
+    "report_state": "parcial",
+    "confirmed": 7,
+    "indications": 1,
+    "synthesis_items": 5,
+    "verified_unique_citations": 20,
+    "model_stage_skips": 0,
+    "markdown_http": 200,
+    "html_http": 200,
+    "manifest": true,
+    "office_terminal_no_active_jobs": true
+  },
+  "local_tests": {
+    "run": 120,
+    "passed": 119,
+    "skipped": 1,
+    "seconds": 6.57
+  },
+  "limitations": [
+    "Informe parcial: el explorador alcanzó las dos llamadas configuradas; no se simula suficiencia.",
+    "OSV habilitado, pero sin archivo de versiones resueltas compatible; dependencias no evaluadas.",
+    "Una muestra real y perfil económico; calibración semántica y modelos finales pendientes del Bloque 8.",
+    "No se ejecutó bookingApi ni se instalaron sus dependencias.",
+    "Tiempos aproximados medidos desde creación hasta última escritura del trabajo."
+  ]
+}
