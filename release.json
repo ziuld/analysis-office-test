@@ -16,8 +16,8 @@
   },
   "validation": {
     "backend": {
-      "run": 118,
-      "passed": 117,
+      "run": 119,
+      "passed": 118,
       "skipped": 1
     },
     "frontend_block6": {
@@ -56,5 +56,13 @@
     "changelog": "CHANGELOG.md",
     "results": "docs/RESULTADOS.md"
   },
-  "revision": "Identificada por el commit y la cabecera del PR; este archivo no se firma a sí mismo."
+  "revision": "Identificada por el commit y la cabecera del PR; este archivo no se firma a sí mismo.",
+  "trial_configuration": {
+    "preparation_max_loops": 1,
+    "preparation_max_calls": 2,
+    "codex_model": "gpt-6-luna",
+    "reasoning": "low",
+    "per_role_model_overrides": false,
+    "tuning_block": 8
+  }
 }

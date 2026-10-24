@@ -10,7 +10,7 @@ from arktic_office.preparation.repository import (
     acquire, select, redact, mask_findings, LOCKFILES, NoRedirect, file_role,
 )
 
-from arktic_office.config.models import registry
+from arktic_office.config.models import registry, profile
 LIMITS = dict(registry()["roles"]["preparation"])
 
 
@@ -101,9 +101,11 @@ class Retrieval:
 
 
 def explore(retrieval, invoke, config, emit=lambda event: None):
+    loops = profile("preparation")["limits"]["max_loops"]
+    limits = {**LIMITS, "max_loops": loops, "iterations": 1 + loops}
     started = time.monotonic()
     state = {"status": "running", "closure": None, "iterations": 0, "prompt_bytes": 0,
-             "usage": [], "events": [], "limits": LIMITS, "reads": retrieval.reads,
+             "usage": [], "events": [], "limits": limits, "reads": retrieval.reads,
              "search_hits": retrieval.search_hits, "actions": retrieval.actions}
 
     def event(kind, **data):
@@ -118,13 +120,15 @@ def explore(retrieval, invoke, config, emit=lambda event: None):
               "Responde SOLO un objeto JSON: {tool:search,query:texto literal}, {tool:graph,query:símbolo}, "
               "{tool:read,path:ruta,start:entero,end:entero} o {tool:finish,reason:motivo}. "
               "Las claves y los valores de tool deben ser cadenas JSON entre comillas. "
-              "Usa una herramienta por turno; máximo 8 turnos y 100 líneas por lectura. "
+              f"Usa una herramienta por turno; máximo {limits['iterations']} turnos "
+              f"(inicial más {limits['max_loops']} adicionales) y 100 líneas por lectura. "
+              "Termina con finish en cuanto la evidencia sea suficiente; solo continúa si falta información. "
               "No declares suficiencia sin leer código. Mapa estático parcial, no prueba de ejecución.\n"
               + json.dumps({"commit": retrieval.snapshot["commit"], "inventory": inventory,
                             "graph_status": retrieval.graph.get("status")}, ensure_ascii=False))
     event("started")
     try:
-        for iteration in range(LIMITS["iterations"]):
+        for iteration in range(limits["iterations"]):
             remaining = LIMITS["seconds"] - (time.monotonic() - started)
             size = len(prompt.encode())
             if remaining <= 1 or state["prompt_bytes"] + size > LIMITS["prompt_bytes"]:

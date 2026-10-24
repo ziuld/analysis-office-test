@@ -49,6 +49,9 @@ def profile(role):
     options = runtime_options()
     limits = dict(registry()["roles"][role])
     prefix = "AUDIT_" + role.upper()
+    if role == "preparation":
+        limits["max_loops"] = integer(prefix + "_MAX_LOOPS", limits["max_loops"], 0, 20)
+        limits["iterations"] = 1 + limits["max_loops"]
     model = os.environ.get(prefix + "_MODEL", "").strip() or model
     validate_model(model)
     effort = os.environ.get(prefix + "_REASONING", "").strip() or options["reasoning_config"]["effort"]

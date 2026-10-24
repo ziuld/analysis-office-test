@@ -2,6 +2,8 @@
 
 ## Sin publicar — candidata de Fase 1
 
+- Pasadas adicionales de preparación parametrizadas (`AUDIT_PREPARATION_MAX_LOOPS`, 1 por defecto) y perfil mínimo común de pruebas; afinado posterior registrado como Bloque 8.
+
 - Preparación híbrida opcional con Graphify fijado, búsquedas y exploración limitada dentro de Docker.
 - Backend modular, perfiles centrales y skills; reparto y síntesis con IA opcionales, Azure bajo encargo.
 - Oficina vinculada a estados persistidos e historial de las últimas diez consultas por revisión y personaje.

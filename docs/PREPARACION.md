@@ -11,7 +11,7 @@ docker compose -f compose.yaml -f compose.hybrid.yaml build audit-api preparator
 docker compose -f compose.yaml -f compose.hybrid.yaml up -d --wait
 ```
 
-La oficina mantiene su entrada habitual. Una revisión normal en este modo puede añadir **hasta ocho llamadas de preparación**, además de las tres células; utiliza el modelo y razonamiento comunes. No inicia ninguna revisión por arrancar los servicios. Para inspeccionar sin scanners ni modelos:
+La oficina mantiene su entrada habitual. Una revisión normal en este modo puede añadir **hasta dos llamadas de preparación por defecto**, además de las tres células; utiliza el modelo y razonamiento comunes. No inicia ninguna revisión por arrancar los servicios. Para inspeccionar sin scanners ni modelos:
 
 ```powershell
 docker compose -f compose.yaml -f compose.hybrid.yaml --profile audit run --rm auditor https://github.com/propietario/repositorio --inspect-only
@@ -37,7 +37,7 @@ El override fija `AUDIT_PREPARATION_MODE=hybrid` y `AUDIT_INDEXER_URL=http://pre
 
 El preparador limita cada solicitud a 2 MB, la entrada textual a 1 MB y la extracción a 300 segundos. El grafo devuelto admite hasta 12000 nodos, 24000 relaciones y 3 MB; los recortes y avisos dejan estado parcial. Salud y extracción se atienden por separado. Una extracción fallida conserva la recuperación textual y queda registrada; no dispara otro indexador ni reintenta automáticamente.
 
-El explorador dispone de **8 llamadas, 180 segundos, 60000 bytes acumulados de prompts**, 8000 bytes por respuesta y hasta 60 segundos por llamada. No hay reintentos. Los límites globales existentes de contexto final siguen vigentes: por defecto 24 archivos, 12000 bytes por archivo y 120000 bytes totales; las lecturas nuevas se rechazan si no caben. Los especialistas conservan sus límites y su única pasada. Las líneas omitidas se dejan vacías para mantener citas al commit original.
+El explorador dispone por defecto de **2 llamadas, 180 segundos, 60000 bytes acumulados de prompts**, 8000 bytes por respuesta y hasta 60 segundos por llamada. No hay reintentos. Los límites globales existentes de contexto final siguen vigentes: por defecto 24 archivos, 12000 bytes por archivo y 120000 bytes totales; las lecturas nuevas se rechazan si no caben. Los especialistas conservan sus límites y su única pasada. Las líneas omitidas se dejan vacías para mantener citas al commit original.
 
 `finish` declara suficiencia solo después de alguna lectura; es una declaración del explorador sobre contexto parcial, no garantía de cobertura completa. Los otros cierres distinguen insuficiencia, límite de iteraciones/contexto/tiempo y fallo técnico. La evidencia recuperada se conserva. Un cierre de preparación sin suficiencia mantiene parcial un equipo que por sí solo hubiese terminado completo.
 
@@ -61,4 +61,12 @@ Los logs locales están en `artifacts/block4-tests-final.log` y `artifacts/block
 
 ## Integración posterior: Bloque 5
 
-Los límites y el perfil de preparación se centralizan ahora en el registro de [coordinación](COORDINACION.md). La exploración conserva sus límites de llamadas/tiempo/contexto y solicita por defecto hasta 1500 tokens de salida (sin techo duro OAuth). La coordinación IA opcional puede sumar otras dos llamadas, sin reabrir la preparación ni dar herramientas a especialistas.
+Los límites y el perfil de preparación se centralizan ahora en el registro de [coordinación](COORDINACION.md). La exploración conserva sus límites de tiempo/contexto; las llamadas son configurables y solicita por defecto hasta 1500 tokens de salida (sin techo duro OAuth). La coordinación IA opcional puede sumar otras dos llamadas, sin reabrir la preparación ni dar herramientas a especialistas.
+
+## Pasadas de preparación para pruebas — 24/10/2026
+
+En `.env`, `AUDIT_PREPARATION_MAX_LOOPS=1` limita las pasadas adicionales del coordinador explorador. `0` permite solo la llamada inicial; `1`, hasta dos; `2`, hasta tres; `3`, hasta cuatro. Se admiten enteros entre 0 y 20, validados antes de adquirir el repositorio o consumir modelo. Predeterminado: 1. Tiempo y contexto pueden cortar antes; incrementar loops no los amplía.
+
+Cada pasada solicita una acción de lectura/búsqueda/mapa o `finish`. Es el loop de preparación híbrida, no una repetición del equipo completo. El modelo debe terminar cuando tenga suficiente evidencia; puede necesitar una pasada para comunicar `finish`. Si agota llamadas tras una lectura, se conserva lo recuperado y se declara el límite. Reparto y síntesis opcionales siguen siendo una llamada cada uno; cada especialista mantiene una pasada. En modo `legacy` este parámetro no añade llamadas.
+
+La traza registra `limits.max_loops`, `limits.iterations` (inicial + adicionales) e `iterations` usadas. Cambiar `.env` requiere recrear la API con el override híbrido para probar esta preparación. Los perfiles de prueba heredan el modelo común y razonamiento `low`; `.env.example` usa `gpt-6-luna` sin elevar Seguridad. La calibración de modelos y calidad se pospone al Bloque 8.

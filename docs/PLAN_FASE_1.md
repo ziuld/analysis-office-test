@@ -222,6 +222,17 @@ El usuario confirmó el historial de las últimas diez consultas por revisión y
 
 **F1-24 abierta:** manifiesto [release.json](../release.json) de candidata para revisión y changelog sin publicar preparados. El PR no cierra aceptación ni versión. No se amplía CI/CD; frontend, backend y paquete Python permanecen en 0.2.0. Pendientes validación semántica tras resolver sesión/cuota, aceptación humana, decisión de versión y merge del usuario. Sin etiquetas, release ni publicación de imágenes.
 
+### Bloque 8 — Afinado (finetuning) de configuración y resultados
+
+Este bloque afina configuración, instrucciones y utilidad observada; no implica entrenar pesos de un modelo. Primero se prueba el funcionamiento con perfiles mínimos, sin buscar todavía el resultado óptimo.
+
+- [ ] F1-25 Resolver y comprobar sesión/cuota con evaluación real acotada y presupuesto explícito, sin scanners salvo autorización independiente. Completar la validación semántica pendiente de F1-23.
+- [ ] F1-26 Acordar y elevar modelos/razonamiento por rol para analizar un repositorio real; conservar el perfil económico para pruebas funcionales.
+- [ ] F1-27 Evaluar utilidad, citas, insuficiencia, cobertura, llamadas, tiempos y consumo comunicado. Afinar prompts, selección y loops según fallos observados, con cambios pequeños y comprobaciones mínimas.
+- [ ] F1-28 Registrar configuración final, límites y resultados; aceptación humana y decisión de versión para completar F1-24. El usuario conserva el merge.
+
+**Preparación del 24/10/2026:** `AUDIT_PREPARATION_MAX_LOOPS` añade pasadas a la inicial: 0 → 1 llamada, 1 → 2, 2 → 3, 3 → 4; predeterminado 1, rango 0–20. Validación previa al consumo; tiempo/contexto mantienen sus techos. El explorador puede cerrar antes y al agotar llamadas conserva evidencia parcial. No repite el equipo ni amplía reparto/síntesis. Todos los roles de pruebas heredan el modelo común y `low`; se retira la elevación de Seguridad del ejemplo y de la configuración local. Esto no resuelve por sí solo los errores anteriores de sesión/cuota. CI/CD y versiones conservados. Comprobaciones: 119 pruebas ejecutadas, 118 correctas y una referencia visual opcional omitida en 6,706 s; un único caso nuevo comprueba 0/1/2/3 loops y cierre anticipado, y el caso existente de configuración inválida cubre límites erróneos antes de consumir modelo. Log local `artifacts/preparation-loops-tests.log`. Imágenes reconstruidas y preparación híbrida activada localmente sin trabajos activos; perfiles efectivos de los seis roles comprobados como `gpt-6-luna`/`low`, con dos llamadas máximas de preparación. Un bloqueo de metadatos temporales de Compose en Windows obligó a repetir el build del backend directamente con Docker, correctamente. API, preparador y oficina saludables; HTTP de oficina y proxy comprobados. Sin nuevas llamadas reales, scanners ni ampliación de CI/CD. La CI del PR #3 sobre el commit anterior `61d4dcb` había finalizado correctamente; la actualización se validará en su propio commit. Evidencia resumida: [preparation-loops-2026-10-24.json](evidence/preparation-loops-2026-10-24.json).
+
 ## Estructura implementada
 
 ```text

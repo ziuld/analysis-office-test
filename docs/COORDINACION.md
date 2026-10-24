@@ -21,20 +21,20 @@ Para que los servicios lean cambios de `.env`, recrearlos sin trabajos activos, 
 |---|---|
 | Preparación legacy + coordinación determinista | 3 células |
 | Preparación legacy + coordinación IA | 3 células + 2 del coordinador |
-| Preparación híbrida + coordinación IA | Hasta 8 del explorador + 3 células + 2 del coordinador |
+| Preparación híbrida + coordinación IA | Hasta 2 del explorador por defecto (1 + loops) + 3 células + 2 del coordinador |
 
 Cada pregunta posterior sigue siendo una llamada independiente. Ninguna de estas llamadas se inicia por construir imágenes o arrancar servicios. Las comprobaciones de este bloque emplearon respuestas ficticias; no se consumió modelo del proyecto para validarlo.
 
 ## Perfiles y validación
 
-La fuente de perfiles y límites locales es [models.json](../backend/src/arktic_office/resources/profiles/models.json). El adaptador de configuración la aplica a preparación, coordinador, especialistas y consultas. Conserva los proveedores y modelos predeterminados anteriores, así como los ajustes de célula existentes. No hay cambios automáticos de modelo o proveedor.
+La fuente de perfiles y límites locales es [models.json](../backend/src/arktic_office/resources/profiles/models.json). El adaptador de configuración la aplica a preparación, coordinador, especialistas y consultas. El perfil de pruebas usa el modelo mínimo ya configurado de cada proveedor (`gpt-6-luna` en Codex OAuth, `gpt-5.4-mini` en API) y razonamiento `low`, sin elevaciones por célula en `.env.example`. Los overrides explícitos siguen disponibles. No hay cambios automáticos de modelo o proveedor.
 
 | Rol | Límites predeterminados relevantes |
 |---|---|
 | Seguridad | 12 archivos, 64000 bytes, una llamada, 240 s, salida solicitada hasta 4500 tokens |
 | Arquitectura / Inventario | 6 archivos, 24000 bytes, una llamada cada uno, 240 s, salida solicitada hasta 4500 tokens |
 | Coordinador | Dos llamadas como máximo; cada una hasta 32000 bytes de prompt, 16000 bytes de respuesta, 60 s, salida solicitada hasta 2000 tokens |
-| Preparación | 8 iteraciones, 180 s, 60000 bytes acumulados; 60 s por llamada, salida solicitada hasta 1500 tokens |
+| Preparación | 1 pasada inicial + `AUDIT_PREPARATION_MAX_LOOPS` adicionales (1 por defecto), 180 s, 60000 bytes acumulados; 60 s por llamada, salida solicitada hasta 1500 tokens |
 | Consulta al coordinador | Una llamada, 240 s; hereda el modelo común, salida solicitada hasta 4500 tokens |
 
 `AUDIT_MODEL`, `AUDIT_REASONING` y `AUDIT_MAX_OUTPUT_TOKENS` siguen siendo la base. Los prefijos `AUDIT_SECURITY_`, `AUDIT_ARCHITECTURE_`, `AUDIT_INVENTORY_`, `AUDIT_COORDINATOR_`, `AUDIT_PREPARATION_` y `AUDIT_QUESTION_` permiten ajustar `MODEL`, `REASONING` y `MAX_OUTPUT_TOKENS`. Los límites locales de archivos, tiempo y contexto están en el registro. La consulta a un especialista mantiene su perfil propio; `QUESTION` corresponde a la consulta al coordinador. Los ajustes explícitos de salida admiten 1000–8000 tokens; el valor predeterminado de cada rol limita el valor común heredado.
@@ -64,3 +64,5 @@ Se reutiliza la suite manual y se añaden solo tres casos necesarios: configurac
 Se construyeron imágenes y se reutilizó el comprobador de arranque existente: API 0.2.0 y oficina saludables, oficina/proxy HTTP 200, sin trabajos, autenticación ni revisiones. El proyecto y sus volúmenes temporales se retiraron. Logs locales: `artifacts/block5-tests-final.log` y `artifacts/block5-startup.log`.
 
 No se ejecutaron análisis de repositorios reales, scanners ni modelos del proyecto. No se evaluaron calidad semántica del reparto/síntesis reales, consumo del proveedor, disponibilidad de modelos, carga concurrente ni recuperación de una llamada interrumpida. La prueba valida contratos y conservación con respuestas deterministas, no esas propiedades. CI/CD conserva su base sin ampliaciones; frontend/backend permanecen en 0.2.0, sin cierre de entrega.
+
+El límite de loops corresponde a la exploración híbrida; véase [PREPARACION.md](PREPARACION.md). No multiplica especialistas ni reparto/síntesis. El Bloque 8 separa la calibración posterior de modelos de estas pruebas funcionales.

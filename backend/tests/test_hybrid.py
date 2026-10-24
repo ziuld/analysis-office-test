@@ -2,6 +2,7 @@
 import base64
 import json
 import unittest
+from unittest.mock import patch
 from arktic_office.core.errors import AuditError
 from arktic_office.preparation.hybrid import prepare, Retrieval, explore, LIMITS
 
@@ -30,8 +31,9 @@ class HybridTests(unittest.TestCase):
         def invoke(prompt, config):
             self.assertNotIn("private-value", prompt)
             return {"report": json.dumps(next(actions)), "usage": {"total_tokens": 10}}
-        snapshot = prepare("https://github.com/acme/app", fetch=fetch, scanner=scanner, invoke=invoke,
-                           config={}, index=lambda files: {"status": "ready", "nodes": [], "edges": []}, emit=events.append)
+        with patch.dict("os.environ", {"AUDIT_PREPARATION_MAX_LOOPS": "3"}):
+            snapshot = prepare("https://github.com/acme/app", fetch=fetch, scanner=scanner, invoke=invoke,
+                               config={}, index=lambda files: {"status": "ready", "nodes": [], "edges": []}, emit=events.append)
         self.assertEqual(snapshot["commit"], "b" * 40)
         self.assertEqual(len(scans), 1)
         self.assertEqual(len([c for c in calls if "/git/blobs/" in c]), 3)
@@ -67,7 +69,7 @@ class HybridTests(unittest.TestCase):
         self.assertEqual(retrieval.tool({"tool": "graph", "query": "two"})["status"], "error")
         state = explore(retrieval, lambda *a: {"report": '{"tool":"search","query":"two"}'}, {})
         self.assertEqual(state["closure"], "iteration_limit")
-        self.assertEqual(state["iterations"], LIMITS["iterations"])
+        self.assertEqual(state["iterations"], state["limits"]["iterations"])
         state = explore(retrieval, lambda *a: {"report": '{"tool":"shell"}'}, {})
         self.assertEqual(state["closure"], "technical_error")
         self.assertIn("two", snapshot["files"][0]["text"])
@@ -78,3 +80,24 @@ class HybridTests(unittest.TestCase):
         with patch.dict(LIMITS, {"seconds": 0}):
             state = explore(retrieval, lambda *a: self.fail("No time: must not invoke"), {})
         self.assertEqual(state["closure"], "time_limit")
+
+    def test_extra_loops_add_to_initial_pass_and_finish_can_stop_early(self):
+        for loops in (0, 1, 2, 3):
+            with self.subTest(loops=loops), patch.dict("os.environ", {"AUDIT_PREPARATION_MAX_LOOPS": str(loops)}):
+                snapshot = {"commit": "a" * 40, "files": [], "bytes_read": 0,
+                            "limits": {"files": 2, "file_bytes": 12000, "total_bytes": 24000}}
+                retrieval = Retrieval([{"path": "a.py", "text": "one"}], snapshot, {})
+                calls = []
+                def invoke(prompt, config):
+                    calls.append(prompt)
+                    self.assertIn(f"máximo {1 + loops} turnos", prompt)
+                    return {"report": '{"tool":"read","path":"a.py","start":1,"end":1}'}
+                state = explore(retrieval, invoke, {})
+                self.assertEqual(len(calls), 1 + loops)
+                self.assertEqual(state["limits"]["max_loops"], loops)
+                self.assertEqual(state["closure"], "iteration_limit")
+                self.assertEqual(snapshot["files"][0]["text"], "one")
+                finish = unittest.mock.Mock(return_value={"report": '{"tool":"finish","reason":"Código leído; suficiente."}'})
+                state = explore(retrieval, finish, {})
+                self.assertEqual(finish.call_count, 1)
+                self.assertEqual(state["closure"], "sufficient")
