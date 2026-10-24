@@ -5,7 +5,7 @@ index 05eb0ab..328efcf 100644
 @@ -508,7 +508,7 @@ function startAdapter() {
      ws.on("error", () => activeSendEventFns.delete(sendEventFn));
    });
- 
+
 -  httpServer.listen(ADAPTER_PORT, "127.0.0.1", () => {
 +  httpServer.listen(ADAPTER_PORT, process.env.DEMO_ADAPTER_HOST || "127.0.0.1", () => {
      console.log(`[demo-gateway] Listening on ws://localhost:${ADAPTER_PORT}`);
@@ -17,26 +17,123 @@ index 1bf6457..3aadafa 100644
 +++ b/server/network-policy.js
 @@ -64,6 +64,8 @@ const isPublicHost = (host) => {
  };
- 
+
  const assertPublicHostAllowed = ({ host, studioAccessToken }) => {
 +  // Local Docker office only: Compose publishes Studio on host loopback exclusively.
 +  if (process.env.HERMES3D_LOCAL_ONLY === "1") return;
    if (!isPublicHost(host)) return;
- 
+
    const token = String(studioAccessToken ?? "").trim();
+diff --git a/src/app/api/audit/[...path]/route.ts b/src/app/api/audit/[...path]/route.ts
+new file mode 100644
+index 0000000..825db4f
+--- /dev/null
++++ b/src/app/api/audit/[...path]/route.ts
+@@ -0,0 +1,42 @@
++import { NextRequest, NextResponse } from "next/server";
++
++export const runtime = "nodejs";
++export const dynamic = "force-dynamic";
++
++async function proxy(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
++  const { path } = await context.params;
++  const valid = path.length === 1 && path[0] === "runs" ||
++    path.length === 2 && path[0] === "runs" && /^[a-zA-Z0-9_-]{8,80}$/.test(path[1]) ||
++    path.length === 3 && path[0] === "runs" && /^[a-zA-Z0-9_-]{8,80}$/.test(path[1]) && ["report", "download", "questions"].includes(path[2]) ||
++    path.length === 4 && path[0] === "runs" && /^[a-zA-Z0-9_-]{8,80}$/.test(path[1]) && path[2] === "questions" && (/^[0-9a-f-]{36}$/.test(path[3]) || ["coordinator", "security", "architecture", "inventory"].includes(path[3]));
++  if (!valid || request.method === "POST" && !(path.length === 1 || path.length === 3 && path[2] === "questions")) {
++    return NextResponse.json({ error: "Ruta no disponible." }, { status: 404 });
++  }
++  if (request.method === "POST") {
++    let sameOrigin = false;
++    try {
++      const origin = new URL(request.headers.get("origin") || "");
++      sameOrigin = ["http:", "https:"].includes(origin.protocol) && origin.host === request.headers.get("host");
++    } catch { /* An absent or malformed browser origin is not accepted. */ }
++    if (!sameOrigin) return NextResponse.json({ error: "Origen no permitido." }, { status: 403 });
++  }
++  try {
++    const body = request.method === "POST" ? await request.text() : undefined;
++    if (body && new TextEncoder().encode(body).length > 2048) {
++      return NextResponse.json({ error: "Solicitud demasiado grande." }, { status: 413 });
++    }
++    const upstream = await fetch(`${process.env.AUDIT_API_URL || "http://audit-api:8080"}/${path.join("/")}`, {
++      method: request.method, body, headers: { "Content-Type": "application/json" }, cache: "no-store",
++      signal: AbortSignal.timeout(10000), redirect: "error",
++    });
++    const headers = new Headers({ "Content-Type": upstream.headers.get("Content-Type") || "application/json", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" });
++    const disposition = upstream.headers.get("Content-Disposition");
++    if (disposition) headers.set("Content-Disposition", disposition);
++    return new NextResponse(upstream.body, { status: upstream.status, headers });
++  } catch {
++    return NextResponse.json({ error: "No se puede contactar con el equipo de análisis. Comprueba que el servicio esté iniciado." }, { status: 503 });
++  }
++}
++
++export const GET = proxy;
++export const POST = proxy;
+diff --git a/src/app/globals.css b/src/app/globals.css
+index f6ff54d..47e8a1a 100644
+--- a/src/app/globals.css
++++ b/src/app/globals.css
+@@ -50,9 +50,9 @@
+   --radius-small: 6px;
+   --radius-card: 14px;
+   --radius-container: 20px;
+-  --font-display: "Bebas Neue", sans-serif;
+-  --font-sans: "IBM Plex Sans", sans-serif;
+-  --font-mono: "IBM Plex Mono", monospace;
++  --font-display: "Arial Narrow", Arial, sans-serif;
++  --font-sans: Arial, Helvetica, sans-serif;
++  --font-mono: ui-monospace, Consolas, monospace;
+   --shadow-color: oklch(0.19 0.01 255);
+   --shadow-opacity: 0.16;
+   --shadow-blur: 28px;
 diff --git a/src/app/layout.tsx b/src/app/layout.tsx
-index 1f452a0..b35ffe2 100644
+index 1f452a0..526b855 100644
 --- a/src/app/layout.tsx
 +++ b/src/app/layout.tsx
-@@ -3,7 +3,7 @@ import { Bebas_Neue, IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
+@@ -1,30 +1,11 @@
+ import type { Metadata } from "next";
+-import { Bebas_Neue, IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
  import "./globals.css";
- 
+
  export const metadata: Metadata = {
 -  title: "Hermes3D",
 +  title: "Arktic Office — revisión de código",
    description: "Focused operator studio for the Hermes gateway.",
  };
- 
+
+-const display = Bebas_Neue({
+-  variable: "--font-display",
+-  weight: "400",
+-  subsets: ["latin"],
+-});
+-
+-const sans = IBM_Plex_Sans({
+-  variable: "--font-sans",
+-  weight: ["400", "500", "600", "700"],
+-  subsets: ["latin"],
+-});
+-
+-const mono = IBM_Plex_Mono({
+-  variable: "--font-mono",
+-  weight: ["400", "500", "600"],
+-  subsets: ["latin"],
+-});
+-
+ export default function RootLayout({
+   children,
+ }: Readonly<{
+@@ -40,7 +21,7 @@ export default function RootLayout({
+           }}
+         />
+       </head>
+-      <body className={`${display.variable} ${sans.variable} ${mono.variable} antialiased`}>
++      <body className="antialiased">
+         <main className="h-screen w-screen overflow-hidden bg-background">{children}</main>
+       </body>
+     </html>
 diff --git a/src/app/office/page.tsx b/src/app/office/page.tsx
 index 5278885..03cdfca 100644
 --- a/src/app/office/page.tsx
@@ -74,7 +171,7 @@ index 5278885..03cdfca 100644
 -  );
 -}
 +import { AuditOffice } from "@/features/audit/AuditOffice";
- 
+
  export default function OfficePage() {
 -  const showHermesConsole = readDebugFlag(process.env.DEBUG);
 -
@@ -87,351 +184,12 @@ index 5278885..03cdfca 100644
 -  );
 +  return <AgentStoreProvider><AuditOffice /></AgentStoreProvider>;
  }
-diff --git a/src/features/office/renderMode.ts b/src/features/office/renderMode.ts
-index 6f9b948..4a6513a 100644
---- a/src/features/office/renderMode.ts
-+++ b/src/features/office/renderMode.ts
-@@ -1,8 +1,6 @@
- // Office renderer preference: immersive 3D scene vs. lightweight 2D pixel scene.
- // Persisted in localStorage so the choice survives reloads.
- 
--import { detectSoftwareWebGL } from "@/features/retro-office/core/graphicsQuality";
--
- export type OfficeRenderMode = "3d" | "2d";
- 
- export const OFFICE_RENDER_MODE_STORAGE_KEY = "hermes-office-render-mode-v1";
-@@ -41,11 +39,10 @@ export const loadStoredOfficeRenderMode = (): OfficeRenderMode | null => {
- 
- /**
-  * The mode the office should boot with: the user's stored choice, or a
-- * hardware-appropriate default. Machines that rasterize WebGL in software
-- * cannot drive the 3D pipeline smoothly, so they default to the pixel office.
-+ * lightweight 2D default for this local MVP. 3D remains an explicit choice.
-  */
- export const resolveInitialOfficeRenderMode = (): OfficeRenderMode =>
--  loadStoredOfficeRenderMode() ?? (detectSoftwareWebGL() ? "2d" : "3d");
-+  loadStoredOfficeRenderMode() ?? "2d";
- 
- export const saveOfficeRenderMode = (mode: OfficeRenderMode) => {
-   if (typeof window === "undefined") return;
-diff --git a/src/features/office/screens/OfficeScreen.tsx b/src/features/office/screens/OfficeScreen.tsx
-index 7d9371e..061f069 100644
---- a/src/features/office/screens/OfficeScreen.tsx
-+++ b/src/features/office/screens/OfficeScreen.tsx
-@@ -1071,7 +1071,7 @@ export function OfficeScreen({
-   const [marketplaceOpen, setMarketplaceOpen] = useState(false);
-   // Office renderer preference (3D immersive vs. 2D pixel). Resolved after
-   // mount so SSR markup stays deterministic.
--  const [officeRenderMode, setOfficeRenderMode] = useState<OfficeRenderMode>("3d");
-+  const [officeRenderMode, setOfficeRenderMode] = useState<OfficeRenderMode>("2d");
-   useEffect(() => {
-     setOfficeRenderMode(resolveInitialOfficeRenderMode());
-   }, []);
-diff --git a/src/features/pixel-office/PixelOffice2D.tsx b/src/features/pixel-office/PixelOffice2D.tsx
-index 7d2a060..2c51fca 100644
---- a/src/features/pixel-office/PixelOffice2D.tsx
-+++ b/src/features/pixel-office/PixelOffice2D.tsx
-@@ -17,6 +17,7 @@ import {
-   isCleaningActive,
- } from "@/features/pixel-office/buildPixelInputs";
- import { buildHermesHqMap } from "@/features/pixel-office/map/hermesHqMap";
-+import { buildArkticOfficeMap } from "@/features/pixel-office/map/arkticOfficeMap";
- import {
-   createPixelSceneBridge,
-   type PixelSceneBridge,
-@@ -29,6 +30,8 @@ type ContextMenuState = {
- };
- 
- export type PixelOffice2DProps = {
-+  compact?: boolean;
-+  readOnly?: boolean;
-   agents: OfficeAgent[];
-   animationState?: OfficeAnimationState | null;
-   streamingTextByAgentId?: Record<string, string | null>;
-@@ -95,6 +98,8 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
-     officeTitleLoaded,
-     gatewayStatus = "disconnected",
-     activeAdapterType = "hermes",
-+    readOnly = false,
-+    compact = false,
-   } = props;
- 
-   const rootRef = useRef<HTMLDivElement | null>(null);
-@@ -103,7 +108,7 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
-   const [settingsOpen, setSettingsOpen] = useState(false);
-   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
- 
--  const map = useMemo(() => buildHermesHqMap(), []);
-+  const map = useMemo(() => compact ? buildArkticOfficeMap() : buildHermesHqMap(), [compact]);
- 
-   if (!bridgeRef.current) {
-     bridgeRef.current = createPixelSceneBridge({
-@@ -148,6 +153,7 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
-       onAgentChatSelect?.(agentId);
-     };
-     bridge.callbacks.onAgentContextMenu = (agentId, clientX, clientY) => {
-+      if (readOnly) return;
-       setContextMenu({ agentId, x: clientX, y: clientY });
-     };
-     bridge.callbacks.onStationInteract = (kind) => {
-@@ -155,7 +161,7 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
-       if (kind === "jukebox") onJukeboxInteract?.();
-       if (kind === "kanban") onKanbanInteract?.();
-     };
--  }, [bridge, onAgentChatSelect, onJukeboxInteract, onKanbanInteract]);
-+  }, [bridge, onAgentChatSelect, onJukeboxInteract, onKanbanInteract, readOnly]);
- 
-   useEffect(() => {
-     let canceled = false;
-@@ -166,11 +172,11 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
-         "@/features/pixel-office/scene/PixelOfficeScene"
-       );
-       if (canceled || !rootRef.current) return;
--      const scene = createPixelOfficeScene({ PhaserLib, bridge, map });
-+      const scene = createPixelOfficeScene({ PhaserLib, bridge, map, fitToView: compact });
-       const game = new PhaserLib.Game({
-         type: PhaserLib.AUTO,
-         parent: rootRef.current,
--        backgroundColor: "#b5dc9c",
-+        backgroundColor: compact ? "#111b23" : "#b5dc9c",
-         scene: [scene],
-         render: {
-           antialias: false,
-@@ -190,7 +196,7 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
-       gameRef.current?.destroy(true);
-       gameRef.current = null;
-     };
--  }, [bridge, map]);
-+  }, [bridge, map, compact]);
- 
-   const contextAgent = contextMenu
-     ? (agents.find((agent) => agent.id === contextMenu.agentId) ?? null)
-@@ -206,16 +212,16 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
- 
-       {/* Office title — top left. */}
-       <div className="absolute top-3 left-3 z-20 flex items-center gap-2 select-none">
--        <div className="rounded-md border border-black/25 bg-[#11131c]/85 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-100 backdrop-blur-sm">
-+        {!compact && <div className="rounded-md border border-black/25 bg-[#11131c]/85 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-100 backdrop-blur-sm">
-           {officeTitleLoaded ? officeTitle : ""}
--        </div>
--        <div className="rounded-md border border-black/25 bg-[#11131c]/70 px-2 py-1.5 text-[10px] font-mono text-white/70 backdrop-blur-sm">
-+        </div>}
-+        {!compact && <div className="rounded-md border border-black/25 bg-[#11131c]/70 px-2 py-1.5 text-[10px] font-mono text-white/70 backdrop-blur-sm">
-           2D PIXEL
--        </div>
-+        </div>}
-         <div className="flex items-center gap-2 rounded-md border border-black/25 bg-[#11131c]/70 px-2 py-1.5 text-[10px] font-mono backdrop-blur-sm">
--          <span className="text-emerald-300/85">{workingCount} working</span>
-+          <span className="text-emerald-300/85">{workingCount} {compact ? "trabajando" : "working"}</span>
-           <span className="text-white/25">·</span>
--          <span className="text-amber-300/85">{idleCount} idle</span>
-+          <span className="text-amber-300/85">{idleCount} {compact ? "en espera" : "idle"}</span>
-           {errorCount > 0 ? (
-             <>
-               <span className="text-white/25">·</span>
-@@ -247,17 +253,17 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
-           }`}
-           title={`Runtime: ${activeAdapterType} (${gatewayStatus})`}
-         >
--          {activeAdapterType} • {gatewayStatus}
-+          {compact ? (gatewayStatus === "connected" ? "Conectado" : "Sin conexión") : `${activeAdapterType} • ${gatewayStatus}`}
-         </div>
--        <button
-+        {!readOnly && <button
-           onClick={() => onRenderModeChange("3d")}
-           title="Switch to the 3D office"
-           className="flex h-7 items-center justify-center gap-1 rounded-md border border-white/15 bg-[#11131c]/85 px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/75 transition-all backdrop-blur-sm hover:border-cyan-400/45 hover:text-cyan-100"
-         >
-           <Boxes size={12} />
-           <span>3D</span>
--        </button>
--        <button
-+        </button>}
-+        {!readOnly && <button
-           onClick={() => setSettingsOpen(true)}
-           title="Studio settings"
-           className={`flex h-7 w-7 items-center justify-center rounded-md border transition-all backdrop-blur-sm ${
-@@ -267,13 +273,13 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
-           }`}
-         >
-           <Settings2 size={12} />
--        </button>
-+        </button>}
-       </div>
- 
-       {/* Controls hint — bottom center (event console and chat own the corners). */}
-       <div className="absolute bottom-3 left-1/2 z-10 -translate-x-1/2 pointer-events-none select-none">
-         <div className="rounded-full bg-black/50 px-3 py-1 text-[10px] font-mono text-white/55 backdrop-blur-sm">
--          drag to pan · scroll to zoom · click an agent to chat
-+          {readOnly ? "Arrastra para mover · rueda para ampliar · pulsa un agente para consultar" : "drag to pan · scroll to zoom · click an agent to chat"}
-         </div>
-       </div>
- 
-diff --git a/src/features/pixel-office/scene/PixelOfficeScene.ts b/src/features/pixel-office/scene/PixelOfficeScene.ts
-index 4708d1d..f6d0d07 100644
---- a/src/features/pixel-office/scene/PixelOfficeScene.ts
-+++ b/src/features/pixel-office/scene/PixelOfficeScene.ts
-@@ -72,6 +72,7 @@ type AgentVisual = {
-   lastStatus: string;
-   lastName: string;
-   seed: string;
-+  hitTarget: HTMLButtonElement | null;
- };
- 
- /** How long a finished speech bubble stays readable, in ms. */
-@@ -81,8 +82,9 @@ export const createPixelOfficeScene = (params: {
-   PhaserLib: typeof import("phaser");
-   bridge: PixelSceneBridge;
-   map: PixelOfficeMap;
-+  fitToView?: boolean;
- }): Phaser.Scene => {
--  const { PhaserLib, bridge, map } = params;
-+  const { PhaserLib, bridge, map, fitToView = false } = params;
-   const worldWidth = map.cols * TILE;
-   const worldHeight = map.rows * TILE;
- 
-@@ -106,7 +108,11 @@ export const createPixelOfficeScene = (params: {
-       this.renderZoneLabels();
-       this.setupCamera();
-       this.setupPointerControls();
-+      // Keep the compact office in view when its adjacent panel opens/closes.
-+      if (fitToView) this.scale.on(PhaserLib.Scale.Events.RESIZE, this.setupCamera, this);
-       this.events.once(PhaserLib.Scenes.Events.SHUTDOWN, () => {
-+        for (const visual of this.visuals.values()) visual.hitTarget?.remove();
-+        this.scale.off(PhaserLib.Scale.Events.RESIZE, this.setupCamera, this);
-         this.visuals.clear();
-         this.sim = null;
-       });
-@@ -242,7 +248,7 @@ export const createPixelOfficeScene = (params: {
- 
-     /** Lowest allowed zoom: never smaller than "whole map in view". */
-     private minZoom(): number {
--      return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, this.containZoom()));
-+      return Math.min(MAX_ZOOM, Math.max(fitToView ? 0.1 : MIN_ZOOM, this.containZoom()));
-     }
- 
-     private setupCamera() {
-@@ -263,12 +269,12 @@ export const createPixelOfficeScene = (params: {
-       // Gather-style default: start close enough that the pixel art reads at
-       // 1:1+ detail, centered on the main pods. Wheel out for the overview.
-       const zoom = PhaserLib.Math.Clamp(
--        Math.max(0.75, Math.floor(this.containZoom() * 4) / 4),
-+        fitToView ? this.containZoom() : Math.max(0.75, Math.floor(this.containZoom() * 4) / 4),
-         this.minZoom(),
-         MAX_ZOOM,
-       );
-       camera.setZoom(zoom);
--      camera.centerOn(worldWidth / 2, worldHeight * 0.42);
-+      camera.centerOn(worldWidth / 2, worldHeight * (fitToView ? 0.5 : 0.42));
-     }
- 
-     private setupPointerControls() {
-@@ -380,6 +386,7 @@ export const createPixelOfficeScene = (params: {
-         if (seen.has(id)) continue;
-         visual.container.destroy();
-         visual.overlay.destroy();
-+        visual.hitTarget?.remove();
-         this.visuals.delete(id);
-       }
-     }
-@@ -445,6 +452,20 @@ export const createPixelOfficeScene = (params: {
-       ]);
-       overlay.setDepth(40_000);
- 
-+      // Native hit targets make compact-office characters clickable with
-+      // mouse, keyboard and DOM browser clients, without React frame updates.
-+      const hitTarget = fitToView && id !== JANITOR_ID ? document.createElement("button") : null;
-+      if (hitTarget) {
-+        hitTarget.type = "button";
-+        hitTarget.setAttribute("aria-label", `Consultar a ${name}`);
-+        hitTarget.title = `Consultar a ${name}`;
-+        hitTarget.className = "absolute z-10 cursor-pointer rounded-lg border-2 border-transparent bg-transparent focus-visible:border-cyan-300 focus-visible:outline-none";
-+        hitTarget.style.width = "44px";
-+        hitTarget.style.height = "48px";
-+        hitTarget.addEventListener("click", () => bridge.callbacks.onAgentClick?.(id));
-+        this.game.canvas.parentElement?.appendChild(hitTarget);
-+      }
-+
-       return {
-         container,
-         sprite,
-@@ -463,6 +484,7 @@ export const createPixelOfficeScene = (params: {
-         lastStatus: "",
-         lastName: name,
-         seed: id,
-+        hitTarget,
-       };
-     }
- 
-@@ -497,6 +519,14 @@ export const createPixelOfficeScene = (params: {
-     ) {
-       visual.container.setPosition(pose.x, pose.y + TILE / 2 - 1);
-       visual.container.setDepth(pose.y + TILE / 2);
-+      if (visual.hitTarget) {
-+        const camera = this.cameras.main;
-+        const x = (visual.container.x - camera.worldView.x) * camera.zoom;
-+        const y = (visual.container.y - CHARACTER_HEIGHT / 2 - camera.worldView.y) * camera.zoom;
-+        visual.hitTarget.style.transform = `translate(${x - 22}px, ${y - 24}px)`;
-+        visual.hitTarget.style.left = "0";
-+        visual.hitTarget.style.top = "0";
-+      }
-       const frameKey = `char_${visual.seed}_${this.frameFor(pose)}`;
-       if (this.textures.exists(frameKey) && visual.sprite.texture.key !== frameKey) {
-         visual.sprite.setTexture(frameKey);
-diff --git a/src/app/api/audit/[...path]/route.ts b/src/app/api/audit/[...path]/route.ts
-new file mode 100644
-index 0000000..9d8d289
---- /dev/null
-+++ b/src/app/api/audit/[...path]/route.ts
-@@ -0,0 +1,42 @@
-+import { NextRequest, NextResponse } from "next/server";
-+
-+export const runtime = "nodejs";
-+export const dynamic = "force-dynamic";
-+
-+async function proxy(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
-+  const { path } = await context.params;
-+  const valid = path.length === 1 && path[0] === "runs" ||
-+    path.length === 2 && path[0] === "runs" && /^[a-zA-Z0-9_-]{8,80}$/.test(path[1]) ||
-+    path.length === 3 && path[0] === "runs" && /^[a-zA-Z0-9_-]{8,80}$/.test(path[1]) && ["report", "download", "questions"].includes(path[2]) ||
-+    path.length === 4 && path[0] === "runs" && /^[a-zA-Z0-9_-]{8,80}$/.test(path[1]) && path[2] === "questions" && /^[0-9a-f-]{36}$/.test(path[3]);
-+  if (!valid || request.method === "POST" && !(path.length === 1 || path.length === 3 && path[2] === "questions")) {
-+    return NextResponse.json({ error: "Ruta no disponible." }, { status: 404 });
-+  }
-+  if (request.method === "POST") {
-+    let sameOrigin = false;
-+    try {
-+      const origin = new URL(request.headers.get("origin") || "");
-+      sameOrigin = ["http:", "https:"].includes(origin.protocol) && origin.host === request.headers.get("host");
-+    } catch { /* An absent or malformed browser origin is not accepted. */ }
-+    if (!sameOrigin) return NextResponse.json({ error: "Origen no permitido." }, { status: 403 });
-+  }
-+  try {
-+    const body = request.method === "POST" ? await request.text() : undefined;
-+    if (body && new TextEncoder().encode(body).length > 2048) {
-+      return NextResponse.json({ error: "Solicitud demasiado grande." }, { status: 413 });
-+    }
-+    const upstream = await fetch(`${process.env.AUDIT_API_URL || "http://audit-api:8080"}/${path.join("/")}`, {
-+      method: request.method, body, headers: { "Content-Type": "application/json" }, cache: "no-store",
-+      signal: AbortSignal.timeout(10000), redirect: "error",
-+    });
-+    const headers = new Headers({ "Content-Type": upstream.headers.get("Content-Type") || "application/json", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" });
-+    const disposition = upstream.headers.get("Content-Disposition");
-+    if (disposition) headers.set("Content-Disposition", disposition);
-+    return new NextResponse(upstream.body, { status: upstream.status, headers });
-+  } catch {
-+    return NextResponse.json({ error: "No se puede contactar con el equipo de análisis. Comprueba que el servicio esté iniciado." }, { status: 503 });
-+  }
-+}
-+
-+export const GET = proxy;
-+export const POST = proxy;
 diff --git a/src/features/audit/AgentQuestion.tsx b/src/features/audit/AgentQuestion.tsx
 new file mode 100644
-index 0000000..d6fbf8a
+index 0000000..9441f36
 --- /dev/null
 +++ b/src/features/audit/AgentQuestion.tsx
-@@ -0,0 +1,94 @@
+@@ -0,0 +1,107 @@
 +"use client";
 +import { useEffect, useState } from "react";
 +
@@ -468,6 +226,17 @@ index 0000000..d6fbf8a
 +  const [query, setQuery] = useState<Question | null>(() => readLastQuestion(run.id, agent));
 +  const [text, setText] = useState(() => query?.question || "");
 +  const [sending, setSending] = useState(false);
++  const [history, setHistory] = useState<Question[]>([]);
++  const [historyError, setHistoryError] = useState("");
++  useEffect(() => {
++    let cancelled = false;
++    fetch(`/api/audit/runs/${run.id}/questions/${agent}`, { cache: "no-store" }).then(async response => {
++      if (!response.ok) throw new Error();
++      const data = await response.json();
++      if (!cancelled) { setHistory(data.questions || []); setHistoryError(""); }
++    }).catch(() => { if (!cancelled) setHistoryError("Historial no disponible; no se reenvía ninguna pregunta."); });
++    return () => { cancelled = true; };
++  }, [run.id, agent, query?.id, query?.estado]);
 +  const [error, setError] = useState("");
 +  useEffect(() => { if (query) rememberQuestion(query); }, [query]);
 +  useEffect(() => {
@@ -506,7 +275,7 @@ index 0000000..d6fbf8a
 +    <section role="dialog" aria-modal="true" aria-label={`Consultar a ${name}`} className="flex max-h-full w-full max-w-2xl flex-col overflow-auto rounded-xl border border-white/20 bg-slate-950 p-5 text-slate-100 shadow-2xl">
 +      <header className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold">Consultar a {name}</h2><button onClick={onClose} className="rounded border border-white/20 px-3 py-2">Cerrar consulta</button></header>
 +      <p className="mt-3 break-all text-xs text-slate-400">{run.repository}<br />Revisión {run.id} · {run.branch || "main"}@{run.commit?.slice(0, 12)} · {run.estado}</p>
-+      <p className="mt-3 text-sm text-slate-300">Pregunta independiente sobre la evidencia guardada. Se conserva la última consulta en esta pestaña; no se envía como historial al modelo. No modifica el informe.</p>
++      <p className="mt-3 text-sm text-slate-300">Pregunta independiente sobre la evidencia guardada. Puedes leer las últimas 10 consultas guardadas de este personaje y revisión; no se envían como historial al modelo. No modifica el informe.</p>
 +      <form onSubmit={ask} className="mt-4 space-y-3">
 +        <label htmlFor="agent-question" className="block text-sm">Tu pregunta para {name}</label>
 +        <textarea id="agent-question" required maxLength={800} value={text} onChange={e => setText(e.target.value)} rows={3} className="w-full rounded-lg border border-white/20 bg-slate-900 p-3 text-sm" placeholder="¿Qué evidencia respalda esta observación?" />
@@ -514,6 +283,8 @@ index 0000000..d6fbf8a
 +      </form>
 +      {blocked && !waiting && <p className="mt-3 text-sm text-amber-200">Espera a que termine la revisión o consulta activa.</p>}
 +      {error && <p role="alert" className="mt-4 text-sm text-rose-300">{error}</p>}
++      {historyError && <p role="status" className="mt-3 text-xs text-amber-200">{historyError}</p>}
++      {history.length > 0 && <details className="mt-4 rounded border border-white/15 p-3"><summary className="cursor-pointer text-sm">Últimas consultas guardadas ({history.length})</summary><ul className="mt-2 space-y-2">{history.map(item => <li key={item.id}><button type="button" onClick={() => setQuery(item)} className="text-left text-sm text-cyan-200">{item.question} · {item.estado}</button></li>)}</ul></details>}
 +      {query && <div aria-live="polite" className="mt-5 space-y-3 border-t border-white/10 pt-4">
 +        <p className="text-xs text-slate-400">{query.nombre} · {query.model} / {query.reasoning}</p>
 +        <p className="text-sm"><strong>Pregunta:</strong> {query.question}</p>
@@ -528,10 +299,10 @@ index 0000000..d6fbf8a
 +}
 diff --git a/src/features/audit/AuditOffice.tsx b/src/features/audit/AuditOffice.tsx
 new file mode 100644
-index 0000000..df27280
+index 0000000..91d18c7
 --- /dev/null
 +++ b/src/features/audit/AuditOffice.tsx
-@@ -0,0 +1,123 @@
+@@ -0,0 +1,127 @@
 +"use client";
 +
 +import { useCallback, useEffect, useMemo, useState } from "react";
@@ -543,7 +314,8 @@ index 0000000..df27280
 +import { ExecutiveReport } from "./ExecutiveReport";
 +
 +interface Cell { id: string; nombre: string; estado: string; model: string; reasoning: string; error?: string; mensaje?: string; necesita?: string[] }
-+interface Run { id: string; repository: string; estado: string; commit?: string; branch?: string; celulas: Cell[]; error?: string; mensaje?: string; necesita?: string[]; has_report: boolean; historical?: boolean; evidence_origin?: string; report_format?: number; derived_from?: string; simulation?: boolean }
++interface Activity { state: string; text: string; working: boolean; meeting: boolean }
++interface Run { activity?: Record<string, Activity>; id: string; repository: string; estado: string; commit?: string; branch?: string; celulas: Cell[]; error?: string; mensaje?: string; necesita?: string[]; has_report: boolean; historical?: boolean; evidence_origin?: string; report_format?: number; derived_from?: string; simulation?: boolean }
 +const roles = [{ id: "coordinator", name: "Coordinador", color: "#38bdf8" }, { id: "security", name: "Seguridad", color: "#fbbf24" }, { id: "architecture", name: "Arquitectura", color: "#a78bfa" }, { id: "inventory", name: "Inventario", color: "#34d399" }];
 +const busy = (state?: string) => state === "preparando" || state === "analizando";
 +import { statusLabel as label, avatarStatus } from "./auditStatus";
@@ -584,9 +356,11 @@ index 0000000..df27280
 +  const live = active || runs[0];
 +  const agents = useMemo<OfficeAgent[]>(() => roles.map(role => {
 +    const cell = live?.celulas?.find(c => c.id === role.id);
-+    const state = questionActive?.agent === role.id ? "analizando" : role.id === "coordinator" ? live?.estado : cell?.estado;
++    const state = questionActive?.agent === role.id ? "analizando" : live?.activity?.[role.id]?.state || (role.id === "coordinator" ? live?.estado : cell?.estado);
 +    return { ...role, subtitle: label[state || ""] || "En espera", item: "coding", status: avatarStatus(connected, state) };
 +  }), [live, connected, questionActive]);
++
++  const activityText = Object.fromEntries(roles.map(role => [role.id, !connected ? "" : questionActive?.agent === role.id ? "Consultando evidencia guardada" : live?.activity?.[role.id]?.working || (chat?.agent || selectedCell) === role.id ? live?.activity?.[role.id]?.text || "" : ""]));
 +
 +  async function start(event: React.FormEvent) {
 +    event.preventDefault(); setSubmitting(true); setError(""); setReport(null);
@@ -614,7 +388,8 @@ index 0000000..df27280
 +  return <div className="relative h-full w-full bg-slate-950 text-slate-100">
 +    <div className={`absolute inset-x-0 top-14 ${panel ? "bottom-1/2 min-[1000px]:bottom-0 min-[1000px]:right-[380px]" : "bottom-0"}`}>
 +      <PixelOffice2D agents={agents} renderMode="2d" onRenderModeChange={() => {}} readOnly compact
-+        onAgentChatSelect={consult}
++        onAgentChatSelect={consult} selectedAgentId={chat?.agent || selectedCell} statusTextByAgentId={activityText}
++        meetingActive={connected && !!live?.activity?.coordinator?.meeting}
 +        officeTitle="Equipo de análisis" officeTitleLoaded gatewayStatus={connected ? "connected" : "disconnected"} activeAdapterType="hermes"
 +        remoteOfficeEnabled={false} remoteOfficeSourceKind="presence_endpoint" remoteOfficeLabel="" remoteOfficePresenceUrl="" remoteOfficeGatewayUrl="" remoteOfficeTokenConfigured={false}
 +        voiceRepliesEnabled={false} voiceRepliesVoiceId={null} voiceRepliesSpeed={1} voiceRepliesLoaded />
@@ -625,7 +400,7 @@ index 0000000..df27280
 +    </header>
 +    {panel && <aside aria-label="Panel de revisión" className="absolute bottom-3 left-3 right-3 top-1/2 z-30 overflow-auto rounded-xl border border-white/15 bg-slate-950/95 p-5 shadow-2xl min-[1000px]:left-auto min-[1000px]:top-16 min-[1000px]:w-[356px]">
 +      <h1 className="text-xl font-semibold">Revisión de repositorio</h1>
-+      <p className="mt-1 text-sm text-slate-400">Solo lectura de <strong>main</strong> o, si no existe, <strong>master</strong>. El arquitecto evalúa el resultado.</p>
++      <p className="mt-1 text-sm text-slate-400">Solo lectura de la <strong>rama predeterminada</strong>, ligada a un commit. El arquitecto evalúa el resultado.</p>
 +      <form onSubmit={start} className="mt-5 space-y-3">
 +        <label className="block text-sm" htmlFor="repository">Repositorio de GitHub</label>
 +        <input id="repository" required type="url" placeholder="https://github.com/propietario/repositorio" value={repository} onChange={e => setRepository(e.target.value)} className="w-full rounded-lg border border-white/20 bg-slate-900 px-3 py-3 text-sm" />
@@ -734,6 +509,220 @@ index 0000000..36e816d
 +  if (state === "preparando" || state === "analizando") return "working";
 +  return "idle";
 +}
+diff --git a/src/features/office/renderMode.ts b/src/features/office/renderMode.ts
+index 6f9b948..4a6513a 100644
+--- a/src/features/office/renderMode.ts
++++ b/src/features/office/renderMode.ts
+@@ -1,8 +1,6 @@
+ // Office renderer preference: immersive 3D scene vs. lightweight 2D pixel scene.
+ // Persisted in localStorage so the choice survives reloads.
+
+-import { detectSoftwareWebGL } from "@/features/retro-office/core/graphicsQuality";
+-
+ export type OfficeRenderMode = "3d" | "2d";
+
+ export const OFFICE_RENDER_MODE_STORAGE_KEY = "hermes-office-render-mode-v1";
+@@ -41,11 +39,10 @@ export const loadStoredOfficeRenderMode = (): OfficeRenderMode | null => {
+
+ /**
+  * The mode the office should boot with: the user's stored choice, or a
+- * hardware-appropriate default. Machines that rasterize WebGL in software
+- * cannot drive the 3D pipeline smoothly, so they default to the pixel office.
++ * lightweight 2D default for this local MVP. 3D remains an explicit choice.
+  */
+ export const resolveInitialOfficeRenderMode = (): OfficeRenderMode =>
+-  loadStoredOfficeRenderMode() ?? (detectSoftwareWebGL() ? "2d" : "3d");
++  loadStoredOfficeRenderMode() ?? "2d";
+
+ export const saveOfficeRenderMode = (mode: OfficeRenderMode) => {
+   if (typeof window === "undefined") return;
+diff --git a/src/features/office/screens/OfficeScreen.tsx b/src/features/office/screens/OfficeScreen.tsx
+index 7d9371e..061f069 100644
+--- a/src/features/office/screens/OfficeScreen.tsx
++++ b/src/features/office/screens/OfficeScreen.tsx
+@@ -1071,7 +1071,7 @@ export function OfficeScreen({
+   const [marketplaceOpen, setMarketplaceOpen] = useState(false);
+   // Office renderer preference (3D immersive vs. 2D pixel). Resolved after
+   // mount so SSR markup stays deterministic.
+-  const [officeRenderMode, setOfficeRenderMode] = useState<OfficeRenderMode>("3d");
++  const [officeRenderMode, setOfficeRenderMode] = useState<OfficeRenderMode>("2d");
+   useEffect(() => {
+     setOfficeRenderMode(resolveInitialOfficeRenderMode());
+   }, []);
+diff --git a/src/features/pixel-office/PixelOffice2D.tsx b/src/features/pixel-office/PixelOffice2D.tsx
+index 7d2a060..9c4e3c1 100644
+--- a/src/features/pixel-office/PixelOffice2D.tsx
++++ b/src/features/pixel-office/PixelOffice2D.tsx
+@@ -17,6 +17,7 @@ import {
+   isCleaningActive,
+ } from "@/features/pixel-office/buildPixelInputs";
+ import { buildHermesHqMap } from "@/features/pixel-office/map/hermesHqMap";
++import { buildArkticOfficeMap } from "@/features/pixel-office/map/arkticOfficeMap";
+ import {
+   createPixelSceneBridge,
+   type PixelSceneBridge,
+@@ -29,6 +30,11 @@ type ContextMenuState = {
+ };
+
+ export type PixelOffice2DProps = {
++  compact?: boolean;
++  selectedAgentId?: string;
++  meetingActive?: boolean;
++  statusTextByAgentId?: Record<string, string>;
++  readOnly?: boolean;
+   agents: OfficeAgent[];
+   animationState?: OfficeAnimationState | null;
+   streamingTextByAgentId?: Record<string, string | null>;
+@@ -95,6 +101,11 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
+     officeTitleLoaded,
+     gatewayStatus = "disconnected",
+     activeAdapterType = "hermes",
++    readOnly = false,
++    compact = false,
++    selectedAgentId,
++    meetingActive = false,
++    statusTextByAgentId = {},
+   } = props;
+
+   const rootRef = useRef<HTMLDivElement | null>(null);
+@@ -103,7 +114,7 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
+   const [settingsOpen, setSettingsOpen] = useState(false);
+   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
+
+-  const map = useMemo(() => buildHermesHqMap(), []);
++  const map = useMemo(() => compact ? buildArkticOfficeMap() : buildHermesHqMap(), [compact]);
+
+   if (!bridgeRef.current) {
+     bridgeRef.current = createPixelSceneBridge({
+@@ -117,6 +128,12 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
+   const pushBridgeState = useCallback(() => {
+     const nowMs = Date.now();
+     const inputs = buildPixelAgentInputs({ agents, animationState, nowMs });
++    if (compact && readOnly) for (const input of inputs) {
++      input.controlled = true;
++      input.selected = input.id === selectedAgentId;
++      input.thinking = input.status === "working";
++      input.standup = meetingActive && input.status !== "error";
++    }
+     const bubbleTextByAgentId: Record<string, string> = {};
+     for (const input of inputs) {
+       // Streamed text shows while the stream flag is up or the run is still
+@@ -127,12 +144,13 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
+         bubbleTextByAgentId[input.id] = text;
+       }
+     }
++    if (compact && readOnly) Object.assign(bubbleTextByAgentId, statusTextByAgentId);
+     bridge.setState({
+       agents: inputs,
+       bubbleTextByAgentId,
+       cleaningActive: isCleaningActive(animationState),
+     });
+-  }, [agents, animationState, bridge, streamingTextByAgentId]);
++  }, [agents, animationState, bridge, streamingTextByAgentId, compact, readOnly, selectedAgentId, meetingActive, statusTextByAgentId]);
+
+   useEffect(() => {
+     pushBridgeState();
+@@ -148,6 +166,7 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
+       onAgentChatSelect?.(agentId);
+     };
+     bridge.callbacks.onAgentContextMenu = (agentId, clientX, clientY) => {
++      if (readOnly) return;
+       setContextMenu({ agentId, x: clientX, y: clientY });
+     };
+     bridge.callbacks.onStationInteract = (kind) => {
+@@ -155,7 +174,7 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
+       if (kind === "jukebox") onJukeboxInteract?.();
+       if (kind === "kanban") onKanbanInteract?.();
+     };
+-  }, [bridge, onAgentChatSelect, onJukeboxInteract, onKanbanInteract]);
++  }, [bridge, onAgentChatSelect, onJukeboxInteract, onKanbanInteract, readOnly]);
+
+   useEffect(() => {
+     let canceled = false;
+@@ -166,11 +185,11 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
+         "@/features/pixel-office/scene/PixelOfficeScene"
+       );
+       if (canceled || !rootRef.current) return;
+-      const scene = createPixelOfficeScene({ PhaserLib, bridge, map });
++      const scene = createPixelOfficeScene({ PhaserLib, bridge, map, fitToView: compact });
+       const game = new PhaserLib.Game({
+         type: PhaserLib.AUTO,
+         parent: rootRef.current,
+-        backgroundColor: "#b5dc9c",
++        backgroundColor: compact ? "#111b23" : "#b5dc9c",
+         scene: [scene],
+         render: {
+           antialias: false,
+@@ -190,7 +209,7 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
+       gameRef.current?.destroy(true);
+       gameRef.current = null;
+     };
+-  }, [bridge, map]);
++  }, [bridge, map, compact]);
+
+   const contextAgent = contextMenu
+     ? (agents.find((agent) => agent.id === contextMenu.agentId) ?? null)
+@@ -206,16 +225,16 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
+
+       {/* Office title — top left. */}
+       <div className="absolute top-3 left-3 z-20 flex items-center gap-2 select-none">
+-        <div className="rounded-md border border-black/25 bg-[#11131c]/85 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-100 backdrop-blur-sm">
++        {!compact && <div className="rounded-md border border-black/25 bg-[#11131c]/85 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-100 backdrop-blur-sm">
+           {officeTitleLoaded ? officeTitle : ""}
+-        </div>
+-        <div className="rounded-md border border-black/25 bg-[#11131c]/70 px-2 py-1.5 text-[10px] font-mono text-white/70 backdrop-blur-sm">
++        </div>}
++        {!compact && <div className="rounded-md border border-black/25 bg-[#11131c]/70 px-2 py-1.5 text-[10px] font-mono text-white/70 backdrop-blur-sm">
+           2D PIXEL
+-        </div>
++        </div>}
+         <div className="flex items-center gap-2 rounded-md border border-black/25 bg-[#11131c]/70 px-2 py-1.5 text-[10px] font-mono backdrop-blur-sm">
+-          <span className="text-emerald-300/85">{workingCount} working</span>
++          <span className="text-emerald-300/85">{workingCount} {compact ? "trabajando" : "working"}</span>
+           <span className="text-white/25">·</span>
+-          <span className="text-amber-300/85">{idleCount} idle</span>
++          <span className="text-amber-300/85">{idleCount} {compact ? "en espera" : "idle"}</span>
+           {errorCount > 0 ? (
+             <>
+               <span className="text-white/25">·</span>
+@@ -247,17 +266,17 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
+           }`}
+           title={`Runtime: ${activeAdapterType} (${gatewayStatus})`}
+         >
+-          {activeAdapterType} • {gatewayStatus}
++          {compact ? (gatewayStatus === "connected" ? "Conectado" : "Sin conexión") : `${activeAdapterType} • ${gatewayStatus}`}
+         </div>
+-        <button
++        {!readOnly && <button
+           onClick={() => onRenderModeChange("3d")}
+           title="Switch to the 3D office"
+           className="flex h-7 items-center justify-center gap-1 rounded-md border border-white/15 bg-[#11131c]/85 px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-white/75 transition-all backdrop-blur-sm hover:border-cyan-400/45 hover:text-cyan-100"
+         >
+           <Boxes size={12} />
+           <span>3D</span>
+-        </button>
+-        <button
++        </button>}
++        {!readOnly && <button
+           onClick={() => setSettingsOpen(true)}
+           title="Studio settings"
+           className={`flex h-7 w-7 items-center justify-center rounded-md border transition-all backdrop-blur-sm ${
+@@ -267,13 +286,13 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
+           }`}
+         >
+           <Settings2 size={12} />
+-        </button>
++        </button>}
+       </div>
+
+       {/* Controls hint — bottom center (event console and chat own the corners). */}
+       <div className="absolute bottom-3 left-1/2 z-10 -translate-x-1/2 pointer-events-none select-none">
+         <div className="rounded-full bg-black/50 px-3 py-1 text-[10px] font-mono text-white/55 backdrop-blur-sm">
+-          drag to pan · scroll to zoom · click an agent to chat
++          {readOnly ? "Arrastra para mover · rueda para ampliar · pulsa un agente para consultar" : "drag to pan · scroll to zoom · click an agent to chat"}
+         </div>
+       </div>
+
 diff --git a/src/features/pixel-office/map/arkticOfficeMap.ts b/src/features/pixel-office/map/arkticOfficeMap.ts
 new file mode 100644
 index 0000000..73148ab
@@ -813,9 +802,194 @@ index 0000000..73148ab
 +    spawn: { tx: 9, ty: 19 },
 +  };
 +};
+diff --git a/src/features/pixel-office/scene/PixelOfficeScene.ts b/src/features/pixel-office/scene/PixelOfficeScene.ts
+index 4708d1d..5ebd129 100644
+--- a/src/features/pixel-office/scene/PixelOfficeScene.ts
++++ b/src/features/pixel-office/scene/PixelOfficeScene.ts
+@@ -72,6 +72,7 @@ type AgentVisual = {
+   lastStatus: string;
+   lastName: string;
+   seed: string;
++  hitTarget: HTMLButtonElement | null;
+ };
+
+ /** How long a finished speech bubble stays readable, in ms. */
+@@ -81,8 +82,9 @@ export const createPixelOfficeScene = (params: {
+   PhaserLib: typeof import("phaser");
+   bridge: PixelSceneBridge;
+   map: PixelOfficeMap;
++  fitToView?: boolean;
+ }): Phaser.Scene => {
+-  const { PhaserLib, bridge, map } = params;
++  const { PhaserLib, bridge, map, fitToView = false } = params;
+   const worldWidth = map.cols * TILE;
+   const worldHeight = map.rows * TILE;
+
+@@ -106,7 +108,11 @@ export const createPixelOfficeScene = (params: {
+       this.renderZoneLabels();
+       this.setupCamera();
+       this.setupPointerControls();
++      // Keep the compact office in view when its adjacent panel opens/closes.
++      if (fitToView) this.scale.on(PhaserLib.Scale.Events.RESIZE, this.setupCamera, this);
+       this.events.once(PhaserLib.Scenes.Events.SHUTDOWN, () => {
++        for (const visual of this.visuals.values()) visual.hitTarget?.remove();
++        this.scale.off(PhaserLib.Scale.Events.RESIZE, this.setupCamera, this);
+         this.visuals.clear();
+         this.sim = null;
+       });
+@@ -184,7 +190,8 @@ export const createPixelOfficeScene = (params: {
+         image.setOrigin(0, 1);
+         // Flat decor stays under everything that walks over it.
+         const flat = object.kind === "rug" || object.kind === "flower";
+-        image.setDepth(flat ? 1 : bottomY);
++        if (fitToView && object.kind === "chair" && map.desks.some(d => d.seatTx === object.tx && d.seatTy === object.ty)) image.x += TILE / 2;
++        image.setDepth(flat ? 1 : bottomY + (fitToView && object.kind === "chair" ? 1 : 0));
+         if (object.kind === "jukebox" || object.kind === "kanban_board") {
+           const stationKind = object.kind === "jukebox" ? "jukebox" : "kanban";
+           image.setInteractive({ useHandCursor: true });
+@@ -242,7 +249,7 @@ export const createPixelOfficeScene = (params: {
+
+     /** Lowest allowed zoom: never smaller than "whole map in view". */
+     private minZoom(): number {
+-      return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, this.containZoom()));
++      return Math.min(MAX_ZOOM, Math.max(fitToView ? 0.1 : MIN_ZOOM, this.containZoom()));
+     }
+
+     private setupCamera() {
+@@ -263,12 +270,12 @@ export const createPixelOfficeScene = (params: {
+       // Gather-style default: start close enough that the pixel art reads at
+       // 1:1+ detail, centered on the main pods. Wheel out for the overview.
+       const zoom = PhaserLib.Math.Clamp(
+-        Math.max(0.75, Math.floor(this.containZoom() * 4) / 4),
++        fitToView ? this.containZoom() : Math.max(0.75, Math.floor(this.containZoom() * 4) / 4),
+         this.minZoom(),
+         MAX_ZOOM,
+       );
+       camera.setZoom(zoom);
+-      camera.centerOn(worldWidth / 2, worldHeight * 0.42);
++      camera.centerOn(worldWidth / 2, worldHeight * (fitToView ? 0.5 : 0.42));
+     }
+
+     private setupPointerControls() {
+@@ -380,6 +387,7 @@ export const createPixelOfficeScene = (params: {
+         if (seen.has(id)) continue;
+         visual.container.destroy();
+         visual.overlay.destroy();
++        visual.hitTarget?.remove();
+         this.visuals.delete(id);
+       }
+     }
+@@ -445,6 +453,20 @@ export const createPixelOfficeScene = (params: {
+       ]);
+       overlay.setDepth(40_000);
+
++      // Native hit targets make compact-office characters clickable with
++      // mouse, keyboard and DOM browser clients, without React frame updates.
++      const hitTarget = fitToView && id !== JANITOR_ID ? document.createElement("button") : null;
++      if (hitTarget) {
++        hitTarget.type = "button";
++        hitTarget.setAttribute("aria-label", `Consultar a ${name}`);
++        hitTarget.title = `Consultar a ${name}`;
++        hitTarget.className = "absolute z-10 cursor-pointer rounded-lg border-2 border-transparent bg-transparent focus-visible:border-cyan-300 focus-visible:outline-none";
++        hitTarget.style.width = "44px";
++        hitTarget.style.height = "48px";
++        hitTarget.addEventListener("click", () => bridge.callbacks.onAgentClick?.(id));
++        this.game.canvas.parentElement?.appendChild(hitTarget);
++      }
++
+       return {
+         container,
+         sprite,
+@@ -463,6 +485,7 @@ export const createPixelOfficeScene = (params: {
+         lastStatus: "",
+         lastName: name,
+         seed: id,
++        hitTarget,
+       };
+     }
+
+@@ -495,15 +518,24 @@ export const createPixelOfficeScene = (params: {
+       input: { name: string; status: string; thinking: boolean; awaitingApproval: boolean } | null,
+       bubble: string,
+     ) {
+-      visual.container.setPosition(pose.x, pose.y + TILE / 2 - 1);
++      const seatedX = pose.x + (fitToView && pose.activity === "sitting_desk" ? TILE / 2 : 0);
++      visual.container.setPosition(seatedX, pose.y + TILE / 2 - 1);
+       visual.container.setDepth(pose.y + TILE / 2);
++      if (visual.hitTarget) {
++        const camera = this.cameras.main;
++        const x = (visual.container.x - camera.worldView.x) * camera.zoom;
++        const y = (visual.container.y - CHARACTER_HEIGHT / 2 - camera.worldView.y) * camera.zoom;
++        visual.hitTarget.style.transform = `translate(${x - 22}px, ${y - 24}px)`;
++        visual.hitTarget.style.left = "0";
++        visual.hitTarget.style.top = "0";
++      }
+       const frameKey = `char_${visual.seed}_${this.frameFor(pose)}`;
+       if (this.textures.exists(frameKey) && visual.sprite.texture.key !== frameKey) {
+         visual.sprite.setTexture(frameKey);
+       }
+
+       const overlayY = pose.y + TILE / 2 - CHARACTER_HEIGHT - 8;
+-      visual.overlay.setPosition(pose.x, overlayY);
++      visual.overlay.setPosition(seatedX, overlayY);
+
+       // Nameplate pill with the status dot.
+       const name = input?.name ?? "Janitor";
+diff --git a/src/features/pixel-office/sim/agentSimulation.ts b/src/features/pixel-office/sim/agentSimulation.ts
+index cd4b188..ba2a6a1 100644
+--- a/src/features/pixel-office/sim/agentSimulation.ts
++++ b/src/features/pixel-office/sim/agentSimulation.ts
+@@ -218,6 +218,7 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
+     agent.targetX = x;
+     agent.targetY = y;
+     agent.targetFacing = facing;
++    if (agent.arrived) agent.facing = facing;
+     if (targetTx !== agent.targetTx || targetTy !== agent.targetTy) {
+       agent.targetTx = targetTx;
+       agent.targetTy = targetTy;
+@@ -333,7 +334,7 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
+     }
+
+     // Priority d: working/error agents head to their assigned desk seat.
+-    if (input.status === "working" || input.status === "error") {
++    if (input.status === "working" || input.status === "error" || input.controlled) {
+       const deskId = state.deskByAgentId[input.id];
+       const deskSlot = deskId ? deskById.get(deskId) : undefined;
+       if (deskSlot) {
+@@ -343,7 +344,7 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
+           agent.pauseUntil = 0;
+         }
+         const seat = tileCenter(deskSlot.seatTx, deskSlot.seatTy);
+-        setTarget(agent, seat.x, seat.y, deskSlot.facing);
++        setTarget(agent, seat.x, seat.y, input.selected ? "down" : deskSlot.facing);
+         return;
+       }
+       // No free desk: fall through to wander behavior.
+@@ -505,7 +506,7 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
+
+     // Sticky desk assignment: first free desk in map order, agents by id.
+     for (const input of sortedInputs) {
+-      if (input.status !== "working" && input.status !== "error") continue;
++      if (input.status !== "working" && input.status !== "error" && !input.controlled) continue;
+       if (state.deskByAgentId[input.id]) continue;
+       const used = new Set(Object.values(state.deskByAgentId));
+       const freeDesk = map.desks.find((deskSlot) => !used.has(deskSlot.id));
+diff --git a/src/features/pixel-office/types.ts b/src/features/pixel-office/types.ts
+index cdf2601..78576eb 100644
+--- a/src/features/pixel-office/types.ts
++++ b/src/features/pixel-office/types.ts
+@@ -282,6 +282,8 @@ export const OBJECT_FOOTPRINT: Readonly<Record<PixelObjectKind, [number, number]
+
+ /** What a Hermes agent currently looks like to the pixel office. */
+ export type PixelAgentInput = {
++  controlled?: boolean;
++  selected?: boolean;
+   id: string;
+   name: string;
+   status: "working" | "idle" | "error";
 diff --git a/tests/unit/agentQuestionCache.test.ts b/tests/unit/agentQuestionCache.test.ts
 new file mode 100644
-index 0000000..0c8db67
+index 0000000..12454fe
 --- /dev/null
 +++ b/tests/unit/agentQuestionCache.test.ts
 @@ -0,0 +1,48 @@
@@ -847,11 +1021,11 @@ index 0000000..0c8db67
 +    render(React.createElement(AgentQuestion, first));
 +    expect(screen.getByText("Respuesta guardada")).toBeInTheDocument();
 +    expect(screen.getByRole("textbox")).toHaveValue("Primera pregunta");
-+    expect(fetchMock).toHaveBeenCalledTimes(1);
++    expect(fetchMock.mock.calls.filter(call => call[1]?.method === "POST")).toHaveLength(1);
 +    fireEvent.change(screen.getByRole("textbox"), { target: { value: "Segunda pregunta" } });
 +    fireEvent.click(screen.getByRole("button", { name: "Enviar pregunta" }));
-+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
-+    expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toEqual({ agent: "security", question: "Segunda pregunta" });
++    await waitFor(() => expect(fetchMock.mock.calls.filter(call => call[1]?.method === "POST")).toHaveLength(2));
++    expect(JSON.parse(fetchMock.mock.calls.filter(call => call[1]?.method === "POST")[1][1].body)).toEqual({ agent: "security", question: "Segunda pregunta" });
 +  });
 +
 +  it("isolates restored answers by review and agent", () => {
@@ -869,10 +1043,10 @@ index 0000000..0c8db67
 +});
 diff --git a/tests/unit/arkticOfficeMap.test.ts b/tests/unit/arkticOfficeMap.test.ts
 new file mode 100644
-index 0000000..70346f4
+index 0000000..2336d8a
 --- /dev/null
 +++ b/tests/unit/arkticOfficeMap.test.ts
-@@ -0,0 +1,45 @@
+@@ -0,0 +1,61 @@
 +import { describe, expect, it } from "vitest";
 +import { buildArkticOfficeMap } from "@/features/pixel-office/map/arkticOfficeMap";
 +import { buildPixelNavGrid, tileCenter } from "@/features/pixel-office/map/navGrid";
@@ -916,6 +1090,22 @@ index 0000000..70346f4
 +    expect(poses).toHaveLength(4);
 +    expect(poses.every(p => p.activity === "sitting_desk" && !p.moving)).toBe(true);
 +    expect(new Set(poses.map(p => p.deskId)).size).toBe(4);
++  });
++
++  it("parks controlled agents after completion and faces the selected person without wandering", () => {
++    const sim = createPixelSimulation(buildArkticOfficeMap());
++    const inputs: PixelAgentInput[] = ["coordinator", "security"].map(id => ({
++      id, name: id, color: "#42bcc6", status: "idle", controlled: true, selected: false,
++      streaming: false, thinking: false, awaitingApproval: false, dancing: false, hold: null, standup: false,
++    }));
++    let poses = sim.tick({ inputs, nowMs: 0, dtMs: 50, cleaningActive: false });
++    for (let tick = 1; tick < 1000; tick++) poses = sim.tick({ inputs, nowMs: tick * 50, dtMs: 50, cleaningActive: false });
++    const parked = poses.map(p => [p.x, p.y]);
++    inputs[1].selected = true;
++    for (let tick = 1000; tick < 2000; tick++) poses = sim.tick({ inputs, nowMs: tick * 50, dtMs: 50, cleaningActive: false });
++    expect(poses.map(p => [p.x, p.y])).toEqual(parked);
++    expect(poses.every(p => !p.moving && p.activity === "sitting_desk")).toBe(true);
++    expect(poses[1].facing).toBe("down");
 +  });
 +});
 diff --git a/tests/unit/auditStatus.test.ts b/tests/unit/auditStatus.test.ts

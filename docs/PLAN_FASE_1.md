@@ -2,7 +2,7 @@
 
 Fecha de registro: 23/10/2026.
 
-Estado: Bloque 1 fusionado; bloques 2, 3, 4 y 5 implementados y comprobados localmente, con evidencia y límites registrados debajo. Los bloques posteriores continúan pendientes. Las decisiones técnicas indicadas como pendientes requieren validación antes de adoptarse. La entrega permanece abierta y las versiones actuales se conservan.
+Estado: Bloque 1 fusionado; bloques 2, 3, 4, 5 y 6 implementados y comprobados localmente, con evidencia y límites registrados debajo. Los bloques posteriores continúan pendientes. Las decisiones técnicas indicadas como pendientes requieren validación antes de adoptarse. La entrega permanece abierta y las versiones actuales se conservan.
 
 ## Relación con el MVP actual
 
@@ -192,12 +192,18 @@ Coordinación con IA opcional (`AUDIT_COORDINATION_MODE=ai`): una llamada de rep
 
 ### Bloque 6 — Oficina y consultas
 
-- [ ] F1-17 Conectar eventos reales con burbujas, indicadores de trabajo, desplazamientos, orientación e interacciones entre personajes.
-- [ ] F1-18 Corregir asientos, alineación y profundidad de muebles mediante comprobación visual. Evitar conversaciones o progreso ficticios.
-- [ ] F1-19 Representar fin, interrupción, fallo e información insuficiente; orientar al personaje al seleccionarlo y animar la consulta.
-- [ ] F1-20 Incorporar historial acotado por revisión y agente si se confirma esa ampliación, usando evidencias guardadas y sin relanzar el equipo.
+- [x] F1-17 Conectar eventos reales con burbujas, indicadores de trabajo, desplazamientos, orientación e interacciones entre personajes.
+- [x] F1-18 Corregir asientos, alineación y profundidad de muebles mediante comprobación visual. Evitar conversaciones o progreso ficticios.
+- [x] F1-19 Representar fin, interrupción, fallo e información insuficiente; orientar al personaje al seleccionarlo y animar la consulta.
+- [x] F1-20 Incorporar historial acotado por revisión y agente si se confirma esa ampliación, usando evidencias guardadas y sin relanzar el equipo.
 
 **Cierre:** la oficina refleja el estado real, cesa su actividad al terminar y mantiene interacciones legibles. Las animaciones no consumen modelo. Las correcciones visuales independientes pueden adelantarse tras acordar el contrato de eventos.
+
+**Registro del Bloque 6 — 24/10/2026:** actividad real proyectada desde estados persistidos de preparación, coordinación y células mediante el sondeo existente, sin otro transporte ni conversaciones ficticias. Burbujas, trabajo y reunión de síntesis ligados a esas fases. Personajes estacionados al terminar, orientación del seleccionado y ajuste de alineación/profundidad de sillas. Los estados terminales prevalecen sobre actividad intermedia obsoleta. Consulta activa animada y segundo envío bloqueado.
+
+El usuario confirmó el historial de las últimas diez consultas por revisión y personaje: solo lectura de consultas guardadas, sin reenviar conversaciones al modelo ni relanzar el equipo. Se conservan las preguntas independientes y el caché anterior. Verificación manual con ejecutor ficticio y comprobación visual del historial, puestos y consulta. La repetición final detectó un fallo de carga de fuentes Google en Next/Turbopack; se sustituyó esa descarga por familias del sistema, sin dependencias nuevas. Reconstrucción y arranque finales correctos; aplicación del parche desde fuentes limpias y comparación de sus 21 archivos correctas. Ocho pruebas de interfaz correctas; backend: 117 ejecutadas, 116 correctas y 1 referencia visual opcional omitida en 6,832 s, mediante suite manual y un único caso nuevo de estado terminal/historial. Frontend reproducido desde fuentes limpias del pin y parche comprobado; imágenes construidas y servicios saludables. Detalle, logs y límites en [OFICINA.md](OFICINA.md).
+
+**Limitaciones y alcance final:** no se ejecutaron revisiones de repositorios, scanners ni modelos reales. El sondeo puede omitir fases breves y no acredita calidad semántica. Sin ampliaciones de CI/CD ni cambios de versiones. Por indicación del usuario al quedar poco presupuesto, se cierra únicamente este bloque: el Bloque 7 continúa pendiente y sus adelantos quedan apartados en `artifacts/block7-deferred.patch`. La entrega sigue abierta y conserva frontend/backend 0.2.0.
 
 ### Bloque 7 — Resultados, documentación y entrega
 

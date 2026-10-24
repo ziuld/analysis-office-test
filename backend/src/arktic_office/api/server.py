@@ -31,6 +31,8 @@ def handler_for(jobs):
                 if parts == ["runs"]:
                     return self.send(200, {"runs": jobs.listing(), "question_active": jobs.question_active})
                 if len(parts) == 4 and parts[0] == "runs" and parts[2] == "questions":
+                    if parts[3] in {"coordinator", "security", "architecture", "inventory"}:
+                        return self.send(200, jobs.history(parts[1], parts[3]))
                     return self.send(200, jobs.question(parts[1], parts[3]))
                 if len(parts) == 2 and parts[0] == "runs":
                     return self.send(200, jobs.detail(parts[1]))

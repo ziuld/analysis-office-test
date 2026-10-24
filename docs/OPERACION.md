@@ -142,3 +142,7 @@ El Bloque 4 incorpora un recorrido alternativo con preparador independiente y ex
 ## Coordinación y capacidades del Bloque 5
 
 `AUDIT_COORDINATION_MODE=deterministic` conserva el recorrido habitual. `ai` añade hasta una llamada de reparto y una de síntesis; no habilita búsquedas ni rondas especializadas. `AUDIT_CAPABILITIES` vacío omite Azure; `azure` la solicita expresamente. Ambas variables están documentadas en `.env.example`, sin modificar el `.env` local. Detalles y límites: [COORDINACION.md](COORDINACION.md).
+
+## Oficina e historial del Bloque 6
+
+La oficina refleja actividad guardada mediante el sondeo existente y deja estacionados los personajes al terminar. El historial confirmado muestra hasta diez consultas por revisión/agente; abrirlo no consume modelo y no se envía como conversación en preguntas nuevas. Comprobaciones y límites: [OFICINA.md](OFICINA.md).

@@ -75,6 +75,24 @@ class Jobs:
             raise FileNotFoundError()
         return result
 
+    def history(self, job_id, agent):
+        from arktic_office.coordination.questions import AGENTS
+        if agent not in AGENTS:
+            raise AuditError("Agente no válido.")
+        directory = self.directory(job_id) / "consultas"
+        from itertools import islice
+        paths = list(islice(directory.glob("*.json"), 1001))
+        if len(paths) > 1000:
+            raise AuditError("Demasiadas consultas guardadas; revisar conservación antes de listar.")
+        result = []
+        for path in paths:
+            if path.is_symlink() or not path.is_file():
+                continue
+            data = read_json(path, {})
+            if data.get("run_id") == job_id and data.get("agent") == agent:
+                result.append((data.get("created") or datetime.fromtimestamp(path.stat().st_mtime, timezone.utc).isoformat(), data))
+        return {"questions": [data for _, data in sorted(result, key=lambda x: (x[0], x[1].get("id", "")), reverse=True)[:10]]}
+
     def ask(self, job_id, agent, question):
         with self.lock:
             if self.question_active or any(x["estado"] in ACTIVE for x in self.listing()):
@@ -88,6 +106,7 @@ class Jobs:
             context = prepare_question(directory, agent, question)
             question_id = str(uuid.uuid4())
             data = {"id": question_id, "run_id": job_id, "agent": agent, "nombre": context["nombre"],
+                    "created": datetime.now(timezone.utc).isoformat(),
                     "question": context["question"], "repository": context["repository"], "commit": context["commit"],
                     "model": context["config"]["model"], "reasoning": context["config"]["reasoning"],
                     "estado": "respondiendo"}

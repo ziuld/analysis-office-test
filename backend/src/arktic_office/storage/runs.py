@@ -86,7 +86,10 @@ class RunStore:
                    "historical": True, "created": datetime.fromtimestamp((path / "informe.md").stat().st_mtime, timezone.utc).isoformat()}
         if job["estado"] in ACTIVE_STATES and not snapshot:
             job = {**job, "estado": "preparando"}
-        return {**job, "commit": snapshot.get("commit"), "branch": snapshot.get("branch"), "celulas": team.get("celulas", report.get("celulas", [])),
+        cells = team.get("celulas", report.get("celulas", []))
+        from arktic_office.execution.activity import project
+        return {**job, "commit": snapshot.get("commit"), "branch": snapshot.get("branch"), "celulas": cells,
+                "activity": project(path, job, cells),
                 "mensaje": report.get("mensaje"), "necesita": report.get("necesita", []),
                 "has_report": (path / "informe.md").is_file(), "evidence_origin": snapshot.get("evidence_origin"),
                 "report_format": report.get("schema_version", 1), "derived_from": snapshot.get("source_revision"), "simulation": bool(snapshot.get("simulation"))}
