@@ -5,11 +5,10 @@ from pathlib import Path
 from datetime import datetime, timezone
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "auditor"))
-from executive import render_html
-from reporting import markdown, validate_report
-from team import consolidate
-from security import CONTROLS
+from arktic_office.reporting.executive import render_html
+from arktic_office.reporting.reports import markdown, validate_report
+from arktic_office.coordination.team import consolidate
+from arktic_office.reporting.security import CONTROLS
 
 RUN_ID = "demo-editorial-v12-portal-personal"
 SOURCES = {

@@ -2,7 +2,7 @@
 
 ## Qué se publica
 
-Publicar nuestro código de `auditor/`, los Dockerfiles, `compose.yaml`, el parche de Hermes3D, los archivos de versiones, `.env.example`, las guías y avisos de terceros. El plan conserva el seguimiento del MVP; sus rutas a informes describen datos locales que no forman parte del clon.
+Publicar el paquete de `backend/src/`, sus pruebas separadas, `pyproject.toml`, los lanzadores de `auditor/`, los Dockerfiles y Compose, el parche de Hermes3D, archivos de versiones, `.env.example`, guías y avisos de terceros. El plan conserva el seguimiento del MVP; sus rutas a informes describen datos locales que no forman parte del clon.
 
 `.gitignore` excluye `vendor/`, `.env`, informes, capturas, cachés y archivos comunes de credenciales. `vendor/` se recupera siguiendo [Inicio rápido](INICIO_RAPIDO.md). Esto evita subir copias de los proyectos originales o perder cambios dentro de un repositorio Git anidado.
 
@@ -23,7 +23,7 @@ Antes del commit, revisar `git diff --cached` y ejecutar `git ls-files .env repo
 
 Se usa SemVer: corrección compatible → patch, funcionalidad compatible → minor, cambio incompatible de contrato → major. En versiones 0.x, documentar explícitamente cualquier cambio de contrato. Un cambio exclusivo de frontend no obliga a subir backend, ni a la inversa.
 
-Para una nueva entrega, actualizar el archivo de versión del componente, su etiqueta de imagen y su `APP_VERSION` en `compose.yaml`, y añadir su entrada en `CHANGELOG.md`. Construir, probar y verificar la versión visible. El argumento del frontend se incorpora durante la compilación: reiniciar sin reconstruir no cambia ese número.
+Para una nueva entrega acordada, actualizar el archivo de versión del componente, su etiqueta de imagen y su `APP_VERSION` en `compose.yaml`, y añadir su entrada en `CHANGELOG.md`. La versión del paquete backend en `pyproject.toml` debe coincidir con `BACKEND_VERSION`; también mantener alineada la imagen manual de pruebas en `compose.backend-tests.yaml`. Construir, probar y verificar la versión visible. El argumento del frontend se incorpora durante la compilación: reiniciar sin reconstruir no cambia ese número.
 
 Tras fusionar el PR y verificar el commit final, las etiquetas pueden distinguirse como `frontend/v0.2.0` y `backend/v0.2.0`. No se publican etiquetas de versión sobre una rama pendiente de revisión ni se crean releases automáticamente. Las imágenes se construyen localmente; este flujo no las publica en un registro.
 
@@ -40,7 +40,7 @@ Los Dockerfiles fijan las imágenes base por digest y usan los lockfiles de los 
 
 El nombre histórico `docker/hermes3d-local-demo.patch` incluye todas las adaptaciones actuales: oficina 2D, mapa compacto, integración con el analizador, lectura del informe y consultas. No corresponde solo al modo demo. Aplicarlo una vez sobre el commit limpio indicado.
 
-En el MVP actual, Hermes Agent se utiliza sin un parche propio. Las modificaciones del analizador están en `auditor/` y se copian a la imagen junto al runtime.
+Hermes Agent se utiliza sin un parche propio. Desde el Bloque 3, el analizador vive en `backend/src/arktic_office/` y se instala como wheel junto al runtime; `auditor/` conserva solo lanzadores compatibles. Los recursos van en el paquete y las pruebas en un target Docker manual separado. Detalles: [CORE.md](CORE.md).
 
 ## Mantener cambios en Hermes3D
 

@@ -15,7 +15,9 @@ Versiones propias: **frontend 0.2.0** y **backend 0.2.0**, gestionadas de forma 
 - **Cómo se redacta el informe:** [Estándar de comunicación compartido](docs/ESTANDAR_COMUNICACION_INFORMES.md).
 - **Preparar la subida y mantener las versiones:** [Repositorio y reproducción](docs/REPOSITORIO.md).
 - **MVP actual e histórico:** [PLAN_MVP.md](PLAN_MVP.md), con el alcance y las verificaciones de la entrega 0.2.0.
-- **Siguiente evolución:** [Plan de Fase 1](docs/PLAN_FASE_1.md), con objetivos, tareas, criterios de cierre y decisiones pendientes. El Bloque 1 incorpora reproducción automatizada y CI de arranque sin modelos; el resto sigue pendiente.
+- **Siguiente evolución:** [Plan de Fase 1](docs/PLAN_FASE_1.md), con objetivos, tareas, criterios de cierre y decisiones pendientes. El Bloque 1 incorpora reproducción y CI; el Bloque 2 prueba el indexador de forma independiente. Los siguientes siguen pendientes.
+- **Experimento del Bloque 2:** [Validación del indexador](docs/INDEXADOR.md), con recuperación y extracción estructural de muestras dentro de Docker, sin modelos ni ejecución de las aplicaciones.
+- **Núcleo del Bloque 3:** [Paquete Python y compatibilidad](docs/CORE.md), con pruebas manuales mínimas y sin ampliar CI/CD.
 
 Con las dependencias recuperadas, `.env` configurado y la sesión del modelo autorizada:
 
@@ -27,7 +29,7 @@ Abrir [la oficina local](http://localhost:3000/office), introducir una URL como 
 
 ## Qué incluye
 
-- Una URL como entrada. Busca `main` y, solo si no existe, utiliza `master`; si faltan ambas, informa del error. Guarda rama y commit.
+- Una URL como entrada. Resuelve la rama predeterminada real de GitHub y fija su commit antes de seleccionar contexto.
 - Lectura estática acotada: por defecto, 24 archivos / 120 KB; Seguridad recibe hasta 12 / 64 KB, las otras células hasta 6 / 24 KB.
 - Tres revisiones secuenciales y consolidación mediante código. Estados reales en la oficina, resultados parciales y errores visibles.
 - Reporte visual de seguridad con indicadores de gravedad, certeza separada, acciones, cobertura e inventario; descarga Markdown e impresión/PDF. Evidencias enlazadas al commit revisado.
@@ -49,7 +51,9 @@ Navegador → office (localhost:3000) → audit-api (red interna)
 
 | Ruta | Contenido |
 |---|---|
-| `auditor/` | Lectura de GitHub, distribución, validación de citas, informe, consultas, API y pruebas |
+| `backend/src/arktic_office/` | Paquete Python: API, ejecución, almacenamiento, preparación, coordinación, adaptadores e informes |
+| `backend/tests/` | Pruebas manuales fuera de la imagen de producción |
+| `auditor/` | Lanzadores de compatibilidad para las rutas Docker actuales |
 | `compose.yaml` | Servicios, red, volúmenes y límites de contenedores |
 | `docker/` | Dockerfiles y parche de Hermes3D con la oficina e integración local |
 | `HERMES3D_VERSION`, `HERMES_AGENT_VERSION` | Commits fijados de los proyectos originales |
@@ -64,7 +68,7 @@ Navegador → office (localhost:3000) → audit-api (red interna)
 
 La configuración propone `openai-codex` mediante OAuth en Hermes: Seguridad con `gpt-6.1-sol` / `medium`, el resto con `gpt-6-luna` / `low`. También existe el modo API con facturación independiente. La sesión del modelo se configura en cada instalación; no viene incluida al clonar. Alcance y comprobaciones en [Seguridad](docs/SEGURIDAD.md).
 
-La revisión normal usa tres llamadas al modelo; cada pregunta añade una llamada al personaje elegido. El coordinador distribuye y consolida mediante código. No hay reintentos ni escalado de modelo automáticos. Con el backend Codex OAuth de esta versión, el límite de salida configurado no constituye un techo duro de tokens. Detalles en [Operación](docs/OPERACION.md).
+El recorrido habitual `legacy` usa tres llamadas al modelo; cada pregunta añade una llamada al personaje elegido. El modo opcional de [coordinación con IA](docs/COORDINACION.md) añade hasta dos llamadas para reparto y síntesis; conserva los originales y usa la base determinista si falla. Azure se genera solo cuando se solicita como capacidad del encargo. No hay reintentos ni escalado de modelo automáticos. Con el backend Codex OAuth de esta versión, el límite de salida configurado no constituye un techo duro de tokens. El modo híbrido opcional añade hasta ocho llamadas acotadas de preparación: [Preparación híbrida](docs/PREPARACION.md). Detalles en [Operación](docs/OPERACION.md).
 
 ## Datos y despliegue local
 

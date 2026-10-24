@@ -1,0 +1,17 @@
+[
+  {
+    "id": "security",
+    "name": "Seguridad",
+    "focus": "Prioriza acceso a datos, autenticación, exposición y configuraciones inseguras evidentes. Gobernanza y responsables desconocidos quedan como dudas. No afirmes CVE sin prueba ni reproduzcas secretos."
+  },
+  {
+    "id": "architecture",
+    "name": "Arquitectura y migración",
+    "focus": "Prioriza arranque, persistencia/recuperación de datos, estabilidad y conexiones. Configuración de recursos no demuestra consumo real. Declara supuestos sin autorizar despliegues."
+  },
+  {
+    "id": "inventory",
+    "name": "Inventario tecnológico",
+    "focus": "Identifica componentes principales con tecnología, versiones declaradas y función evidenciada. No enumeres todos los paquetes. Incluye propósito solo si está documentado. Distingue declaración de uso real; no evalúes seguridad ni elijas infraestructura."
+  }
+]

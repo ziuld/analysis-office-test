@@ -1,0 +1,117 @@
+{
+  "date": "2026-10-24",
+  "status": "partial_integration_validation",
+  "profile": {
+    "model": "gpt-6-luna",
+    "reasoning": "low",
+    "preparation_max_loops": 1,
+    "coordination_mode": "ai",
+    "scanners_enabled": false
+  },
+  "runs": [
+    {
+      "id": "f12157da-db8c-4f03-a1d0-ec6112c25a88",
+      "repository": "https://github.com/ziuld/bookingApi",
+      "commit": "c0d247e3226d77a83471c7a1b32afdb0981eb7f1",
+      "state": "parcial",
+      "preparation_closure": "iteration_limit",
+      "tree_files": 44,
+      "acquired_files": 36,
+      "context_files": 13,
+      "scanners_executed": false,
+      "calls": 7,
+      "usage": {
+        "input_tokens": 34203,
+        "output_tokens": 2705,
+        "reasoning_tokens": 19,
+        "total_tokens": 36908,
+        "api_calls": 7
+      },
+      "cells": [
+        {
+          "id": "security",
+          "estado": "error",
+          "error": "Tema de hallazgo no admitido."
+        },
+        {
+          "id": "architecture",
+          "estado": "error",
+          "error": "La célula no aportó título comprensible, objetivo y detalle técnico para un riesgo nuevo."
+        },
+        {
+          "id": "inventory",
+          "estado": "completada"
+        }
+      ],
+      "coordination": {
+        "routing": {
+          "status": "complete",
+          "calls": 1
+        },
+        "synthesis": {
+          "status": "complete",
+          "calls": 1
+        }
+      },
+      "approximate_elapsed_seconds": 100.74
+    },
+    {
+      "id": "c2fb7c07-a41e-4968-b38b-b9c9e3c6df68",
+      "repository": "https://github.com/ziuld/bookingApi",
+      "commit": "c0d247e3226d77a83471c7a1b32afdb0981eb7f1",
+      "state": "parcial",
+      "preparation_closure": "technical_error",
+      "tree_files": 44,
+      "acquired_files": 36,
+      "context_files": 12,
+      "scanners_executed": false,
+      "calls": 7,
+      "usage": {
+        "input_tokens": 34075,
+        "output_tokens": 3413,
+        "reasoning_tokens": 32,
+        "total_tokens": 37488,
+        "api_calls": 7
+      },
+      "cells": [
+        {
+          "id": "security",
+          "estado": "error",
+          "error": "Tema de hallazgo no admitido."
+        },
+        {
+          "id": "architecture",
+          "estado": "completada"
+        },
+        {
+          "id": "inventory",
+          "estado": "error",
+          "error": "La célula citó un identificador de evidencia inexistente."
+        }
+      ],
+      "coordination": {
+        "routing": {
+          "status": "complete",
+          "calls": 1
+        },
+        "synthesis": {
+          "status": "complete",
+          "calls": 1
+        }
+      },
+      "approximate_elapsed_seconds": 105.22
+    }
+  ],
+  "model_calls": 14,
+  "reported_total_tokens": 74396,
+  "pending": [
+    "Histórico de los dos primeros intentos; la autorización posterior y el resultado funcional final se documentan en full-pilot-final-2026-10-24.json."
+  ],
+  "local_regression": {
+    "run": 119,
+    "passed": 118,
+    "skipped": 1,
+    "seconds": 6.66
+  },
+  "follow_up": "docs/evidence/full-pilot-final-2026-10-24.json"
+}

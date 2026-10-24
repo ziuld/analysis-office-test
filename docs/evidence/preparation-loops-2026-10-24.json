@@ -1,0 +1,48 @@
+{
+  "date": "2026-10-24",
+  "configuration": {
+    "variable": "AUDIT_PREPARATION_MAX_LOOPS",
+    "default": 1,
+    "range": [
+      0,
+      20
+    ],
+    "maximum_calls": "1 + max_loops",
+    "test_profile": {
+      "all_roles": "gpt-6-luna",
+      "reasoning": "low"
+    },
+    "local_mode": "hybrid"
+  },
+  "checks": {
+    "extra_loops": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "expected_maximum_calls": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "early_finish": true,
+    "invalid_configuration_before_calls": true,
+    "backend_tests": {
+      "run": 119,
+      "passed": 118,
+      "skipped": 1,
+      "seconds": 6.706
+    }
+  },
+  "limitations": [
+    "Respuestas ficticias; sin nuevas llamadas reales ni scanners.",
+    "Tiempo/contexto pueden terminar antes del máximo.",
+    "Un turno ejecuta una acción; agotar turnos conserva evidencia parcial.",
+    "Reparto/síntesis opcionales y especialistas no se repiten.",
+    "Sesión/cuota y calidad real siguen pendientes del Bloque 8."
+  ],
+  "ci_cd": "Base del Bloque 1 sin ampliar",
+  "versions": "0.2.0 conservadas"
+}

@@ -74,7 +74,7 @@ docker compose up -d --wait
 docker compose ps
 ```
 
-Abrir [http://localhost:3000/office](http://localhost:3000/office). Debe aparecer **CONECTADO**. Introducir una URL de GitHub sin rama ni parámetros y pulsar **Iniciar revisión**. Se usa `main` o, si no existe, `master`.
+Abrir [http://localhost:3000/office](http://localhost:3000/office). Debe aparecer **CONECTADO**. Introducir una URL de GitHub sin rama ni parámetros y pulsar **Iniciar revisión**. Se resuelve la rama predeterminada real del repositorio y se fija su commit.
 
 Esperar los resultados de Seguridad, Arquitectura e Inventario. Abrir o descargar el informe y pulsar un personaje para hacerle una pregunta. Esto sí consume modelo; que los contenedores estén activos solo comprueba el arranque, no una revisión real. En un clon nuevo no aparecen los informes de nuestro piloto porque son datos locales excluidos de Git.
 

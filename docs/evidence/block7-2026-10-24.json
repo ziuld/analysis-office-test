@@ -1,0 +1,102 @@
+{
+  "date": "2026-10-24",
+  "environment": "Windows, Docker Linux/amd64",
+  "backend_tests": {
+    "run": 118,
+    "passed": 117,
+    "skipped": 1,
+    "seconds": 7.081
+  },
+  "startup": {
+    "build": "passed",
+    "api": "healthy",
+    "office": "healthy",
+    "http_status": 200,
+    "runs": 0,
+    "credentials_present": false,
+    "temporary_resources_removed": true
+  },
+  "real_pilot": {
+    "repository": "https://github.com/ziuld/bookingApi",
+    "commit": "c0d247e3226d77a83471c7a1b32afdb0981eb7f1",
+    "files": 24,
+    "calls": [
+      {
+        "id": "coordinator-routing",
+        "model": "gpt-6-luna",
+        "reasoning": "low",
+        "prompt_bytes": 5725,
+        "status": "error",
+        "error": "Hermes no completó la célula: sesión no válida. Sin reintento automático.",
+        "usage": null,
+        "seconds": 7.374
+      },
+      {
+        "id": "security",
+        "model": "gpt-6.1-sol",
+        "reasoning": "medium",
+        "prompt_bytes": 40707,
+        "status": "error",
+        "error": "Hermes no completó la célula: sesión no válida. Sin reintento automático.",
+        "usage": null,
+        "seconds": 6.386
+      },
+      {
+        "id": "architecture",
+        "model": "gpt-6-luna",
+        "reasoning": "low",
+        "prompt_bytes": 20410,
+        "status": "error",
+        "error": "Hermes no completó la célula: cuota o límite de peticiones. Sin reintento automático.",
+        "usage": null,
+        "seconds": 6.736
+      },
+      {
+        "id": "inventory",
+        "model": "gpt-6-luna",
+        "reasoning": "low",
+        "prompt_bytes": 31193,
+        "status": "error",
+        "error": "Hermes no completó la célula: cuota o límite de peticiones. Sin reintento automático.",
+        "usage": null,
+        "seconds": 6.593
+      }
+    ],
+    "seconds": 27.654,
+    "estado": "sin_resultados",
+    "cells": [
+      {
+        "id": "security",
+        "estado": "error",
+        "error": "Hermes no completó la célula: sesión no válida. Sin reintento automático.",
+        "mensaje": null,
+        "usage": null
+      },
+      {
+        "id": "architecture",
+        "estado": "error",
+        "error": "Hermes no completó la célula: cuota o límite de peticiones. Sin reintento automático.",
+        "mensaje": null,
+        "usage": null
+      },
+      {
+        "id": "inventory",
+        "estado": "error",
+        "error": "Hermes no completó la célula: cuota o límite de peticiones. Sin reintento automático.",
+        "mensaje": null,
+        "usage": null
+      }
+    ],
+    "confirmed": 0,
+    "indications": 0,
+    "synthesis": 0,
+    "scanners": false,
+    "target_executed": false
+  },
+  "limitations": [
+    "Snapshot histórico fijado; no se afirma evaluar HEAD remoto.",
+    "Errores de sesión y cuota: calidad semántica y consumo efectivo pendientes.",
+    "Sin scanners, ejecución del objetivo o ampliaciones de CI/CD.",
+    "Entrega y aceptación humana abiertas; versiones 0.2.0 conservadas."
+  ]
+}
