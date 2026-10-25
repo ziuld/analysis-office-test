@@ -17,3 +17,6 @@ node_modules/
 Thumbs.db
 artifacts/
 reports/
+
+# Referencias visuales locales; conservar fuera de la entrega
+/tmp/pdf-reference/

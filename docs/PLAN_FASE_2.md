@@ -1,12 +1,14 @@
 # Fase 2 — Mejora de agentes, recuperación y calidad
 
-Estado: **F2-01 a F2-06 realizadas; integración funcional comprobada con Luna/medium el 25/10/2026. Calidad y feedback pendientes en el punto 3**. Fase 2 abierta; versión 0.3.0 y merge manual del usuario.
+Estado: **tramo funcional F2-01 a F2-06 cerrado para revisión; F2-07 a F2-12 pendientes de trabajo conjunto**. Integración comprobada con Luna/medium el 25/10/2026; la calidad del último informe NO está aceptada. Fase 2 abierta, versión 0.3.0, merge manual del usuario.
+
+**Entrada para otro chat:** leer primero «Retomar en otro chat» y el nuevo punto 3. No continuar automáticamente los experimentos históricos ni ejecutar un flujo completo por defecto.
 
 ## Objetivo
 
 Conseguir respuestas más útiles, precisas y propias de cada especialidad, localizando suficiente código con un coste controlado. Primero revisar qué instrucciones/configuración se aplican realmente a los agentes Hermes usados por Arktic; después cambiar una causa cada vez. No ampliar CI/CD, añadir servicios ni ejecutar suites completas sin necesidad. Mantener un perfil económico reproducible y pruebas dirigidas mínimas.
 
-## Punto de partida comprobado
+## Punto de partida histórico — anterior a F2-01
 
 - El flujo descarga y verifica el snapshot completo antes de mapas/scanners. Los especialistas reciben fragmentos limitados: insuficiencia de contexto no implica que falten archivos descargados.
 - [hermes_runtime.py](../backend/src/arktic_office/adapters/hermes_runtime.py) instancia `AIAgent` por llamada con un prompt de sistema efímero, herramientas desactivadas y `max_iterations=1`. Se usan `skip_context_files=True`, `skip_memory=True`, `skip_background_review=True`; no se solicita identidad SOUL. No asumir que una personalidad configurada en otra sesión/UI se aplica a estas llamadas.
@@ -14,15 +16,9 @@ Conseguir respuestas más útiles, precisas y propias de cada especialidad, loca
 - Las últimas consultas fueron por rutas exactas, con relaciones del grafo adjuntas. Esto no demuestra navegación eficiente por símbolos/grafo. Las ventanas de 100 líneas pueden omitir rutas/middleware posteriores; Arquitectura agotó su cap de seis archivos. El padding de líneas consume presupuesto. Aumentar archivos o modelo sin localizar el cuello de botella no garantiza mejor resultado.
 - Baseline `f7043007-40a9-42a3-8b1e-a1478688c25c`: tres especialistas y síntesis, 8 llamadas gpt-6-luna/low, 52.366 tokens comunicados, 7 observaciones y 22 citas verificadas. Informe parcial: un tema inválido rechazado, cinco controles no evaluados, una formulación sobre recuperación de trabajos demasiado amplia. [Evidencia](evidence/orchestrator-research-2026-10-24.json).
 
-## Orden y entregables
+## Orden vigente y entregables
 
-| Paso | Qué revisar primero | Decisión que debe permitir |
-|---|---|---|
-| 1. Agentes e instrucciones | Perfil visible en Hermes frente al agente que realmente invoca Arktic; prompt completo, idioma, responsabilidad y contrato | Qué instrucciones se están usando y cuáles conviene corregir |
-| 2. Evidencia y límites | Consulta realizada, símbolo/relación, región de código recibida, fuente omitida y motivo | Si falta información real o falló su localización/entrega |
-| 3. Calidad y coste | Mismas preguntas y commit, una variable por comparación, feedback humano | Conservar el cambio útil y decidir si hace falta otro modelo o una actualización |
-
-La ficha de configuración efectiva precedió al cambio funcional y sus pilotos. No se elevan modelos ni número global de archivos. La implementación inicial y resultados se registran al final; las incorporaciones de agentes siguen como propuesta.
+F2-01 a F2-06 conservan su cierre funcional y sus evidencias. El 25/10/2026 el usuario sustituye las antiguas tareas pendientes F2-07 a F2-10 por F2-07 a F2-12, descritas en el punto 3. No se abre otra fase. Primero comprender las herramientas, después acordar la búsqueda de cada agente, integrar y finalmente definir el informe. Los diseños y pruebas anteriores son antecedentes, no aceptación del resultado deseado.
 
 ## 1. Revisar configuración efectiva de Hermes y agentes
 
@@ -40,14 +36,47 @@ La ficha de configuración efectiva precedió al cambio funcional y sus pilotos.
 
 **Salida:** explicación verificable de por qué cada rol obtuvo o no el código necesario y el menor ajuste útil al flujo existente.
 
-## 3. Medir, recoger feedback y decidir modelos
+## 3. Nuevo trabajo acordado: evidencia, agentes e informe
 
-- [ ] F2-07 Definir un conjunto pequeño de preguntas esperadas sobre repositorios representativos y sus fuentes, incluyendo casos de insuficiencia legítima. Comparar una variable por vez sobre el mismo commit. Acordar un presupuesto acotado antes de una tanda de pruebas reales; no introducir bucles de evaluación automáticos.
-- [ ] F2-08 Medir utilidad por rol, interpretación fiel, citas, rechazos de formato, carencias resolubles, consultas útiles, bytes, llamadas, tiempo y tokens comunicados. Que una cita exista no valida la conclusión; que haya más hallazgos no demuestra más calidad. Conservar también intentos fallidos.
-- [ ] F2-09 Ajustar modelo/razonamiento por rol solo cuando se distinga un fallo de razonamiento de falta de fuentes o instrucciones. Conservar perfil económico; revisar modelos/proveedor disponibles y consumo en el momento, sin fijar ahora una elevación general. Valorar una actualización de Hermes/Graphify únicamente si resuelve una carencia comprobada, contrastando compatibilidad con los pins y la misma muestra antes de adoptarla.
-- [ ] F2-10 Incorporar feedback visual y sobre informes con cambios pequeños. Cerrar esta fase mediante aceptación humana, resultados comparables y decisión de versión independiente; merge manual del usuario.
+Estas tareas se realizan secuencialmente **con el usuario**. Codex prepara muestras y preguntas concretas, muestra resultados y espera el acuerdo antes de pasar al siguiente especialista o modificar criterios. No asumir preferencias sobre contenido, prioridades, búsquedas o formato. No ejecutar todo el plan de forma autónoma.
 
-**Criterio de cierre propuesto:** los roles respetan su responsabilidad, acceden al código necesario dentro del presupuesto acordado y distinguen carencias reales de fallos de recuperación. Resultados y límites comprensibles y aceptados por el usuario. Las comprobaciones se limitan a contratos/caminos afectados y pilotos representativos; sin nuevos pipelines ni una plataforma de evaluación.
+- [ ] **F2-07 · Revisar herramientas deterministas.** Mostrar por separado las salidas reales de Graphify, Gitleaks, OSV y Semgrep, antes de convertirlas en un informe de IA. Para cada una: entrada/commit, cobertura compatible, archivos omitidos y motivo, salida original relevante, interpretación y límites. Distinguir mapa estructural, secretos, dependencias vulnerables y patrones SAST; no equiparar nueve reglas locales con Sonar. Reutilizar primero los artefactos existentes. Si una capacidad no está demostrada, acordar una muestra pequeña con problemas conocidos: cero detecciones no demuestra que una herramienta no sirva. Decidir juntos conservar, ajustar o sustituir; no instalar sustitutos por iniciativa automática. **Cierre:** el usuario entiende qué aporta cada herramienta y acuerda la decisión.
+- [ ] **F2-08 · Definir y probar Inventario.** Antes de cambiar instrucciones, acordar un repositorio/commit y una referencia manual pequeña de qué debería encontrar. Construir juntos una ruta por tecnología: ejemplo Java, pom y módulos → dependencias declaradas/usadas → configuración/persistencia → implementaciones/controladores/respuestas → plantillas y estáticos. Es un ejemplo pendiente de precisar con el usuario, no una receta impuesta. Mostrar entrada → consultas → fragmentos recibidos → respuesta; probar evidencia suficiente y escasa con el mínimo de llamadas. Identificar tecnologías, función, persistencia (BD/archivos/servicio, configuración local/Docker cuando exista evidencia) y forma de ejecución sin inventar. **Cierre:** el usuario valida la estrategia y los resultados frente a su referencia.
+- [ ] **F2-09 · Definir y probar Seguridad.** Con Inventario validado, acordar objetivos y rutas de investigación usando código y scanners. Seguir pistas de entrada → uso sensible → defensa, distinguir riesgo concreto, indicio y no evaluado, y comprobar citas e impacto. No convertir ausencia de evidencia en vulnerabilidad ni ausencia de hallazgos en certificación. Probar aisladamente y revisar salidas con el usuario. **Cierre:** resultados útiles y estrategia aprobados, con cobertura explícita.
+- [ ] **F2-10 · Definir y probar Arquitectura.** Con los dos roles anteriores revisados, acordar cómo identificar componentes, conexiones, persistencia e infraestructura declarada en Docker/Compose, CI/CD, configuración y documentación. Separar arquitectura observada, inferencias y recomendaciones; no inventar servidor/VPN ni preguntar despliegue desconocido durante el análisis automático. Probar aisladamente. **Cierre:** el usuario valida que el mapa y las recomendaciones se apoyan en fuentes.
+- [ ] **F2-11 · Verificar integración.** Después de aceptar las estrategias aisladas, ejecutar un recorrido completo acotado. Comprobar encargos del coordinador, uso de evidencia, ausencia de pérdidas/contradicciones y síntesis fiel. Registrar intentos fallidos, llamadas, tiempo, tokens y presupuestos efectivos. No introducir reintentos o evaluaciones automáticas. **Cierre:** integración válida y contenido revisado con el usuario; éxito técnico y calidad se evalúan por separado.
+- [ ] **F2-12 · Acordar output e informe.** Con resultados reales ya comprendidos, proponer contenido, unificarlo con la propuesta del usuario y construir juntos un modelo rellenado que él revise/complemente manualmente. Derivar una plantilla vacía coherente para que Core la rellene; adaptar contratos solo a lo acordado. Diseño/presentación al final, sin imponer el v14 actual. Hallazgos útiles al comienzo; límites detallados y próximos pasos abajo/anexos. **Cierre:** aceptación explícita del modelo y de la plantilla vacía, con trazabilidad a las salidas disponibles.
+
+### Forma de colaboración y límites
+
+- Al empezar cada tarea, hacer preguntas concretas sobre el resultado esperado, la muestra y los criterios pendientes; contrastar supuestos y contradicciones con ejemplos. Preguntar cuando exista una duda material, sin volver a pedir permisos ya dados. Esperar respuestas para las decisiones dependientes; avanzar solo en lecturas/preparación independientes.
+- Las pruebas aisladas permiten diálogo y corrección de estrategias; el análisis automático entrega lo encontrado y registra pendientes sin interrogar al usuario ni bloquear por datos externos ausentes.
+- Las rutas guían pero permiten seguir pistas justificadas dentro del presupuesto. Separar fallos de búsqueda, cobertura, contrato y razonamiento antes de elevar modelos/archivos.
+- Mantener Luna/medium y límites actuales salvo acuerdo. No modificar CI/CD, versiones/pins, instalar skills, añadir agentes ni ejecutar código del repositorio analizado. Pruebas mínimas sobre lo afectado; sin suites completas o tandas de modelos por defecto.
+- Separar instrucciones profesionales reutilizables del adaptador Hermes. Portabilidad a Claude Code/OpenCode u otros entornos queda fuera de este tramo; no prometer que el agente funciona sin adaptar sus herramientas.
+- Nuevos roles DevOps/Privacidad, alertas históricas de GitHub, actualizaciones de herramientas y cambios de modelos quedan **diferidos sin tarea activa**. Solo reconsiderarlos si las comprobaciones justifican la necesidad y el usuario lo acuerda.
+
+### Retomar en otro chat
+
+1. Leer este punto 3 y la evidencia [última validación funcional](evidence/phase2-luna-validation-2026-10-25.json). El commit funcional es `af7a452`, rama de cierre `codex/fase-2-agentes`; comprobar estado de Git/PR antes de tocar nada. El usuario hace el merge.
+2. No rehacer F2-01 a F2-06 ni optimizar el informe actual. El usuario no quedó satisfecho con su contenido; el cierre acepta esta base funcional, no su calidad final. La fase 2 continúa abierta.
+3. Configuración de cierre: todos los roles heredan `gpt-6-luna`/`medium` en `.env.example`; comprobar overrides locales sin mostrar secretos. Presupuestos acumulados: Seguridad 20 archivos/100000 bytes/2 rondas, Arquitectura 12/60000/2, Inventario 8/32000/1. El historial contiene valores anteriores.
+4. Empezar **solo F2-07**: localizar resultados originales de Graphify y scanners de la revisión `d506794d-6b23-4d84-bab8-c9438d678d7b`, repo `ziuld/beneath-the-code-page`, commit `95ede5bccc881a2230f874944299b4a73101337d`. Resumen publicable en la evidencia enlazada; artefactos completos locales bajo `reports/2026-10-25/082854-beneath-the-code-page/` y `artifacts/`. Estos directorios están ignorados: en otro equipo comprobar disponibilidad y acordar cómo regenerar lo necesario, sin fingir disponer de ellos.
+5. Primera conversación: mostrar qué salidas hay y preguntar qué espera ver el usuario de una herramienta tipo Sonar y qué ejemplo quiere revisar. Presentar muestras legibles con enlaces a los originales, sin generar otro informe completo ni llamar agentes para explicarlas.
+6. Antes de F2-08, pedir al usuario su ruta de lectura y hallazgos esperados de Inventario. Repetir el acuerdo por Seguridad y Arquitectura; no saltar directamente al flujo completo.
+
+### Cierre del tramo funcional y limpieza — 25/10/2026
+
+- [x] Mantener F2-01 a F2-06 y evidencias; sustituir el pendiente anterior por la secuencia acordada F2-07 a F2-12, sin otra fase ni plan paralelo.
+- [x] Mantener informe v14 como salida provisional, demo e informes históricos sin reescribir. Conservar pruebas y contratos de compatibilidad mientras no se acuerde reemplazarlos.
+- [x] Excluir de Git las tres imágenes locales de referencia de `tmp/pdf-reference/`, sin borrarlas. Mantener `.env`, OAuth, vendor, informes, cachés y artefactos fuera del commit; evidencias saneadas en `docs/evidence/` sí se conservan.
+- [x] No cambiar ejecución, modelos, CI/CD ni versión 0.3.0 para este cierre documental. No repetir modelos/scanners ni una suite de código por cambios exclusivamente documentales.
+- [x] Comprobación de cierre documental: `git diff --check` correcto, sin archivos locales sensibles versionados ni cambios en `.github` respecto a origin/main; audit-api, office y preparator saludables. No se repite la prueba completa: su evidencia corresponde a `af7a452`.
+- Preparar PR hacia main con la base funcional acumulada; no hacer merge, tags ni releases. El PR previo de fase 1 #3 sigue siendo antecedente; comprobar solapamiento antes de fusionar.
+
+## Registro histórico (lectura de referencia)
+
+Lo siguiente conserva decisiones y comprobaciones de su fecha. Los modelos, presupuestos y propuestas antiguas no sustituyen el alcance vigente del punto 3. Las casillas pendientes históricas no son tareas adicionales.
 
 ## Checklist del arranque — 24/10/2026
 
@@ -60,7 +89,7 @@ La ficha de configuración efectiva precedió al cambio funcional y sus pilotos.
 - [ ] Decidir la incorporación de DevOps y Privacidad/gobernanza IA como roles independientes; continúan como propuesta.
 - [x] Comparar el resultado del ajuste sobre el mismo commit remoto y revisar persistencia/recuperación y selección de fuentes; comparación exploratoria registrada, sin atribuir mejora general.
 - [ ] Implementar nuevos roles solo si se adopta esa ampliación, incluyendo contratos, informes, consultas y oficina; no basta con añadir nombres a agents.json.
-- [ ] F2-11 Valorar después un conector opcional a alertas históricas de GitHub Secret Scanning. Queda diferido; no instalar skills ni ampliar ahora el scanner al historial.
+- Propuesta histórica diferida (sin ID activo): valorar después un conector opcional a alertas históricas de GitHub Secret Scanning. Queda diferido; no instalar skills ni ampliar ahora el scanner al historial.
 
 ## Auditoría de agentes efectivos: qué se aplica realmente
 
@@ -409,6 +438,6 @@ Las dos respuestas reales se revalidan offline sin advertencias, manteniendo 82 
 - [x] 352 citas únicas contrastadas, cero citas inválidas; HTML sin IDs duplicados ni enlaces internos rotos, cuatro nodos y tres conexiones. Informe HTTP 200, tres servicios saludables y cero trabajos/consultas activos.
 - [x] Ocho llamadas, 66017 tokens comunicados, 143,411 s. En esta comprobación previa al commit hubo tres intentos: 25 llamadas y 198316 tokens comunicados en total. Las dos pasadas parciales se conservan con sus causas; cada repetición siguió una corrección concreta, sin elevar modelos para conseguir un aprobado.
 - [x] Regresión dirigida: 46 pruebas correctas, más caso explícito de línea ocultada correcto. Las dos respuestas problemáticas se revalidaron offline antes de la tercera ejecución. Sin suite completa añadida ni cambios de CI/CD.
-- [x] Se cumple la condición funcional solicitada para hacer commit local. F2-06 se cierra por integración; F2-07 a F2-10 siguen pendientes. La siguiente mejora de calidad queda a las nuevas indicaciones del usuario.
+- [x] Se cumple la condición funcional solicitada para hacer commit local. F2-06 se cierra por integración; En ese momento F2-07 a F2-10 seguían pendientes; su alcance fue sustituido posteriormente por F2-07 a F2-12 en el punto 3 vigente.
 
 Se conserva versión 0.3.0, pins existentes, informes anteriores y demo del usuario. No se hace push ni se actualiza el PR en este paso. La comprobación no certifica seguridad, calidad óptima, exhaustividad semántica ni estabilidad estadística; acredita que el recorrido de este commit terminó sin errores de integración. Las correcciones de líneas ocultadas del piloto anterior continúan como asunto acotado pendiente: esta pasada no tuvo ese rechazo, y la protección sigue verificada por prueba.

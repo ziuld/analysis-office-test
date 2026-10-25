@@ -14,7 +14,7 @@ Solo hay tres planes canónicos. Las guías de `docs/` describen la operación; 
 |---|---|---|
 | [MVP](PLAN_MVP.md) | Cerrado, 0.2.0 | Alcance e histórico inicial |
 | [Fase 1](docs/PLAN_FASE_1.md) | Cerrada y aceptada, 0.3.0 | Base integrada y límites aceptados |
-| [Fase 2](docs/PLAN_FASE_2.md) | Propuesta | Auditar agentes Hermes/Arktic y mejorar recuperación y calidad según feedback |
+| [Fase 2](docs/PLAN_FASE_2.md) | En curso; tramo funcional cerrado para revisión | F2-01–06 realizadas; F2-07–12: herramientas → agentes por separado → integración → informe, con el usuario |
 
 ## Empezar
 
@@ -25,7 +25,7 @@ Solo hay tres planes canónicos. Las guías de `docs/` describen la operación; 
 - **Cómo se redacta el informe:** [Estándar de comunicación compartido](docs/ESTANDAR_COMUNICACION_INFORMES.md).
 - **Preparar la subida y mantener las versiones:** [Repositorio y reproducción](docs/REPOSITORIO.md).
 - **MVP actual e histórico:** [PLAN_MVP.md](PLAN_MVP.md), con el alcance y las verificaciones de la entrega 0.2.0.
-- **Fase 1 cerrada (0.3.0):** [alcance, aceptación y evidencias](docs/PLAN_FASE_1.md). **Siguiente fase propuesta:** [mejora de agentes y recuperación](docs/PLAN_FASE_2.md), empezando por revisar la configuración efectiva en Hermes/Arktic.
+- **Fase 1 cerrada (0.3.0):** [alcance, aceptación y evidencias](docs/PLAN_FASE_1.md). **Fase 2 en curso:** [plan y guía para retomar en otro chat](docs/PLAN_FASE_2.md#retomar-en-otro-chat). Siguiente tarea F2-07: revisar juntos las salidas deterministas antes de ajustar agentes o informe.
 - **Experimento del Bloque 2:** [Validación del indexador](docs/INDEXADOR.md), con recuperación y extracción estructural de muestras dentro de Docker, sin modelos ni ejecución de las aplicaciones.
 - **Núcleo del Bloque 3:** [Paquete Python y compatibilidad](docs/CORE.md), con pruebas manuales mínimas y sin ampliar CI/CD.
 

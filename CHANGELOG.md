@@ -1,5 +1,13 @@
 # Cambios por componente
 
+## Sin publicar — tramo funcional de Fase 2, 25/10/2026
+
+- Agentes auditados, recuperación por símbolo, OSV multitecnología/SBOM y Semgrep local; contrato compacto y síntesis con fuentes resueltas por Core.
+- Integridad del snapshot ante transformaciones de archivo GitHub y clasificación explícita de JSON no compatible con Graphify. Informe v14 provisional, sin aceptación de calidad final.
+- Último recorrido Luna/medium completo: ocho llamadas, 66017 tokens comunicados, 352 citas verificadas, sin errores ni advertencias. Intentos parciales y límites conservados en el plan/evidencias.
+- Tramo F2-01 a F2-06 cerrado para revisión; fase 2 sigue abierta. Nuevo pendiente acordado F2-07 a F2-12: herramientas, Inventario, Seguridad, Arquitectura, integración e informe, trabajando con el usuario.
+- Versiones 0.3.0 y CI/CD conservados; merge manual, sin tags/releases.
+
 ## 0.3.0 — Fase 1 aceptada, 24/10/2026
 
 - Snapshot íntegro verificado, Graphify y scanners sin modelos sobre su entrada compatible; recuperación compartida con fuentes originales y citas verificables.
