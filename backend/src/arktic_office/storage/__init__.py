@@ -1,0 +1,1 @@
+"""Arktic Office storage."""

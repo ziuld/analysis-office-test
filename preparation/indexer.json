@@ -1,0 +1,35 @@
+{
+  "graphify": {
+    "version": "0.9.95",
+    "commit": "92741d162b2094ffc2fed58cfbd8ee823e9da62c"
+  },
+  "limits": {
+    "archive_bytes": 30000000,
+    "snapshot_bytes": 150000000,
+    "file_bytes": 2000000,
+    "files": 4000,
+    "seconds": 600,
+    "workers": 2
+  },
+  "samples": [
+    {
+      "id": "arktic-office",
+      "repository": "ziuld/analysis-office-test",
+      "commit": "b6b8adec2a36a43248ed5194bdc86b38bfeaccb6",
+      "queries": ["Jobs", "handler_for", "prepare_question"]
+    },
+    {
+      "id": "booking-api",
+      "repository": "ziuld/bookingApi",
+      "commit": "c0d247e3226d77a83471c7a1b32afdb0981eb7f1",
+      "queries": ["ReservationController", "ReservationService", "GuestRepository"]
+    },
+    {
+      "id": "office-frontend",
+      "repository": "iamlukethedev/Hermes3D",
+      "commit": "beb76292747b816ef317aa6f9a3992e0014f81d9",
+      "patch": "docker/hermes3d-local-demo.patch",
+      "queries": ["AgentQuestion", "AuditOffice", "proxy"]
+    }
+  ]
+}

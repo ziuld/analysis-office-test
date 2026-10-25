@@ -1,0 +1,517 @@
+{
+  "date": "2026-10-23",
+  "run": "indexer-20261023-184518-e41e49",
+  "environment": "Windows / PowerShell 7 / Docker Desktop 4.47.0, Linux amd64; 14 CPUs, 8047558656 bytes RAM available to Docker; 2 CPUs and 2 GiB per extraction container",
+  "network": "none for extraction and query",
+  "models": "disabled; no model SDK extras or credentials",
+  "graphify": {
+    "version": "0.9.95",
+    "commit": "92741d162b2094ffc2fed58cfbd8ee823e9da62c"
+  },
+  "runner_sha256": "aeb28d940d12fe25b8bee26376c032118da3113b83966dbba3452350cc2687b1",
+  "config_sha256": "ce27ddc4a6a3a1471ae94de557ef196cd3d78ae377e70927858bab4334544554",
+  "probes_sha256": "e475665440a676406778e53f935352c6f6b4d478c37b4ab793a6795954ec9bed",
+  "overlay_sha256": "af15f1350d7ac9e7835c409c45b692c0f340dc652b19f050ed8fbb94e40440b4",
+  "notes": [
+    "Per-container high-water memory from cgroup v1; memory_events is memory.failcnt, not an OOM-kill counter.",
+    "Extraction timings exclude build, download, queries and the later probe-only reevaluation.",
+    "Frontend file label corrected to [...path]/route.ts; probes reevaluated inside Docker against the unchanged graph.",
+    "File representation is not symbol/flow completeness. Two boundary probes are not a general false-negative benchmark."
+  ],
+  "packages": [
+    [
+      "PyYAML",
+      "6.0.3"
+    ],
+    [
+      "RapidFuzz",
+      "3.14.5"
+    ],
+    [
+      "graphifyy",
+      "0.9.95"
+    ],
+    [
+      "networkx",
+      "3.6.1"
+    ],
+    [
+      "numpy",
+      "1.26.4"
+    ],
+    [
+      "tree-sitter",
+      "0.25.2"
+    ],
+    [
+      "tree-sitter-bash",
+      "0.25.1"
+    ],
+    [
+      "tree-sitter-c",
+      "0.24.2"
+    ],
+    [
+      "tree-sitter-c-sharp",
+      "0.23.5"
+    ],
+    [
+      "tree-sitter-cpp",
+      "0.23.4"
+    ],
+    [
+      "tree-sitter-elixir",
+      "0.3.5"
+    ],
+    [
+      "tree-sitter-fortran",
+      "0.6.0"
+    ],
+    [
+      "tree-sitter-go",
+      "0.25.0"
+    ],
+    [
+      "tree-sitter-groovy",
+      "0.1.2"
+    ],
+    [
+      "tree-sitter-java",
+      "0.23.5"
+    ],
+    [
+      "tree-sitter-javascript",
+      "0.25.0"
+    ],
+    [
+      "tree-sitter-json",
+      "0.24.8"
+    ],
+    [
+      "tree-sitter-julia",
+      "0.23.1"
+    ],
+    [
+      "tree-sitter-kotlin",
+      "1.1.0"
+    ],
+    [
+      "tree-sitter-lua",
+      "0.5.0"
+    ],
+    [
+      "tree-sitter-objc",
+      "3.0.2"
+    ],
+    [
+      "tree-sitter-php",
+      "0.24.1"
+    ],
+    [
+      "tree-sitter-powershell",
+      "0.26.4"
+    ],
+    [
+      "tree-sitter-python",
+      "0.25.0"
+    ],
+    [
+      "tree-sitter-ruby",
+      "0.23.1"
+    ],
+    [
+      "tree-sitter-rust",
+      "0.24.2"
+    ],
+    [
+      "tree-sitter-scala",
+      "0.26.0"
+    ],
+    [
+      "tree-sitter-swift",
+      "0.7.2"
+    ],
+    [
+      "tree-sitter-typescript",
+      "0.23.2"
+    ],
+    [
+      "tree-sitter-verilog",
+      "1.0.3"
+    ],
+    [
+      "tree-sitter-zig",
+      "1.1.2"
+    ]
+  ],
+  "samples": [
+    {
+      "id": "arktic-office",
+      "repository": "ziuld/analysis-office-test",
+      "commit": "b6b8adec2a36a43248ed5194bdc86b38bfeaccb6",
+      "patch_sha256": null,
+      "archive_sha256": "04a415ae899aa8a924e882af71df2a521d1fe4dbf88995709d877718e25951ed",
+      "archive_bytes": 995567,
+      "snapshot_bytes": 1602576,
+      "snapshot_files_before_patch": 68,
+      "skipped_files": 1,
+      "fetch_seconds": 1.906,
+      "extraction_seconds": 15.232,
+      "exit_code": 0,
+      "timeout": false,
+      "memory_limit_bytes": "2147483648",
+      "container_memory_peak_bytes": "124833792",
+      "memory_events": "0",
+      "child_max_rss_kib": 90504,
+      "child_cpu_seconds": 10.573,
+      "nodes": 407,
+      "edges": 1361,
+      "graph_bytes": 430700,
+      "graph_sha256": "19956b17103e3c7f3f07dd9d212d9452efc13e5f5ca9940b801126d8937cde67",
+      "relations": {
+        "contains": 174,
+        "calls": 551,
+        "imports": 265,
+        "imports_from": 134,
+        "rationale_for": 28,
+        "method": 137,
+        "inherits": 5,
+        "indirect_call": 30,
+        "uses": 37
+      },
+      "files_by_extension": {
+        "(no extension)": 7,
+        ".yaml": 3,
+        ".md": 14,
+        ".png": 1,
+        ".js": 1,
+        ".css": 1,
+        ".py": 32,
+        ".dockerfile": 2,
+        ".patch": 1,
+        ".txt": 4,
+        ".ps1": 2
+      },
+      "represented_by_extension": {
+        ".yaml": 1,
+        ".js": 1,
+        ".py": 32,
+        ".ps1": 2
+      },
+      "queries": [
+        {
+          "query": "Jobs",
+          "exit_code": 3,
+          "timeout": false,
+          "seconds": 1.275,
+          "scoped": {
+            "seed": "auditor_server_jobs",
+            "exit_code": 0,
+            "timeout": false,
+            "seconds": 1.71
+          }
+        },
+        {
+          "query": "handler_for",
+          "exit_code": 0,
+          "timeout": false,
+          "seconds": 1.14
+        },
+        {
+          "query": "prepare_question",
+          "exit_code": 0,
+          "timeout": false,
+          "seconds": 1.08
+        }
+      ],
+      "probes": [
+        {
+          "source_file": "auditor/server.py",
+          "source_label": "server.py",
+          "relation": "imports",
+          "target_file": "auditor/questions.py",
+          "target_label": "prepare_question()",
+          "source_lines": [
+            16
+          ],
+          "recovered": true
+        },
+        {
+          "source_file": "auditor/server.py",
+          "source_label": ".start()",
+          "relation": "calls",
+          "target_file": "auditor/repository.py",
+          "target_label": "parse_repo()",
+          "source_lines": [
+            90
+          ],
+          "recovered": true
+        },
+        {
+          "source_file": "auditor/server.py",
+          "source_label": ".question_work()",
+          "relation": "calls",
+          "target_file": "auditor/questions.py",
+          "target_label": "answer_question()",
+          "source_lines": [
+            145
+          ],
+          "recovered": false
+        }
+      ],
+      "diagnostics": [
+        "[graphify extract] --code-only: skipping 19 non-code file(s) (18 docs, 0 papers, 1 images) — no LLM extraction",
+        "[graphify extract] 11 file(s) not classified (no supported extension or shebang), skipped: .dockerignore, .gitattributes, .gitignore, Auditor.Dockerfile, BACKEND_VERSION, FRONTEND_VERSION (+5 more)"
+      ]
+    },
+    {
+      "id": "booking-api",
+      "repository": "ziuld/bookingApi",
+      "commit": "c0d247e3226d77a83471c7a1b32afdb0981eb7f1",
+      "patch_sha256": null,
+      "archive_sha256": "067fc6b32bc7d9f4f3db4185720522d18c290d3d3da402b79107ccf33aa407d9",
+      "archive_bytes": 72512,
+      "snapshot_bytes": 161303,
+      "snapshot_files_before_patch": 44,
+      "skipped_files": 0,
+      "fetch_seconds": 1.745,
+      "extraction_seconds": 18.412,
+      "exit_code": 0,
+      "timeout": false,
+      "memory_limit_bytes": "2147483648",
+      "container_memory_peak_bytes": "83820544",
+      "memory_events": "0",
+      "child_max_rss_kib": 71700,
+      "child_cpu_seconds": 10.75,
+      "nodes": 321,
+      "edges": 985,
+      "graph_bytes": 516067,
+      "graph_sha256": "c392d4f71a95ef833886903e3dc2c318fecce0d28bcb758157316892081cf4b0",
+      "relations": {
+        "contains": 36,
+        "defines": 2,
+        "calls": 329,
+        "imports": 216,
+        "references": 185,
+        "method": 207,
+        "inherits": 10
+      },
+      "files_by_extension": {
+        "(no extension)": 2,
+        ".md": 1,
+        ".gradle": 2,
+        ".jar": 1,
+        ".properties": 2,
+        ".bat": 1,
+        ".java": 35
+      },
+      "represented_by_extension": {
+        ".gradle": 2,
+        "(no extension)": 1,
+        ".java": 35
+      },
+      "queries": [
+        {
+          "query": "ReservationController",
+          "exit_code": 3,
+          "timeout": false,
+          "seconds": 1.585,
+          "scoped": {
+            "seed": "src_main_java_com_colibridge_api_reservation_controller_reservationcontroller_reservationcontroller",
+            "exit_code": 0,
+            "timeout": false,
+            "seconds": 1.386
+          }
+        },
+        {
+          "query": "ReservationService",
+          "exit_code": 3,
+          "timeout": false,
+          "seconds": 1.189,
+          "scoped": {
+            "seed": "src_main_java_com_colibridge_api_reservation_service_reservationservice_reservationservice",
+            "exit_code": 0,
+            "timeout": false,
+            "seconds": 1.485
+          }
+        },
+        {
+          "query": "GuestRepository",
+          "exit_code": 0,
+          "timeout": false,
+          "seconds": 1.634
+        }
+      ],
+      "probes": [
+        {
+          "source_file": "src/main/java/com/colibridge/api/reservation/controller/ReservationController.java",
+          "source_label": ".getAllReservation()",
+          "relation": "calls",
+          "target_file": "src/main/java/com/colibridge/api/reservation/service/ReservationService.java",
+          "target_label": ".getAllReservation()",
+          "source_lines": [
+            58
+          ],
+          "recovered": true
+        },
+        {
+          "source_file": "src/main/java/com/colibridge/api/reservation/controller/ReservationController.java",
+          "source_label": ".getReservation()",
+          "relation": "calls",
+          "target_file": "src/main/java/com/colibridge/api/reservation/service/ReservationService.java",
+          "target_label": ".getReservationById()",
+          "source_lines": [
+            80
+          ],
+          "recovered": true
+        },
+        {
+          "source_file": "src/main/java/com/colibridge/api/reservation/service/ReservationService.java",
+          "source_label": ".getAllReservation()",
+          "relation": "calls",
+          "target_file": "src/main/java/com/colibridge/api/reservation/repository/ReservationRepository.java",
+          "target_label": ".findAll()",
+          "source_lines": [
+            68
+          ],
+          "recovered": false
+        }
+      ],
+      "diagnostics": [
+        "[graphify extract] --code-only: skipping 1 non-code file(s) (1 docs, 0 papers, 0 images) — no LLM extraction",
+        "[graphify extract] 5 file(s) not classified (no supported extension or shebang), skipped: .gitignore, application.properties, gradle-wrapper.jar, gradle-wrapper.properties, gradlew.bat",
+        "  warning: 2 code file(s) yielded no symbols (0.00 MB) — a data file, or source this extractor models no symbols for: build.gradle, settings.gradle"
+      ]
+    },
+    {
+      "id": "office-frontend",
+      "repository": "iamlukethedev/Hermes3D",
+      "commit": "beb76292747b816ef317aa6f9a3992e0014f81d9",
+      "patch_sha256": "12d54ff1bd27aa4708ae13300e9b1ef989508af60b4ddabf1e29bfab0d168f21",
+      "archive_sha256": "9995ff64bb6964f6eb5215397f50f49ddc132c224123bbf26d4e958cfa82dbd6",
+      "archive_bytes": 2909637,
+      "snapshot_bytes": 7926303,
+      "snapshot_files_before_patch": 645,
+      "skipped_files": 2,
+      "fetch_seconds": 16.856,
+      "extraction_seconds": 229.787,
+      "exit_code": 0,
+      "timeout": false,
+      "memory_limit_bytes": "2147483648",
+      "container_memory_peak_bytes": "221806592",
+      "memory_events": "0",
+      "child_max_rss_kib": 216672,
+      "child_cpu_seconds": 74.493,
+      "nodes": 4546,
+      "edges": 12898,
+      "graph_bytes": 4811262,
+      "graph_sha256": "0a372c81dc17b770829b1876373c742fb8160cb63675b1087890063058306827",
+      "relations": {
+        "contains": 3733,
+        "imports_from": 2007,
+        "imports": 2877,
+        "declares": 37,
+        "references": 46,
+        "calls": 3846,
+        "indirect_call": 109,
+        "rationale_for": 14,
+        "defines": 8,
+        "method": 149,
+        "dynamic_import": 16,
+        "re_exports": 52,
+        "implements": 3,
+        "uses": 1
+      },
+      "files_by_extension": {
+        "(no extension)": 6,
+        ".yml": 3,
+        ".md": 51,
+        ".png": 2,
+        ".json": 6,
+        ".mjs": 6,
+        ".ts": 451,
+        ".py": 2,
+        ".sh": 2,
+        ".yaml": 1,
+        ".svg": 2,
+        ".hdr": 1,
+        ".glb": 17,
+        ".js": 16,
+        ".tsx": 86,
+        ".ico": 1,
+        ".css": 2
+      },
+      "represented_by_extension": {
+        ".yml": 2,
+        ".json": 3,
+        ".mjs": 6,
+        ".ts": 451,
+        ".py": 2,
+        ".sh": 2,
+        ".yaml": 1,
+        ".js": 16,
+        ".tsx": 86
+      },
+      "queries": [
+        {
+          "query": "AgentQuestion",
+          "exit_code": 0,
+          "timeout": false,
+          "seconds": 1.587
+        },
+        {
+          "query": "AuditOffice",
+          "exit_code": 0,
+          "timeout": false,
+          "seconds": 2.088
+        },
+        {
+          "query": "proxy",
+          "exit_code": 0,
+          "timeout": false,
+          "seconds": 1.734
+        }
+      ],
+      "probes": [
+        {
+          "source_file": "src/features/audit/AuditOffice.tsx",
+          "source_label": "AuditOffice.tsx",
+          "relation": "imports",
+          "target_file": "src/features/audit/AgentQuestion.tsx",
+          "target_label": "AgentQuestion()",
+          "source_lines": [
+            8
+          ],
+          "recovered": true
+        },
+        {
+          "source_file": "src/features/audit/AuditOffice.tsx",
+          "source_label": "AuditOffice.tsx",
+          "relation": "imports",
+          "target_file": "src/features/audit/ExecutiveReport.tsx",
+          "target_label": "ExecutiveReport()",
+          "source_lines": [
+            9
+          ],
+          "recovered": true
+        },
+        {
+          "source_file": "src/app/api/audit/[...path]/route.ts",
+          "source_label": "[...path]/route.ts",
+          "relation": "contains",
+          "target_file": "src/app/api/audit/[...path]/route.ts",
+          "target_label": "proxy()",
+          "source_lines": [
+            6
+          ],
+          "recovered": true
+        }
+      ],
+      "diagnostics": [
+        "[graphify extract] --code-only: skipping 55 non-code file(s) (51 docs, 0 papers, 4 images) — no LLM extraction",
+        "[graphify extract] 27 file(s) not classified (no supported extension or shebang), skipped: .dockerignore, .gitignore, .gitkeep, CODEOWNERS, Dockerfile, LICENSE (+21 more)",
+        "  warning: 100 code file(s) yielded no symbols (0.35 MB) — a data file, or source this extractor models no symbols for: playwright.config.ts, playwright.kanban.config.ts, src/features/agents/components/AgentInspectPanels.tsx, src/features/onboarding/index.ts, src/features/pixel-office/art/index.ts (+95 more)"
+      ]
+    }
+  ]
+}

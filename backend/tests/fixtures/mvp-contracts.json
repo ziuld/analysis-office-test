@@ -1,0 +1,218 @@
+{
+  "origin": "pre-block-3 source, deterministic synthetic fixture; no model calls",
+  "snapshot": {
+    "repository": "https://github.com/acme/demo",
+    "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "files": [
+      {
+        "path": "routes.py",
+        "text": "db.execute('SELECT * FROM users WHERE id=' + request.args['id'])\nrequire_permission(user, 'admin')"
+      }
+    ],
+    "excluded": [],
+    "bytes_read": 130
+  },
+  "prompt_sha256": "981e99c635da3833ca47d062a3d459174aa7628ec8e3913dfc37a9935ff9295a",
+  "cases": [
+    {
+      "version": 1,
+      "report": {
+        "confirmados": [
+          {
+            "tema": "acceso",
+            "observacion": "Entrada concatenada en consulta SQL",
+            "importancia": "Puede alterar la consulta.",
+            "pendiente": "Verificar alcance y protección de la ruta.",
+            "evidencia": [
+              {
+                "path": "routes.py",
+                "line": 1,
+                "quote": "db.execute('SELECT * FROM users WHERE id=' + request.args['id'])"
+              }
+            ],
+            "severidad": "alta",
+            "control": "entradas",
+            "accion": "Parametrizar la consulta.",
+            "condiciones": "Requiere entrada controlada por el solicitante."
+          }
+        ],
+        "indicios": [],
+        "dudas": [],
+        "controles": [
+          {
+            "id": "acceso",
+            "estado": "no_evaluado",
+            "motivo": "Falta contexto.",
+            "evidencia": []
+          },
+          {
+            "id": "entradas",
+            "estado": "no_evaluado",
+            "motivo": "Falta contexto.",
+            "evidencia": []
+          },
+          {
+            "id": "secretos",
+            "estado": "no_evaluado",
+            "motivo": "Falta contexto.",
+            "evidencia": []
+          },
+          {
+            "id": "dependencias",
+            "estado": "no_evaluado",
+            "motivo": "Falta contexto.",
+            "evidencia": []
+          },
+          {
+            "id": "configuracion",
+            "estado": "no_evaluado",
+            "motivo": "Falta contexto.",
+            "evidencia": []
+          },
+          {
+            "id": "operacion",
+            "estado": "no_evaluado",
+            "motivo": "Falta contexto.",
+            "evidencia": []
+          }
+        ]
+      },
+      "markdown_sha256": "a6722e2db062a1742c91c62b8d0c7c8b56782baebc47f2d1f93bc6680540b6a8",
+      "html_sha256": "31c429add9fa75f8b38c8e02382e9883ff94760bd9959175bd8cfcd53aa15ad3"
+    },
+    {
+      "version": 2,
+      "report": {
+        "schema_version": 2,
+        "confirmados": [
+          {
+            "tema": "acceso",
+            "observacion": "Entrada concatenada en consulta SQL",
+            "importancia": "Puede alterar la consulta.",
+            "pendiente": "Verificar alcance y protección de la ruta.",
+            "evidencia": [
+              {
+                "path": "routes.py",
+                "line": 1,
+                "quote": "db.execute('SELECT * FROM users WHERE id=' + request.args['id'])"
+              }
+            ],
+            "severidad": "alta",
+            "control": "entradas",
+            "accion": "Parametrizar la consulta.",
+            "condiciones": "Requiere entrada controlada por el solicitante."
+          }
+        ],
+        "indicios": [],
+        "dudas": [],
+        "controles": [
+          {
+            "id": "acceso",
+            "estado": "no_evaluado",
+            "motivo": "Falta contexto.",
+            "evidencia": []
+          },
+          {
+            "id": "entradas",
+            "estado": "no_evaluado",
+            "motivo": "Falta contexto.",
+            "evidencia": []
+          },
+          {
+            "id": "secretos",
+            "estado": "no_evaluado",
+            "motivo": "Falta contexto.",
+            "evidencia": []
+          },
+          {
+            "id": "dependencias",
+            "estado": "no_evaluado",
+            "motivo": "Falta contexto.",
+            "evidencia": []
+          },
+          {
+            "id": "configuracion",
+            "estado": "no_evaluado",
+            "motivo": "Falta contexto.",
+            "evidencia": []
+          },
+          {
+            "id": "operacion",
+            "estado": "no_evaluado",
+            "motivo": "Falta contexto.",
+            "evidencia": []
+          }
+        ]
+      },
+      "markdown_sha256": "fc71b5b3eec26ba06b8037ee5ffeb6e3e8a0224e8d86d9901101a6bdbaa27131",
+      "html_sha256": "31c429add9fa75f8b38c8e02382e9883ff94760bd9959175bd8cfcd53aa15ad3"
+    },
+    {
+      "version": 3,
+      "report": {
+        "schema_version": 3,
+        "confirmados": [
+          {
+            "tema": "acceso",
+            "observacion": "Entrada concatenada en consulta SQL",
+            "importancia": "Puede alterar la consulta.",
+            "pendiente": "Verificar alcance y protección de la ruta.",
+            "evidencia": [
+              {
+                "path": "routes.py",
+                "line": 1,
+                "quote": "db.execute('SELECT * FROM users WHERE id=' + request.args['id'])"
+              }
+            ],
+            "severidad": "alta",
+            "control": "entradas",
+            "accion": "Parametrizar la consulta.",
+            "condiciones": "Requiere entrada controlada por el solicitante."
+          }
+        ],
+        "indicios": [],
+        "dudas": [],
+        "controles": [
+          {
+            "id": "acceso",
+            "estado": "no_evaluado",
+            "motivo": "Falta contexto.",
+            "evidencia": []
+          },
+          {
+            "id": "entradas",
+            "estado": "no_evaluado",
+            "motivo": "Falta contexto.",
+            "evidencia": []
+          },
+          {
+            "id": "secretos",
+            "estado": "no_evaluado",
+            "motivo": "Falta contexto.",
+            "evidencia": []
+          },
+          {
+            "id": "dependencias",
+            "estado": "no_evaluado",
+            "motivo": "Falta contexto.",
+            "evidencia": []
+          },
+          {
+            "id": "configuracion",
+            "estado": "no_evaluado",
+            "motivo": "Falta contexto.",
+            "evidencia": []
+          },
+          {
+            "id": "operacion",
+            "estado": "no_evaluado",
+            "motivo": "Falta contexto.",
+            "evidencia": []
+          }
+        ]
+      },
+      "markdown_sha256": "75d5ac577f9cba9b5ea8de759d114bdd89e30d9553e441da86adebbd36dbae7a",
+      "html_sha256": "31c429add9fa75f8b38c8e02382e9883ff94760bd9959175bd8cfcd53aa15ad3"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+# Explicit experimental harness, independent of the application Compose project.
+name: arktic-indexer-validation
+services:
+  fetch:
+    platform: linux/amd64
+    image: arktic-indexer:graphify-0.9.95
+    build:
+      context: .
+      dockerfile: docker/Indexer.Dockerfile
+    command: [fetch]
+    volumes:
+      - ${INDEXER_WORK_DIR:?Set INDEXER_WORK_DIR to a new empty output directory}:/work
+    read_only: true
+    tmpfs: ["/tmp:rw,noexec,nosuid,size=128m,mode=1777"]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    init: true
+    mem_limit: 2g
+    cpus: 2
+    pids_limit: 128
+  index:
+    extends:
+      service: fetch
+    command: [index]
+    network_mode: none

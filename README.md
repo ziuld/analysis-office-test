@@ -4,7 +4,17 @@ Oficina virtual 2D para entender una aplicación a partir de su repositorio de G
 
 El MVP entrega un informe con evidencia del código, indicios por confirmar y preguntas pendientes. Ayuda al responsable técnico a valorar seguridad, operación y una posible migración a VPS o Kubernetes. La decisión de despliegue corresponde al arquitecto.
 
-Versiones propias: **frontend 0.2.0** y **backend 0.2.0**, gestionadas de forma independiente en `FRONTEND_VERSION` y `BACKEND_VERSION`. Cambios de cada componente: [CHANGELOG.md](CHANGELOG.md). Los archivos `HERMES3D_VERSION` y `HERMES_AGENT_VERSION` fijan las dependencias originales, no la versión de Arktic Office.
+Versiones propias: **frontend 0.3.0** y **backend 0.3.0**, gestionadas de forma independiente en `FRONTEND_VERSION` y `BACKEND_VERSION`. Cambios de cada componente: [CHANGELOG.md](CHANGELOG.md). Los archivos `HERMES3D_VERSION` y `HERMES_AGENT_VERSION` fijan las dependencias originales, no la versión de Arktic Office.
+
+## Planes del proyecto
+
+Solo hay tres planes canónicos. Las guías de `docs/` describen la operación; no añaden roadmaps independientes.
+
+| Plan | Estado | Alcance |
+|---|---|---|
+| [MVP](PLAN_MVP.md) | Cerrado, 0.2.0 | Alcance e histórico inicial |
+| [Fase 1](docs/PLAN_FASE_1.md) | Cerrada y aceptada, 0.3.0 | Base integrada y límites aceptados |
+| [Fase 2](docs/PLAN_FASE_2.md) | En curso; tramo funcional cerrado para revisión | F2-01–06 realizadas; F2-07–12: herramientas → agentes por separado → integración → informe, con el usuario |
 
 ## Empezar
 
@@ -15,23 +25,25 @@ Versiones propias: **frontend 0.2.0** y **backend 0.2.0**, gestionadas de forma 
 - **Cómo se redacta el informe:** [Estándar de comunicación compartido](docs/ESTANDAR_COMUNICACION_INFORMES.md).
 - **Preparar la subida y mantener las versiones:** [Repositorio y reproducción](docs/REPOSITORIO.md).
 - **MVP actual e histórico:** [PLAN_MVP.md](PLAN_MVP.md), con el alcance y las verificaciones de la entrega 0.2.0.
-- **Siguiente evolución:** [Plan de Fase 1](docs/PLAN_FASE_1.md), con objetivos, tareas, criterios de cierre y decisiones pendientes. El Bloque 1 incorpora reproducción automatizada y CI de arranque sin modelos; el resto sigue pendiente.
+- **Fase 1 cerrada (0.3.0):** [alcance, aceptación y evidencias](docs/PLAN_FASE_1.md). **Fase 2 en curso:** [plan y guía para retomar en otro chat](docs/PLAN_FASE_2.md#retomar-en-otro-chat). Siguiente tarea F2-07: revisar juntos las salidas deterministas antes de ajustar agentes o informe.
+- **Experimento del Bloque 2:** [Validación del indexador](docs/INDEXADOR.md), con recuperación y extracción estructural de muestras dentro de Docker, sin modelos ni ejecución de las aplicaciones.
+- **Núcleo del Bloque 3:** [Paquete Python y compatibilidad](docs/CORE.md), con pruebas manuales mínimas y sin ampliar CI/CD.
 
 Con las dependencias recuperadas, `.env` configurado y la sesión del modelo autorizada:
 
 ```powershell
-docker compose up -d --build --wait
+docker compose -f compose.yaml -f compose.hybrid.yaml up -d --build --wait
 ```
 
 Abrir [la oficina local](http://localhost:3000/office), introducir una URL como `https://github.com/ziuld/bookingApi` y pulsar **Iniciar revisión**. Después, **Leer informe**, **Descargar informe** o pulsar un personaje para preguntar sobre el resultado.
 
 ## Qué incluye
 
-- Una URL como entrada. Busca `main` y, solo si no existe, utiliza `master`; si faltan ambas, informa del error. Guarda rama y commit.
-- Lectura estática acotada: por defecto, 24 archivos / 120 KB; Seguridad recibe hasta 12 / 64 KB, las otras células hasta 6 / 24 KB.
+- Una URL como entrada. Resuelve la rama predeterminada real de GitHub y fija su commit antes de seleccionar contexto.
+- Snapshot íntegro verificado al commit, mapas y scanners sobre todo el conjunto compatible. Contexto inicial de modelos acotado a 24 archivos / 120 KB; Seguridad recibe hasta 12 / 64 KB, las otras células hasta 6 / 24 KB.
 - Tres revisiones secuenciales y consolidación mediante código. Estados reales en la oficina, resultados parciales y errores visibles.
 - Reporte visual de seguridad con indicadores de gravedad, certeza separada, acciones, cobertura e inventario; descarga Markdown e impresión/PDF. Evidencias enlazadas al commit revisado.
-- Gitleaks para posibles secretos y OSV-Scanner para dependencias, sobre la descarga acotada y sin ejecutar el proyecto.
+- Gitleaks para posibles secretos y OSV-Scanner para dependencias, sobre todo el input compatible del snapshot y sin ejecutar el proyecto.
 - Consultas independientes al coordinador o a una célula, usando únicamente resultados y evidencia guardados.
 - Propuesta DevOps Azure preliminar de Arquitectura: opción sencilla, motivos, supuestos, servicios, entrega y validaciones.
 - [Ejemplo ficticio sin agentes](examples/README.md), con consultas bloqueadas para evitar consumo de tokens.
@@ -49,7 +61,9 @@ Navegador → office (localhost:3000) → audit-api (red interna)
 
 | Ruta | Contenido |
 |---|---|
-| `auditor/` | Lectura de GitHub, distribución, validación de citas, informe, consultas, API y pruebas |
+| `backend/src/arktic_office/` | Paquete Python: API, ejecución, almacenamiento, preparación, coordinación, adaptadores e informes |
+| `backend/tests/` | Pruebas manuales fuera de la imagen de producción |
+| `auditor/` | Lanzadores de compatibilidad para las rutas Docker actuales |
 | `compose.yaml` | Servicios, red, volúmenes y límites de contenedores |
 | `docker/` | Dockerfiles y parche de Hermes3D con la oficina e integración local |
 | `HERMES3D_VERSION`, `HERMES_AGENT_VERSION` | Commits fijados de los proyectos originales |
@@ -62,9 +76,9 @@ Navegador → office (localhost:3000) → audit-api (red interna)
 
 ## Acceso y coste
 
-La configuración propone `openai-codex` mediante OAuth en Hermes: Seguridad con `gpt-6.1-sol` / `medium`, el resto con `gpt-6-luna` / `low`. También existe el modo API con facturación independiente. La sesión del modelo se configura en cada instalación; no viene incluida al clonar. Alcance y comprobaciones en [Seguridad](docs/SEGURIDAD.md).
+La configuración propone `openai-codex` mediante OAuth en Hermes: todos los roles con `gpt-6-luna` / `low` para pruebas funcionales económicas; el afinado posterior se acuerda en el Bloque 9. También existe el modo API con facturación independiente. La sesión del modelo se configura en cada instalación; no viene incluida al clonar. Alcance y comprobaciones en [Seguridad](docs/SEGURIDAD.md).
 
-La revisión normal usa tres llamadas al modelo; cada pregunta añade una llamada al personaje elegido. El coordinador distribuye y consolida mediante código. No hay reintentos ni escalado de modelo automáticos. Con el backend Codex OAuth de esta versión, el límite de salida configurado no constituye un techo duro de tokens. Detalles en [Operación](docs/OPERACION.md).
+El recorrido híbrido actual prepara el snapshot y grafo sin modelos. Con coordinación IA usa cinco llamadas de base (reparto, tres especialistas y síntesis); permite una consulta local adicional por agente, configurable 0/1, con su llamada para finalizar. El perfil de prueba admite hasta siete llamadas; habilitando todos los extras, hasta nueve. Las omisiones justificadas reducen ese número. Cada pregunta posterior añade una llamada independiente. No hay escalado automático de modelos ni reintentos de proveedor. El límite de salida Codex OAuth no es un techo duro de tokens. Configuración y limitaciones: [preparación completa](docs/PREPARACION.md) y [coordinación](docs/COORDINACION.md). `legacy` permanece disponible expresamente como recorrido parcial de compatibilidad.
 
 ## Datos y despliegue local
 

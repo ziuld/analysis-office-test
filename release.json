@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "status": "accepted_pending_user_merge",
+  "delivery_closed": true,
+  "phase": 1,
+  "versions": {
+    "frontend": "0.3.0",
+    "backend": "0.3.0",
+    "python_package": "0.3.0"
+  },
+  "dependencies": {
+    "hermes3d_commit": "beb76292747b816ef317aa6f9a3992e0014f81d9",
+    "hermes_agent_commit": "ce28ca328d3b85ac8663e602136eb69b027cd056",
+    "graphify_version": "0.9.95",
+    "graphify_commit": "92741d162b2094ffc2fed58cfbd8ee823e9da62c"
+  },
+  "validation": {
+    "backend": {
+      "run": 120,
+      "passed": 119,
+      "skipped": 1
+    },
+    "frontend_block6": {
+      "passed": 8
+    },
+    "real_model_pilot": {
+      "repository": "ziuld/bookingApi",
+      "commit": "c0d247e3226d77a83471c7a1b32afdb0981eb7f1",
+      "authorized_max_calls": 5,
+      "attempted_calls": 4,
+      "valid_results": 0,
+      "seconds": 27.654,
+      "token_usage": null,
+      "errors": [
+        "invalid_session",
+        "quota_or_rate_limit"
+      ],
+      "scanners": false,
+      "target_executed": false
+    },
+    "startup": "build_and_health_passed_without_credentials_or_jobs",
+    "post_login_verification": {
+      "repository": "https://github.com/ziuld/bookingApi",
+      "commit": "c0d247e3226d77a83471c7a1b32afdb0981eb7f1",
+      "role": "inventory",
+      "model": "gpt-6-luna",
+      "reasoning": "low",
+      "attempted_calls": 1,
+      "scanners": false,
+      "target_executed": false,
+      "usage": {
+        "input_tokens": 9685,
+        "output_tokens": 418,
+        "reasoning_tokens": 0,
+        "total_tokens": 10103,
+        "api_calls": 1
+      },
+      "status": "validated",
+      "confirmed": 2,
+      "indications": 0,
+      "warnings": [],
+      "seconds": 12.24
+    },
+    "full_economic_pilot": {
+      "status": "functional_end_to_end_passed_with_partial_coverage",
+      "final_run": "bb23e6e3-f995-4748-8ff2-47304b8f57cc",
+      "model_calls": 7,
+      "reported_total_tokens": 40020,
+      "all_specialists_valid_together": true,
+      "routing_and_synthesis_valid": true,
+      "model_stage_skips": 0,
+      "scanners_enabled": true,
+      "gitleaks": "sin_detecciones_en_seleccion",
+      "osv": "no_evaluado_sin_entrada_compatible",
+      "report_state": "parcial",
+      "evidence": "docs/evidence/full-pilot-final-2026-10-24.json"
+    },
+    "earlier_complete_test_attempts": {
+      "runs": 3,
+      "model_calls": 17,
+      "reported_total_tokens": 81112,
+      "note": "Dos intentos de siete llamadas y un tercero de tres, con reparto vacío; no se confunden etapas omitidas con llamadas sin consumo comunicado."
+    },
+    "initial_budget_authorized_model_calls_used": 5,
+    "initial_budget_authorized_model_calls_remaining": 0,
+    "block8": {
+      "status": "implemented_functional_flow_verified_with_partial_semantic_coverage",
+      "tasks": [
+        "F1-29",
+        "F1-30",
+        "F1-31",
+        "F1-32",
+        "F1-33",
+        "F1-34",
+        "F1-35",
+        "F1-36",
+        "F1-37"
+      ],
+      "targeted_tests": {
+        "run": 14,
+        "passed": 14,
+        "full_suite": false
+      },
+      "booking_final": "cd87e221-9549-4699-9591-dec1ca256360",
+      "arktic_final": "5a9eaa6e-29ee-4dc7-9144-6a00d53a0543",
+      "booking_final_model_calls": 6,
+      "booking_final_tokens": 55627,
+      "all_attempts_model_calls": 32,
+      "all_attempts_reported_tokens": 282555,
+      "evidence": "docs/evidence/block8-architecture-2026-10-24.json",
+      "limitations": "Informes parciales; Arktic Arquitectura sin hallazgos con citas válidas; OSV no evaluado; LFS/submódulos no hidratados bloquean preparación."
+    },
+    "orchestrator_research": {
+      "targeted_tests": 15,
+      "run": "f7043007-40a9-42a3-8b1e-a1478688c25c",
+      "model_calls": 8,
+      "reported_total_tokens": 52366,
+      "confirmed_observations": 7,
+      "synthesis_items": 4,
+      "validated_unique_citations": 22,
+      "all_specialists_executed": true,
+      "report_state": "parcial",
+      "evidence": "docs/evidence/orchestrator-research-2026-10-24.json",
+      "limitations": [
+        "Un hallazgo de Seguridad rechazado por tema inválido; cinco controles no evaluados.",
+        "El primer intento falló en Inventario por respuesta incompleta y se conserva.",
+        "Pilotos ejecutados con backend 0.2.0 antes del cierre de versión; no se reetiquetan informes históricos."
+      ]
+    },
+    "closure_0_3_0": {
+      "targeted_tests": {
+        "run": 17,
+        "passed": 17,
+        "seconds": 0.161,
+        "full_suite": false
+      },
+      "image_builds": [
+        "arktic-hermes-auditor:0.3.0",
+        "arktic-hermes3d-office:0.3.0"
+      ],
+      "isolated_startup": "existing_check_startup_script_passed_without_credentials_or_jobs",
+      "model_calls_for_closure": 0,
+      "scanners_for_closure": false,
+      "ci_workflow_changes": false,
+      "evidence": "docs/evidence/phase1-close-2026-10-24.json"
+    }
+  },
+  "pending": [
+    "user_merge"
+  ],
+  "publication": {
+    "tags": false,
+    "images": false,
+    "release": false
+  },
+  "references": {
+    "plan": "docs/PLAN_FASE_1.md",
+    "changelog": "CHANGELOG.md",
+    "results": "docs/RESULTADOS.md"
+  },
+  "revision": "Identificada por el commit y la cabecera del PR; este archivo no se firma a sí mismo.",
+  "trial_configuration": {
+    "codex_model": "gpt-6-luna",
+    "reasoning": "low",
+    "per_role_model_overrides": false,
+    "scanners_enabled": true,
+    "preparation_model_calls": 0,
+    "research_rounds": {
+      "security": 1,
+      "architecture": 1,
+      "inventory": 1
+    }
+  },
+  "accepted_on": "2026-10-24",
+  "acceptance": "Usuario acepta la Fase 1 funcional y sus resultados parciales; merge manual a main pendiente.",
+  "next_phase": "docs/PLAN_FASE_2.md"
+}

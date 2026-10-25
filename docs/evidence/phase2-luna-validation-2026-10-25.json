@@ -1,0 +1,463 @@
+{
+  "citation_check": {
+    "unique": 352,
+    "invalid": []
+  },
+  "job": {
+    "id": "d506794d-6b23-4d84-bab8-c9438d678d7b",
+    "repository": "https://github.com/ziuld/beneath-the-code-page",
+    "estado": "completo",
+    "created": "2026-10-25T08:28:54.803541+00:00"
+  },
+  "directory": "reports\\2026-10-25\\082854-beneath-the-code-page\\d506794d-6b23-4d84-bab8-c9438d678d7b",
+  "commit": "95ede5bccc881a2230f874944299b4a73101337d",
+  "branch": "main",
+  "acquisition": {
+    "complete": true,
+    "expected": 567,
+    "actual": 567,
+    "bytes": 10200922,
+    "seconds": 2.945,
+    "kinds": {
+      "text": 557,
+      "binary": 10
+    }
+  },
+  "map": {
+    "status": "partial",
+    "engine": {
+      "version": "0.9.95",
+      "commit": "92741d162b2094ffc2fed58cfbd8ee823e9da62c"
+    },
+    "diagnostic_lines": 2,
+    "truncated": false,
+    "processing_complete": true,
+    "unresolved_relations": 517,
+    "exit_code": 0,
+    "timeout": false,
+    "seconds": 5.733,
+    "node_count": 3108,
+    "edge_count": 5080
+  },
+  "map_coverage": {
+    "unsupported": 128,
+    "processed": 439
+  },
+  "scanners": [
+    {
+      "name": "Gitleaks 8.30.1",
+      "status": "sin_detecciones_en_seleccion",
+      "detail": "Snapshot completo ofrecido a Gitleaks; reglas y límites nativos, sin historial Git. Binarios y enlaces no equivalen a texto analizable.",
+      "seconds": 0.96,
+      "input_count": 567,
+      "finding_count": 0
+    },
+    {
+      "name": "OSV-Scanner 2.7.0",
+      "status": "sin_detecciones_en_seleccion",
+      "detail": "273 paquetes con versión en la respuesta; 3 archivos enviados, 3 con paquetes versionados y 0 sin paquetes versionados. Consulta OSV en línea con metadatos de paquetes. Resolución Maven habilitada por metadatos (deps.dev); sin instalar dependencias ni ejecutar builds/código, sin analizar llamadas. No prueba versiones instaladas ni ausencia de vulnerabilidades.",
+      "evaluated_files": [
+        "pom.xml",
+        "src/main/frontend/package-lock.json",
+        "tests/e2e/package-lock.json"
+      ],
+      "unevaluated_files": [],
+      "seconds": 11.857,
+      "input_kinds": {
+        "pom.xml": "lockfile",
+        "src/main/frontend/package-lock.json": "lockfile",
+        "tests/e2e/package-lock.json": "lockfile"
+      },
+      "input_count": 3,
+      "finding_count": 0
+    },
+    {
+      "name": "Semgrep 1.182.1",
+      "status": "detecciones_por_validar",
+      "detail": "Reglas locales acotadas para Python, JavaScript/TypeScript, Java y C#. Sin análisis exhaustivo ni explotación probada.",
+      "processed_files": [
+        "docker/HealthCheck.java",
+        "scripts/check-maven-wrapper.py",
+        "scripts/check-planning.py",
+        "scripts/install-security-tools.py",
+        "scripts/planning_delivery.py",
+        "scripts/planning_documents.py",
+        "scripts/planning_rules.py",
+        "scripts/planning_specs.py",
+        "scripts/prepare-webkit-local.py",
+        "scripts/render-backlog.py",
+        "scripts/render-roadmap.py",
+        "scripts/smoke-java-baseline.py",
+        "scripts/test-container-security.py",
+        "scripts/test-planning-rules.py",
+        "scripts/test-security.py",
+        "scripts/verify-container-security.py",
+        "scripts/verify-container.py",
+        "scripts/verify-home-browser.py",
+        "scripts/verify-java-baseline.py",
+        "scripts/verify-security.py",
+        "src/main/frontend/design-system/components/editor-policy.test.ts",
+        "src/main/frontend/design-system/components/editor-policy.ts",
+        "src/main/frontend/design-system/components/editor-workspace.ts",
+        "src/main/frontend/design-system/components/editor.test.ts",
+        "src/main/frontend/design-system/components/editor.ts",
+        "src/main/frontend/entries/site.ts",
+        "src/main/frontend/eslint.config.js",
+        "src/main/frontend/eslint.config.test.ts",
+        "src/main/frontend/platform/text-budget.test.ts",
+        "src/main/frontend/platform/text-budget.ts",
+        "src/main/frontend/platform/tool-session.test.ts",
+        "src/main/frontend/platform/tool-session.ts",
+        "src/main/frontend/platform/worker-input.test.ts",
+        "src/main/frontend/platform/worker-input.ts",
+        "src/main/frontend/platform/worker-manager.test.ts",
+        "src/main/frontend/platform/worker-manager.ts",
+        "src/main/frontend/tools/base64/algorithms/codec.ts",
+        "src/main/frontend/tools/base64/codec.test.ts",
+        "src/main/frontend/tools/base64/worker-protocol.test.ts",
+        "src/main/frontend/tools/base64/worker-protocol.ts",
+        "src/main/frontend/tools/base64/workspace.ts",
+        "src/main/frontend/tools/json/algorithms/formatter.test.ts",
+        "src/main/frontend/tools/json/algorithms/formatter.ts",
+        "src/main/frontend/tools/json/algorithms/minifier.test.ts",
+        "src/main/frontend/tools/json/algorithms/minifier.ts",
+        "src/main/frontend/tools/json/algorithms/position.test.ts",
+        "src/main/frontend/tools/json/algorithms/position.ts",
+        "src/main/frontend/tools/json/algorithms/validation.test.ts",
+        "src/main/frontend/tools/json/algorithms/validation.ts",
+        "src/main/frontend/tools/json/formatter-session.test.ts",
+        "src/main/frontend/tools/json/formatter-session.ts",
+        "src/main/frontend/tools/json/formatter-workspace.ts",
+        "src/main/frontend/tools/json/formatter.worker.ts",
+        "src/main/frontend/tools/json/worker-protocol.test.ts",
+        "src/main/frontend/tools/json/worker-protocol.ts",
+        "src/main/frontend/tools/jwt/algorithms/decode.test.ts",
+        "src/main/frontend/tools/jwt/algorithms/decode.ts",
+        "src/main/frontend/tools/jwt/workspace.ts",
+        "src/main/frontend/tools/uuid/generate.test.ts",
+        "src/main/frontend/tools/uuid/generate.ts",
+        "src/main/frontend/tools/uuid/workspace.ts",
+        "src/main/frontend/vite.config.test.ts",
+        "src/main/frontend/vite.config.ts",
+        "src/main/frontend/vite.worker-proof.config.ts",
+        "src/main/java/dev/beneaththecode/BeneathTheCodeApplication.java",
+        "src/main/java/dev/beneaththecode/bootstrap/LearningConfiguration.java",
+        "src/main/java/dev/beneaththecode/learning/adapter/in/web/LearningController.java",
+        "src/main/java/dev/beneaththecode/learning/adapter/in/web/LessonHtmlRenderer.java",
+        "src/main/java/dev/beneaththecode/learning/adapter/out/content/ClasspathCourseContentSource.java",
+        "src/main/java/dev/beneaththecode/learning/application/LearningPages.java",
+        "src/main/java/dev/beneaththecode/learning/application/port/out/CourseContentSource.java",
+        "src/main/java/dev/beneaththecode/learning/domain/LearningCatalogue.java",
+        "src/main/java/dev/beneaththecode/platform/web/assets/AssetManifest.java",
+        "src/main/java/dev/beneaththecode/platform/web/assets/AssetSource.java",
+        "src/main/java/dev/beneaththecode/platform/web/assets/LocalAssetWebConfiguration.java",
+        "src/main/java/dev/beneaththecode/platform/web/i18n/HomeLocaleConfiguration.java",
+        "src/main/java/dev/beneaththecode/platform/web/i18n/LanguagePreferenceController.java",
+        "src/main/java/dev/beneaththecode/platform/web/i18n/PreferenceCookiePolicy.java",
+        "src/main/java/dev/beneaththecode/platform/web/i18n/PreferenceLocaleResolver.java",
+        "src/main/java/dev/beneaththecode/platform/web/i18n/PreferenceReturnPaths.java",
+        "src/main/java/dev/beneaththecode/platform/web/security/ContainerRejectionHeaders.java",
+        "src/main/java/dev/beneaththecode/platform/web/security/HttpBoundaryConfiguration.java",
+        "src/main/java/dev/beneaththecode/platform/web/security/PreferenceRequestBoundary.java",
+        "src/main/java/dev/beneaththecode/platform/web/security/PublicPageSecurity.java",
+        "src/main/java/dev/beneaththecode/platform/web/security/SafeErrorController.java",
+        "src/main/java/dev/beneaththecode/platform/web/security/SafeHttpErrors.java",
+        "src/main/java/dev/beneaththecode/platform/web/security/SafeMvcErrors.java",
+        "src/main/java/dev/beneaththecode/platform/web/security/SecurityResponseHeaders.java",
+        "src/main/java/dev/beneaththecode/site/adapter/in/web/HomeController.java",
+        "src/main/java/dev/beneaththecode/site/adapter/in/web/HomeNavigation.java",
+        "src/main/java/dev/beneaththecode/site/adapter/in/web/SharedNavigationAdvice.java",
+        "src/main/java/dev/beneaththecode/tools/adapter/in/web/ToolsController.java",
+        "src/test/frontend/proof.worker.ts",
+        "src/test/frontend/worker-proof.ts",
+        "src/test/java/btc/fixtures/AssetFixtureApplication.java",
+        "src/test/java/btc/fixtures/AssetFixtureController.java",
+        "src/test/java/btc/fixtures/AssetFixtureSecurity.java",
+        "src/test/java/btc/fixtures/EditorFixtureController.java",
+        "src/test/java/btc/fixtures/HttpFailureApplication.java",
+        "src/test/java/btc/fixtures/HttpFailureController.java",
+        "src/test/java/btc/fixtures/LearningFixtureConfiguration.java",
+        "src/test/java/btc/fixtures/ShellFixtureApplication.java",
+        "src/test/java/btc/fixtures/ShellFixtureController.java",
+        "src/test/java/btc/fixtures/ShellFixtureSecurity.java",
+        "src/test/java/dev/beneaththecode/BeneathTheCodeApplicationTests.java",
+        "src/test/java/dev/beneaththecode/architecture/ArchitectureRules.java",
+        "src/test/java/dev/beneaththecode/architecture/ArchitectureTests.java",
+        "src/test/java/dev/beneaththecode/architecture/BoundaryFixtureTests.java",
+        "src/test/java/dev/beneaththecode/learning/adapter/in/web/EmptyLearningCatalogueTests.java",
+        "src/test/java/dev/beneaththecode/learning/adapter/in/web/LearningRenderingTests.java",
+        "src/test/java/dev/beneaththecode/learning/adapter/in/web/LessonHtmlRendererTests.java",
+        "src/test/java/dev/beneaththecode/learning/adapter/in/web/PublishedLearningTests.java",
+        "src/test/java/dev/beneaththecode/learning/adapter/out/content/LearningContentTests.java",
+        "src/test/java/dev/beneaththecode/learning/adapter/out/content/LearningLessonExamplesTests.java",
+        "src/test/java/dev/beneaththecode/platform/web/assets/AssetManifestTests.java",
+        "src/test/java/dev/beneaththecode/platform/web/assets/AssetSourceTests.java",
+        "src/test/java/dev/beneaththecode/platform/web/assets/PackagedAssetsIT.java",
+        "src/test/java/dev/beneaththecode/platform/web/i18n/ContainerLanguagePreferenceTests.java",
+        "src/test/java/dev/beneaththecode/platform/web/i18n/LanguagePreferenceTests.java",
+        "src/test/java/dev/beneaththecode/platform/web/i18n/LocalLanguagePreferenceTests.java",
+        "src/test/java/dev/beneaththecode/platform/web/i18n/LocaleRenderingTests.java",
+        "src/test/java/dev/beneaththecode/platform/web/i18n/PreferenceCookiePolicyTests.java",
+        "src/test/java/dev/beneaththecode/platform/web/i18n/PreferenceLocaleResolverTests.java",
+        "src/test/java/dev/beneaththecode/platform/web/security/PreferenceRequestBoundaryTests.java",
+        "src/test/java/dev/beneaththecode/platform/web/security/SafeHttpErrorsTests.java",
+        "src/test/java/dev/beneaththecode/platform/web/security/SecurityResponseHeadersTests.java",
+        "src/test/java/dev/beneaththecode/site/adapter/in/web/EditorComponentTests.java",
+        "src/test/java/dev/beneaththecode/site/adapter/in/web/HomePublicationTests.java",
+        "src/test/java/dev/beneaththecode/site/adapter/in/web/HomeRenderingTests.java",
+        "src/test/java/dev/beneaththecode/site/adapter/in/web/HomeSecurityTests.java",
+        "src/test/java/dev/beneaththecode/site/adapter/in/web/SharedComponentTests.java",
+        "src/test/java/dev/beneaththecode/tools/adapter/in/web/ToolsRenderingTests.java"
+      ],
+      "seconds": 5.364,
+      "input_count": 132,
+      "finding_count": 1
+    }
+  ],
+  "stages": {
+    "routing": {
+      "status": "complete",
+      "calls": 1,
+      "usage": {
+        "input_tokens": 4422,
+        "output_tokens": 239,
+        "reasoning_tokens": 0,
+        "total_tokens": 4661,
+        "api_calls": 1
+      },
+      "prompt_bytes": 14968
+    },
+    "synthesis": {
+      "status": "complete",
+      "calls": 1,
+      "usage": {
+        "input_tokens": 6136,
+        "output_tokens": 325,
+        "reasoning_tokens": 0,
+        "total_tokens": 6461,
+        "api_calls": 1
+      },
+      "prompt_bytes": 24169
+    }
+  },
+  "cells": [
+    {
+      "id": "security",
+      "estado": "completada",
+      "model": "gpt-6-luna",
+      "reasoning": "medium",
+      "archivos": [
+        "src/test/frontend/proof.worker.ts",
+        "src/main/frontend/platform/text-budget.ts",
+        "src/main/frontend/platform/worker-input.ts",
+        "Dockerfile",
+        ".github/workflows/container.yml",
+        ".github/workflows/home-browser.yml",
+        "src/main/java/dev/beneaththecode/learning/adapter/in/web/LearningController.java",
+        "src/main/java/dev/beneaththecode/site/adapter/in/web/HomeController.java",
+        "src/main/java/dev/beneaththecode/tools/adapter/in/web/ToolsController.java"
+      ],
+      "calls": 2,
+      "execution": "completed",
+      "coverage": "partial",
+      "missing": [],
+      "usage": {
+        "api_calls": 2,
+        "total_tokens": 16694,
+        "reasoning_tokens": 414,
+        "input_tokens": 15476,
+        "output_tokens": 1218
+      },
+      "valid_findings": 4,
+      "retrieval_count": 4,
+      "retrieved_paths": [
+        "src/test/frontend/proof.worker.ts",
+        "src/main/frontend/platform/text-budget.ts",
+        "src/main/frontend/platform/worker-input.ts",
+        "Dockerfile",
+        ".github/workflows/container.yml",
+        ".github/workflows/home-browser.yml",
+        "src/main/java/dev/beneaththecode/learning/adapter/in/web/LearningController.java",
+        "src/main/java/dev/beneaththecode/site/adapter/in/web/HomeController.java",
+        "src/main/java/dev/beneaththecode/tools/adapter/in/web/ToolsController.java"
+      ]
+    },
+    {
+      "id": "architecture",
+      "estado": "completada",
+      "model": "gpt-6-luna",
+      "reasoning": "medium",
+      "archivos": [
+        "Dockerfile",
+        ".github/workflows/container.yml",
+        ".github/workflows/java.yml",
+        "docs/architecture/technical-architecture-v1.md",
+        "docs/architecture/repository-tree.md",
+        "docs/architecture/sources.md",
+        "README.md",
+        "docs/adr/0001-accepted-baseline.md",
+        "docs/architecture/adr-006-worker-startup-privacy.md"
+      ],
+      "calls": 2,
+      "execution": "completed",
+      "coverage": "available_evidence",
+      "missing": [],
+      "usage": {
+        "api_calls": 2,
+        "total_tokens": 21135,
+        "reasoning_tokens": 76,
+        "input_tokens": 19682,
+        "output_tokens": 1453
+      },
+      "valid_findings": 12,
+      "retrieval_count": 3,
+      "retrieved_paths": [
+        "Dockerfile",
+        ".github/workflows/container.yml",
+        ".github/workflows/java.yml",
+        "docs/architecture/technical-architecture-v1.md",
+        "docs/architecture/repository-tree.md",
+        "docs/architecture/sources.md",
+        "README.md",
+        "docs/adr/0001-accepted-baseline.md",
+        "docs/architecture/adr-006-worker-startup-privacy.md"
+      ]
+    },
+    {
+      "id": "inventory",
+      "estado": "completada",
+      "model": "gpt-6-luna",
+      "reasoning": "medium",
+      "archivos": [
+        "pom.xml",
+        "Dockerfile",
+        "README.md",
+        "docs/architecture/adr-010-v2-delivery-and-portable-handoff.md"
+      ],
+      "calls": 2,
+      "execution": "completed",
+      "coverage": "available_evidence",
+      "missing": [],
+      "usage": {
+        "api_calls": 2,
+        "total_tokens": 17066,
+        "reasoning_tokens": 0,
+        "input_tokens": 16041,
+        "output_tokens": 1025
+      },
+      "valid_findings": 10,
+      "retrieval_count": 2,
+      "retrieved_paths": [
+        "pom.xml",
+        "Dockerfile",
+        "README.md",
+        "docs/architecture/adr-010-v2-delivery-and-portable-handoff.md"
+      ]
+    }
+  ],
+  "elapsed_seconds": 143.411,
+  "model_calls": 8,
+  "known_tokens": 66017,
+  "findings": {
+    "confirmados": 26,
+    "indicios": 0,
+    "synthesis": 5
+  },
+  "coverage": {
+    "snapshot": "complete",
+    "semantic": "partial",
+    "cells": {
+      "security": "partial",
+      "architecture": "available_evidence",
+      "inventory": "available_evidence"
+    },
+    "limitation": "Ejecución terminada no demuestra exhaustividad semántica; consultar inventario y controles no evaluados."
+  },
+  "control_states": {
+    "no_evaluado": 4,
+    "evidencia_favorable_limitada": 2
+  },
+  "date": "2026-10-25",
+  "profile": "gpt-6-luna / medium",
+  "report_checks": {
+    "duplicate_ids": 0,
+    "broken_links": [],
+    "flow_nodes": 4,
+    "flow_edges": 3
+  },
+  "previous_attempts": [
+    {
+      "id": "5e077251-624b-4abd-a311-361b381470bd",
+      "state": "parcial",
+      "calls": 9,
+      "reported_tokens": 72046,
+      "warnings": {
+        "security": [
+          "controles[3] rechazado: Lista de referencias inválida (máximo 12 IDs o rangos)."
+        ]
+      }
+    },
+    {
+      "id": "e70468fd-d96d-4973-9066-bc5aeab676fa",
+      "state": "parcial",
+      "calls": 8,
+      "reported_tokens": 60253,
+      "warnings": {
+        "security": [
+          "controles[0] rechazado: Rango de fuentes inválido o mayor de 40 líneas."
+        ],
+        "inventory": [
+          "observaciones[2] rechazado: Rango de fuentes inválido o mayor de 40 líneas."
+        ]
+      }
+    }
+  ],
+  "session_totals": {
+    "attempts": 3,
+    "model_calls": 25,
+    "reported_tokens": 198316
+  },
+  "minimal_regressions": {
+    "directed_tests": 46,
+    "passed": 46,
+    "seconds": 1.223,
+    "explicit_masked_line_case": {
+      "passed": true,
+      "seconds": 0.018
+    },
+    "offline_range_replay": [
+      {
+        "role": "security",
+        "warnings": [],
+        "observations": 4,
+        "maximum_refs": 82
+      },
+      {
+        "role": "inventory",
+        "warnings": [],
+        "observations": 8,
+        "maximum_refs": 56
+      }
+    ]
+  },
+  "final_service_check": {
+    "audit-api": "healthy",
+    "office": "healthy",
+    "preparator": "healthy",
+    "report_http": 200,
+    "active_runs": 0,
+    "active_questions": 0
+  },
+  "fixes": [
+    "Security must use no_evaluado when it has only scanner metadata and no file references; tools remain separately visible.",
+    "MAX_EVIDENCE_REFS=200 shared across report validators; aligns with a full existing research fragment. Sources individually verified, no source/byte/round budget increase."
+  ],
+  "limitations": [
+    "This validates functional integration for one commit, not exhaustive audit quality or future run stability.",
+    "26 records include components and observations; not 26 vulnerabilities.",
+    "Four security controls remain no_evaluado; this is legitimate scope, not an execution error.",
+    "Two prior attempts remain partial and are not relabeled successful.",
+    "Semantic quality improvements are deferred to the user next instructions."
+  ],
+  "commit_scope": "Local source/config/docs/tests; product 0.3.0 and existing tool pins preserved. No CI/CD changes or push."
+}

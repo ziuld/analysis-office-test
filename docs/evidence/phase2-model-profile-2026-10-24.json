@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-24",
+  "provider": "openai-codex",
+  "model": "gpt-6.1-sol",
+  "reasoning": "medium",
+  "live_catalog_confirmed": true,
+  "analysis_calls": 0,
+  "sources": [
+    "https://developers.openai.com/api/docs/models",
+    "https://developers.openai.com/api/docs/guides/reasoning"
+  ],
+  "unchanged": [
+    "versions",
+    "CI/CD",
+    "file/byte limits",
+    "research rounds",
+    "output limits",
+    "synthesis prompt cap"
+  ],
+  "pending": [
+    "new repository from user",
+    "masked/range citation handling",
+    "coordinator synthesis context size"
+  ]
+}

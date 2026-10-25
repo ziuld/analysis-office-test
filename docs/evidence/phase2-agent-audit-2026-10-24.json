@@ -1,0 +1,101 @@
+{
+  "source_sha256": {
+    "run_agent.py": "0d7110b77b5ccf52e5e432d85cd0a42ec86982418e7f8c1a749311c36da96b66",
+    "agent/system_prompt.py": "fd8d23565f5eb17b304b0443fa19e3729a69cd699b4217acb27e7eb1503db500",
+    "agent/agent_init.py": "1e29225039534583ef0f3e7ae0d7a02b091e03792f8170c880ba83fff9c977cd",
+    "agent/codex_runtime.py": "31799bc1eafb00933cdf6e770b79f95ba8e59837c1cab230734811bdd03db4e8",
+    "agent/chat_completion_helpers.py": "8e4348884b780999fd33ddaecca688f1afcfe4f66940b5bac62c222383c41869"
+  },
+  "local_config_present": false,
+  "identity_file_present": true,
+  "project_context_file_present": false,
+  "local_plugin_directory_present": false,
+  "roles": {
+    "coordinator": {
+      "provider": "openai-codex",
+      "model": "gpt-6-luna",
+      "reasoning": "low",
+      "max_output_tokens": 2000,
+      "timeout": 60,
+      "limits": {
+        "prompt_bytes": 32000,
+        "response_bytes": 16000,
+        "seconds": 60,
+        "output_tokens": 2000,
+        "calls": 2,
+        "max_extra_queries": 0
+      }
+    },
+    "security": {
+      "provider": "openai-codex",
+      "model": "gpt-6-luna",
+      "reasoning": "low",
+      "max_output_tokens": 4500,
+      "timeout": 240,
+      "limits": {
+        "files": 12,
+        "bytes": 64000,
+        "seconds": 240,
+        "output_tokens": 4500,
+        "calls": 2,
+        "max_extra_queries": 1,
+        "research_rounds": 1
+      }
+    },
+    "architecture": {
+      "provider": "openai-codex",
+      "model": "gpt-6-luna",
+      "reasoning": "low",
+      "max_output_tokens": 4500,
+      "timeout": 240,
+      "limits": {
+        "files": 6,
+        "bytes": 24000,
+        "seconds": 240,
+        "output_tokens": 4500,
+        "calls": 2,
+        "max_extra_queries": 1,
+        "research_rounds": 1
+      }
+    },
+    "inventory": {
+      "provider": "openai-codex",
+      "model": "gpt-6-luna",
+      "reasoning": "low",
+      "max_output_tokens": 4500,
+      "timeout": 240,
+      "limits": {
+        "files": 6,
+        "bytes": 24000,
+        "seconds": 240,
+        "output_tokens": 4500,
+        "calls": 2,
+        "max_extra_queries": 0,
+        "research_rounds": 1
+      }
+    }
+  },
+  "model_calls": 0,
+  "resolved_boolean_agent_flags": {
+    "task_completion_guidance": true,
+    "parallel_tool_call_guidance": true,
+    "environment_probe": true,
+    "bot_mode_protocol": true
+  },
+  "date": "2026-10-24",
+  "phase": 2,
+  "scope": "Auditoría por lectura del código fijado e instalado y configuración no secreta; sin inferencia ni captura de prompts privados.",
+  "hermes_commit": "ce28ca328d3b85ac8663e602136eb69b027cd056",
+  "local_config_note": "No existe config.yaml local; el lector nativo devuelve defaults. La presencia de SOUL no implica que se cargue.",
+  "source_hash_check": "Five installed Hermes source files match pinned local source byte-for-byte.",
+  "scanners_executed": false,
+  "github_secret_alerts_requested": false,
+  "new_skills_installed": false,
+  "runtime_modified": false,
+  "limitations": [
+    "No se instanció un AIAgent ni se invocó al proveedor. La composición se trazó por lectura de código, no por captura de una petición real.",
+    "Los hooks de plugins y metadatos del runtime no desaparecen por skip_context_files. No se encontró directorio local de plugins; no se presume ausencia universal de toda inyección de plugins.",
+    "El contexto de investigación no incluye el perfil detallado de Seguridad ni el estándar editorial; el contexto de análisis sí. El coordinador usa skill+encargo y no el mismo constructor editorial.",
+    "Gitleaks dir analiza el snapshot, no Git history. No se consultaron alertas de secretos ni se implementó acceso a su API."
+  ]
+}

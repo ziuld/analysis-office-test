@@ -1,0 +1,368 @@
+{
+  "date": "2026-10-24",
+  "purpose": "Pruebas aisladas solicitadas, información escasa y suficiente para cada especialista",
+  "scope": {
+    "real_model_calls": 7,
+    "total_reported_tokens": 19851,
+    "seconds_sum": 93.438,
+    "provider": "openai-codex",
+    "model": "gpt-6-luna",
+    "reasoning": "low",
+    "coordinator_calls": 0,
+    "research_calls": 0,
+    "scanners": 0,
+    "target_execution": false,
+    "downloads": 0,
+    "automatic_retries": 0
+  },
+  "fixtures": {
+    "escasa": {
+      "repository": "https://github.com/example/controlled-fixture",
+      "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "simulation": true,
+      "evidence_origin": "Fixture sintético, no repositorio real",
+      "files": [
+        {
+          "path": "README.md",
+          "text": "# Internal notes\nUtility for a small team.\n",
+          "partial": false
+        }
+      ]
+    },
+    "suficiente": {
+      "repository": "https://github.com/example/controlled-fixture",
+      "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "simulation": true,
+      "evidence_origin": "Fixture sintético, no repositorio real",
+      "files": [
+        {
+          "path": "README.md",
+          "text": "# Internal notes\nInternal notes API for a small team.\nPython API; SQLite data stored at /data/notes.db in the configured volume.\nThe files describe configuration, not an observed deployment.\n",
+          "partial": false
+        },
+        {
+          "path": "app.py",
+          "text": "import os\nimport sqlite3\nfrom fastapi import FastAPI, Header, HTTPException, Depends\nfrom fastapi.responses import HTMLResponse\n\napp = FastAPI()\nDB_FILE = os.getenv(\"DB_FILE\", \"/data/notes.db\")\nAPI_KEY = os.environ[\"API_KEY\"]\n\ndef require_key(x_api_key: str = Header()):\n    if x_api_key != API_KEY:\n        raise HTTPException(status_code=401, detail=\"Unauthorized\")\n\n@app.get(\"/health\")\ndef health():\n    return {\"status\": \"ok\"}\n\n@app.get(\"/notes\", response_class=HTMLResponse, dependencies=[Depends(require_key)])\ndef notes(q: str = \"\"):\n    with sqlite3.connect(DB_FILE) as db:\n        rows = db.execute(\"SELECT body FROM notes WHERE body LIKE ?\", (\"%\" + q + \"%\",)).fetchall()\n    return \"<ul>\" + \"\".join(\"<li>\" + row[0] + \"</li>\" for row in rows) + \"</ul>\"\n",
+          "partial": false
+        },
+        {
+          "path": "requirements.txt",
+          "text": "fastapi==0.115.0\nuvicorn==0.30.6\n",
+          "partial": false
+        },
+        {
+          "path": "compose.yaml",
+          "text": "services:\n  api:\n    build: .\n    ports: [\"127.0.0.1:8080:8080\"]\n    environment:\n      DB_FILE: /data/notes.db\n      API_KEY: ${API_KEY:?set API_KEY outside source control}\n    volumes: [\"notes:/data\"]\nvolumes:\n  notes:\n",
+          "partial": false
+        },
+        {
+          "path": "Dockerfile",
+          "text": "FROM python:3.12-slim\nWORKDIR /app\nCOPY requirements.txt .\nRUN pip install --no-cache-dir -r requirements.txt\nCOPY app.py .\nCMD [\"uvicorn\", \"app:app\", \"--host\", \"0.0.0.0\", \"--port\", \"8080\"]\n",
+          "partial": false
+        }
+      ]
+    }
+  },
+  "calls": [
+    {
+      "id": "architecture-escasa",
+      "run": {
+        "role": "architecture",
+        "case": "escasa",
+        "model": "gpt-6-luna",
+        "reasoning": "low",
+        "usage": {
+          "input_tokens": 2045,
+          "output_tokens": 128,
+          "reasoning_tokens": 0,
+          "total_tokens": 2173,
+          "api_calls": 1
+        },
+        "status": "validated",
+        "warnings": [],
+        "confirmed": 1,
+        "indications": 0,
+        "pending": 1,
+        "seconds": 9.803
+      },
+      "prompt_sha256": "e06697f9b3d8bf6245ea9dfeb9271b76b34698ee507f8d3232a88ae690aa8a56",
+      "response": "{\"observaciones\":[{\"observacion\":\"El README describe el repositorio únicamente como una utilidad para un equipo pequeño. Las fuentes no identifican componentes técnicos, puntos de entrada, persistencia, conexiones ni infraestructura declarada; esto es un límite de las fuentes entregadas, no evidencia de que esos elementos no existan.\",\"certeza\":\"observado\",\"evidencia\":[\"F1:L1-L2\"]}],\"pendientes\":[\"Revisar código, configuración de despliegue y documentación operativa para identificar componentes, conexiones, persistencia e infraestructura; no es posible determinar ejecución efectiva con las fuentes disponibles.\"]}"
+    },
+    {
+      "id": "architecture-suficiente",
+      "run": {
+        "role": "architecture",
+        "case": "suficiente",
+        "model": "gpt-6-luna",
+        "reasoning": "low",
+        "usage": {
+          "input_tokens": 2667,
+          "output_tokens": 666,
+          "reasoning_tokens": 0,
+          "total_tokens": 3333,
+          "api_calls": 1
+        },
+        "status": "validated",
+        "warnings": [],
+        "confirmed": 6,
+        "indications": 0,
+        "pending": 1,
+        "seconds": 14.594
+      },
+      "prompt_sha256": "d9fe3829372480516f5c535af0877bb542488fa7004ff250e59d6e36edca9d6f",
+      "response": "{\"observaciones\":[{\"observacion\":\"La imagen declarada usa Python 3.12 slim, instala las dependencias y arranca la API FastAPI mediante Uvicorn en 0.0.0.0:8080. El Compose publica el puerto 8080 solo en 127.0.0.1 del host. Estas fuentes describen configuración, no confirman un despliegue activo.\",\"certeza\":\"observado\",\"evidencia\":[\"F5:L1-L6\",\"F4:L1-L4\"]},{\"observacion\":\"La API configura SQLite en /data/notes.db por defecto; Compose fija esa ruta y monta el volumen nombrado notes en /data. El manejador /notes abre ese archivo y consulta la tabla notes. Es persistencia en archivo respaldada por un volumen declarado; no consta su estado efectivo ni una estrategia de copia o recuperación.\",\"certeza\":\"observado\",\"evidencia\":[\"F2:L7-L7\",\"F2:L18-L22\",\"F4:L5-L10\"]},{\"observacion\":\"La configuración requiere API_KEY desde el entorno y Compose exige que se proporcione fuera del control de versiones. El acceso a /notes compara esa clave con la cabecera X-API-Key y responde 401 si no coincide. No se conoce el valor real ni se ha comprobado la operación del servicio.\",\"certeza\":\"observado\",\"evidencia\":[\"F2:L8-L12\",\"F2:L18-L18\",\"F4:L5-L7\"]}],\"componentes\":[{\"nombre\":\"API FastAPI\",\"tecnologia\":\"Python, FastAPI y Uvicorn\",\"funcion\":\"Expone /health y /notes; el contenedor la configura para escuchar en el puerto 8080.\",\"evidencia\":[\"F2:L3-L6\",\"F2:L14-L22\",\"F5:L1-L6\"]},{\"nombre\":\"Base de datos SQLite\",\"tecnologia\":\"SQLite en archivo\",\"funcion\":\"Almacén configurado en /data/notes.db; /notes consulta la tabla notes.\",\"evidencia\":[\"F2:L7-L7\",\"F2:L18-L22\",\"F4:L6-L10\"]},{\"nombre\":\"Volumen notes\",\"funcion\":\"Volumen nombrado de Compose montado en /data para los datos de la API.\",\"evidencia\":[\"F4:L8-L10\"]}],\"conexiones\":[{\"origen\":\"API FastAPI\",\"destino\":\"Base de datos SQLite\",\"certeza\":\"observado\",\"descripcion\":\"El manejador /notes abre DB_FILE, configurado en Compose como /data/notes.db, y consulta la tabla notes.\",\"evidencia\":[\"F2:L7-L7\",\"F2:L18-L22\",\"F4:L5-L6\"]},{\"origen\":\"API FastAPI\",\"destino\":\"Volumen notes\",\"certeza\":\"indicio\",\"descripcion\":\"Compose monta el volumen en /data, que contiene la ruta configurada para SQLite; no se confirma el montaje efectivo.\",\"evidencia\":[\"F2:L7-L7\",\"F4:L8-L10\"]}],\"pendientes\":[\"No hay evidencia de que Compose se haya desplegado o de que el puerto, el volumen y la base de datos estén activos.\"]}"
+    },
+    {
+      "id": "inventory-escasa",
+      "run": {
+        "role": "inventory",
+        "case": "escasa",
+        "model": "gpt-6-luna",
+        "reasoning": "low",
+        "usage": {
+          "input_tokens": 1905,
+          "output_tokens": 80,
+          "reasoning_tokens": 0,
+          "total_tokens": 1985,
+          "api_calls": 1
+        },
+        "status": "validated",
+        "warnings": [],
+        "confirmed": 1,
+        "indications": 0,
+        "pending": 1,
+        "seconds": 10.336
+      },
+      "prompt_sha256": "d0ebe04f53e02825335f46c3331eee58a90a3c7b4defe50246b23cd0308d499c",
+      "response": "{\"observaciones\":[{\"observacion\":\"El README describe el proyecto como una utilidad para un equipo pequeño; no aporta información sobre tecnologías, versiones ni mecanismos de persistencia.\",\"certeza\":\"observado\",\"evidencia\":[\"F1:L1-L2\"]}],\"pendientes\":[\"Revisar manifiestos, código y configuración para identificar componentes, tecnologías y persistencia.\"]}"
+    },
+    {
+      "id": "inventory-suficiente",
+      "run": {
+        "role": "inventory",
+        "case": "suficiente",
+        "model": "gpt-6-luna",
+        "reasoning": "low",
+        "usage": {
+          "input_tokens": 2527,
+          "output_tokens": 500,
+          "reasoning_tokens": 0,
+          "total_tokens": 3027,
+          "api_calls": 1
+        },
+        "status": "validated",
+        "warnings": [],
+        "confirmed": 6,
+        "indications": 0,
+        "pending": 1,
+        "seconds": 13.126
+      },
+      "prompt_sha256": "276c45f8e49f6ec8551262fc1d51cb20435ae1105aa73afb7b8be2b7e79fb123",
+      "response": "{\"observaciones\":[{\"observacion\":\"La aplicación abre una conexión SQLite usando DB_FILE, configurable por variable de entorno y con valor predeterminado /data/notes.db. La ruta declarada en Compose es /data/notes.db y se monta en el volumen notes; el código mostrado consulta notas, pero no incluye inicialización ni escrituras, por lo que el mecanismo de creación y almacenamiento de datos no queda completo.\",\"certeza\":\"observado\",\"evidencia\":[\"F1:L3\",\"F2:L7\",\"F2:L20-L21\",\"F4:L5-L10\"]},{\"observacion\":\"Las dependencias declaran FastAPI 0.115.0 y Uvicorn 0.30.6. La aplicación importa FastAPI; la imagen ejecuta Uvicorn para servirla. No se declara una versión de SQLite en las fuentes.\",\"certeza\":\"observado\",\"evidencia\":[\"F2:L2-L6\",\"F3:L1-L2\",\"F5:L1-L6\"]}],\"pendientes\":[\"No se proporcionan la inicialización del esquema ni operaciones de escritura; queda indeterminado cómo se crean y modifican los datos persistidos.\"],\"componentes\":[{\"nombre\":\"API de notas\",\"tecnologia\":\"Python, FastAPI 0.115.0\",\"funcion\":\"Expone /health y /notes; el endpoint de notas consulta SQLite.\",\"evidencia\":[\"F2:L2-L6\",\"F2:L14-L21\",\"F3:L1\"]},{\"nombre\":\"Persistencia de notas\",\"tecnologia\":\"SQLite\",\"funcion\":\"Consulta la tabla notes en la ruta configurable DB_FILE, cuyo valor predeterminado es /data/notes.db.\",\"evidencia\":[\"F2:L2\",\"F2:L7\",\"F2:L20-L21\"]},{\"nombre\":\"Servicio de ejecución\",\"tecnologia\":\"Docker, Python 3.12-slim, Uvicorn 0.30.6\",\"funcion\":\"La imagen instala las dependencias y ejecuta la aplicación en el puerto 8080.\",\"evidencia\":[\"F3:L2\",\"F5:L1-L6\"]},{\"nombre\":\"Configuración declarada de Compose\",\"tecnologia\":\"Docker Compose\",\"funcion\":\"Configura el servicio API, publica 127.0.0.1:8080 y monta el volumen notes en /data.\",\"evidencia\":[\"F4:L1-L10\"]}]}"
+    },
+    {
+      "id": "security-escasa",
+      "run": {
+        "role": "security",
+        "case": "escasa",
+        "model": "gpt-6-luna",
+        "reasoning": "low",
+        "usage": {
+          "input_tokens": 2040,
+          "output_tokens": 228,
+          "reasoning_tokens": 0,
+          "total_tokens": 2268,
+          "api_calls": 1
+        },
+        "status": "validated",
+        "warnings": [],
+        "confirmed": 0,
+        "indications": 0,
+        "pending": 1,
+        "seconds": 11.572
+      },
+      "prompt_sha256": "192de3fdf68ba48ccfb670ba92be8e2780e9122342455c56c6c0da49852eb87f",
+      "response": "{\"observaciones\":[],\"pendientes\":[\"Las fuentes solo incluyen una descripción general del proyecto; no permiten evaluar código, configuración ni controles de seguridad.\"],\"controles\":[{\"id\":\"acceso\",\"estado\":\"no_evaluado\",\"motivo\":\"No se proporcionan manejadores ni controles de acceso.\",\"evidencia\":[]},{\"id\":\"entradas\",\"estado\":\"no_evaluado\",\"motivo\":\"No se proporciona código que procese entradas.\",\"evidencia\":[]},{\"id\":\"secretos\",\"estado\":\"no_evaluado\",\"motivo\":\"No se proporcionan fuentes sobre secretos o datos persistidos.\",\"evidencia\":[]},{\"id\":\"dependencias\",\"estado\":\"no_evaluado\",\"motivo\":\"No se incluyen manifiestos ni resultados de análisis de dependencias.\",\"evidencia\":[]},{\"id\":\"configuracion\",\"estado\":\"no_evaluado\",\"motivo\":\"No se incluyen archivos de despliegue o configuración.\",\"evidencia\":[]},{\"id\":\"operacion\",\"estado\":\"no_evaluado\",\"motivo\":\"No se incluyen fuentes sobre operación, registros o exposición de servicios.\",\"evidencia\":[]}]}"
+    },
+    {
+      "id": "security-suficiente-clarificado",
+      "run": {
+        "role": "security",
+        "case": "suficiente",
+        "model": "gpt-6-luna",
+        "reasoning": "low",
+        "usage": {
+          "input_tokens": 2719,
+          "output_tokens": 877,
+          "reasoning_tokens": 0,
+          "total_tokens": 3596,
+          "api_calls": 1
+        },
+        "status": "failed",
+        "error": "Respuesta compacta no es JSON válido.",
+        "error_type": "AuditError",
+        "seconds": 17.44
+      },
+      "prompt_sha256": "bc3b802403b605f9838737861fbd7d88a08277691d1917927a327f92223e27b8",
+      "response": "{\"observaciones\":[{\"observacion\":\"El endpoint /notes requiere una API key mediante una dependencia y devuelve 401 si no coincide.\",\"certeza\":\"observado\",\"evidencia\":[\"F2:L10-L12\",\"F2:L18-L19\"],\"implicacion\":\"Se observa un control de autenticación para este endpoint; las fuentes no muestran autorización por usuario, rol u objeto.\",\"recomendacion\":\"Revisar si la autenticación por clave compartida satisface los requisitos de autorización y aislamiento de datos.\"},{\"observacion\":\"El parámetro q se utiliza en una consulta SQLite parametrizada. Sin embargo, los cuerpos recuperados se concatenan directamente en una respuesta HTML, sin escape visible.\",\"certeza\":\"observado\",\"evidencia\":[\"F2:L19-L22\"],\"gravedad\":\"media\",\"implicacion\":\"Si una nota contiene marcado o JavaScript controlado por un usuario y un cliente representa la respuesta como HTML, podría producirse XSS almacenado.\",\"condicion\":\"El riesgo depende de que contenido no confiable pueda almacenarse en notes.body y de que la respuesta HTML se procese en el navegador.\",\"recomendacion\":\"Escapar el contenido para contexto HTML o generarlo con una plantilla que escape por defecto.\"},{\"observacion\":\"Compose declara el uso de una variable de entorno requerida para API_KEY; la aplicación la lee del entorno y la compara con el encabezado recibido.\",\"certeza\":\"observado\",\"evidencia\":[\"F2:L8-L12\",\"F4:L5-L7\"],\"implicacion\":\"La clave no aparece escrita directamente en estos archivos, pero no se documentan su almacenamiento, permisos, rotación ni protección en ejecución.\",\"recomendacion\":\"Verificar la gestión y los permisos del mecanismo que proporciona API_KEY, sin incluir la clave en registros ni repositorios.\"},{\"observacion\":\"Compose declara publicar el puerto 8080 enlazado a 127.0.0.1 y montar el volumen notes en /data; la aplicación configura allí la base SQLite por defecto.\",\"certeza\":\"observado\",\"evidencia\":[\"F1:L3-L4\",\"F2:L7\",\"F4:L1-L10\",\"F5:L6-L6\"],\"implicacion\":\"Esto describe la configuración prevista, no acredita el despliegue efectivo ni los permisos del archivo persistido.\"}],\"pendientes\":[\"No hay resultados OSV ni otra evaluación de vulnerabilidades de dependencias; las versiones declaradas por sí solas no acreditan una CVE.\",\"No se aportan fuentes sobre autorización por usuario, creación o modificación de notas, permisos de la base de datos, registros, manejo de errores ni controles operativos.\"],\"controles\":[{\"id\":\"acceso\",\"estado\":\"evidencia_favorable_limitada\",\"motivo\":\"El endpoint /notes exige una API key; no se evalúa autorización granular ni aislamiento de datos.\",\"evidencia\":[\"F2:L10-L12\",\"F2:L18-L19\"]},{\"id\":\"entradas\",\"estado\":\"hallazgo\",\"motivo\":\"La consulta SQL está parametrizada, pero el contenido de las filas se concatena en HTML sin escape visible; el impacto depende de que sea contenido no confiable procesado por un navegador.\",\"evidencia\":[\"F2:L19-L22\"]},{\"id\":\"secretos\",\"estado\":\"evidencia_favorable_limitada\",\"motivo\":\"La clave se obtiene del entorno y Compose exige que se proporcione fuera del archivo; no se evalúa su gestión o protección efectiva.\",\"evidencia\":[\"F2:L8-L11\",\"F4:L5-L7\"]},{\"id\":\"dependencias\",\"estado\":\"no_evaluado\",\"motivo\":\"Hay versiones fijadas, pero no resultados OSV ni análisis de vulnerabilidades.\",\"evidencia\":[\"F3:L1-L2\"]},{\"id\":\"configuracion\",\"estado\":\"evidencia_favorable_limitada\",\"motivo\":\"Compose declara enlace a localhost y almacenamiento mediante volumen; no acredita la configuración efectiva del despliegue.\",\"evidencia\":[\"F4:L1-L10\",\"F5:L1-L6\"]},{\"id\":\"operacion\",\"estado\":\"no_evaluado\",\"motivo\":\"Las fuentes no permiten evaluar registros, permisos efectivos, exposición desplegada ni manejo operativo de errores.\",\"evidencia\":[]}]}</final>"
+    },
+    {
+      "id": "security-suficiente",
+      "run": {
+        "role": "security",
+        "case": "suficiente",
+        "model": "gpt-6-luna",
+        "reasoning": "low",
+        "usage": {
+          "input_tokens": 2662,
+          "output_tokens": 807,
+          "reasoning_tokens": 0,
+          "total_tokens": 3469,
+          "api_calls": 1
+        },
+        "status": "validated",
+        "warnings": [],
+        "confirmed": 5,
+        "indications": 0,
+        "pending": 3,
+        "seconds": 16.567
+      },
+      "prompt_sha256": "2a3a521b5a446136f471f9a14888bf6ae2982bb19c25ce8da10281833cc47921",
+      "response": "{\"observaciones\":[{\"observacion\":\"El endpoint /notes exige una API key mediante dependencia y devuelve 401 cuando la clave no coincide. No se observa autenticación en /health, que solo informa el estado del servicio.\",\"certeza\":\"observado\",\"evidencia\":[\"F2:L10-L16\",\"F2:L18-L19\"]},{\"observacion\":\"El contenido de las notas se concatena directamente en HTML sin escape visible. Si un usuario puede almacenar contenido HTML o etiquetas de script en notes.body, la respuesta podría permitir XSS al cliente que la renderice.\",\"certeza\":\"observado\",\"implicacion\":\"El valor de body se inserta dentro de un elemento <li> en una respuesta HTML.\",\"condicion\":\"La explotación depende de que contenido no confiable llegue a notes.body y de que un cliente interprete la respuesta como HTML.\",\"recomendacion\":\"Escapar body para contexto HTML o devolver datos en un formato que no se interprete como HTML.\",\"gravedad\":\"media\",\"evidencia\":[\"F2:L18-L22\"]},{\"observacion\":\"La búsqueda usa una consulta SQLite parametrizada, lo que evita insertar q como sintaxis SQL. Los comodines % y _ siguen teniendo significado en LIKE.\",\"certeza\":\"observado\",\"evidencia\":[\"F2:L19-L21\"]},{\"observacion\":\"La clave se obtiene de una variable de entorno y Compose exige que API_KEY esté definida externamente; no se observa un valor secreto literal en las fuentes entregadas.\",\"certeza\":\"observado\",\"evidencia\":[\"F2:L7-L12\",\"F4:L5-L8\"]},{\"observacion\":\"Compose declara publicar el puerto 8080 enlazado a 127.0.0.1 y montar el volumen notes en /data. Esto describe la configuración prevista, no confirma el despliegue efectivo ni sus permisos.\",\"certeza\":\"observado\",\"evidencia\":[\"F1:L3-L4\",\"F4:L1-L10\",\"F5:L6-L6\"]}],\"pendientes\":[\"No se proporcionan controles de autorización por usuario, rol u objeto ni el esquema o mecanismo de escritura de notas; no puede evaluarse quién puede leer o introducir contenido.\",\"No se aportan resultados OSV ni evidencia de evaluación de vulnerabilidades de las dependencias.\",\"No se aportan datos sobre permisos efectivos del volumen, registros, gestión de errores o configuración de producción.\"],\"controles\":[{\"id\":\"acceso\",\"estado\":\"hallazgo\",\"motivo\":\"La API key protege /notes; /health no requiere esa dependencia. No hay evidencia suficiente para evaluar autorización por usuario, rol u objeto.\",\"evidencia\":[\"F2:L10-L19\"]},{\"id\":\"entradas\",\"estado\":\"hallazgo\",\"motivo\":\"La búsqueda SQL está parametrizada, pero body se inserta en HTML sin escape visible; el riesgo XSS depende del origen del contenido almacenado.\",\"evidencia\":[\"F2:L18-L22\"]},{\"id\":\"secretos\",\"estado\":\"evidencia_favorable_limitada\",\"motivo\":\"La clave se toma del entorno y Compose exige que se proporcione externamente; no se verifican almacenamiento, permisos ni gestión en ejecución.\",\"evidencia\":[\"F2:L7-L12\",\"F4:L5-L8\"]},{\"id\":\"dependencias\",\"estado\":\"no_evaluado\",\"motivo\":\"Hay versiones fijadas, pero no se proporcionan resultados OSV ni análisis de vulnerabilidades.\",\"evidencia\":[\"F3:L1-L2\"]},{\"id\":\"configuracion\",\"estado\":\"evidencia_favorable_limitada\",\"motivo\":\"Compose declara enlace del puerto a loopback y volumen persistente; no demuestra la configuración efectiva del despliegue.\",\"evidencia\":[\"F4:L1-L10\"]},{\"id\":\"operacion\",\"estado\":\"no_evaluado\",\"motivo\":\"Las fuentes no permiten evaluar registros, permisos efectivos, manejo operativo de errores ni controles en ejecución.\",\"evidencia\":[]}] }"
+    }
+  ],
+  "offline_replay": [
+    {
+      "case": "architecture-escasa",
+      "replayed": true,
+      "format_normalization": false,
+      "warnings": [],
+      "confirmed": 1,
+      "indications": 0,
+      "controls": {}
+    },
+    {
+      "case": "architecture-suficiente",
+      "replayed": true,
+      "format_normalization": false,
+      "warnings": [],
+      "confirmed": 6,
+      "indications": 0,
+      "controls": {}
+    },
+    {
+      "case": "inventory-escasa",
+      "replayed": true,
+      "format_normalization": false,
+      "warnings": [],
+      "confirmed": 1,
+      "indications": 0,
+      "controls": {}
+    },
+    {
+      "case": "inventory-suficiente",
+      "replayed": true,
+      "format_normalization": false,
+      "warnings": [],
+      "confirmed": 6,
+      "indications": 0,
+      "controls": {}
+    },
+    {
+      "case": "security-escasa",
+      "replayed": true,
+      "format_normalization": false,
+      "warnings": [],
+      "confirmed": 0,
+      "indications": 0,
+      "controls": {
+        "acceso": "no_evaluado",
+        "entradas": "no_evaluado",
+        "secretos": "no_evaluado",
+        "dependencias": "no_evaluado",
+        "configuracion": "no_evaluado",
+        "operacion": "no_evaluado"
+      }
+    },
+    {
+      "case": "security-suficiente-clarificado",
+      "replayed": true,
+      "format_normalization": true,
+      "warnings": [],
+      "confirmed": 4,
+      "indications": 0,
+      "controls": {
+        "acceso": "evidencia_favorable_limitada",
+        "entradas": "hallazgo",
+        "secretos": "evidencia_favorable_limitada",
+        "dependencias": "no_evaluado",
+        "configuracion": "evidencia_favorable_limitada",
+        "operacion": "no_evaluado"
+      }
+    },
+    {
+      "case": "security-suficiente",
+      "replayed": true,
+      "format_normalization": false,
+      "warnings": [],
+      "confirmed": 5,
+      "indications": 0,
+      "controls": {
+        "acceso": "hallazgo",
+        "entradas": "hallazgo",
+        "secretos": "evidencia_favorable_limitada",
+        "dependencias": "no_evaluado",
+        "configuracion": "evidencia_favorable_limitada",
+        "operacion": "no_evaluado"
+      }
+    }
+  ],
+  "manual_review": {
+    "inventory": {
+      "sparse": "Solo describe el README y deja tecnología/persistencia pendientes; no inventa motor.",
+      "sufficient": "Identifica FastAPI 0.115.0, Uvicorn 0.30.6, Python 3.12-slim, SQLite /data/notes.db, DB_FILE y volumen notes; separa versiones declaradas y código de lectura. No inventa escritura, esquema ni copias."
+    },
+    "architecture": {
+      "sparse": "No crea componentes o conexiones ficticios.",
+      "sufficient": "Tres componentes y dos conexiones con extremos válidos; distingue enlace de host 127.0.0.1 del bind de contenedor 0.0.0.0, configuración de ejecución y volumen de copia.",
+      "minor_caveat": "Dice que Compose exige proporcionar API_KEY fuera del control de versiones; el archivo exige una variable y contiene ese mensaje, pero no verifica que el valor nunca se versionó. No es garantía de gestión segura."
+    },
+    "security": {
+      "sparse": "Cero hallazgos y seis controles no_evaluado; correcto.",
+      "sufficient_initial": "Detecta API key, SQL parametrizado, HTML sin escape con XSS condicionado, secreto por entorno y loopback. Estado acceso=hallazgo no justificado por un defecto concreto; requiere aclaración.",
+      "sufficient_clarified": "Mismas fuentes, contrato aclara estados; acceso=evidencia_favorable_limitada y entradas=hallazgo por HTML sin escape, explotación explícitamente condicionada. Dependencias y operación quedan no_evaluado. No inventa CVEs ni falla crítica por /health público.",
+      "transport_failure": "La respuesta contiene JSON completo seguido de </final>; rechazo original conservado. Normalización exacta en adaptador, replay offline sin rechazos. No se edita contenido técnico."
+    }
+  },
+  "fixes": [
+    "Rangos de referencias verificados por línea, sin inventar fuentes",
+    "Semántica explícita de hallazgo frente a defensa limitada en prompt de Seguridad",
+    "Eliminar solo sufijo </final> tras un objeto JSON íntegro; no reparar ni extraer JSON arbitrario"
+  ],
+  "checks": {
+    "linux_directed_tests": 31,
+    "passed": 31,
+    "seconds": 1.053,
+    "offline_replayed_responses": 7,
+    "offline_replay_warnings": 0,
+    "host_attempt": "No válido para suite completa: imports fcntl no disponibles en Windows. Se verifica en contenedor Linux, sin modificar producto por el fallo del entorno."
+  },
+  "limitations": [
+    "Un caso escaso y uno suficiente por rol; no demuestra estabilidad estadística ni otros lenguajes.",
+    "Fuentes sintéticas entregadas directamente: no comprueba selección por grafo, ventanas ni presupuesto acumulativo de investigación.",
+    "No se prueba coordinador/síntesis ni flujo completo. Su fallo anterior continúa pendiente.",
+    "Séptima respuesta falló inicialmente por sufijo; corrección verificada mediante replay, no con una octava llamada.",
+    "Citas y esquema correctos no prueban verdad de todas las interpretaciones; matiz de Arquitectura documentado.",
+    "Sin auditoría dinámica, scanners, ejecución de fixtures, cambios CI/CD ni versiones."
+  ],
+  "local_service_check": {
+    "audit-api": "healthy",
+    "office": "healthy",
+    "preparator": "healthy",
+    "office_http": 200,
+    "active_runs": 0,
+    "active_questions": 0,
+    "version": "0.3.0",
+    "visual_inspection": false
+  }
+}

@@ -1,10 +1,10 @@
 # Reporte de seguridad · formato 3
 
-El formato visual y editorial actual sigue la referencia v12: cuatro capítulos (resumen, diagnóstico, mejoras y anexos). La fuente única de redacción es [ESTANDAR_COMUNICACION_INFORMES.md](ESTANDAR_COMUNICACION_INFORMES.md), cargada explícitamente por cada célula y por las consultas. La consolidación guarda la versión y el hash del estándar utilizado, sin una llamada adicional.
+El formato visual y editorial actual sigue la referencia v12: cuatro capítulos (resumen, diagnóstico, mejoras y anexos). La fuente única de redacción es [resources/editorial/standard.md](../backend/src/arktic_office/resources/editorial/standard.md), cargada explícitamente por cada célula y por las consultas. La consolidación guarda la versión y el hash del estándar utilizado, sin una llamada adicional.
 
 Los campos opcionales `titulo`, `resultado_esperado`, `detalle_tecnico` y `presentacion` permiten redactar desde origen, estructurar conexiones y separar estado de datos, disponibilidad y capacidad. Los resultados antiguos siguen siendo legibles: sus huecos se muestran como no estructurados y no se rellenan por inferencia. Las variantes de componentes y aportaciones discrepantes se conservan en anexos. Los resultados esperados son objetivos por verificar.
 
-`auditor/report_view.py` produce HTML y Markdown a partir de los mismos registros. Los recursos visuales en `auditor/assets/` se extrajeron de la referencia aprobada, que se conserva intacta. La muestra independiente es `artifacts/informe-arktic-v12-muestra.html`. El ejemplo anterior se conserva; el nuevo se guarda en `reports/demo-editorial-v12-portal-personal/`.
+`backend/src/arktic_office/reporting/view.py` produce HTML y Markdown a partir de los mismos registros. Los recursos visuales en `backend/src/arktic_office/resources/assets/` se extrajeron de la referencia aprobada, que se conserva intacta. La muestra independiente es `artifacts/informe-arktic-v12-muestra.html`. El ejemplo anterior se conserva; el nuevo se guarda en `reports/demo-editorial-v12-portal-personal/`.
 
 El reporte comienza por propósito, construcción y datos; después muestra riesgos por gravedad, controles pendientes, detecciones automáticas, inventario y cobertura. Cada riesgo incluye impacto, condiciones, acción propuesta y fuentes al commit. La oficina permite filtrar riesgos e imprimir el reporte completo o guardarlo como PDF desde el navegador. Markdown sigue disponible para descarga. Los informes anteriores se conservan en su formato original.
 
@@ -39,7 +39,7 @@ Si únicamente falla la validación de la propuesta Azure, se valida de forma in
 
 También se valida por separado cada bloque opcional de presentación de Arquitectura. Un diagrama inválido se omite sin descartar los hallazgos, las decisiones u otros bloques que sí superen validación. La advertencia técnica queda en `advertencias` de la célula; la interfaz muestra un mensaje de resultado parcial.
 
-`auditor/profiles/security-v1.md` se carga explícitamente en las instrucciones de Seguridad. Es una guía propia y acotada inspirada en [OWASP ASVS 5.0.0](https://asvs.owasp.org/) y [OWASP Top 10:2025](https://top10.owasp.org/2025/); no es certificación ni cobertura completa de sus requisitos.
+`backend/src/arktic_office/resources/profiles/security-v1.md` se carga explícitamente en las instrucciones de Seguridad. Es una guía propia y acotada inspirada en [OWASP ASVS 5.0.0](https://asvs.owasp.org/) y [OWASP Top 10:2025](https://top10.owasp.org/2025/); no es certificación ni cobertura completa de sus requisitos.
 
 Revisa acceso; entradas/inyección/archivos/red; secretos/datos; dependencias; configuración/exposición; errores/registros/continuidad. Cada control indica hallazgo, evidencia favorable limitada, no evaluado o no aplica justificado. Los estados evaluados requieren citas contrastadas. Una cita correcta no valida automáticamente la interpretación del modelo.
 
@@ -54,13 +54,13 @@ Las detecciones aparecen separadas de los riesgos del modelo para evitar duplica
 
 No se analizan `.env`, claves privadas reconocidas por nombre, archivos excluidos, historial Git ni dependencias no descargadas. La ocultación de secretos tiene límites, incluso con Gitleaks. El código seleccionado y ocultado se envía al proveedor del modelo; esto debe ser compatible con las reglas de datos de la empresa.
 
-Semgrep queda para una ampliación posterior con reglas revisadas para los lenguajes reales. Esta versión no hace pentesting, análisis dinámico, mediciones de carga ni validación de copias/restauración. La decisión de despliegue sigue siendo humana.
+En el MVP Semgrep quedó diferido; la ampliación de Fase 2 descrita al final ya lo integra con reglas locales acotadas. Esta versión no hace pentesting, análisis dinámico, mediciones de carga ni validación de copias/restauración. La decisión de despliegue sigue siendo humana.
 
 ## Comprobar cambios
 
 ```powershell
 docker compose --profile audit build auditor
-docker compose --profile audit run --rm -T --entrypoint python auditor -m unittest test_audit test_team test_server test_questions test_brief test_security
+pwsh -NoProfile -File scripts/check-backend.ps1
 docker compose up -d --build --wait
 ```
 
@@ -70,6 +70,27 @@ Validación del 22/10/2026: 66 pruebas del auditor y 4 de interfaz superadas; re
 
 ## Propuesta DevOps Azure
 
-Arquitectura añade una recomendación preliminar con una opción principal, justificación, evidencia técnica, supuestos, hasta cinco servicios y cinco pasos, y pendientes antes de aceptarla. El perfil `auditor/profiles/azure-v1.md` favorece App Service o Container Apps para cargas sencillas; AKS exige una razón concreta y la hipótesis de plataforma corporativa existente. No se inventan SKU, recursos, precios ni infraestructura disponible. Incluye preparación, entrega con Azure Pipelines, aprobación humana y reversión, tratando cambios de BD por separado. Se obtiene en la misma llamada de Arquitectura; no añade llamadas de consolidación.
+Arquitectura añade una recomendación preliminar con una opción principal, justificación, evidencia técnica, supuestos, hasta cinco servicios y cinco pasos, y pendientes antes de aceptarla. El perfil `backend/src/arktic_office/resources/profiles/azure-v1.md` favorece App Service o Container Apps para cargas sencillas; AKS exige una razón concreta y la hipótesis de plataforma corporativa existente. No se inventan SKU, recursos, precios ni infraestructura disponible. Incluye preparación, entrega con Azure Pipelines, aprobación humana y reversión, tratando cambios de BD por separado. Se obtiene en la misma llamada de Arquitectura; no añade llamadas de consolidación.
 
 Los informes antiguos no se reinterpretan automáticamente. El [ejemplo ficticio](../examples/README.md) muestra esta sección sin ejecutar agentes ni scanners. La generación real de la nueva propuesta queda pendiente por decisión del usuario de no consumir más tokens.
+
+## Preparación híbrida del Bloque 4
+
+La rama se resuelve desde los metadatos reales de GitHub y se fija el commit. El modo opcional `hybrid` separa adquisición, recuperación e inferencia; la cobertura de entrada a scanners se declara aparte de los fragmentos del explorador y los envíos por célula. El servicio Graphify recibe únicamente texto previamente ocultado, sin credenciales ni salida a Internet, y no ejecuta el proyecto. Hermes solicita acciones JSON que el Core limita a búsqueda, mapa y lectura sobre archivos ya adquiridos; no habilita herramientas de agente. Límites, conservación temporal, cierres y restricciones comprobadas: [PREPARACION.md](PREPARACION.md). Las comprobaciones de este bloque no ejecutaron scanners ni modelos reales.
+
+## Coordinación del Bloque 5
+
+La coordinación IA opcional añade hasta dos llamadas sobre inventario o aportaciones ya validadas, sin herramientas, búsquedas ni reintentos. Las referencias de síntesis se heredan de aportaciones existentes y se contrastan con el snapshot; su corrección no demuestra fidelidad semántica de la interpretación. Los originales y los fallos se conservan. Azure requiere un encargo explícito y su ausencia no invalida un encargo que no la solicita. Configuración, límites y pruebas sin consumo real: [COORDINACION.md](COORDINACION.md).
+
+
+## Scanners ampliados en Fase 2 — 24/10/2026
+
+Detección automática por archivos, sin solicitar la tecnología principal. OSV 2.7.0 admite desde el adaptador lockfiles/manifiestos Python (`requirements*.txt`, directorios requirements, Pipfile.lock, poetry.lock, pdm.lock, pylock.toml, uv.lock), npm/yarn/pnpm/bun, Maven/Gradle, .NET (packages.config, packages.lock.json, *.deps.json), Go y otros ecosistemas contemplados en `adapters/scanners.py`. Incluye SBOM CycloneDX (`bom.json`, `bom.xml`, *.cdx.json/xml) y SPDX (*.spdx, *.spdx.json/yml/rdf/rdf.xml). No se generan SBOM ejecutando el proyecto ni se inventan versiones. `package.json`, `pyproject.toml`, csproj o build.gradle solos no equivalen a versiones instaladas resueltas. La capacidad de extracción de cada formato depende de OSV fijado y del contenido; el adaptador registra entradas y cuáles aportaron paquetes versionados.
+
+Se habilita resolución transitiva de Maven mediante metadatos de deps.dev. OSV consulta servicios externos con nombres/versiones/coordenadas de dependencias; no necesita modelos ni instalar dependencias o ejecutar builds del objetivo. Manifiestos con rangos y resolución remota no prueban qué está instalado en producción. Un archivo enviado sin paquetes extraídos sigue siendo una carencia, no una comprobación favorable. Compatibilidad de referencia: https://google.github.io/osv-scanner/supported-languages-and-lockfiles/ .
+
+Semgrep CE 1.182.1 se instala con dependencias fijadas por hashes en un entorno separado. Nueve reglas propias para Python, JavaScript/TypeScript, Java y C# cubren patrones de ejecución dinámica, deserialización, comandos, destinos HTML y SQL concatenado según lenguaje. No es un perfil OWASP completo, ni análisis entre archivos ni validación de explotación. No reemplaza a OSV/Gitleaks ni certifica ausencia de vulnerabilidades. Los candidatos se entregan a los agentes como pistas con archivo y línea.
+
+SAST trabaja en una copia temporal de todos los archivos con extensiones compatibles del snapshot, incluidos ocultos/tests; no usa .semgrepignore/config/reglas del objetivo. Reglas locales, métricas y comprobación de versión desactivadas; sin descargas de reglas, modelos ni llamadas externas por Semgrep. Devuelve metadatos de patrón y ubicación, sin copiar fragmentos ni mensajes arbitrarios del scanner al contexto. Se comprueba la lista realmente procesada; errores/omisiones no se convierten en un resultado limpio. Fuentes temporales se eliminan al salir. Límite de ejecución por scanner 90 s y salida 8 MB; si falla la preparación no se inicia el equipo con una muestra silenciosa.
+
+Validación controlada: OSV extrae nueve paquetes de siete archivos de Python, npm, Maven, .NET, Go y SBOM CycloneDX/SPDX; encuentra 51 coincidencias de avisos en dependencias deliberadamente antiguas. Semgrep procesa siete archivos, detecta los seis patrones preparados en cuatro lenguajes y no marca el archivo TypeScript de control. La primera ejecución del fixture npm no incluía el origen resolved y no produjo una detección para ese archivo; se corrigió el fixture y se conservó el fallo en el registro. Estas pruebas no miden cobertura o precisión general ni certifican todos los formatos enumerados.

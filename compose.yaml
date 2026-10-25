@@ -14,12 +14,12 @@ services:
 
   auditor:
     profiles: [audit]
-    image: arktic-hermes-auditor:0.2.0
+    image: arktic-hermes-auditor:0.3.0
     build:
       context: .
       dockerfile: docker/Auditor.Dockerfile
       args:
-        APP_VERSION: "0.2.0"
+        APP_VERSION: "0.3.0"
     env_file: .env
     volumes:
       - ./reports:/reports
@@ -56,13 +56,13 @@ services:
     networks: [office]
 
   office:
-    image: arktic-hermes3d-office:0.2.0
+    image: arktic-hermes3d-office:0.3.0
     build:
       context: ./vendor/Hermes3D
       dockerfile: ../../docker/Hermes3D.Dockerfile
       target: office
       args:
-        APP_VERSION: "0.2.0"
+        APP_VERSION: "0.3.0"
     ports:
       - "127.0.0.1:3000:3000"
     environment:

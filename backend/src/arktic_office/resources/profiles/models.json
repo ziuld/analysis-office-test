@@ -1,0 +1,59 @@
+{
+  "providers": {
+    "openai-codex": "gpt-6-luna",
+    "openai": "gpt-5.4-mini"
+  },
+  "reasoning": [
+    "low",
+    "medium",
+    "high"
+  ],
+  "roles": {
+    "security": {
+      "files": 20,
+      "bytes": 100000,
+      "seconds": 240,
+      "output_tokens": 4500,
+      "calls": 1,
+      "research_rounds": 2
+    },
+    "architecture": {
+      "files": 12,
+      "bytes": 60000,
+      "seconds": 240,
+      "output_tokens": 4500,
+      "calls": 1,
+      "research_rounds": 2
+    },
+    "inventory": {
+      "files": 8,
+      "bytes": 32000,
+      "seconds": 240,
+      "output_tokens": 4500,
+      "calls": 1,
+      "research_rounds": 1
+    },
+    "coordinator": {
+      "prompt_bytes": 32000,
+      "response_bytes": 16000,
+      "seconds": 60,
+      "output_tokens": 2000,
+      "calls": 2
+    },
+    "preparation": {
+      "max_loops": 1,
+      "seconds": 180,
+      "prompt_bytes": 60000,
+      "response_bytes": 8000,
+      "tool_bytes": 8000,
+      "read_lines": 100,
+      "output_tokens": 1500,
+      "call_seconds": 60
+    },
+    "question": {
+      "seconds": 240,
+      "output_tokens": 4500,
+      "calls": 1
+    }
+  }
+}

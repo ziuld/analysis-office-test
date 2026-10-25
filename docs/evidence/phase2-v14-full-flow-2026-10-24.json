@@ -1,0 +1,459 @@
+{
+  "citation_check": {
+    "unique": 299,
+    "invalid": []
+  },
+  "job": {
+    "id": "9755814d-b669-4ba2-b2d2-ca86107ad71b",
+    "repository": "https://github.com/ziuld/analysis-office-test",
+    "estado": "parcial",
+    "created": "2026-10-24T20:28:09.992238+00:00"
+  },
+  "directory": "reports\\2026-10-24\\202809-analysis-office-test\\9755814d-b669-4ba2-b2d2-ca86107ad71b",
+  "commit": "b6b8adec2a36a43248ed5194bdc86b38bfeaccb6",
+  "branch": "main",
+  "acquisition": {
+    "complete": true,
+    "expected": 69,
+    "actual": 69,
+    "bytes": 1603313,
+    "seconds": 2.237,
+    "kinds": {
+      "text": 68,
+      "binary": 1
+    }
+  },
+  "map": {
+    "status": "ready",
+    "engine": {
+      "version": "0.9.95",
+      "commit": "92741d162b2094ffc2fed58cfbd8ee823e9da62c"
+    },
+    "diagnostic_lines": 0,
+    "truncated": false,
+    "processing_complete": true,
+    "unresolved_relations": 194,
+    "exit_code": 0,
+    "timeout": false,
+    "seconds": 3.028,
+    "node_count": 493,
+    "edge_count": 1487
+  },
+  "map_coverage": {
+    "unsupported": 19,
+    "processed": 50
+  },
+  "scanners": [
+    {
+      "name": "Gitleaks 8.30.1",
+      "status": "sin_detecciones_en_seleccion",
+      "detail": "Snapshot completo ofrecido a Gitleaks; reglas y límites nativos, sin historial Git. Binarios y enlaces no equivalen a texto analizable.",
+      "seconds": 1.562,
+      "input_count": 69,
+      "finding_count": 0
+    },
+    {
+      "name": "OSV-Scanner 2.7.0",
+      "status": "no_evaluado",
+      "detail": "No hay archivos de versiones resueltas admitidos en la selección. Revisar dependencias queda pendiente.",
+      "seconds": 0.0,
+      "input_kinds": {},
+      "input_count": 0,
+      "finding_count": 0
+    },
+    {
+      "name": "Semgrep 1.182.1",
+      "status": "sin_detecciones_en_seleccion",
+      "detail": "Reglas locales acotadas para Python, JavaScript/TypeScript, Java y C#. Sin análisis exhaustivo ni explotación probada.",
+      "processed_files": [
+        "auditor/assets/report-navigation.js",
+        "auditor/audit.py",
+        "auditor/azure_proposal.py",
+        "auditor/brief.py",
+        "auditor/editorial.py",
+        "auditor/executive.py",
+        "auditor/outcome.py",
+        "auditor/presentation.py",
+        "auditor/preview.py",
+        "auditor/questions.py",
+        "auditor/report_compact.py",
+        "auditor/report_view.py",
+        "auditor/reporting.py",
+        "auditor/repository.py",
+        "auditor/runtime.py",
+        "auditor/scanners.py",
+        "auditor/security.py",
+        "auditor/server.py",
+        "auditor/settings.py",
+        "auditor/team.py",
+        "auditor/test_audit.py",
+        "auditor/test_azure_proposal.py",
+        "auditor/test_brief.py",
+        "auditor/test_editorial.py",
+        "auditor/test_outcome.py",
+        "auditor/test_questions.py",
+        "auditor/test_security.py",
+        "auditor/test_selection.py",
+        "auditor/test_server.py",
+        "auditor/test_team.py",
+        "docker/install_scanners.py",
+        "examples/create_fictional_report.py",
+        "examples/create_insufficient_example.py"
+      ],
+      "seconds": 6.639,
+      "input_count": 33,
+      "finding_count": 0
+    }
+  ],
+  "stages": {
+    "routing": {
+      "status": "complete",
+      "calls": 1,
+      "usage": {
+        "input_tokens": 212,
+        "output_tokens": 202,
+        "reasoning_tokens": 0,
+        "total_tokens": 3230,
+        "api_calls": 1
+      },
+      "prompt_bytes": 10055
+    },
+    "synthesis": {
+      "status": "error",
+      "calls": 0,
+      "usage": null,
+      "prompt_bytes": 80010,
+      "error": "Respuesta o llamada inválida; sin reintento."
+    }
+  },
+  "cells": [
+    {
+      "id": "security",
+      "estado": "parcial",
+      "model": "gpt-6-luna",
+      "reasoning": "medium",
+      "archivos": [
+        "compose.yaml",
+        "compose.ci.yaml",
+        "docker/Auditor.Dockerfile",
+        ".env.example",
+        ".github/workflows/ci.yaml",
+        "auditor/settings.py",
+        "auditor/server.py",
+        "auditor/repository.py",
+        "auditor/security.py",
+        "auditor/runtime.py",
+        "auditor/audit.py"
+      ],
+      "calls": 3,
+      "execution": "completed",
+      "coverage": "partial",
+      "missing": [],
+      "usage": {
+        "input_tokens": 37124,
+        "api_calls": 3,
+        "reasoning_tokens": 411,
+        "output_tokens": 1917,
+        "total_tokens": 39041
+      },
+      "advertencias": [
+        "observaciones[5] rechazado: Una cita no coincide con un archivo y línea revisados; informe rechazado."
+      ],
+      "mensaje": "Algunos apartados no superaron la validación; se conservan las aportaciones válidas. No se reintentó.",
+      "valid_findings": 5,
+      "retrieval_count": 5,
+      "retrieved_paths": [
+        "compose.yaml",
+        "compose.ci.yaml",
+        "docker/Auditor.Dockerfile",
+        ".env.example",
+        ".github/workflows/ci.yaml",
+        "auditor/settings.py",
+        "auditor/server.py",
+        "auditor/repository.py",
+        "auditor/security.py",
+        "auditor/repository.py",
+        "auditor/runtime.py",
+        "auditor/server.py",
+        "auditor/repository.py",
+        "auditor/audit.py"
+      ]
+    },
+    {
+      "id": "architecture",
+      "estado": "parcial",
+      "model": "gpt-6-luna",
+      "reasoning": "low",
+      "archivos": [
+        "compose.yaml",
+        "docker/Auditor.Dockerfile",
+        "auditor/server.py",
+        "auditor/runtime.py",
+        "auditor/settings.py",
+        "auditor/audit.py",
+        "auditor/team.py",
+        "auditor/repository.py"
+      ],
+      "calls": 3,
+      "execution": "completed",
+      "coverage": "partial",
+      "missing": [],
+      "usage": {
+        "input_tokens": 33077,
+        "api_calls": 3,
+        "reasoning_tokens": 224,
+        "output_tokens": 1720,
+        "total_tokens": 34797
+      },
+      "advertencias": [
+        "observaciones[4] rechazado: Una cita no coincide con un archivo y línea revisados; informe rechazado.",
+        "componentes[2] rechazado: Rango de fuentes inválido o mayor de 40 líneas.",
+        "conexiones[1] rechazado: Conexión con extremo inexistente; no se crea por inferencia.",
+        "conexiones[2] rechazado: Conexión con extremo inexistente; no se crea por inferencia.",
+        "conexiones[3] rechazado: Conexión con extremo inexistente; no se crea por inferencia."
+      ],
+      "mensaje": "Algunos apartados no superaron la validación; se conservan las aportaciones válidas. No se reintentó.",
+      "valid_findings": 10,
+      "retrieval_count": 3,
+      "retrieved_paths": [
+        "compose.yaml",
+        "docker/Auditor.Dockerfile",
+        "auditor/server.py",
+        "auditor/runtime.py",
+        "auditor/settings.py",
+        "auditor/audit.py",
+        "auditor/server.py",
+        "auditor/team.py",
+        "auditor/repository.py"
+      ]
+    },
+    {
+      "id": "inventory",
+      "estado": "parcial",
+      "model": "gpt-6-luna",
+      "reasoning": "low",
+      "archivos": [
+        "auditor/repository.py",
+        "auditor/runtime.py",
+        "auditor/settings.py",
+        "compose.yaml",
+        "docker/Auditor.Dockerfile"
+      ],
+      "calls": 2,
+      "execution": "completed",
+      "coverage": "partial",
+      "missing": [],
+      "usage": {
+        "input_tokens": 12543,
+        "api_calls": 2,
+        "reasoning_tokens": 241,
+        "output_tokens": 1216,
+        "total_tokens": 13759
+      },
+      "advertencias": [
+        "observaciones[1] rechazado: Una cita no coincide con un archivo y línea revisados; informe rechazado.",
+        "observaciones[4] rechazado: Una cita no coincide con un archivo y línea revisados; informe rechazado.",
+        "componentes[1] rechazado: Una cita no coincide con un archivo y línea revisados; informe rechazado."
+      ],
+      "mensaje": "Algunos apartados no superaron la validación; se conservan las aportaciones válidas. No se reintentó.",
+      "valid_findings": 9,
+      "retrieval_count": 2,
+      "retrieved_paths": [
+        "auditor/repository.py",
+        "auditor/runtime.py",
+        "auditor/settings.py",
+        "compose.yaml",
+        "docker/Auditor.Dockerfile"
+      ]
+    }
+  ],
+  "elapsed_seconds": 166.873,
+  "model_calls": 9,
+  "known_tokens": 90827,
+  "findings": {
+    "confirmados": 24,
+    "indicios": 0,
+    "synthesis": 0
+  },
+  "coverage": {
+    "snapshot": "complete",
+    "semantic": "partial",
+    "cells": {
+      "security": "partial",
+      "architecture": "partial",
+      "inventory": "partial"
+    },
+    "limitation": "Ejecución terminada no demuestra exhaustividad semántica; consultar inventario y controles no evaluados."
+  },
+  "control_states": {
+    "hallazgo": 1,
+    "evidencia_favorable_limitada": 3,
+    "no_evaluado": 2
+  },
+  "date": "2026-10-24",
+  "template": "v14",
+  "diagnostics": [
+    {
+      "role": "security",
+      "warning": "observaciones[5] rechazado: Una cita no coincide con un archivo y línea revisados; informe rechazado.",
+      "observation": "El runtime deshabilita toolsets, memoria y trayectorias, y comprueba que no se hayan habilitado herramientas; el código de error evita imprimir literalmente errores del proveedor.",
+      "sources": [
+        {
+          "ref": "F10:L35-L43",
+          "path": "auditor/runtime.py",
+          "hidden_lines": [
+            36
+          ],
+          "range_lines": 9
+        }
+      ]
+    },
+    {
+      "role": "architecture",
+      "warning": "observaciones[4] rechazado: Una cita no coincide con un archivo y línea revisados; informe rechazado.",
+      "observation": "El flujo de auditoría obtiene un snapshot de una rama `main` o `master`, registra evidencia y ejecuta el equipo de análisis antes de escribir el informe. El runtime configura proveedor y modelo mediante variables; admite `openai-codex` u `openai`. La llamada al proveedor es parte del flujo previsto, pero no se comprueban el destino efectivo, el tráfico ni los valores de credenciales.",
+      "sources": [
+        {
+          "ref": "F4:L23-L40",
+          "path": "auditor/runtime.py",
+          "hidden_lines": [
+            32,
+            34,
+            36
+          ],
+          "range_lines": 18
+        }
+      ]
+    },
+    {
+      "role": "architecture",
+      "warning": "componentes[2] rechazado: Rango de fuentes inválido o mayor de 40 líneas.",
+      "observation": "Proceso de auditoría",
+      "sources": [
+        {
+          "ref": "F6:L27-L67",
+          "path": "auditor/audit.py",
+          "hidden_lines": [],
+          "range_lines": 41
+        }
+      ]
+    },
+    {
+      "role": "architecture",
+      "warning": "conexiones[1] rechazado: Conexión con extremo inexistente; no se crea por inferencia.",
+      "observation": "API de auditoría → Proceso de auditoría",
+      "sources": []
+    },
+    {
+      "role": "architecture",
+      "warning": "conexiones[2] rechazado: Conexión con extremo inexistente; no se crea por inferencia.",
+      "observation": "Proceso de auditoría → Archivos de informes",
+      "sources": []
+    },
+    {
+      "role": "architecture",
+      "warning": "conexiones[3] rechazado: Conexión con extremo inexistente; no se crea por inferencia.",
+      "observation": "Proceso de auditoría → Volumen de autenticación",
+      "sources": []
+    },
+    {
+      "role": "inventory",
+      "warning": "observaciones[1] rechazado: Una cita no coincide con un archivo y línea revisados; informe rechazado.",
+      "observation": "El runtime selecciona OpenAI Codex o OpenAI mediante AUDIT_PROVIDER; declara gpt-6-luna como modelo predeterminado para Codex y gpt-5.4-mini para OpenAI, reemplazables con AUDIT_MODEL. El runtime obtiene credenciales según proveedor y entrega la petición a AIAgent.",
+      "sources": [
+        {
+          "ref": "F2:L27-L45",
+          "path": "auditor/runtime.py",
+          "hidden_lines": [
+            32,
+            34,
+            36
+          ],
+          "range_lines": 19
+        }
+      ]
+    },
+    {
+      "role": "inventory",
+      "warning": "observaciones[4] rechazado: Una cita no coincide con un archivo y línea revisados; informe rechazado.",
+      "observation": "El runtime desactiva herramientas, memoria y guardado de trayectorias para la ejecución del agente; no se observan en las fuentes entregadas un motor de base de datos ni operaciones de persistencia de la aplicación.",
+      "sources": [
+        {
+          "ref": "F2:L35-L43",
+          "path": "auditor/runtime.py",
+          "hidden_lines": [
+            36
+          ],
+          "range_lines": 9
+        }
+      ]
+    },
+    {
+      "role": "inventory",
+      "warning": "componentes[1] rechazado: Una cita no coincide con un archivo y línea revisados; informe rechazado.",
+      "observation": "Runtime Hermes",
+      "sources": [
+        {
+          "ref": "F2:L27-L45",
+          "path": "auditor/runtime.py",
+          "hidden_lines": [
+            32,
+            34,
+            36
+          ],
+          "range_lines": 19
+        }
+      ]
+    }
+  ],
+  "report_check": {
+    "duplicate_ids": 0,
+    "broken_links": [],
+    "v14": true,
+    "cloud_default_absent": true,
+    "report_exists": true,
+    "size": 1336537
+  },
+  "final_service_check": {
+    "audit-api": "healthy",
+    "office": "healthy",
+    "preparator": "healthy",
+    "report_http": 200,
+    "active_runs": 0,
+    "active_questions": 0
+  },
+  "synthesis_failure": {
+    "reason": "Contexto mayor que el presupuesto antes de llamar al proveedor",
+    "actual_prompt_bytes": 80010,
+    "limit_prompt_bytes": 32000,
+    "model_calls": 0,
+    "provider_failure": false
+  },
+  "limits": [
+    "El objetivo es main remoto b6b8adec2a36a43248ed5194bdc86b38bfeaccb6, no los cambios locales de fase 2.",
+    "299 citas publicadas coinciden con las fuentes retenidas; eso no valida toda interpretación.",
+    "24 registros incluyen observaciones y componentes; no son 24 vulnerabilidades.",
+    "El riesgo medio de acceso depende de exposición efectiva y controles externos no comprobados.",
+    "Gitleaks y Semgrep no tienen detecciones dentro de sus reglas/entradas compatibles; OSV queda no_evaluado por falta de formato compatible.",
+    "No se ejecuta el código del repositorio objetivo. Sin reintentos automáticos ni repetición del flujo para buscar una pasada favorable."
+  ],
+  "http_request_note": "Solicitud inicial sin Origin fue rechazada antes de crear trabajo. Solicitud con origen local autorizado creó este único trabajo; sin gasto de modelos duplicado.",
+  "decision": "Resultado parcial; no cerrar F2-06 ni hacer commit/push como ejecución sin fallos.",
+  "actual_role_budgets": {
+    "security": {
+      "files": 11,
+      "bytes": 33617,
+      "calls": 3
+    },
+    "architecture": {
+      "files": 8,
+      "bytes": 36372,
+      "calls": 3
+    },
+    "inventory": {
+      "files": 5,
+      "bytes": 13524,
+      "calls": 2
+    }
+  }
+}

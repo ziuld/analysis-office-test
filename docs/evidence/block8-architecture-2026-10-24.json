@@ -1,0 +1,1410 @@
+{
+  "date": "2026-10-24",
+  "scope": "Bloque 8 F1-29 a F1-37; funcionamiento con modelos económicos, sin afinado del Bloque 9",
+  "models": "gpt-6-luna/low",
+  "configuration": {
+    "coordinator_extra_queries": 0,
+    "security_extra_queries": 1,
+    "architecture_extra_queries": 1,
+    "inventory_extra_queries": 0,
+    "automatic_provider_retries": false
+  },
+  "booking_final": {
+    "citation_check": {
+      "unique": 22,
+      "invalid": []
+    },
+    "job": {
+      "id": "cd87e221-9549-4699-9591-dec1ca256360",
+      "repository": "https://github.com/ziuld/bookingApi",
+      "estado": "parcial",
+      "created": "2026-10-24T12:00:16.195466+00:00"
+    },
+    "directory": "reports\\2026-10-24\\120016-bookingApi\\cd87e221-9549-4699-9591-dec1ca256360",
+    "commit": "c0d247e3226d77a83471c7a1b32afdb0981eb7f1",
+    "branch": "master",
+    "acquisition": {
+      "complete": true,
+      "expected": 44,
+      "actual": 44,
+      "bytes": 161303,
+      "seconds": 2.17,
+      "kinds": {
+        "text": 43,
+        "binary": 1
+      }
+    },
+    "map": {
+      "status": "partial",
+      "engine": {
+        "version": "0.9.95",
+        "commit": "92741d162b2094ffc2fed58cfbd8ee823e9da62c"
+      },
+      "diagnostic_lines": 1,
+      "truncated": false,
+      "processing_complete": true,
+      "unresolved_relations": 82,
+      "exit_code": 0,
+      "timeout": false,
+      "seconds": 1.471,
+      "node_count": 335,
+      "edge_count": 1102
+    },
+    "map_coverage": {
+      "unsupported": 6,
+      "processed": 38
+    },
+    "scanners": [
+      {
+        "name": "Gitleaks 8.30.1",
+        "status": "sin_detecciones_en_seleccion",
+        "detail": "Snapshot completo ofrecido a Gitleaks; reglas y límites nativos, sin historial Git. Binarios y enlaces no equivalen a texto analizable.",
+        "seconds": 0.429,
+        "input_count": 44,
+        "finding_count": 0
+      },
+      {
+        "name": "OSV-Scanner 2.7.0",
+        "status": "no_evaluado",
+        "detail": "No hay archivos de versiones resueltas admitidos en la selección. Revisar dependencias queda pendiente.",
+        "seconds": 0.0,
+        "input_count": 0,
+        "finding_count": 0
+      }
+    ],
+    "stages": {
+      "routing": {
+        "status": "complete",
+        "calls": 1,
+        "usage": {
+          "input_tokens": 4525,
+          "output_tokens": 511,
+          "reasoning_tokens": 0,
+          "total_tokens": 5036,
+          "api_calls": 1
+        },
+        "prompt_bytes": 16665
+      },
+      "synthesis": {
+        "status": "complete",
+        "calls": 1,
+        "usage": {
+          "input_tokens": 3272,
+          "output_tokens": 314,
+          "reasoning_tokens": 0,
+          "total_tokens": 3586,
+          "api_calls": 1
+        },
+        "prompt_bytes": 11683
+      }
+    },
+    "cells": [
+      {
+        "id": "security",
+        "estado": "parcial",
+        "model": "gpt-6-luna",
+        "reasoning": "low",
+        "archivos": [
+          "src/main/java/com/colibridge/api/reservation/controller/GuestController.java",
+          "gradle/wrapper/gradle-wrapper.properties",
+          "build.gradle",
+          "settings.gradle",
+          "src/main/java/com/colibridge/api/reservation/model/GuestEntity.java",
+          "src/main/java/com/colibridge/api/reservation/Application.java",
+          "src/main/java/com/colibridge/api/reservation/repository/GuestRepository.java",
+          "src/main/java/com/colibridge/api/reservation/controller/ReservationController.java",
+          "src/main/resources/application.properties",
+          "src/main/java/com/colibridge/api/reservation/model/ReservationEntity.java",
+          "src/main/java/com/colibridge/api/reservation/repository/ReservationRepository.java",
+          "src/main/java/com/colibridge/api/reservation/service/GuestService.java"
+        ],
+        "calls": 1,
+        "execution": "completed",
+        "coverage": "partial",
+        "missing": [
+          "No se dispone del texto original ni de posiciones de línea para las rutas del paquete; solo hay muestras truncadas de algunas."
+        ],
+        "usage": {
+          "input_tokens": 14344,
+          "output_tokens": 1605,
+          "reasoning_tokens": 0,
+          "total_tokens": 15949,
+          "api_calls": 1
+        },
+        "advertencias": [
+          "confirmados[2] rechazado: Tema de hallazgo no admitido.",
+          "indicios[1] rechazado: Tema de hallazgo no admitido."
+        ],
+        "mensaje": "Algunos apartados no superaron la validación; se conservan las aportaciones válidas. No se reintentó.",
+        "valid_findings": 3,
+        "retrieval_count": 0,
+        "retrieved_paths": []
+      },
+      {
+        "id": "architecture",
+        "estado": "parcial",
+        "model": "gpt-6-luna",
+        "reasoning": "low",
+        "archivos": [
+          "src/main/resources/application.properties",
+          "src/main/java/com/colibridge/api/reservation/repository/ReservationRepository.java",
+          "src/main/java/com/colibridge/api/reservation/service/ReservationService.java",
+          "src/main/java/com/colibridge/api/reservation/Application.java",
+          "src/main/java/com/colibridge/api/reservation/model/GuestEntity.java",
+          "build.gradle"
+        ],
+        "calls": 2,
+        "execution": "completed",
+        "coverage": "partial",
+        "missing": [
+          "Faltan fuentes de configuración de la conexión a base de datos, repositorios y servicios para evaluar persistencia y recuperación de forma completa; constan en el índice application.properties, ReservationRepository.java y ReservationService.java."
+        ],
+        "usage": {
+          "output_tokens": 1133,
+          "total_tokens": 19341,
+          "reasoning_tokens": 20,
+          "input_tokens": 18208,
+          "api_calls": 2
+        },
+        "advertencias": [
+          "confirmados[2] rechazado: Una cita no coincide con un archivo y línea revisados; informe rechazado."
+        ],
+        "mensaje": "Algunos apartados no superaron la validación; se conservan las aportaciones válidas. No se reintentó.",
+        "valid_findings": 3,
+        "retrieval_count": 1,
+        "retrieved_paths": [
+          "src/main/resources/application.properties",
+          "src/main/java/com/colibridge/api/reservation/repository/ReservationRepository.java",
+          "src/main/java/com/colibridge/api/reservation/service/ReservationService.java"
+        ]
+      },
+      {
+        "id": "inventory",
+        "estado": "completada",
+        "model": "gpt-6-luna",
+        "reasoning": "low",
+        "archivos": [
+          "build.gradle",
+          "settings.gradle",
+          "src/main/java/com/colibridge/api/reservation/Application.java",
+          "src/main/java/com/colibridge/api/reservation/model/GuestEntity.java",
+          "src/main/java/com/colibridge/api/reservation/controller/GuestController.java",
+          "README.md"
+        ],
+        "calls": 1,
+        "execution": "completed",
+        "coverage": "partial",
+        "missing": [
+          "No se dispone del texto completo ni de posiciones originales de estas fuentes; las muestras disponibles son parciales."
+        ],
+        "usage": {
+          "input_tokens": 11006,
+          "output_tokens": 709,
+          "reasoning_tokens": 0,
+          "total_tokens": 11715,
+          "api_calls": 1
+        },
+        "valid_findings": 3,
+        "retrieval_count": 0,
+        "retrieved_paths": []
+      }
+    ],
+    "elapsed_seconds": 88.038,
+    "model_calls": 6,
+    "known_tokens": 55627,
+    "findings": {
+      "confirmados": 8,
+      "indicios": 1,
+      "synthesis": 5
+    },
+    "coverage": {
+      "snapshot": "complete",
+      "semantic": "partial",
+      "cells": {
+        "security": "partial",
+        "architecture": "partial",
+        "inventory": "partial"
+      },
+      "limitation": "Ejecución terminada no demuestra exhaustividad semántica; consultar inventario y controles no evaluados."
+    },
+    "control_states": {
+      "no_evaluado": 6
+    }
+  },
+  "arktic_final": {
+    "citation_check": {
+      "unique": 6,
+      "invalid": []
+    },
+    "job": {
+      "id": "5a9eaa6e-29ee-4dc7-9144-6a00d53a0543",
+      "repository": "https://github.com/ziuld/analysis-office-test",
+      "estado": "parcial",
+      "created": "2026-10-24T11:50:40.118794+00:00"
+    },
+    "directory": "reports\\2026-10-24\\115040-analysis-office-test\\5a9eaa6e-29ee-4dc7-9144-6a00d53a0543",
+    "commit": "b6b8adec2a36a43248ed5194bdc86b38bfeaccb6",
+    "branch": "main",
+    "acquisition": {
+      "complete": true,
+      "expected": 69,
+      "actual": 69,
+      "bytes": 1603313,
+      "seconds": 2.13,
+      "kinds": {
+        "text": 68,
+        "binary": 1
+      }
+    },
+    "map": {
+      "status": "ready",
+      "engine": {
+        "version": "0.9.95",
+        "commit": "92741d162b2094ffc2fed58cfbd8ee823e9da62c"
+      },
+      "diagnostic_lines": 0,
+      "truncated": false,
+      "processing_complete": true,
+      "unresolved_relations": 194,
+      "exit_code": 0,
+      "timeout": false,
+      "seconds": 1.922,
+      "node_count": 493,
+      "edge_count": 1487
+    },
+    "map_coverage": {
+      "unsupported": 19,
+      "processed": 50
+    },
+    "scanners": [
+      {
+        "name": "Gitleaks 8.30.1",
+        "status": "sin_detecciones_en_seleccion",
+        "detail": "Snapshot completo ofrecido a Gitleaks; reglas y límites nativos, sin historial Git. Binarios y enlaces no equivalen a texto analizable.",
+        "seconds": 1.114,
+        "input_count": 69,
+        "finding_count": 0
+      },
+      {
+        "name": "OSV-Scanner 2.7.0",
+        "status": "no_evaluado",
+        "detail": "No hay archivos de versiones resueltas admitidos en la selección. Revisar dependencias queda pendiente.",
+        "seconds": 0.0,
+        "input_count": 0,
+        "finding_count": 0
+      }
+    ],
+    "stages": {
+      "routing": {
+        "status": "complete",
+        "calls": 1,
+        "usage": {
+          "input_tokens": 4216,
+          "output_tokens": 344,
+          "reasoning_tokens": 0,
+          "total_tokens": 4560,
+          "api_calls": 1
+        },
+        "prompt_bytes": 13998
+      },
+      "synthesis": {
+        "status": "complete",
+        "calls": 1,
+        "usage": {
+          "input_tokens": 1763,
+          "output_tokens": 153,
+          "reasoning_tokens": 0,
+          "total_tokens": 1916,
+          "api_calls": 1
+        },
+        "prompt_bytes": 5285
+      }
+    },
+    "cells": [
+      {
+        "id": "security",
+        "estado": "parcial",
+        "model": "gpt-6-luna",
+        "reasoning": "low",
+        "archivos": [
+          "auditor/security.py",
+          "auditor/repository.py",
+          ".github/workflows/ci.yaml",
+          "compose.yaml",
+          "compose.ci.yaml",
+          "auditor/assets/report-navigation.js",
+          "auditor/audit.py",
+          "auditor/azure_proposal.py",
+          "auditor/brief.py",
+          "auditor/editorial.py",
+          "auditor/executive.py",
+          "auditor/outcome.py"
+        ],
+        "calls": 1,
+        "execution": "completed",
+        "coverage": "insufficient",
+        "missing": [
+          "Texto completo y posiciones originales de las fuentes; las muestras están truncadas o no incluyen líneas."
+        ],
+        "usage": {
+          "input_tokens": 20640,
+          "output_tokens": 865,
+          "reasoning_tokens": 0,
+          "total_tokens": 21505,
+          "api_calls": 1
+        },
+        "mensaje": "Las fuentes aportadas permiten observar controles declarados en CI y contenedores, pero no bastan para evaluar los seis dominios de seguridad ni seguir la relación entre rutas, autorización, servicios y datos. La lectura del repositorio está incompleta.",
+        "valid_findings": 2,
+        "retrieval_count": 0,
+        "retrieved_paths": []
+      },
+      {
+        "id": "architecture",
+        "estado": "informacion_insuficiente",
+        "model": "gpt-6-luna",
+        "reasoning": "low",
+        "archivos": [
+          "compose.yaml",
+          "compose.ci.yaml",
+          ".github/workflows/ci.yaml",
+          "README.md",
+          "examples/README.md"
+        ],
+        "calls": 1,
+        "execution": "completed",
+        "coverage": "insufficient",
+        "missing": [
+          "Archivos relevantes no incluidos en el paquete seleccionado, como Dockerfiles, configuración completa de servicios y documentación operativa."
+        ],
+        "usage": {
+          "input_tokens": 8286,
+          "output_tokens": 1335,
+          "reasoning_tokens": 0,
+          "total_tokens": 9621,
+          "api_calls": 1
+        },
+        "advertencias": [
+          "confirmados[0] rechazado: La célula citó un identificador de evidencia inexistente.",
+          "confirmados[1] rechazado: La célula citó un identificador de evidencia inexistente.",
+          "confirmados[2] rechazado: La célula citó un identificador de evidencia inexistente.",
+          "confirmados[3] rechazado: La célula citó un identificador de evidencia inexistente.",
+          "confirmados[4] rechazado: La célula citó un identificador de evidencia inexistente."
+        ],
+        "mensaje": "La información recibida no permite elaborar una evaluación útil de esta especialidad.",
+        "valid_findings": 0,
+        "retrieval_count": 0,
+        "retrieved_paths": []
+      },
+      {
+        "id": "inventory",
+        "estado": "parcial",
+        "model": "gpt-6-luna",
+        "reasoning": "low",
+        "archivos": [
+          "README.md",
+          "examples/README.md",
+          "compose.yaml",
+          "BACKEND_VERSION",
+          "FRONTEND_VERSION",
+          "HERMES3D_VERSION"
+        ],
+        "calls": 1,
+        "execution": "completed",
+        "coverage": "partial",
+        "missing": [
+          "Contenido de los archivos de versiones y fuentes que confirmen el uso efectivo de componentes declarados."
+        ],
+        "usage": {
+          "input_tokens": 7701,
+          "output_tokens": 879,
+          "reasoning_tokens": 0,
+          "total_tokens": 8580,
+          "api_calls": 1
+        },
+        "advertencias": [
+          "confirmados[1] rechazado: Componente con formato inválido.",
+          "confirmados[2] rechazado: Componente con formato inválido."
+        ],
+        "mensaje": "Algunos apartados no superaron la validación; se conservan las aportaciones válidas. No se reintentó.",
+        "valid_findings": 1,
+        "retrieval_count": 0,
+        "retrieved_paths": []
+      }
+    ],
+    "elapsed_seconds": 80.03,
+    "model_calls": 5,
+    "known_tokens": 46182,
+    "findings": {
+      "confirmados": 3,
+      "indicios": 0,
+      "synthesis": 3
+    },
+    "coverage": {
+      "snapshot": "complete",
+      "semantic": "partial",
+      "cells": {
+        "security": "insufficient",
+        "architecture": "insufficient",
+        "inventory": "partial"
+      },
+      "limitation": "Ejecución terminada no demuestra exhaustividad semántica; consultar inventario y controles no evaluados."
+    },
+    "control_states": {
+      "no_evaluado": 6
+    }
+  },
+  "other_model_attempts": [
+    {
+      "citation_check": {
+        "unique": 21,
+        "invalid": []
+      },
+      "job": {
+        "id": "e503d528-4f83-446f-9376-d017d04bd7dc",
+        "repository": "https://github.com/ziuld/bookingApi",
+        "estado": "parcial",
+        "created": "2026-10-24T11:39:03.037478+00:00"
+      },
+      "directory": "reports\\2026-10-24\\113903-bookingApi\\e503d528-4f83-446f-9376-d017d04bd7dc",
+      "commit": "c0d247e3226d77a83471c7a1b32afdb0981eb7f1",
+      "branch": "master",
+      "acquisition": {
+        "complete": true,
+        "expected": 44,
+        "actual": 44,
+        "bytes": 161303,
+        "seconds": 1.867,
+        "kinds": {
+          "text": 43,
+          "binary": 1
+        }
+      },
+      "map": {
+        "status": "partial",
+        "engine": {
+          "version": "0.9.95",
+          "commit": "92741d162b2094ffc2fed58cfbd8ee823e9da62c"
+        },
+        "diagnostic_lines": 1,
+        "truncated": false,
+        "processing_complete": true,
+        "unresolved_relations": 82,
+        "exit_code": 0,
+        "timeout": false,
+        "seconds": 1.169,
+        "node_count": 335,
+        "edge_count": 1102
+      },
+      "map_coverage": {
+        "unsupported": 6,
+        "processed": 38
+      },
+      "scanners": [
+        {
+          "name": "Gitleaks 8.30.1",
+          "status": "sin_detecciones_en_seleccion",
+          "detail": "Snapshot completo ofrecido a Gitleaks; reglas y límites nativos, sin historial Git. Binarios y enlaces no equivalen a texto analizable.",
+          "input_count": 44,
+          "finding_count": 0
+        },
+        {
+          "name": "OSV-Scanner 2.7.0",
+          "status": "no_evaluado",
+          "detail": "No hay archivos de versiones resueltas admitidos en la selección. Revisar dependencias queda pendiente.",
+          "input_count": 0,
+          "finding_count": 0
+        }
+      ],
+      "stages": {
+        "routing": {
+          "status": "complete",
+          "calls": 1,
+          "usage": {
+            "input_tokens": 4488,
+            "output_tokens": 593,
+            "reasoning_tokens": 0,
+            "total_tokens": 5081,
+            "api_calls": 1
+          },
+          "prompt_bytes": 16487
+        },
+        "synthesis": {
+          "status": "complete",
+          "calls": 1,
+          "usage": {
+            "input_tokens": 3181,
+            "output_tokens": 285,
+            "reasoning_tokens": 0,
+            "total_tokens": 3466,
+            "api_calls": 1
+          },
+          "prompt_bytes": 11227
+        }
+      },
+      "cells": [
+        {
+          "id": "security",
+          "estado": "parcial",
+          "model": "gpt-6-luna",
+          "reasoning": "low",
+          "archivos": [
+            "src/main/java/com/colibridge/api/reservation/controller/GuestController.java",
+            "src/main/java/com/colibridge/api/reservation/controller/ReservationController.java",
+            "src/main/java/com/colibridge/api/reservation/model/GuestEntity.java",
+            "src/main/java/com/colibridge/api/reservation/model/ReservationEntity.java",
+            "src/main/java/com/colibridge/api/reservation/repository/GuestRepository.java",
+            "src/main/java/com/colibridge/api/reservation/repository/ReservationRepository.java",
+            "src/main/java/com/colibridge/api/reservation/service/GuestService.java",
+            "src/main/resources/application.properties",
+            "build.gradle",
+            "settings.gradle",
+            "gradle/wrapper/gradle-wrapper.properties",
+            "src/main/java/com/colibridge/api/reservation/Application.java"
+          ],
+          "calls": 1,
+          "execution": "completed",
+          "coverage": "partial",
+          "missing": [
+            "Contenido íntegro de las rutas seleccionadas, en especial configuración, controladores, servicios y repositorios.",
+            "Configuración efectiva de autenticación, autorización, despliegue y gestión de secretos, no visible en el inventario."
+          ],
+          "usage": {
+            "input_tokens": 12895,
+            "output_tokens": 1876,
+            "reasoning_tokens": 0,
+            "total_tokens": 14771,
+            "api_calls": 1
+          },
+          "advertencias": [
+            "confirmados[3] rechazado: Tema de hallazgo no admitido."
+          ],
+          "mensaje": "Algunos apartados no superaron la validación; se conservan las aportaciones válidas. No se reintentó.",
+          "valid_findings": 5,
+          "retrieval_count": 0,
+          "retrieved_paths": []
+        },
+        {
+          "id": "architecture",
+          "estado": "parcial",
+          "model": "gpt-6-luna",
+          "reasoning": "low",
+          "archivos": [
+            "src/main/java/com/colibridge/api/reservation/Application.java",
+            "src/main/java/com/colibridge/api/reservation/model/GuestEntity.java",
+            "build.gradle",
+            "settings.gradle",
+            "gradle/wrapper/gradle-wrapper.properties",
+            "src/main/java/com/colibridge/api/reservation/controller/GuestController.java"
+          ],
+          "calls": 1,
+          "execution": "completed",
+          "coverage": "partial",
+          "missing": [
+            "Contenido íntegro de las fuentes seleccionadas y configuración de base de datos.",
+            "Fuentes de servicio y repositorios de reservas e invitados, y pruebas relevantes para flujos de persistencia y recuperación."
+          ],
+          "usage": {
+            "input_tokens": 6710,
+            "output_tokens": 1179,
+            "reasoning_tokens": 0,
+            "total_tokens": 7889,
+            "api_calls": 1
+          },
+          "advertencias": [
+            "Bloque de presentación rechazado: Faltan fuentes para el contenido estructurado.",
+            "Bloque de presentación rechazado: Faltan fuentes para el contenido estructurado.",
+            "Bloque de presentación rechazado: Faltan fuentes para el contenido estructurado."
+          ],
+          "mensaje": "Algunos apartados no superaron la validación; se conservan las aportaciones válidas. No se reintentó.",
+          "valid_findings": 2,
+          "retrieval_count": 0,
+          "retrieved_paths": []
+        },
+        {
+          "id": "inventory",
+          "estado": "parcial",
+          "model": "gpt-6-luna",
+          "reasoning": "low",
+          "archivos": [
+            "build.gradle",
+            "settings.gradle",
+            "src/main/java/com/colibridge/api/reservation/Application.java",
+            "src/main/java/com/colibridge/api/reservation/model/GuestEntity.java",
+            "src/main/java/com/colibridge/api/reservation/controller/GuestController.java",
+            "README.md"
+          ],
+          "calls": 1,
+          "execution": "completed",
+          "coverage": "partial",
+          "missing": [
+            "Contenido íntegro de settings.gradle y de las fuentes seleccionadas.",
+            "Inventario de dependencias resueltas y evidencia de uso efectivo en ejecución, que no se obtiene solo de las declaraciones de build."
+          ],
+          "usage": {
+            "input_tokens": 10184,
+            "output_tokens": 662,
+            "reasoning_tokens": 0,
+            "total_tokens": 10846,
+            "api_calls": 1
+          },
+          "advertencias": [
+            "confirmados[1] rechazado: Hallazgo con formato inválido."
+          ],
+          "mensaje": "Algunos apartados no superaron la validación; se conservan las aportaciones válidas. No se reintentó.",
+          "valid_findings": 1,
+          "retrieval_count": 0,
+          "retrieved_paths": []
+        }
+      ],
+      "elapsed_seconds": 84.615,
+      "model_calls": 5,
+      "known_tokens": 42053,
+      "findings": {
+        "confirmados": 6,
+        "indicios": 2,
+        "synthesis": 5
+      },
+      "coverage": {
+        "snapshot": "complete",
+        "semantic": "partial",
+        "cells": {
+          "security": "partial",
+          "architecture": "partial",
+          "inventory": "partial"
+        },
+        "limitation": "Ejecución terminada no demuestra exhaustividad semántica; consultar inventario y controles no evaluados."
+      },
+      "control_states": {
+        "no_evaluado": 5,
+        "hallazgo": 1
+      }
+    },
+    {
+      "citation_check": {
+        "unique": 15,
+        "invalid": []
+      },
+      "job": {
+        "id": "e5aa62f9-d6f3-42c4-aa14-b2d8a92828ad",
+        "repository": "https://github.com/ziuld/bookingApi",
+        "estado": "parcial",
+        "created": "2026-10-24T11:43:06.163835+00:00",
+        "error": "Se guardó un informe parcial; revisar las células pendientes. No equivale a una revisión completa del equipo."
+      },
+      "directory": "reports\\2026-10-24\\114306-bookingApi\\e5aa62f9-d6f3-42c4-aa14-b2d8a92828ad",
+      "commit": "c0d247e3226d77a83471c7a1b32afdb0981eb7f1",
+      "branch": "master",
+      "acquisition": {
+        "complete": true,
+        "expected": 44,
+        "actual": 44,
+        "bytes": 161303,
+        "seconds": 1.88,
+        "kinds": {
+          "text": 43,
+          "binary": 1
+        }
+      },
+      "map": {
+        "status": "partial",
+        "engine": {
+          "version": "0.9.95",
+          "commit": "92741d162b2094ffc2fed58cfbd8ee823e9da62c"
+        },
+        "diagnostic_lines": 1,
+        "truncated": false,
+        "processing_complete": true,
+        "unresolved_relations": 82,
+        "exit_code": 0,
+        "timeout": false,
+        "seconds": 1.119,
+        "node_count": 335,
+        "edge_count": 1102
+      },
+      "map_coverage": {
+        "unsupported": 6,
+        "processed": 38
+      },
+      "scanners": [
+        {
+          "name": "Gitleaks 8.30.1",
+          "status": "sin_detecciones_en_seleccion",
+          "detail": "Snapshot completo ofrecido a Gitleaks; reglas y límites nativos, sin historial Git. Binarios y enlaces no equivalen a texto analizable.",
+          "seconds": 0.774,
+          "input_count": 44,
+          "finding_count": 0
+        },
+        {
+          "name": "OSV-Scanner 2.7.0",
+          "status": "no_evaluado",
+          "detail": "No hay archivos de versiones resueltas admitidos en la selección. Revisar dependencias queda pendiente.",
+          "seconds": 0.0,
+          "input_count": 0,
+          "finding_count": 0
+        }
+      ],
+      "stages": {
+        "routing": {
+          "status": "complete",
+          "calls": 1,
+          "usage": {
+            "input_tokens": 4525,
+            "output_tokens": 495,
+            "reasoning_tokens": 0,
+            "total_tokens": 5020,
+            "api_calls": 1
+          },
+          "prompt_bytes": 16665
+        },
+        "synthesis": {
+          "status": "complete",
+          "calls": 1,
+          "usage": {
+            "input_tokens": 2525,
+            "output_tokens": 170,
+            "reasoning_tokens": 0,
+            "total_tokens": 2695,
+            "api_calls": 1
+          },
+          "prompt_bytes": 8382
+        }
+      },
+      "cells": [
+        {
+          "id": "security",
+          "estado": "error",
+          "model": "gpt-6-luna",
+          "reasoning": "low",
+          "archivos": [
+            "src/main/java/com/colibridge/api/reservation/controller/GuestController.java",
+            "gradle/wrapper/gradle-wrapper.properties",
+            "build.gradle",
+            "settings.gradle",
+            "src/main/java/com/colibridge/api/reservation/model/GuestEntity.java",
+            "src/main/java/com/colibridge/api/reservation/Application.java",
+            "src/main/java/com/colibridge/api/reservation/repository/GuestRepository.java",
+            "src/main/java/com/colibridge/api/reservation/controller/ReservationController.java",
+            "src/main/resources/application.properties",
+            "src/main/java/com/colibridge/api/reservation/model/ReservationEntity.java",
+            "src/main/java/com/colibridge/api/reservation/repository/ReservationRepository.java",
+            "src/main/java/com/colibridge/api/reservation/service/GuestService.java"
+          ],
+          "calls": 1,
+          "execution": "error",
+          "coverage": "incomplete",
+          "missing": [],
+          "usage": {
+            "input_tokens": 14252,
+            "output_tokens": 933,
+            "reasoning_tokens": 0,
+            "total_tokens": 15185,
+            "api_calls": 1
+          },
+          "valid_findings": 0,
+          "retrieval_count": 0,
+          "retrieved_paths": []
+        },
+        {
+          "id": "architecture",
+          "estado": "completada",
+          "model": "gpt-6-luna",
+          "reasoning": "low",
+          "archivos": [
+            "src/main/java/com/colibridge/api/reservation/Application.java",
+            "src/main/java/com/colibridge/api/reservation/model/GuestEntity.java",
+            "build.gradle",
+            "settings.gradle",
+            "gradle/wrapper/gradle-wrapper.properties",
+            "src/main/java/com/colibridge/api/reservation/controller/GuestController.java"
+          ],
+          "calls": 1,
+          "execution": "completed",
+          "coverage": "available_evidence",
+          "missing": [],
+          "usage": {
+            "input_tokens": 8067,
+            "output_tokens": 834,
+            "reasoning_tokens": 0,
+            "total_tokens": 8901,
+            "api_calls": 1
+          },
+          "valid_findings": 3,
+          "retrieval_count": 0,
+          "retrieved_paths": []
+        },
+        {
+          "id": "inventory",
+          "estado": "completada",
+          "model": "gpt-6-luna",
+          "reasoning": "low",
+          "archivos": [
+            "build.gradle",
+            "settings.gradle",
+            "src/main/java/com/colibridge/api/reservation/Application.java",
+            "src/main/java/com/colibridge/api/reservation/model/GuestEntity.java",
+            "src/main/java/com/colibridge/api/reservation/controller/GuestController.java",
+            "README.md"
+          ],
+          "calls": 1,
+          "execution": "completed",
+          "coverage": "available_evidence",
+          "missing": [],
+          "usage": {
+            "input_tokens": 10937,
+            "output_tokens": 922,
+            "reasoning_tokens": 0,
+            "total_tokens": 11859,
+            "api_calls": 1
+          },
+          "valid_findings": 3,
+          "retrieval_count": 0,
+          "retrieved_paths": []
+        }
+      ],
+      "elapsed_seconds": 69.36,
+      "model_calls": 5,
+      "known_tokens": 43660,
+      "findings": {
+        "confirmados": 6,
+        "indicios": 0,
+        "synthesis": 3
+      },
+      "coverage": {
+        "snapshot": "complete",
+        "semantic": "partial",
+        "cells": {
+          "security": "incomplete",
+          "architecture": "available_evidence",
+          "inventory": "available_evidence"
+        },
+        "limitation": "Ejecución terminada no demuestra exhaustividad semántica; consultar inventario y controles no evaluados."
+      },
+      "control_states": {
+        "no_evaluado": 6
+      }
+    },
+    {
+      "citation_check": {
+        "unique": 16,
+        "invalid": []
+      },
+      "job": {
+        "id": "3a04f034-1415-4a9d-8eff-bbe0b326451b",
+        "repository": "https://github.com/ziuld/bookingApi",
+        "estado": "parcial",
+        "created": "2026-10-24T11:53:21.010389+00:00",
+        "error": "Se guardó un informe parcial; revisar las células pendientes. No equivale a una revisión completa del equipo."
+      },
+      "directory": "reports\\2026-10-24\\115321-bookingApi\\3a04f034-1415-4a9d-8eff-bbe0b326451b",
+      "commit": "c0d247e3226d77a83471c7a1b32afdb0981eb7f1",
+      "branch": "master",
+      "acquisition": {
+        "complete": true,
+        "expected": 44,
+        "actual": 44,
+        "bytes": 161303,
+        "seconds": 1.749,
+        "kinds": {
+          "text": 43,
+          "binary": 1
+        }
+      },
+      "map": {
+        "status": "partial",
+        "engine": {
+          "version": "0.9.95",
+          "commit": "92741d162b2094ffc2fed58cfbd8ee823e9da62c"
+        },
+        "diagnostic_lines": 1,
+        "truncated": false,
+        "processing_complete": true,
+        "unresolved_relations": 82,
+        "exit_code": 0,
+        "timeout": false,
+        "seconds": 1.119,
+        "node_count": 335,
+        "edge_count": 1102
+      },
+      "map_coverage": {
+        "unsupported": 6,
+        "processed": 38
+      },
+      "scanners": [
+        {
+          "name": "Gitleaks 8.30.1",
+          "status": "sin_detecciones_en_seleccion",
+          "detail": "Snapshot completo ofrecido a Gitleaks; reglas y límites nativos, sin historial Git. Binarios y enlaces no equivalen a texto analizable.",
+          "seconds": 0.403,
+          "input_count": 44,
+          "finding_count": 0
+        },
+        {
+          "name": "OSV-Scanner 2.7.0",
+          "status": "no_evaluado",
+          "detail": "No hay archivos de versiones resueltas admitidos en la selección. Revisar dependencias queda pendiente.",
+          "seconds": 0.0,
+          "input_count": 0,
+          "finding_count": 0
+        }
+      ],
+      "stages": {
+        "routing": {
+          "status": "complete",
+          "calls": 1,
+          "usage": {
+            "input_tokens": 4525,
+            "output_tokens": 628,
+            "reasoning_tokens": 0,
+            "total_tokens": 5153,
+            "api_calls": 1
+          },
+          "prompt_bytes": 16665
+        },
+        "synthesis": {
+          "status": "complete",
+          "calls": 1,
+          "usage": {
+            "input_tokens": 2646,
+            "output_tokens": 251,
+            "reasoning_tokens": 0,
+            "total_tokens": 2897,
+            "api_calls": 1
+          },
+          "prompt_bytes": 8925
+        }
+      },
+      "cells": [
+        {
+          "id": "security",
+          "estado": "parcial",
+          "model": "gpt-6-luna",
+          "reasoning": "low",
+          "archivos": [
+            "src/main/java/com/colibridge/api/reservation/controller/GuestController.java",
+            "src/main/java/com/colibridge/api/reservation/controller/ReservationController.java",
+            "src/main/java/com/colibridge/api/reservation/model/GuestEntity.java",
+            "src/main/java/com/colibridge/api/reservation/model/ReservationEntity.java",
+            "src/main/java/com/colibridge/api/reservation/repository/GuestRepository.java",
+            "src/main/java/com/colibridge/api/reservation/repository/ReservationRepository.java",
+            "src/main/java/com/colibridge/api/reservation/service/GuestService.java",
+            "src/main/resources/application.properties",
+            "build.gradle",
+            "settings.gradle",
+            "gradle/wrapper/gradle-wrapper.properties",
+            "src/main/java/com/colibridge/api/reservation/Application.java"
+          ],
+          "calls": 1,
+          "execution": "completed",
+          "coverage": "partial",
+          "missing": [
+            "Texto completo y líneas originales de las rutas seleccionadas; las muestras están truncadas o son parciales.",
+            "No se aportaron instrucciones de seguridad security-v1.md ni aportaciones de especialista."
+          ],
+          "usage": {
+            "input_tokens": 14445,
+            "output_tokens": 1481,
+            "reasoning_tokens": 0,
+            "total_tokens": 15926,
+            "api_calls": 1
+          },
+          "advertencias": [
+            "indicios[2] rechazado: Una cita no coincide con un archivo y línea revisados; informe rechazado."
+          ],
+          "mensaje": "Algunos apartados no superaron la validación; se conservan las aportaciones válidas. No se reintentó.",
+          "valid_findings": 3,
+          "retrieval_count": 0,
+          "retrieved_paths": []
+        },
+        {
+          "id": "architecture",
+          "estado": "error",
+          "model": "gpt-6-luna",
+          "reasoning": "low",
+          "archivos": [
+            "src/main/java/com/colibridge/api/reservation/Application.java",
+            "src/main/java/com/colibridge/api/reservation/model/GuestEntity.java",
+            "build.gradle",
+            "settings.gradle",
+            "gradle/wrapper/gradle-wrapper.properties",
+            "src/main/java/com/colibridge/api/reservation/controller/GuestController.java"
+          ],
+          "calls": 1,
+          "execution": "error",
+          "coverage": "incomplete",
+          "missing": [
+            "Texto completo y líneas originales de las rutas seleccionadas.",
+            "application.properties, entidades/repositorios adicionales y servicios para completar la evaluación de conexiones y persistencia; exceden las seis rutas disponibles.",
+            "No se aportaron instrucciones de arquitectura ni aportaciones de especialista."
+          ],
+          "usage": {
+            "input_tokens": 8200,
+            "output_tokens": 79,
+            "reasoning_tokens": 18,
+            "total_tokens": 8279,
+            "api_calls": 1
+          },
+          "valid_findings": 0,
+          "retrieval_count": 0,
+          "retrieved_paths": []
+        },
+        {
+          "id": "inventory",
+          "estado": "completada",
+          "model": "gpt-6-luna",
+          "reasoning": "low",
+          "archivos": [
+            "build.gradle",
+            "settings.gradle",
+            "src/main/java/com/colibridge/api/reservation/Application.java",
+            "src/main/java/com/colibridge/api/reservation/model/GuestEntity.java",
+            "src/main/java/com/colibridge/api/reservation/controller/GuestController.java",
+            "README.md"
+          ],
+          "calls": 1,
+          "execution": "completed",
+          "coverage": "partial",
+          "missing": [
+            "Texto completo y líneas originales; varias muestras están incompletas.",
+            "No se aportaron el estándar editorial canónico ni el esquema JSON vigente del adaptador."
+          ],
+          "usage": {
+            "input_tokens": 11066,
+            "output_tokens": 756,
+            "reasoning_tokens": 0,
+            "total_tokens": 11822,
+            "api_calls": 1
+          },
+          "valid_findings": 3,
+          "retrieval_count": 0,
+          "retrieved_paths": []
+        }
+      ],
+      "elapsed_seconds": 69.276,
+      "model_calls": 5,
+      "known_tokens": 44077,
+      "findings": {
+        "confirmados": 4,
+        "indicios": 2,
+        "synthesis": 5
+      },
+      "coverage": {
+        "snapshot": "complete",
+        "semantic": "partial",
+        "cells": {
+          "security": "partial",
+          "architecture": "incomplete",
+          "inventory": "partial"
+        },
+        "limitation": "Ejecución terminada no demuestra exhaustividad semántica; consultar inventario y controles no evaluados."
+      },
+      "control_states": {
+        "no_evaluado": 6
+      }
+    },
+    {
+      "citation_check": {
+        "unique": 12,
+        "invalid": []
+      },
+      "job": {
+        "id": "660b0a45-dae3-4cfa-a767-77c37ed198a2",
+        "repository": "https://github.com/ziuld/bookingApi",
+        "estado": "parcial",
+        "created": "2026-10-24T11:56:19.924886+00:00",
+        "error": "Se guardó un informe parcial; revisar las células pendientes. No equivale a una revisión completa del equipo."
+      },
+      "directory": "reports\\2026-10-24\\115619-bookingApi\\660b0a45-dae3-4cfa-a767-77c37ed198a2",
+      "commit": "c0d247e3226d77a83471c7a1b32afdb0981eb7f1",
+      "branch": "master",
+      "acquisition": {
+        "complete": true,
+        "expected": 44,
+        "actual": 44,
+        "bytes": 161303,
+        "seconds": 2.157,
+        "kinds": {
+          "text": 43,
+          "binary": 1
+        }
+      },
+      "map": {
+        "status": "partial",
+        "engine": {
+          "version": "0.9.95",
+          "commit": "92741d162b2094ffc2fed58cfbd8ee823e9da62c"
+        },
+        "diagnostic_lines": 1,
+        "truncated": false,
+        "processing_complete": true,
+        "unresolved_relations": 82,
+        "exit_code": 0,
+        "timeout": false,
+        "seconds": 1.219,
+        "node_count": 335,
+        "edge_count": 1102
+      },
+      "map_coverage": {
+        "unsupported": 6,
+        "processed": 38
+      },
+      "scanners": [
+        {
+          "name": "Gitleaks 8.30.1",
+          "status": "sin_detecciones_en_seleccion",
+          "detail": "Snapshot completo ofrecido a Gitleaks; reglas y límites nativos, sin historial Git. Binarios y enlaces no equivalen a texto analizable.",
+          "seconds": 0.446,
+          "input_count": 44,
+          "finding_count": 0
+        },
+        {
+          "name": "OSV-Scanner 2.7.0",
+          "status": "no_evaluado",
+          "detail": "No hay archivos de versiones resueltas admitidos en la selección. Revisar dependencias queda pendiente.",
+          "seconds": 0.0,
+          "input_count": 0,
+          "finding_count": 0
+        }
+      ],
+      "stages": {
+        "routing": {
+          "status": "complete",
+          "calls": 1,
+          "usage": {
+            "input_tokens": 4525,
+            "output_tokens": 518,
+            "reasoning_tokens": 0,
+            "total_tokens": 5043,
+            "api_calls": 1
+          },
+          "prompt_bytes": 16665
+        },
+        "synthesis": {
+          "status": "complete",
+          "calls": 1,
+          "usage": {
+            "input_tokens": 2497,
+            "output_tokens": 212,
+            "reasoning_tokens": 0,
+            "total_tokens": 2709,
+            "api_calls": 1
+          },
+          "prompt_bytes": 8436
+        }
+      },
+      "cells": [
+        {
+          "id": "security",
+          "estado": "error",
+          "model": "gpt-6-luna",
+          "reasoning": "low",
+          "archivos": [
+            "src/main/java/com/colibridge/api/reservation/controller/GuestController.java",
+            "src/main/java/com/colibridge/api/reservation/controller/ReservationController.java",
+            "src/main/java/com/colibridge/api/reservation/service/GuestService.java",
+            "src/main/java/com/colibridge/api/reservation/repository/GuestRepository.java",
+            "src/main/java/com/colibridge/api/reservation/repository/ReservationRepository.java",
+            "src/main/java/com/colibridge/api/reservation/model/GuestEntity.java",
+            "src/main/java/com/colibridge/api/reservation/model/ReservationEntity.java",
+            "src/main/resources/application.properties",
+            "build.gradle",
+            "settings.gradle",
+            "gradle/wrapper/gradle-wrapper.properties",
+            "src/main/java/com/colibridge/api/reservation/Application.java"
+          ],
+          "calls": 1,
+          "execution": "error",
+          "coverage": "incomplete",
+          "missing": [
+            "Texto original completo de las rutas para validar autenticación, exposición, validación de entradas y configuración efectiva."
+          ],
+          "usage": {
+            "input_tokens": 14396,
+            "output_tokens": 87,
+            "reasoning_tokens": 0,
+            "total_tokens": 14483,
+            "api_calls": 1
+          },
+          "valid_findings": 0,
+          "retrieval_count": 0,
+          "retrieved_paths": []
+        },
+        {
+          "id": "architecture",
+          "estado": "completada",
+          "model": "gpt-6-luna",
+          "reasoning": "low",
+          "archivos": [
+            "src/main/resources/application.properties",
+            "src/main/java/com/colibridge/api/reservation/controller/GuestController.java",
+            "src/main/java/com/colibridge/api/reservation/model/GuestEntity.java",
+            "src/main/java/com/colibridge/api/reservation/Application.java",
+            "build.gradle",
+            "settings.gradle"
+          ],
+          "calls": 2,
+          "execution": "completed",
+          "coverage": "partial",
+          "missing": [
+            "Fuentes completas de arranque, configuración y persistencia; configuración de aplicación y repositorios para valorar conexiones y recuperación de datos."
+          ],
+          "usage": {
+            "output_tokens": 973,
+            "total_tokens": 16809,
+            "api_calls": 2,
+            "reasoning_tokens": 23,
+            "input_tokens": 15836
+          },
+          "valid_findings": 3,
+          "retrieval_count": 1,
+          "retrieved_paths": [
+            "src/main/resources/application.properties",
+            "src/main/java/com/colibridge/api/reservation/controller/GuestController.java",
+            "src/main/java/com/colibridge/api/reservation/model/GuestEntity.java"
+          ]
+        },
+        {
+          "id": "inventory",
+          "estado": "completada",
+          "model": "gpt-6-luna",
+          "reasoning": "low",
+          "archivos": [
+            "build.gradle",
+            "settings.gradle",
+            "src/main/java/com/colibridge/api/reservation/Application.java",
+            "src/main/java/com/colibridge/api/reservation/model/GuestEntity.java",
+            "src/main/java/com/colibridge/api/reservation/controller/GuestController.java",
+            "README.md"
+          ],
+          "calls": 1,
+          "execution": "completed",
+          "coverage": "partial",
+          "missing": [
+            "Texto completo de las fuentes y documentación para confirmar versiones transitivas y alcance funcional declarado."
+          ],
+          "usage": {
+            "input_tokens": 11012,
+            "output_tokens": 900,
+            "reasoning_tokens": 0,
+            "total_tokens": 11912,
+            "api_calls": 1
+          },
+          "valid_findings": 3,
+          "retrieval_count": 0,
+          "retrieved_paths": []
+        }
+      ],
+      "elapsed_seconds": 77.985,
+      "model_calls": 6,
+      "known_tokens": 50956,
+      "findings": {
+        "confirmados": 6,
+        "indicios": 0,
+        "synthesis": 4
+      },
+      "coverage": {
+        "snapshot": "complete",
+        "semantic": "partial",
+        "cells": {
+          "security": "incomplete",
+          "architecture": "partial",
+          "inventory": "partial"
+        },
+        "limitation": "Ejecución terminada no demuestra exhaustividad semántica; consultar inventario y controles no evaluados."
+      },
+      "control_states": {
+        "no_evaluado": 6
+      }
+    }
+  ],
+  "pre_model_failures": [
+    {
+      "job_id": "5d86747e-0514-4293-bc56-118ea11cba65",
+      "repository": "ziuld/bookingApi",
+      "model_calls": 0,
+      "cause": "El adaptador confundía relaciones externas con un grafo recortado; corregido conservando y contando relaciones no resueltas."
+    },
+    {
+      "job_id": "de6e20ba-71c8-43e2-9f7c-c384d51180b2",
+      "repository": "ziuld/analysis-office-test",
+      "model_calls": 0,
+      "cause": "Dialectos YAML de Compose !reset/!override no soportados por SafeLoader; ahora se registran como incompatibilidad explícita, conservando texto e inventario. Un YAML malformado sigue deteniendo la preparación."
+    }
+  ],
+  "total_model_calls": 32,
+  "total_reported_tokens": 282555,
+  "minimum_checks": {
+    "backend_targeted": {
+      "modules": [
+        "test_complete_flow",
+        "test_coordinator",
+        "test_compatibility"
+      ],
+      "run": 14,
+      "passed": 14,
+      "seconds": 0.17,
+      "full_suite_run": false
+    },
+    "shared_skill": "quick_validate passed",
+    "frontend": "Docker build passed; reverse patch apply --check passed",
+    "native_indexer": [
+      {
+        "case": "hidden Python and tests plus README",
+        "result": "all three processed"
+      },
+      {
+        "case": "Compose !reset",
+        "result": "unsupported_yaml_dialect_or_data_schema"
+      },
+      {
+        "case": "invalid YAML",
+        "result": "error; processing stops"
+      }
+    ]
+  },
+  "limitations": [
+    "Ejecución completa no significa cobertura semántica completa ni calidad óptima.",
+    "Arquitectura de Arktic Office no produjo hallazgos con citas válidas; sus cinco elementos fueron rechazados y la célula quedó con información insuficiente. No se oculta ni se declara validada.",
+    "Gitleaks recibe todo el snapshot, pero su salida no acredita procesamiento individual de todos los bytes. OSV no encontró entrada compatible resuelta en las dos muestras.",
+    "LFS y submódulos no hidratados detienen la preparación; no se anuncia soporte de adquisición de su contenido.",
+    "Graphify mantiene límites semánticos nativos, como profundidad y claves YAML; no garantiza recuperar todas las relaciones.",
+    "La recuperación real de especialista se comprobó; el extra del coordinador y las omisiones se comprobaron con respuestas controladas, sin forzar otra llamada real.",
+    "La muestra Arktic es la rama main remota al commit b6b8adec2a36a43248ed5194bdc86b38bfeaccb6, no el checkout local sin fusionar.",
+    "No se ejecutaron los repositorios objetivo, sus tests ni instaladores. CI/CD y versiones permanecen sin cambios."
+  ],
+  "final_health": {
+    "office_http": 200,
+    "active_jobs": 0,
+    "reports": [
+      {
+        "id": "cd87e221-9549-4699-9591-dec1ca256360",
+        "estado": "parcial",
+        "cells": 3,
+        "report_text": 27006,
+        "report_html": 1190342,
+        "execution_coverage_table": true,
+        "download_http": 200
+      },
+      {
+        "id": "5a9eaa6e-29ee-4dc7-9144-6a00d53a0543",
+        "estado": "parcial",
+        "cells": 3,
+        "report_text": 9097,
+        "report_html": 1157774,
+        "execution_coverage_table": true,
+        "download_http": 200
+      }
+    ]
+  },
+  "cleanup": {
+    "snapshot_directories_remaining": 0,
+    "index_directories_remaining": 0,
+    "interrupted_workspace_recovery": "verified with controlled abandoned job directory"
+  },
+  "final_backend_source_matches_local": true,
+  "final_backend_source_sha256": "c262ef21d9b722a53bb1fe373ec1e7f9ceb99af508863d1deb676444380dc08d",
+  "final_startup": {
+    "office_http": 200,
+    "active_jobs": 0
+  },
+  "final_accounting_guard": "Tras el piloto se añadió solo la protección de marcar consumo total desconocido si falla la segunda llamada, reteniendo el primer consumo en invocations. Se comprobó el caso dirigido dentro de las mismas 14 pruebas, se reconstruyó y arrancó el paquete final; no se repitieron modelos por este cambio del camino de error."
+}

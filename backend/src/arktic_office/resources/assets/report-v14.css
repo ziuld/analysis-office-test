@@ -1,0 +1,24 @@
+/* Executive hierarchy inspired by the approved v14 proposal. */
+.review-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:24px 0}
+.review-card{display:flex;flex-direction:column;border:1px solid var(--line);border-top:3px solid #008ad8;background:#fff;padding:19px;border-radius:5px;text-decoration:none;color:var(--ink)}
+.review-card:first-child{border-top-color:var(--critical)}
+.review-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#526b7c}
+.review-text{font-size:23px;line-height:1.35;color:#00639b;margin:12px 0 8px}
+.review-card p{font-size:12px;color:#526b7c;margin:9px 0}
+#hallazgos-resumen table{table-layout:fixed}
+#hallazgos-resumen th:nth-child(1){width:7%}#hallazgos-resumen th:nth-child(2){width:33%}#hallazgos-resumen th:nth-child(3){width:41%}#hallazgos-resumen th:nth-child(4){width:19%}
+#hallazgos-resumen td{font-size:13px;font-weight:400;overflow-wrap:anywhere;line-height:1.65}
+#hallazgos-resumen td p{font-size:12px}.source{font-size:12px;color:var(--muted)}
+.connection{border-left:3px solid #41c0cf;padding:12px;margin:10px 0}.connection.inferida{border-left-style:dashed}.connection.desconocida{border-left-style:dotted}
+.connection .arrow{padding:0 12px;display:inline-block!important}.connection p{font-size:12px;margin:5px 0 0}
+.proposal-lanes{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}.proposal-lane{border:1px dashed #008ad8;padding:14px;border-radius:5px}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px}.risk-detail{border-left:3px solid #dce5ec;padding-left:16px;margin-top:12px}
+[id]{scroll-margin-top:115px}.hero h1{overflow-wrap:anywhere}.tag{white-space:normal}.flow>.arrow{display:block!important;text-align:center}.arrow small{display:block;font-size:9px}
+@media(max-width:800px){.review-grid{grid-template-columns:1fr}#hallazgos-resumen table{min-width:720px;table-layout:auto}#hallazgos-resumen th{width:auto!important}}
+@media print{
+ @page{margin:15mm}body{background:white;color:#172d40;font-size:11px}.wrap{max-width:none;padding:0}.nav,.return-link,.hero-art{display:none!important}
+ .hero{padding:15px;background:#fff;color:#172d40}.hero p,.meta span{color:#172d40}.hero:after{display:none}.chapter{break-before:auto}
+ .panel,.review-card,.risk-detail{box-shadow:none;break-inside:avoid}.table-wrap{overflow:visible}table{min-width:0!important;table-layout:auto!important}
+ th{display:table-cell}thead{display:table-header-group}tr{break-inside:avoid}details{content-visibility:visible}details>*{display:block!important}details>summary{display:block}
+ pre{font-size:9px;white-space:pre-wrap}.review-grid{grid-template-columns:repeat(3,minmax(0,1fr))}a{color:inherit}
+}

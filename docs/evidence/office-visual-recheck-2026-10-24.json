@@ -1,0 +1,287 @@
+{
+  "date": "2026-10-24",
+  "visual_fix": {
+    "bubble": "Solo se envían bocadillos de actividad mientras el agente trabaja o responde una consulta; selección persistente no mantiene un estado terminal sobre el avatar.",
+    "facing": "Los personajes controlados mantienen la orientación de su escritorio al seleccionarlos.",
+    "checks": {
+      "build": "passed",
+      "tests": 6,
+      "modules": [
+        "arkticOfficeMap.test.ts",
+        "auditStatus.test.ts"
+      ],
+      "frontend_patch_reverse_check": "passed"
+    },
+    "browser_visual_verification": "No disponible: cua.getBrowser no pudo inicializar el entorno (failed to write kernel assets, os error 3). Comprobación por compilación, simulación y HTTP; no se atribuye inspección visual de navegador.",
+    "deployment": "Solo office recreado; audit-api no se reinició durante la revisión."
+  },
+  "run": {
+    "citation_check": {
+      "unique": 8,
+      "invalid": []
+    },
+    "job": {
+      "id": "61862d6d-701f-4801-9acb-b4f99f40e5f0",
+      "repository": "https://github.com/ziuld/analysis-office-test",
+      "estado": "parcial",
+      "created": "2026-10-24T14:02:33.740599+00:00"
+    },
+    "directory": "reports\\2026-10-24\\140233-analysis-office-test\\61862d6d-701f-4801-9acb-b4f99f40e5f0",
+    "commit": "b6b8adec2a36a43248ed5194bdc86b38bfeaccb6",
+    "branch": "main",
+    "acquisition": {
+      "complete": true,
+      "expected": 69,
+      "actual": 69,
+      "bytes": 1603313,
+      "seconds": 2.021,
+      "kinds": {
+        "text": 68,
+        "binary": 1
+      }
+    },
+    "map": {
+      "status": "ready",
+      "engine": {
+        "version": "0.9.95",
+        "commit": "92741d162b2094ffc2fed58cfbd8ee823e9da62c"
+      },
+      "diagnostic_lines": 0,
+      "truncated": false,
+      "processing_complete": true,
+      "unresolved_relations": 194,
+      "exit_code": 0,
+      "timeout": false,
+      "seconds": 3.378,
+      "node_count": 493,
+      "edge_count": 1487
+    },
+    "map_coverage": {
+      "unsupported": 19,
+      "processed": 50
+    },
+    "scanners": [
+      {
+        "name": "Gitleaks 8.30.1",
+        "status": "sin_detecciones_en_seleccion",
+        "detail": "Snapshot completo ofrecido a Gitleaks; reglas y límites nativos, sin historial Git. Binarios y enlaces no equivalen a texto analizable.",
+        "seconds": 1.356,
+        "input_count": 69,
+        "finding_count": 0
+      },
+      {
+        "name": "OSV-Scanner 2.7.0",
+        "status": "no_evaluado",
+        "detail": "No hay archivos de versiones resueltas admitidos en la selección. Revisar dependencias queda pendiente.",
+        "seconds": 0.0,
+        "input_count": 0,
+        "finding_count": 0
+      }
+    ],
+    "stages": {
+      "routing": {
+        "status": "complete",
+        "calls": 1,
+        "usage": {
+          "input_tokens": 4216,
+          "output_tokens": 359,
+          "reasoning_tokens": 0,
+          "total_tokens": 4575,
+          "api_calls": 1
+        },
+        "prompt_bytes": 13998
+      },
+      "synthesis": {
+        "status": "complete",
+        "calls": 1,
+        "usage": {
+          "input_tokens": 2142,
+          "output_tokens": 269,
+          "reasoning_tokens": 0,
+          "total_tokens": 2411,
+          "api_calls": 1
+        },
+        "prompt_bytes": 6960
+      }
+    },
+    "cells": [
+      {
+        "id": "security",
+        "estado": "informacion_insuficiente",
+        "model": "gpt-6-luna",
+        "reasoning": "low",
+        "archivos": [
+          "auditor/security.py",
+          ".github/workflows/ci.yaml",
+          "compose.yaml",
+          "auditor/repository.py",
+          "compose.ci.yaml",
+          "auditor/assets/report-navigation.js",
+          "auditor/audit.py",
+          "auditor/azure_proposal.py",
+          "auditor/brief.py",
+          "auditor/editorial.py",
+          "auditor/executive.py",
+          "auditor/outcome.py"
+        ],
+        "calls": 1,
+        "execution": "completed",
+        "coverage": "insufficient",
+        "missing": [
+          "Texto original completo de las rutas; las muestras disponibles están truncadas o parciales.",
+          "Configuración y comportamiento íntegros para verificar controles de acceso, exposición y tratamiento de datos."
+        ],
+        "usage": {
+          "input_tokens": 20781,
+          "output_tokens": 374,
+          "reasoning_tokens": 0,
+          "total_tokens": 21155,
+          "api_calls": 1
+        },
+        "mensaje": "La información recibida no permite elaborar una evaluación útil de esta especialidad.",
+        "valid_findings": 0,
+        "retrieval_count": 0,
+        "retrieved_paths": []
+      },
+      {
+        "id": "architecture",
+        "estado": "parcial",
+        "model": "gpt-6-luna",
+        "reasoning": "low",
+        "archivos": [
+          "compose.yaml",
+          ".github/workflows/ci.yaml",
+          "README.md",
+          "compose.ci.yaml",
+          "examples/README.md"
+        ],
+        "calls": 1,
+        "execution": "completed",
+        "coverage": "partial",
+        "missing": [
+          "Texto original completo de las rutas, incluidos servicios y dependencias de Compose.",
+          "Detalles de persistencia, recuperación y conexiones no visibles en las muestras."
+        ],
+        "usage": {
+          "input_tokens": 8437,
+          "output_tokens": 1452,
+          "reasoning_tokens": 0,
+          "total_tokens": 9889,
+          "api_calls": 1
+        },
+        "advertencias": [
+          "Bloque de presentación rechazado: Contenido editorial con fuente inexistente.",
+          "Bloque de presentación rechazado: Contenido editorial con fuente inexistente.",
+          "confirmados[1] rechazado: La célula citó un identificador de evidencia inexistente."
+        ],
+        "mensaje": "Algunos apartados no superaron la validación; se conservan las aportaciones válidas. No se reintentó.",
+        "valid_findings": 2,
+        "retrieval_count": 0,
+        "retrieved_paths": []
+      },
+      {
+        "id": "inventory",
+        "estado": "completada",
+        "model": "gpt-6-luna",
+        "reasoning": "low",
+        "archivos": [
+          "compose.yaml",
+          "README.md",
+          "examples/README.md"
+        ],
+        "calls": 1,
+        "execution": "completed",
+        "coverage": "partial",
+        "missing": [
+          "Texto original completo de las rutas para precisar tecnologías, versiones declaradas y funciones.",
+          "Fuentes de versiones de terceros o uso real que no aparecen en las muestras."
+        ],
+        "usage": {
+          "input_tokens": 7749,
+          "output_tokens": 673,
+          "reasoning_tokens": 0,
+          "total_tokens": 8422,
+          "api_calls": 1
+        },
+        "valid_findings": 2,
+        "retrieval_count": 0,
+        "retrieved_paths": []
+      }
+    ],
+    "elapsed_seconds": 78.711,
+    "model_calls": 5,
+    "known_tokens": 46452,
+    "findings": {
+      "confirmados": 4,
+      "indicios": 0,
+      "synthesis": 5
+    },
+    "coverage": {
+      "snapshot": "complete",
+      "semantic": "partial",
+      "cells": {
+        "security": "insufficient",
+        "architecture": "partial",
+        "inventory": "partial"
+      },
+      "limitation": "Ejecución terminada no demuestra exhaustividad semántica; consultar inventario y controles no evaluados."
+    },
+    "control_states": {
+      "no_evaluado": 6
+    }
+  },
+  "health": {
+    "id": "61862d6d-701f-4801-9acb-b4f99f40e5f0",
+    "estado": "parcial",
+    "office_http": 200,
+    "download_http": 200,
+    "report_html": true,
+    "active_jobs": 0,
+    "activity": {
+      "coordinator": {
+        "state": "parcial",
+        "text": "Resultado parcial",
+        "meeting": false,
+        "working": false
+      },
+      "security": {
+        "state": "informacion_insuficiente",
+        "text": "Información insuficiente · evidencia insuficiente",
+        "meeting": false,
+        "working": false
+      },
+      "architecture": {
+        "state": "parcial",
+        "text": "Resultado parcial · cobertura parcial",
+        "meeting": false,
+        "working": false
+      },
+      "inventory": {
+        "state": "completada",
+        "text": "Aportación completada · cobertura parcial",
+        "meeting": false,
+        "working": false
+      }
+    }
+  },
+  "cleanup": {
+    "snapshot_temporaries": 0,
+    "index_temporaries": 0
+  },
+  "conclusion": "Recorrido terminado sin bloqueo. Resultado parcial: Seguridad no obtuvo aportaciones útiles y no solicitó su consulta; Arquitectura rechazó un hallazgo y dos bloques por fuentes inexistentes; Inventario y síntesis finalizados.",
+  "restrictions": "CI/CD, pins y versiones sin cambios; sin ejecutar el objetivo ni sus tests/instaladores; modelos económicos. Sin commit ni actualización del PR.",
+  "idle_followup": {
+    "request": "Agentes libres cuando no están haciendo nada, sin permanecer sentados.",
+    "change": "Agentes controlados van al escritorio solo al trabajar; reposo o error terminal usa el paseo existente. La selección conserva orientación mientras trabajan.",
+    "tests": {
+      "passed": 6,
+      "modules": [
+        "arkticOfficeMap.test.ts",
+        "auditStatus.test.ts"
+      ],
+      "case": "Working -> idle/error abandona escritorio; selección durante trabajo no cambia posición ni orientación."
+    },
+    "model_calls": 0,
+    "ci_versions_unchanged": true
+  }
+}

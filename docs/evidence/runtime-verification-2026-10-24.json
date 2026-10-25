@@ -1,0 +1,49 @@
+{
+  "date": "2026-10-24",
+  "authentication": {
+    "previous_session_catalog_http_status": 401,
+    "new_session_catalog_http_status": 200,
+    "revoked_entry_removed": true,
+    "user_authorized_new_session": true
+  },
+  "real_verification": {
+    "repository": "https://github.com/ziuld/bookingApi",
+    "commit": "c0d247e3226d77a83471c7a1b32afdb0981eb7f1",
+    "role": "inventory",
+    "model": "gpt-6-luna",
+    "reasoning": "low",
+    "attempted_calls": 1,
+    "scanners": false,
+    "target_executed": false,
+    "usage": {
+      "input_tokens": 9685,
+      "output_tokens": 418,
+      "reasoning_tokens": 0,
+      "total_tokens": 10103,
+      "api_calls": 1
+    },
+    "status": "validated",
+    "confirmed": 2,
+    "indications": 0,
+    "warnings": [],
+    "seconds": 12.24
+  },
+  "authorized_budget": {
+    "maximum_model_invocations": 5,
+    "previous_attempts": 4,
+    "verification_attempts": 1,
+    "remaining": 0
+  },
+  "regression": {
+    "run": 119,
+    "passed": 118,
+    "skipped": 1,
+    "seconds": 6.556
+  },
+  "limitations": [
+    "Una célula de Inventario sobre el snapshot fijado de bookingApi; no es una evaluación completa del equipo ni del coordinador explorador.",
+    "El consumo comunicado corresponde solo a la llamada válida; las cuatro anteriores siguen desconocidas.",
+    "Sin scanners ni ejecución del objetivo.",
+    "Calibración semántica y modelos definitivos pendientes del Bloque 8."
+  ]
+}

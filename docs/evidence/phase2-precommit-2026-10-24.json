@@ -1,0 +1,1013 @@
+{
+  "date": "2026-10-24",
+  "scope": "Repetición solicitada antes del commit; tres intentos registrados con correcciones acotadas entre intentos",
+  "attempts": [
+    {
+      "citation_check": {
+        "unique": 26,
+        "invalid": []
+      },
+      "job": {
+        "id": "8da57b97-e413-4bb3-af28-409703b9cd5a",
+        "repository": "https://github.com/ziuld/analysis-office-test",
+        "estado": "parcial",
+        "created": "2026-10-24T18:54:03.033842+00:00"
+      },
+      "directory": "reports\\2026-10-24\\185403-analysis-office-test\\8da57b97-e413-4bb3-af28-409703b9cd5a",
+      "commit": "b6b8adec2a36a43248ed5194bdc86b38bfeaccb6",
+      "branch": "main",
+      "acquisition": {
+        "complete": true,
+        "expected": 69,
+        "actual": 69,
+        "bytes": 1603313,
+        "seconds": 2.048,
+        "kinds": {
+          "text": 68,
+          "binary": 1
+        }
+      },
+      "map": {
+        "status": "ready",
+        "engine": {
+          "version": "0.9.95",
+          "commit": "92741d162b2094ffc2fed58cfbd8ee823e9da62c"
+        },
+        "diagnostic_lines": 0,
+        "truncated": false,
+        "processing_complete": true,
+        "unresolved_relations": 194,
+        "exit_code": 0,
+        "timeout": false,
+        "seconds": 2.526,
+        "node_count": 493,
+        "edge_count": 1487
+      },
+      "map_coverage": {
+        "unsupported": 19,
+        "processed": 50
+      },
+      "scanners": [
+        {
+          "name": "Gitleaks 8.30.1",
+          "status": "sin_detecciones_en_seleccion",
+          "detail": "Snapshot completo ofrecido a Gitleaks; reglas y límites nativos, sin historial Git. Binarios y enlaces no equivalen a texto analizable.",
+          "seconds": 1.284,
+          "input_count": 69,
+          "finding_count": 0
+        },
+        {
+          "name": "OSV-Scanner 2.7.0",
+          "status": "no_evaluado",
+          "detail": "No hay archivos de versiones resueltas admitidos en la selección. Revisar dependencias queda pendiente.",
+          "seconds": 0.001,
+          "input_kinds": {},
+          "input_count": 0,
+          "finding_count": 0
+        },
+        {
+          "name": "Semgrep 1.182.1",
+          "status": "sin_detecciones_en_seleccion",
+          "detail": "Reglas locales acotadas para Python, JavaScript/TypeScript, Java y C#. Sin análisis exhaustivo ni explotación probada.",
+          "processed_files": [
+            "auditor/assets/report-navigation.js",
+            "auditor/audit.py",
+            "auditor/azure_proposal.py",
+            "auditor/brief.py",
+            "auditor/editorial.py",
+            "auditor/executive.py",
+            "auditor/outcome.py",
+            "auditor/presentation.py",
+            "auditor/preview.py",
+            "auditor/questions.py",
+            "auditor/report_compact.py",
+            "auditor/report_view.py",
+            "auditor/reporting.py",
+            "auditor/repository.py",
+            "auditor/runtime.py",
+            "auditor/scanners.py",
+            "auditor/security.py",
+            "auditor/server.py",
+            "auditor/settings.py",
+            "auditor/team.py",
+            "auditor/test_audit.py",
+            "auditor/test_azure_proposal.py",
+            "auditor/test_brief.py",
+            "auditor/test_editorial.py",
+            "auditor/test_outcome.py",
+            "auditor/test_questions.py",
+            "auditor/test_security.py",
+            "auditor/test_selection.py",
+            "auditor/test_server.py",
+            "auditor/test_team.py",
+            "docker/install_scanners.py",
+            "examples/create_fictional_report.py",
+            "examples/create_insufficient_example.py"
+          ],
+          "seconds": 5.615,
+          "input_count": 33,
+          "finding_count": 0
+        }
+      ],
+      "stages": {
+        "routing": {
+          "status": "complete",
+          "calls": 1,
+          "usage": {
+            "input_tokens": 3026,
+            "output_tokens": 171,
+            "reasoning_tokens": 0,
+            "total_tokens": 3197,
+            "api_calls": 1
+          },
+          "prompt_bytes": 10032
+        },
+        "synthesis": {
+          "status": "complete",
+          "calls": 1,
+          "usage": {
+            "input_tokens": 3922,
+            "output_tokens": 306,
+            "reasoning_tokens": 0,
+            "total_tokens": 4228,
+            "api_calls": 1
+          },
+          "prompt_bytes": 14377
+        }
+      },
+      "cells": [
+        {
+          "id": "security",
+          "estado": "informacion_insuficiente",
+          "model": "gpt-6-luna",
+          "reasoning": "low",
+          "archivos": [
+            "auditor/server.py",
+            "auditor/repository.py",
+            "auditor/security.py",
+            "auditor/runtime.py",
+            "auditor/settings.py",
+            "auditor/scanners.py",
+            "auditor/team.py"
+          ],
+          "calls": 2,
+          "execution": "completed",
+          "coverage": "insufficient",
+          "missing": [],
+          "usage": {
+            "total_tokens": 21721,
+            "output_tokens": 569,
+            "api_calls": 2,
+            "input_tokens": 21152,
+            "reasoning_tokens": 52
+          },
+          "advertencias": [
+            "Consulta no completada: Consulta de evidencia supera el límite."
+          ],
+          "mensaje": "La información recibida no permite elaborar una evaluación útil de esta especialidad.",
+          "valid_findings": 0,
+          "retrieval_count": 4,
+          "retrieved_paths": [
+            "auditor/server.py",
+            "auditor/repository.py",
+            "auditor/security.py",
+            "auditor/runtime.py",
+            "auditor/repository.py",
+            "auditor/settings.py",
+            "auditor/scanners.py",
+            "auditor/team.py"
+          ]
+        },
+        {
+          "id": "architecture",
+          "estado": "parcial",
+          "model": "gpt-6-luna",
+          "reasoning": "low",
+          "archivos": [
+            "compose.yaml",
+            "docker/Auditor.Dockerfile",
+            "docker/Hermes3D.Dockerfile",
+            "auditor/server.py",
+            "auditor/runtime.py",
+            "auditor/settings.py",
+            "auditor/repository.py",
+            "auditor/audit.py",
+            "auditor/team.py",
+            "docs/OPERACION.md",
+            "docs/REPOSITORIO.md",
+            "README.md"
+          ],
+          "calls": 2,
+          "execution": "completed",
+          "coverage": "partial",
+          "missing": [],
+          "usage": {
+            "total_tokens": 30193,
+            "output_tokens": 2682,
+            "api_calls": 2,
+            "input_tokens": 27511,
+            "reasoning_tokens": 39
+          },
+          "advertencias": [
+            "Bloque de presentación rechazado: Faltan fuentes para el contenido estructurado."
+          ],
+          "mensaje": "Algunos apartados no superaron la validación; se conservan las aportaciones válidas. No se reintentó.",
+          "valid_findings": 5,
+          "retrieval_count": 4,
+          "retrieved_paths": [
+            "compose.yaml",
+            "docker/Auditor.Dockerfile",
+            "docker/Hermes3D.Dockerfile",
+            "auditor/server.py",
+            "auditor/runtime.py",
+            "auditor/settings.py",
+            "auditor/repository.py",
+            "auditor/audit.py",
+            "auditor/team.py",
+            "docs/OPERACION.md",
+            "docs/REPOSITORIO.md",
+            "README.md"
+          ]
+        },
+        {
+          "id": "inventory",
+          "estado": "completada",
+          "model": "gpt-6-luna",
+          "reasoning": "low",
+          "archivos": [
+            "auditor/repository.py",
+            "auditor/runtime.py",
+            "auditor/settings.py",
+            "auditor/server.py",
+            "auditor/audit.py",
+            "auditor/brief.py",
+            "compose.yaml",
+            "compose.ci.yaml"
+          ],
+          "calls": 2,
+          "execution": "completed",
+          "coverage": "available_evidence",
+          "missing": [],
+          "usage": {
+            "total_tokens": 22828,
+            "output_tokens": 1033,
+            "api_calls": 2,
+            "input_tokens": 21795,
+            "reasoning_tokens": 68
+          },
+          "valid_findings": 3,
+          "retrieval_count": 4,
+          "retrieved_paths": [
+            "auditor/repository.py",
+            "auditor/runtime.py",
+            "auditor/settings.py",
+            "auditor/server.py",
+            "auditor/audit.py",
+            "auditor/brief.py",
+            "compose.yaml",
+            "compose.ci.yaml"
+          ]
+        }
+      ],
+      "elapsed_seconds": 139.848,
+      "model_calls": 8,
+      "known_tokens": 82167,
+      "findings": {
+        "confirmados": 8,
+        "indicios": 0,
+        "synthesis": 5
+      },
+      "coverage": {
+        "snapshot": "complete",
+        "semantic": "partial",
+        "cells": {
+          "security": "insufficient",
+          "architecture": "partial",
+          "inventory": "available_evidence"
+        },
+        "limitation": "Ejecución terminada no demuestra exhaustividad semántica; consultar inventario y controles no evaluados."
+      },
+      "control_states": {
+        "no_evaluado": 6
+      }
+    },
+    {
+      "citation_check": {
+        "unique": 31,
+        "invalid": []
+      },
+      "job": {
+        "id": "33683fc9-ca9d-4ac4-a571-051d23a8d093",
+        "repository": "https://github.com/ziuld/analysis-office-test",
+        "estado": "parcial",
+        "created": "2026-10-24T18:58:00.355122+00:00"
+      },
+      "directory": "reports\\2026-10-24\\185800-analysis-office-test\\33683fc9-ca9d-4ac4-a571-051d23a8d093",
+      "commit": "b6b8adec2a36a43248ed5194bdc86b38bfeaccb6",
+      "branch": "main",
+      "acquisition": {
+        "complete": true,
+        "expected": 69,
+        "actual": 69,
+        "bytes": 1603313,
+        "seconds": 2.414,
+        "kinds": {
+          "text": 68,
+          "binary": 1
+        }
+      },
+      "map": {
+        "status": "ready",
+        "engine": {
+          "version": "0.9.95",
+          "commit": "92741d162b2094ffc2fed58cfbd8ee823e9da62c"
+        },
+        "diagnostic_lines": 0,
+        "truncated": false,
+        "processing_complete": true,
+        "unresolved_relations": 194,
+        "exit_code": 0,
+        "timeout": false,
+        "seconds": 2.98,
+        "node_count": 493,
+        "edge_count": 1487
+      },
+      "map_coverage": {
+        "unsupported": 19,
+        "processed": 50
+      },
+      "scanners": [
+        {
+          "name": "Gitleaks 8.30.1",
+          "status": "sin_detecciones_en_seleccion",
+          "detail": "Snapshot completo ofrecido a Gitleaks; reglas y límites nativos, sin historial Git. Binarios y enlaces no equivalen a texto analizable.",
+          "seconds": 1.214,
+          "input_count": 69,
+          "finding_count": 0
+        },
+        {
+          "name": "OSV-Scanner 2.7.0",
+          "status": "no_evaluado",
+          "detail": "No hay archivos de versiones resueltas admitidos en la selección. Revisar dependencias queda pendiente.",
+          "seconds": 0.0,
+          "input_kinds": {},
+          "input_count": 0,
+          "finding_count": 0
+        },
+        {
+          "name": "Semgrep 1.182.1",
+          "status": "sin_detecciones_en_seleccion",
+          "detail": "Reglas locales acotadas para Python, JavaScript/TypeScript, Java y C#. Sin análisis exhaustivo ni explotación probada.",
+          "processed_files": [
+            "auditor/assets/report-navigation.js",
+            "auditor/audit.py",
+            "auditor/azure_proposal.py",
+            "auditor/brief.py",
+            "auditor/editorial.py",
+            "auditor/executive.py",
+            "auditor/outcome.py",
+            "auditor/presentation.py",
+            "auditor/preview.py",
+            "auditor/questions.py",
+            "auditor/report_compact.py",
+            "auditor/report_view.py",
+            "auditor/reporting.py",
+            "auditor/repository.py",
+            "auditor/runtime.py",
+            "auditor/scanners.py",
+            "auditor/security.py",
+            "auditor/server.py",
+            "auditor/settings.py",
+            "auditor/team.py",
+            "auditor/test_audit.py",
+            "auditor/test_azure_proposal.py",
+            "auditor/test_brief.py",
+            "auditor/test_editorial.py",
+            "auditor/test_outcome.py",
+            "auditor/test_questions.py",
+            "auditor/test_security.py",
+            "auditor/test_selection.py",
+            "auditor/test_server.py",
+            "auditor/test_team.py",
+            "docker/install_scanners.py",
+            "examples/create_fictional_report.py",
+            "examples/create_insufficient_example.py"
+          ],
+          "seconds": 5.069,
+          "input_count": 33,
+          "finding_count": 0
+        }
+      ],
+      "stages": {
+        "routing": {
+          "status": "complete",
+          "calls": 1,
+          "usage": {
+            "input_tokens": 3026,
+            "output_tokens": 148,
+            "reasoning_tokens": 0,
+            "total_tokens": 3174,
+            "api_calls": 1
+          },
+          "prompt_bytes": 10032
+        },
+        "synthesis": {
+          "status": "error",
+          "calls": 1,
+          "usage": {
+            "input_tokens": 4556,
+            "output_tokens": 342,
+            "reasoning_tokens": 0,
+            "total_tokens": 4898,
+            "api_calls": 1
+          },
+          "prompt_bytes": 16972,
+          "error": "Respuesta o llamada inválida; sin reintento."
+        }
+      },
+      "cells": [
+        {
+          "id": "security",
+          "estado": "completada",
+          "model": "gpt-6-luna",
+          "reasoning": "low",
+          "archivos": [
+            "compose.yaml",
+            "compose.ci.yaml",
+            "docker/Auditor.Dockerfile",
+            ".env.example",
+            ".github/workflows/ci.yaml",
+            ".dockerignore",
+            "auditor/server.py",
+            "auditor/repository.py",
+            "auditor/security.py",
+            "auditor/runtime.py"
+          ],
+          "calls": 2,
+          "execution": "completed",
+          "coverage": "partial",
+          "missing": [],
+          "usage": {
+            "output_tokens": 1127,
+            "api_calls": 2,
+            "reasoning_tokens": 175,
+            "input_tokens": 20235,
+            "total_tokens": 21362
+          },
+          "valid_findings": 2,
+          "retrieval_count": 4,
+          "retrieved_paths": [
+            "compose.yaml",
+            "compose.ci.yaml",
+            "docker/Auditor.Dockerfile",
+            ".env.example",
+            ".github/workflows/ci.yaml",
+            ".dockerignore",
+            "auditor/server.py",
+            "auditor/repository.py",
+            "auditor/security.py",
+            "auditor/runtime.py",
+            "auditor/repository.py"
+          ]
+        },
+        {
+          "id": "architecture",
+          "estado": "parcial",
+          "model": "gpt-6-luna",
+          "reasoning": "low",
+          "archivos": [
+            "compose.yaml",
+            "auditor/server.py",
+            "auditor/settings.py",
+            "auditor/runtime.py",
+            "auditor/repository.py",
+            "auditor/audit.py"
+          ],
+          "calls": 2,
+          "execution": "completed",
+          "coverage": "partial",
+          "missing": [],
+          "usage": {
+            "output_tokens": 2438,
+            "api_calls": 2,
+            "reasoning_tokens": 109,
+            "input_tokens": 18697,
+            "total_tokens": 21135
+          },
+          "advertencias": [
+            "Bloque de presentación rechazado: Conexión de flujo inválida."
+          ],
+          "mensaje": "Algunos apartados no superaron la validación; se conservan las aportaciones válidas. No se reintentó.",
+          "valid_findings": 5,
+          "retrieval_count": 2,
+          "retrieved_paths": [
+            "compose.yaml",
+            "auditor/server.py",
+            "auditor/settings.py",
+            "auditor/runtime.py",
+            "auditor/repository.py",
+            "auditor/audit.py"
+          ]
+        },
+        {
+          "id": "inventory",
+          "estado": "completada",
+          "model": "gpt-6-luna",
+          "reasoning": "low",
+          "archivos": [
+            "auditor/settings.py",
+            "auditor/runtime.py",
+            "auditor/repository.py",
+            "auditor/server.py",
+            "README.md",
+            "compose.yaml"
+          ],
+          "calls": 2,
+          "execution": "completed",
+          "coverage": "available_evidence",
+          "missing": [],
+          "usage": {
+            "output_tokens": 1270,
+            "api_calls": 2,
+            "reasoning_tokens": 0,
+            "input_tokens": 18633,
+            "total_tokens": 19903
+          },
+          "valid_findings": 5,
+          "retrieval_count": 2,
+          "retrieved_paths": [
+            "auditor/settings.py",
+            "auditor/runtime.py",
+            "auditor/repository.py",
+            "auditor/server.py",
+            "README.md",
+            "compose.yaml"
+          ]
+        }
+      ],
+      "elapsed_seconds": 148.154,
+      "model_calls": 8,
+      "known_tokens": 70472,
+      "findings": {
+        "confirmados": 12,
+        "indicios": 0,
+        "synthesis": 0
+      },
+      "coverage": {
+        "snapshot": "complete",
+        "semantic": "partial",
+        "cells": {
+          "security": "partial",
+          "architecture": "partial",
+          "inventory": "available_evidence"
+        },
+        "limitation": "Ejecución terminada no demuestra exhaustividad semántica; consultar inventario y controles no evaluados."
+      },
+      "control_states": {
+        "no_evaluado": 5,
+        "evidencia_favorable_limitada": 1
+      }
+    },
+    {
+      "citation_check": {
+        "unique": 21,
+        "invalid": []
+      },
+      "job": {
+        "id": "ddcf96bb-bad4-4bae-a779-5b0aa89dd586",
+        "repository": "https://github.com/ziuld/analysis-office-test",
+        "estado": "parcial",
+        "created": "2026-10-24T19:01:50.801776+00:00"
+      },
+      "directory": "reports\\2026-10-24\\190150-analysis-office-test\\ddcf96bb-bad4-4bae-a779-5b0aa89dd586",
+      "commit": "b6b8adec2a36a43248ed5194bdc86b38bfeaccb6",
+      "branch": "main",
+      "acquisition": {
+        "complete": true,
+        "expected": 69,
+        "actual": 69,
+        "bytes": 1603313,
+        "seconds": 2.093,
+        "kinds": {
+          "text": 68,
+          "binary": 1
+        }
+      },
+      "map": {
+        "status": "ready",
+        "engine": {
+          "version": "0.9.95",
+          "commit": "92741d162b2094ffc2fed58cfbd8ee823e9da62c"
+        },
+        "diagnostic_lines": 0,
+        "truncated": false,
+        "processing_complete": true,
+        "unresolved_relations": 194,
+        "exit_code": 0,
+        "timeout": false,
+        "seconds": 2.828,
+        "node_count": 493,
+        "edge_count": 1487
+      },
+      "map_coverage": {
+        "unsupported": 19,
+        "processed": 50
+      },
+      "scanners": [
+        {
+          "name": "Gitleaks 8.30.1",
+          "status": "sin_detecciones_en_seleccion",
+          "detail": "Snapshot completo ofrecido a Gitleaks; reglas y límites nativos, sin historial Git. Binarios y enlaces no equivalen a texto analizable.",
+          "seconds": 1.562,
+          "input_count": 69,
+          "finding_count": 0
+        },
+        {
+          "name": "OSV-Scanner 2.7.0",
+          "status": "no_evaluado",
+          "detail": "No hay archivos de versiones resueltas admitidos en la selección. Revisar dependencias queda pendiente.",
+          "seconds": 0.0,
+          "input_kinds": {},
+          "input_count": 0,
+          "finding_count": 0
+        },
+        {
+          "name": "Semgrep 1.182.1",
+          "status": "sin_detecciones_en_seleccion",
+          "detail": "Reglas locales acotadas para Python, JavaScript/TypeScript, Java y C#. Sin análisis exhaustivo ni explotación probada.",
+          "processed_files": [
+            "auditor/assets/report-navigation.js",
+            "auditor/audit.py",
+            "auditor/azure_proposal.py",
+            "auditor/brief.py",
+            "auditor/editorial.py",
+            "auditor/executive.py",
+            "auditor/outcome.py",
+            "auditor/presentation.py",
+            "auditor/preview.py",
+            "auditor/questions.py",
+            "auditor/report_compact.py",
+            "auditor/report_view.py",
+            "auditor/reporting.py",
+            "auditor/repository.py",
+            "auditor/runtime.py",
+            "auditor/scanners.py",
+            "auditor/security.py",
+            "auditor/server.py",
+            "auditor/settings.py",
+            "auditor/team.py",
+            "auditor/test_audit.py",
+            "auditor/test_azure_proposal.py",
+            "auditor/test_brief.py",
+            "auditor/test_editorial.py",
+            "auditor/test_outcome.py",
+            "auditor/test_questions.py",
+            "auditor/test_security.py",
+            "auditor/test_selection.py",
+            "auditor/test_server.py",
+            "auditor/test_team.py",
+            "docker/install_scanners.py",
+            "examples/create_fictional_report.py",
+            "examples/create_insufficient_example.py"
+          ],
+          "seconds": 6.227,
+          "input_count": 33,
+          "finding_count": 0
+        }
+      ],
+      "stages": {
+        "routing": {
+          "status": "complete",
+          "calls": 1,
+          "usage": {
+            "input_tokens": 3026,
+            "output_tokens": 154,
+            "reasoning_tokens": 0,
+            "total_tokens": 3180,
+            "api_calls": 1
+          },
+          "prompt_bytes": 10032
+        },
+        "synthesis": {
+          "status": "complete",
+          "calls": 1,
+          "usage": {
+            "input_tokens": 3533,
+            "output_tokens": 259,
+            "reasoning_tokens": 0,
+            "total_tokens": 3792,
+            "api_calls": 1
+          },
+          "prompt_bytes": 12837
+        }
+      },
+      "cells": [
+        {
+          "id": "security",
+          "estado": "parcial",
+          "model": "gpt-6-luna",
+          "reasoning": "low",
+          "archivos": [
+            "auditor/server.py",
+            "auditor/security.py",
+            "auditor/settings.py",
+            "compose.yaml",
+            "compose.ci.yaml",
+            "docker/Auditor.Dockerfile",
+            "auditor/repository.py",
+            "auditor/scanners.py",
+            "auditor/runtime.py"
+          ],
+          "calls": 2,
+          "execution": "completed",
+          "coverage": "partial",
+          "missing": [],
+          "usage": {
+            "input_tokens": 21369,
+            "reasoning_tokens": 485,
+            "api_calls": 2,
+            "output_tokens": 1831,
+            "total_tokens": 23200
+          },
+          "advertencias": [
+            "confirmados[0] rechazado: Tema de hallazgo no admitido.",
+            "confirmados[1] rechazado: Tema de hallazgo no admitido.",
+            "control[4] rechazado: Hallazgo sin evidencia válida.",
+            "Control no evaluado: configuracion"
+          ],
+          "mensaje": "Algunos apartados no superaron la validación; se conservan las aportaciones válidas. No se reintentó.",
+          "valid_findings": 1,
+          "retrieval_count": 3,
+          "retrieved_paths": [
+            "auditor/server.py",
+            "auditor/security.py",
+            "auditor/settings.py",
+            "compose.yaml",
+            "compose.ci.yaml",
+            "docker/Auditor.Dockerfile",
+            "auditor/repository.py",
+            "auditor/scanners.py",
+            "auditor/runtime.py"
+          ]
+        },
+        {
+          "id": "architecture",
+          "estado": "parcial",
+          "model": "gpt-6-luna",
+          "reasoning": "low",
+          "archivos": [
+            "compose.yaml",
+            "auditor/server.py",
+            "auditor/runtime.py",
+            "auditor/repository.py",
+            "auditor/settings.py",
+            "auditor/audit.py"
+          ],
+          "calls": 2,
+          "execution": "completed",
+          "coverage": "partial",
+          "missing": [],
+          "usage": {
+            "input_tokens": 18880,
+            "reasoning_tokens": 99,
+            "api_calls": 2,
+            "output_tokens": 3035,
+            "total_tokens": 21915
+          },
+          "advertencias": [
+            "Bloque de presentación rechazado: Faltan fuentes para el contenido estructurado.",
+            "Bloque de presentación rechazado: Faltan fuentes para el contenido estructurado."
+          ],
+          "mensaje": "Algunos apartados no superaron la validación; se conservan las aportaciones válidas. No se reintentó.",
+          "valid_findings": 6,
+          "retrieval_count": 2,
+          "retrieved_paths": [
+            "compose.yaml",
+            "auditor/server.py",
+            "auditor/runtime.py",
+            "auditor/repository.py",
+            "auditor/settings.py",
+            "auditor/audit.py"
+          ]
+        },
+        {
+          "id": "inventory",
+          "estado": "informacion_insuficiente",
+          "model": "gpt-6-luna",
+          "reasoning": "low",
+          "archivos": [
+            "auditor/repository.py",
+            "auditor/settings.py",
+            "auditor/runtime.py",
+            "compose.yaml",
+            "docker/Auditor.Dockerfile"
+          ],
+          "calls": 2,
+          "execution": "completed",
+          "coverage": "insufficient",
+          "missing": [],
+          "usage": {
+            "input_tokens": 15012,
+            "reasoning_tokens": 203,
+            "api_calls": 2,
+            "output_tokens": 1283,
+            "total_tokens": 16295
+          },
+          "advertencias": [
+            "confirmados[0] rechazado: Hallazgo con formato inválido.",
+            "confirmados[1] rechazado: Hallazgo con formato inválido.",
+            "confirmados[2] rechazado: Hallazgo con formato inválido.",
+            "confirmados[3] rechazado: Hallazgo con formato inválido."
+          ],
+          "mensaje": "La información recibida no permite elaborar una evaluación útil de esta especialidad.",
+          "valid_findings": 0,
+          "retrieval_count": 2,
+          "retrieved_paths": [
+            "auditor/repository.py",
+            "auditor/settings.py",
+            "auditor/runtime.py",
+            "compose.yaml",
+            "docker/Auditor.Dockerfile"
+          ]
+        }
+      ],
+      "elapsed_seconds": 154.157,
+      "model_calls": 8,
+      "known_tokens": 68382,
+      "findings": {
+        "confirmados": 6,
+        "indicios": 1,
+        "synthesis": 5
+      },
+      "coverage": {
+        "snapshot": "complete",
+        "semantic": "partial",
+        "cells": {
+          "security": "partial",
+          "architecture": "partial",
+          "inventory": "insufficient"
+        },
+        "limitation": "Ejecución terminada no demuestra exhaustividad semántica; consultar inventario y controles no evaluados."
+      },
+      "control_states": {
+        "no_evaluado": 5,
+        "evidencia_favorable_limitada": 1
+      }
+    }
+  ],
+  "last_response_shapes": {
+    "security": {
+      "finding_shapes": [
+        {
+          "tema": "entradas",
+          "control": "entradas",
+          "has_componente": false,
+          "reference_count": 2
+        },
+        {
+          "tema": "configuracion",
+          "control": "configuracion",
+          "has_componente": false,
+          "reference_count": 4
+        }
+      ],
+      "flow_reference_counts": {
+        "components": [],
+        "connections": []
+      }
+    },
+    "architecture": {
+      "finding_shapes": [
+        {
+          "tema": "componentes",
+          "control": "contexto",
+          "has_componente": true,
+          "reference_count": 4
+        },
+        {
+          "tema": "componentes",
+          "control": "contexto",
+          "has_componente": true,
+          "reference_count": 3
+        },
+        {
+          "tema": "arranque",
+          "control": "contexto",
+          "has_componente": false,
+          "reference_count": 3
+        },
+        {
+          "tema": "datos",
+          "control": "contexto",
+          "has_componente": false,
+          "reference_count": 3
+        },
+        {
+          "tema": "estabilidad",
+          "control": "operacion",
+          "has_componente": false,
+          "reference_count": 2
+        },
+        {
+          "tema": "servicios",
+          "control": "contexto",
+          "has_componente": false,
+          "reference_count": 4
+        }
+      ],
+      "flow_reference_counts": {
+        "components": [
+          3,
+          4,
+          2,
+          2,
+          4,
+          3
+        ],
+        "connections": [
+          3,
+          2,
+          3,
+          4,
+          2
+        ]
+      }
+    },
+    "inventory": {
+      "finding_shapes": [
+        {
+          "tema": "componentes",
+          "control": "contexto",
+          "has_componente": false,
+          "reference_count": 2
+        },
+        {
+          "tema": "componentes",
+          "control": "contexto",
+          "has_componente": false,
+          "reference_count": 4
+        },
+        {
+          "tema": "componentes",
+          "control": "contexto",
+          "has_componente": false,
+          "reference_count": 4
+        },
+        {
+          "tema": "componentes",
+          "control": "contexto",
+          "has_componente": false,
+          "reference_count": 4
+        }
+      ],
+      "flow_reference_counts": {
+        "components": [],
+        "connections": []
+      }
+    }
+  },
+  "changes": [
+    "División determinista de rutas excesivamente agrupadas solo si cabe dentro de cuatro consultas, sin ampliar presupuestos.",
+    "Ejemplo completo de conexión de Arquitectura contrastado por el validador real; aclaraciones de fuentes, estados y campos.",
+    "Respuestas parcialmente rechazadas ocultadas y limitadas, solo diagnóstico local. Validadores sin relajar."
+  ],
+  "targeted_tests": {
+    "after_group_split": {
+      "run": 11,
+      "passed": 11,
+      "seconds": 0.052
+    },
+    "after_source_contract": {
+      "run": 24,
+      "passed": 23,
+      "optional_skipped": 1,
+      "seconds": 0.237
+    },
+    "after_connection_example": {
+      "run": 25,
+      "passed": 24,
+      "optional_skipped": 1,
+      "seconds": 0.224
+    }
+  },
+  "total_model_calls": 24,
+  "total_known_tokens": 221021,
+  "health": {
+    "active": 0,
+    "question_active": null,
+    "office": 200,
+    "report": 200,
+    "download": 200
+  },
+  "temporary_cleanup": {
+    "snapshots": 0,
+    "indices": 0
+  },
+  "decision": "No commit: ninguna de las tres repeticiones pasó sin rechazos. No repetir hasta obtener una salida favorable sin corregir la fiabilidad del contrato. F2-06 reabierta.",
+  "limits": [
+    "Scanners y adquisición completan; OSV sigue sin entrada compatible en este main.",
+    "El último informe conserva seis observaciones confirmadas y un indicio, cinco conclusiones y veintiuna citas contrastadas, pero perdió contenido rechazado.",
+    "No hubo bloqueo global, ejecución del objetivo, subida de modelos ni cambios de CI/CD/versiones.",
+    "Las correcciones dirigidas no han demostrado estabilizar las respuestas LLM. No se atribuye mejora general ni se presenta el resultado como aprobado."
+  ]
+}

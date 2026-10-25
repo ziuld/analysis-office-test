@@ -1,0 +1,58 @@
+{
+  "date": "2026-10-24",
+  "change": "Template ejecutivo v14 adaptado a compact-v1",
+  "new_model_calls": 0,
+  "full_flow_started": false,
+  "security_next_run": {
+    "model": "gpt-6-luna",
+    "reasoning": "medium",
+    "scope": "Solo Seguridad; no cambian modelos ni presupuestos de otros roles"
+  },
+  "preview": {
+    "html": "artifacts/informe-v14-vista-previa.html",
+    "source": "Tres respuestas reales guardadas de Luna/low sobre cinco archivos sintéticos; no es un análisis nuevo.",
+    "original_demo_modified": false,
+    "html_sha256": "19a617194abbb28ca7b6126233bff5aa11b58cd41c7017b5610aee72a1adf180"
+  },
+  "changes": [
+    "Prioridades iniciales y un único detalle completo por riesgo",
+    "Controles: riesgos, defensas observadas, no evaluado y no aplica, sin puntuación de cumplimiento",
+    "Flujo respaldado con certeza y observaciones compactas, sin exigir filas operativas nuevas",
+    "Recomendaciones de riesgos sin dominio conservadas; no se reclasifican por heurística",
+    "Azure solo con propuesta explícita válida; sin servicios o pipelines fijos",
+    "Estados y detalles de scanners y mapas conservados en cobertura",
+    "Detalle HTML generado por Core, sin depender de JavaScript para crearlo",
+    "Impresión abre anexos y restaura el estado posterior"
+  ],
+  "verification": {
+    "directed_tests": 28,
+    "passed": 28,
+    "seconds": 1.463,
+    "desktop_reviewed": true,
+    "print_pages": 15,
+    "print_contains_annexes": true,
+    "layout_check": {
+      "css_client_width": 489,
+      "document_scroll_width": 489,
+      "overflow_outside_tables": false,
+      "note": "Captura Chrome Windows solicitada 430 px usó viewport interno 504 px y recortó imagen; DOM confirmó ausencia de desbordamiento. Nueva captura móvil a 600 px."
+    },
+    "historical_fixture_change": "Solo hashes HTML/Markdown por rediseño; entradas JSON y hash del prompt standalone preservados.",
+    "test_environment_correction": "Primer intento tomó fixtures antiguos desde /tests de la imagen. Se repitió desde /workspace/backend/tests y pasó, sin cambiar producto para ese fallo.",
+    "mobile_reviewed": true,
+    "packaged_css_present": true,
+    "effective_security_profile": {
+      "model": "gpt-6-luna",
+      "reasoning": "medium"
+    },
+    "office_http": 200,
+    "active_runs": 0,
+    "active_questions": 0
+  },
+  "limits": [
+    "No prueba coordinador ni flujo completo.",
+    "Vista previa reutiliza respuestas low, no demuestra mejora de resultados por medium.",
+    "No cambian CI/CD ni versión 0.3.0; originales guardados y demo v14 conservados.",
+    "No se infiere infraestructura efectiva, inexistencia de copias ni cumplimiento a partir de ausencia de fuentes."
+  ]
+}

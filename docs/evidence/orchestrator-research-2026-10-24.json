@@ -1,0 +1,487 @@
+{
+  "date": "2026-10-24",
+  "change": "Orquestador de objetivos y especialistas con investigación agrupada acotada",
+  "model": "gpt-6-luna",
+  "reasoning": "low",
+  "research_rounds": {
+    "security": 1,
+    "architecture": 1,
+    "inventory": 1
+  },
+  "attempts": [
+    {
+      "citation_check": {
+        "unique": 4,
+        "invalid": []
+      },
+      "job": {
+        "id": "3c39e932-022d-42b7-9bf5-ce27fb712e96",
+        "repository": "https://github.com/ziuld/analysis-office-test",
+        "estado": "parcial",
+        "created": "2026-10-24T14:36:46.660272+00:00",
+        "error": "Se guardó un informe parcial; revisar las células pendientes. No equivale a una revisión completa del equipo."
+      },
+      "directory": "reports\\2026-10-24\\143646-analysis-office-test\\3c39e932-022d-42b7-9bf5-ce27fb712e96",
+      "commit": "b6b8adec2a36a43248ed5194bdc86b38bfeaccb6",
+      "branch": "main",
+      "acquisition": {
+        "complete": true,
+        "expected": 69,
+        "actual": 69,
+        "bytes": 1603313,
+        "seconds": 1.837,
+        "kinds": {
+          "text": 68,
+          "binary": 1
+        }
+      },
+      "map": {
+        "status": "ready",
+        "engine": {
+          "version": "0.9.95",
+          "commit": "92741d162b2094ffc2fed58cfbd8ee823e9da62c"
+        },
+        "diagnostic_lines": 0,
+        "truncated": false,
+        "processing_complete": true,
+        "unresolved_relations": 194,
+        "exit_code": 0,
+        "timeout": false,
+        "seconds": 2.977,
+        "node_count": 493,
+        "edge_count": 1487
+      },
+      "map_coverage": {
+        "unsupported": 19,
+        "processed": 50
+      },
+      "scanners": [
+        {
+          "name": "Gitleaks 8.30.1",
+          "status": "sin_detecciones_en_seleccion",
+          "detail": "Snapshot completo ofrecido a Gitleaks; reglas y límites nativos, sin historial Git. Binarios y enlaces no equivalen a texto analizable.",
+          "seconds": 1.091,
+          "input_count": 69,
+          "finding_count": 0
+        },
+        {
+          "name": "OSV-Scanner 2.7.0",
+          "status": "no_evaluado",
+          "detail": "No hay archivos de versiones resueltas admitidos en la selección. Revisar dependencias queda pendiente.",
+          "seconds": 0.0,
+          "input_count": 0,
+          "finding_count": 0
+        }
+      ],
+      "stages": {
+        "routing": {
+          "status": "complete",
+          "calls": 1,
+          "usage": {
+            "input_tokens": 2389,
+            "output_tokens": 155,
+            "reasoning_tokens": 0,
+            "total_tokens": 2544,
+            "api_calls": 1
+          },
+          "prompt_bytes": 7011
+        },
+        "synthesis": {
+          "status": "complete",
+          "calls": 1,
+          "usage": {
+            "input_tokens": 1671,
+            "output_tokens": 112,
+            "reasoning_tokens": 0,
+            "total_tokens": 1783,
+            "api_calls": 1
+          },
+          "prompt_bytes": 4947
+        }
+      },
+      "cells": [
+        {
+          "id": "security",
+          "estado": "completada",
+          "model": "gpt-6-luna",
+          "reasoning": "low",
+          "archivos": [
+            "auditor/server.py",
+            "auditor/settings.py",
+            "auditor/repository.py",
+            "compose.yaml",
+            "docker/Auditor.Dockerfile",
+            ".env.example",
+            "auditor/security.py",
+            "auditor/runtime.py",
+            "auditor/audit.py"
+          ],
+          "calls": 2,
+          "execution": "completed",
+          "coverage": "partial",
+          "missing": [],
+          "usage": {
+            "output_tokens": 872,
+            "reasoning_tokens": 104,
+            "api_calls": 2,
+            "total_tokens": 19200,
+            "input_tokens": 18328
+          },
+          "valid_findings": 1,
+          "retrieval_count": 3,
+          "retrieved_paths": [
+            "auditor/server.py",
+            "auditor/settings.py",
+            "auditor/repository.py",
+            "compose.yaml",
+            "docker/Auditor.Dockerfile",
+            ".env.example",
+            "auditor/security.py",
+            "auditor/runtime.py",
+            "auditor/audit.py"
+          ]
+        },
+        {
+          "id": "architecture",
+          "estado": "parcial",
+          "model": "gpt-6-luna",
+          "reasoning": "low",
+          "archivos": [
+            "compose.yaml",
+            "compose.ci.yaml",
+            "auditor/server.py",
+            "auditor/settings.py",
+            "auditor/runtime.py",
+            "auditor/repository.py"
+          ],
+          "calls": 2,
+          "execution": "completed",
+          "coverage": "partial",
+          "missing": [],
+          "usage": {
+            "output_tokens": 715,
+            "reasoning_tokens": 28,
+            "api_calls": 2,
+            "total_tokens": 15846,
+            "input_tokens": 15131
+          },
+          "advertencias": [
+            "confirmados[0] rechazado: Hallazgo con formato inválido."
+          ],
+          "mensaje": "Algunos apartados no superaron la validación; se conservan las aportaciones válidas. No se reintentó.",
+          "valid_findings": 1,
+          "retrieval_count": 3,
+          "retrieved_paths": [
+            "compose.yaml",
+            "compose.ci.yaml",
+            "auditor/server.py",
+            "auditor/settings.py",
+            "auditor/runtime.py",
+            "auditor/repository.py"
+          ]
+        },
+        {
+          "id": "inventory",
+          "estado": "error",
+          "model": "gpt-6-luna",
+          "reasoning": "low",
+          "archivos": [],
+          "calls": 1,
+          "execution": "error",
+          "coverage": "incomplete",
+          "missing": [],
+          "usage": null,
+          "valid_findings": 0,
+          "retrieval_count": 0,
+          "retrieved_paths": []
+        }
+      ],
+      "elapsed_seconds": 93.236,
+      "model_calls": 7,
+      "known_tokens": 39373,
+      "findings": {
+        "confirmados": 2,
+        "indicios": 0,
+        "synthesis": 2
+      },
+      "coverage": {
+        "snapshot": "complete",
+        "semantic": "partial",
+        "cells": {
+          "security": "partial",
+          "architecture": "partial",
+          "inventory": "incomplete"
+        },
+        "limitation": "Ejecución terminada no demuestra exhaustividad semántica; consultar inventario y controles no evaluados."
+      },
+      "control_states": {
+        "no_evaluado": 6
+      }
+    },
+    {
+      "citation_check": {
+        "unique": 22,
+        "invalid": []
+      },
+      "job": {
+        "id": "f7043007-40a9-42a3-8b1e-a1478688c25c",
+        "repository": "https://github.com/ziuld/analysis-office-test",
+        "estado": "parcial",
+        "created": "2026-10-24T14:38:59.408882+00:00"
+      },
+      "directory": "reports\\2026-10-24\\143859-analysis-office-test\\f7043007-40a9-42a3-8b1e-a1478688c25c",
+      "commit": "b6b8adec2a36a43248ed5194bdc86b38bfeaccb6",
+      "branch": "main",
+      "acquisition": {
+        "complete": true,
+        "expected": 69,
+        "actual": 69,
+        "bytes": 1603313,
+        "seconds": 1.974,
+        "kinds": {
+          "text": 68,
+          "binary": 1
+        }
+      },
+      "map": {
+        "status": "ready",
+        "engine": {
+          "version": "0.9.95",
+          "commit": "92741d162b2094ffc2fed58cfbd8ee823e9da62c"
+        },
+        "diagnostic_lines": 0,
+        "truncated": false,
+        "processing_complete": true,
+        "unresolved_relations": 194,
+        "exit_code": 0,
+        "timeout": false,
+        "seconds": 2.073,
+        "node_count": 493,
+        "edge_count": 1487
+      },
+      "map_coverage": {
+        "unsupported": 19,
+        "processed": 50
+      },
+      "scanners": [
+        {
+          "name": "Gitleaks 8.30.1",
+          "status": "sin_detecciones_en_seleccion",
+          "detail": "Snapshot completo ofrecido a Gitleaks; reglas y límites nativos, sin historial Git. Binarios y enlaces no equivalen a texto analizable.",
+          "seconds": 1.148,
+          "input_count": 69,
+          "finding_count": 0
+        },
+        {
+          "name": "OSV-Scanner 2.7.0",
+          "status": "no_evaluado",
+          "detail": "No hay archivos de versiones resueltas admitidos en la selección. Revisar dependencias queda pendiente.",
+          "seconds": 0.0,
+          "input_count": 0,
+          "finding_count": 0
+        }
+      ],
+      "stages": {
+        "routing": {
+          "status": "complete",
+          "calls": 1,
+          "usage": {
+            "input_tokens": 213,
+            "output_tokens": 191,
+            "reasoning_tokens": 0,
+            "total_tokens": 2580,
+            "api_calls": 1
+          },
+          "prompt_bytes": 7011
+        },
+        "synthesis": {
+          "status": "complete",
+          "calls": 1,
+          "usage": {
+            "input_tokens": 2948,
+            "output_tokens": 217,
+            "reasoning_tokens": 0,
+            "total_tokens": 3165,
+            "api_calls": 1
+          },
+          "prompt_bytes": 9781
+        }
+      },
+      "cells": [
+        {
+          "id": "security",
+          "estado": "parcial",
+          "model": "gpt-6-luna",
+          "reasoning": "low",
+          "archivos": [
+            "auditor/server.py",
+            "auditor/settings.py",
+            "auditor/security.py",
+            "compose.yaml",
+            "compose.ci.yaml",
+            ".env.example",
+            "docs/SEGURIDAD.md",
+            "docker/Auditor.Dockerfile",
+            "docker/Hermes3D.Dockerfile",
+            ".github/workflows/ci.yaml",
+            "auditor/repository.py",
+            "auditor/runtime.py"
+          ],
+          "calls": 2,
+          "execution": "completed",
+          "coverage": "partial",
+          "missing": [],
+          "usage": {
+            "total_tokens": 21376,
+            "output_tokens": 1037,
+            "reasoning_tokens": 47,
+            "api_calls": 2,
+            "input_tokens": 20339
+          },
+          "advertencias": [
+            "confirmados[1] rechazado: Tema de hallazgo no admitido."
+          ],
+          "mensaje": "Algunos apartados no superaron la validación; se conservan las aportaciones válidas. No se reintentó.",
+          "valid_findings": 1,
+          "retrieval_count": 4,
+          "retrieved_paths": [
+            "auditor/server.py",
+            "auditor/settings.py",
+            "auditor/security.py",
+            "compose.yaml",
+            "compose.ci.yaml",
+            ".env.example",
+            "docs/SEGURIDAD.md",
+            "docker/Auditor.Dockerfile",
+            "docker/Hermes3D.Dockerfile",
+            ".github/workflows/ci.yaml",
+            "auditor/repository.py",
+            "auditor/runtime.py"
+          ]
+        },
+        {
+          "id": "architecture",
+          "estado": "completada",
+          "model": "gpt-6-luna",
+          "reasoning": "low",
+          "archivos": [
+            "compose.yaml",
+            "compose.ci.yaml",
+            "docker/Auditor.Dockerfile",
+            "auditor/settings.py",
+            "auditor/runtime.py",
+            "auditor/server.py"
+          ],
+          "calls": 2,
+          "execution": "completed",
+          "coverage": "available_evidence",
+          "missing": [],
+          "usage": {
+            "total_tokens": 14268,
+            "output_tokens": 1005,
+            "reasoning_tokens": 78,
+            "api_calls": 2,
+            "input_tokens": 13263
+          },
+          "valid_findings": 3,
+          "retrieval_count": 3,
+          "retrieved_paths": [
+            "compose.yaml",
+            "compose.ci.yaml",
+            "docker/Auditor.Dockerfile",
+            "auditor/settings.py",
+            "auditor/runtime.py",
+            "auditor/server.py"
+          ]
+        },
+        {
+          "id": "inventory",
+          "estado": "completada",
+          "model": "gpt-6-luna",
+          "reasoning": "low",
+          "archivos": [
+            "README.md",
+            "BACKEND_VERSION",
+            "FRONTEND_VERSION",
+            "HERMES3D_VERSION",
+            "HERMES_AGENT_VERSION",
+            "docker/Auditor.Dockerfile"
+          ],
+          "calls": 2,
+          "execution": "completed",
+          "coverage": "available_evidence",
+          "missing": [],
+          "usage": {
+            "total_tokens": 10977,
+            "output_tokens": 1100,
+            "reasoning_tokens": 145,
+            "api_calls": 2,
+            "input_tokens": 9877
+          },
+          "valid_findings": 3,
+          "retrieval_count": 2,
+          "retrieved_paths": [
+            "README.md",
+            "BACKEND_VERSION",
+            "FRONTEND_VERSION",
+            "HERMES3D_VERSION",
+            "HERMES_AGENT_VERSION",
+            "docker/Auditor.Dockerfile"
+          ]
+        }
+      ],
+      "elapsed_seconds": 106.366,
+      "model_calls": 8,
+      "known_tokens": 52366,
+      "findings": {
+        "confirmados": 7,
+        "indicios": 0,
+        "synthesis": 4
+      },
+      "coverage": {
+        "snapshot": "complete",
+        "semantic": "partial",
+        "cells": {
+          "security": "partial",
+          "architecture": "available_evidence",
+          "inventory": "available_evidence"
+        },
+        "limitation": "Ejecución terminada no demuestra exhaustividad semántica; consultar inventario y controles no evaluados."
+      },
+      "control_states": {
+        "no_evaluado": 5,
+        "evidencia_favorable_limitada": 1
+      }
+    }
+  ],
+  "total_attempted_model_calls": 15,
+  "known_reported_tokens": 91739,
+  "unknown_usage": [
+    "3c39e932-022d-42b7-9bf5-ce27fb712e96:inventory:research"
+  ],
+  "checks": {
+    "targeted_tests": 15,
+    "seconds": 0.179,
+    "health": {
+      "id": "f7043007-40a9-42a3-8b1e-a1478688c25c",
+      "office_http": 200,
+      "report_html": true,
+      "download_http": 200,
+      "active_jobs": 0,
+      "question_active": null
+    },
+    "temporary_snapshots_remaining": 0,
+    "index_workspaces_remaining": 0,
+    "final_services_healthy": true
+  },
+  "limitations": [
+    "Mismo main remoto b6b8adec2a36a43248ed5194bdc86b38bfeaccb6; no el PR local sin fusionar.",
+    "Primer intento: Inventario recibió respuesta incompleta del runtime; no se dispone de detalle para atribuir una causa más precisa ni de su consumo. Repetición manual única, sin reintentos automáticos.",
+    "Segundo intento: tres especialistas y síntesis terminados. Seguridad conserva una observación; otra rechazada por tema no admitido. Cinco controles no evaluados y uno favorable limitado.",
+    "Las 22 citas conservadas coinciden con el texto recibido; esto valida procedencia/formato, no verdad ni calidad de la interpretación. La redacción sobre recuperar trabajos no demuestra reanudación automática: el código marca interrupciones como error.",
+    "Graphify procesó 50 archivos; 19 sin soporte, 194 relaciones externas sin resolver. OSV no evaluado por ausencia de entradas compatibles.",
+    "Ambos pilotos usaron la imagen anterior al pequeño ajuste de retención acumulada al agotar bytes. Ese caso se comprobó con fixture dirigido; imagen final reconstruida/desplegada saludable, sin otro consumo de modelos.",
+    "No se ejecutó el objetivo ni su suite, instaladores o scripts. CI/CD, pins y versiones conservados.",
+    "Sin inspección visual de navegador en esta comprobación; oficina, informe y descarga HTTP 200."
+  ]
+}

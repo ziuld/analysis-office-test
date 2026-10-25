@@ -1,0 +1,39 @@
+{
+  "source_run": "ddcf96bb-bad4-4bae-a779-5b0aa89dd586",
+  "model_calls": 0,
+  "scanners_executed": false,
+  "method": "Explicit remapping of prior model statements and source IDs to compact fields; no reconstruction of missing inventory component names; original per-role delivered line windows only.",
+  "roles": {
+    "security": {
+      "input_observations": 3,
+      "accepted_confirmed": 2,
+      "accepted_indications": 1,
+      "nodes": 0,
+      "edges": 0,
+      "warnings": [],
+      "max_references": 4,
+      "prompt_bytes": 37336
+    },
+    "architecture": {
+      "input_observations": 6,
+      "accepted_confirmed": 12,
+      "accepted_indications": 0,
+      "nodes": 6,
+      "edges": 5,
+      "warnings": [],
+      "max_references": 4,
+      "prompt_bytes": 33725
+    },
+    "inventory": {
+      "input_observations": 4,
+      "accepted_confirmed": 4,
+      "accepted_indications": 0,
+      "nodes": 0,
+      "edges": 0,
+      "warnings": [],
+      "max_references": 4,
+      "prompt_bytes": 22243
+    }
+  },
+  "scope": "Reproducción sin modelos de las respuestas parciales guardadas: remapeo explícito de campos, no nueva interpretación del código ni generación automática de nombres de componentes ausentes."
+}

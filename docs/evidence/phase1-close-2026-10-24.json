@@ -1,0 +1,59 @@
+{
+  "date": "2026-10-24",
+  "phase": 1,
+  "status": "accepted_pending_user_merge",
+  "versions": {
+    "frontend": "0.3.0",
+    "backend": "0.3.0",
+    "python_package": "0.3.0"
+  },
+  "acceptance": "Usuario acepta base funcional e informes parciales; cierre de Fase 1 y merge manual a main.",
+  "targeted_tests": {
+    "modules": [
+      "test_complete_flow",
+      "test_coordinator",
+      "test_compatibility",
+      "test_office_storage"
+    ],
+    "run": 17,
+    "passed": 17,
+    "seconds": 0.161,
+    "full_suite": false
+  },
+  "builds": [
+    "arktic-hermes-auditor:0.3.0",
+    "arktic-hermes3d-office:0.3.0"
+  ],
+  "isolated_startup": {
+    "script": "scripts/check-startup.ps1",
+    "exit_code": 0,
+    "backend_version": "0.3.0",
+    "office_http": 200,
+    "proxy_http": 200,
+    "empty_credentials_and_reports": true,
+    "cleanup_completed": true
+  },
+  "local_services": {
+    "office_http": 200,
+    "active_jobs": 0,
+    "question_active": null,
+    "backend_version": "0.3.0"
+  },
+  "frontend_patch_reverse_check": "passed",
+  "model_calls_for_closure": 0,
+  "scanners_for_closure": false,
+  "ci_workflow_modified": false,
+  "dependency_pins_modified": false,
+  "historical_results_rewritten": false,
+  "tags_created": false,
+  "images_published": false,
+  "github_release_created": false,
+  "pull_request": "https://github.com/ziuld/analysis-office-test/pull/3",
+  "next_phase": "docs/PLAN_FASE_2.md",
+  "limitations": [
+    "Los pilotos económicos y sus fallos son históricos 0.2.0; no se reetiquetan como pilotos 0.3.0.",
+    "La subida de versión y cierre de manifiesto se verifican con pruebas dirigidas y construcción/arranque; no se vuelve a consumir modelo por metadatos.",
+    "Aceptación funcional con informe parcial; no acredita exhaustividad ni precisión semántica óptima.",
+    "El estado de CI remota del commit de cierre se consulta en el PR; un arranque local no lo sustituye."
+  ]
+}

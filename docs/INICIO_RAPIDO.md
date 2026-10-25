@@ -6,7 +6,7 @@ Guía para **Windows con PowerShell**. Ejecutar los comandos desde la carpeta de
 
 - **Git**, disponible en la terminal.
 - **Docker Desktop**, iniciado y configurado para contenedores Linux. En Windows, habilitar el entorno de virtualización/WSL que requiera la instalación de Docker Desktop.
-- **Docker Compose V2** (`docker compose`, incluido en Docker Desktop), con soporte de `!reset`, utilizado por `compose.yaml`.
+- **Docker Compose V2** (`docker compose -f compose.yaml -f compose.hybrid.yaml`, incluido en Docker Desktop), con soporte de `!reset`, utilizado por `compose.yaml`.
 - Un navegador, conexión a Internet y acceso al proveedor del modelo. Para el perfil probado se autoriza una cuenta compatible con Codex OAuth en Hermes.
 
 No hace falta instalar Node.js, Python, Java ni Hermes en el ordenador: se preparan dentro de Docker. La primera construcción descarga imágenes y dependencias; requiere espacio libre y puede tardar varios minutos.
@@ -60,9 +60,9 @@ Añadir `GITHUB_TOKEN` si se necesita acceso a repositorios privados o evitar el
 ## 4. Construir y autorizar Hermes
 
 ```powershell
-docker compose config --quiet
-docker compose --profile audit build auditor office
-docker compose --profile audit run --rm --entrypoint python auditor -m hermes_cli.main auth add openai-codex
+docker compose -f compose.yaml -f compose.hybrid.yaml config --quiet
+docker compose -f compose.yaml -f compose.hybrid.yaml --profile audit build auditor office
+docker compose -f compose.yaml -f compose.hybrid.yaml --profile audit run --rm --entrypoint python auditor -m hermes_cli.main auth add openai-codex
 ```
 
 Completar personalmente la URL y el código que muestre Hermes. Esperar la confirmación del inicio de sesión. No usar códigos de ejemplos ni copiar credenciales de otro ordenador. La sesión se guarda en el volumen Docker `hermes-auth`.
@@ -70,30 +70,30 @@ Completar personalmente la URL y el código que muestre Hermes. Esperar la confi
 ## 5. Levantar y utilizar
 
 ```powershell
-docker compose up -d --wait
-docker compose ps
+docker compose -f compose.yaml -f compose.hybrid.yaml up -d --wait
+docker compose -f compose.yaml -f compose.hybrid.yaml ps
 ```
 
-Abrir [http://localhost:3000/office](http://localhost:3000/office). Debe aparecer **CONECTADO**. Introducir una URL de GitHub sin rama ni parámetros y pulsar **Iniciar revisión**. Se usa `main` o, si no existe, `master`.
+Abrir [http://localhost:3000/office](http://localhost:3000/office). Debe aparecer **CONECTADO**. Introducir una URL de GitHub sin rama ni parámetros y pulsar **Iniciar revisión**. Se resuelve la rama predeterminada real del repositorio y se fija su commit.
 
 Esperar los resultados de Seguridad, Arquitectura e Inventario. Abrir o descargar el informe y pulsar un personaje para hacerle una pregunta. Esto sí consume modelo; que los contenedores estén activos solo comprueba el arranque, no una revisión real. En un clon nuevo no aparecen los informes de nuestro piloto porque son datos locales excluidos de Git.
 
 Para comprobar primero el acceso y los archivos seleccionados sin llamar al modelo:
 
 ```powershell
-docker compose --profile audit run --rm -T auditor https://github.com/ziuld/bookingApi --inspect-only
+docker compose -f compose.yaml -f compose.hybrid.yaml --profile audit run --rm -T auditor https://github.com/ziuld/bookingApi --inspect-only
 ```
 
 ## Uso diario
 
 | Acción | Comando |
 |---|---|
-| Iniciar otra vez | `docker compose up -d --wait` |
-| Detener sin eliminar contenedores | `docker compose stop` |
-| Reiniciar | `docker compose restart` |
-| Detener y retirar contenedores, conservando datos | `docker compose down` |
-| Ver errores | `docker compose logs --tail 100 office audit-api` |
+| Iniciar otra vez | `docker compose -f compose.yaml -f compose.hybrid.yaml up -d --wait` |
+| Detener sin eliminar contenedores | `docker compose -f compose.yaml -f compose.hybrid.yaml stop` |
+| Reiniciar | `docker compose -f compose.yaml -f compose.hybrid.yaml restart` |
+| Detener y retirar contenedores, conservando datos | `docker compose -f compose.yaml -f compose.hybrid.yaml down` |
+| Ver errores | `docker compose -f compose.yaml -f compose.hybrid.yaml logs --tail 100 office audit-api` |
 
-Evitar reiniciar durante una revisión o consulta: se marcará como interrumpida, sin reintentarse. No utilizar `docker compose down -v` si se quiere conservar la sesión del modelo y el estado de la oficina.
+Evitar reiniciar durante una revisión o consulta: se marcará como interrumpida, sin reintentarse. No utilizar `docker compose -f compose.yaml -f compose.hybrid.yaml down -v` si se quiere conservar la sesión del modelo y el estado de la oficina.
 
 Problemas de acceso, configuración o recuperación: [Operación](OPERACION.md).
