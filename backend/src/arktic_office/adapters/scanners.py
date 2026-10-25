@@ -6,7 +6,26 @@ import re
 import subprocess
 import tempfile
 import time
-from arktic_office.preparation.repository import LOCKFILES, redact
+from arktic_office.preparation.repository import redact
+from arktic_office.adapters.source_scan import scan_source
+
+OSV_FILES = {"package-lock.json", "npm-shrinkwrap.json", "yarn.lock", "pnpm-lock.yaml", "bun.lock",
+    "Pipfile.lock", "poetry.lock", "requirements.txt", "pdm.lock", "pylock.toml", "uv.lock",
+    "pom.xml", "gradle.lockfile", "buildscript-gradle.lockfile", "packages.config", "packages.lock.json",
+    "deps.json", "go.mod", "Cargo.lock", "Gemfile.lock", "gems.locked", "composer.lock",
+    "conan.lock", "pubspec.lock", "package_config.json", "mix.lock", "cabal.project.freeze", "stack.yaml.lock", "renv.lock"}
+
+def osv_input(path):
+    p = Path(path)
+    name = p.name
+    if name in {"bom.json", "bom.xml"} or name.endswith((".cdx.json", ".cdx.xml", ".spdx.json", ".spdx", ".spdx.yml", ".spdx.rdf", ".spdx.rdf.xml")):
+        return "sbom"
+    if name.endswith(".deps.json") or p.as_posix().endswith("gradle/verification-metadata.xml") or name in OSV_FILES:
+        return "lockfile"
+    if name.endswith(".txt") and (name.startswith("requirements") or "requirements" in p.parts):
+        return "requirements.txt"
+    return None
+
 
 
 def run(command, output):
@@ -60,15 +79,16 @@ def scan(files, runner=run, *, source_root=None):
             item["detail"] = "Snapshot completo ofrecido a Gitleaks; reglas y límites nativos, sin historial Git. Binarios y enlaces no equivalen a texto analizable."
         results.append(item)
         started = time.monotonic()
-        locks = [path for path in safe if Path(path).name in LOCKFILES | {"requirements.txt"}]
+        locks = [path for path in safe if osv_input(path)]
         item = {"name": "OSV-Scanner 2.7.0", "status": "no_evaluado", "findings": [], "detail": "No hay archivos de versiones resueltas admitidos en la selección. Revisar dependencias queda pendiente."}
         if locks:
             output = root / "osv.json"
             config = root / "trusted-osv.toml"
             config.write_text("", encoding="utf-8")
             try:
-                payload = runner(["osv-scanner", "scan", "source", "--no-call-analysis=all", "--no-resolve", "--all-packages", "--config=" + str(config), "--format=json", "--output-file=" + str(output)] + ["--lockfile=" + p for p in locks], output)
+                payload = runner(["osv-scanner", "scan", "source", "--no-call-analysis=all", "--all-packages", "--config=" + str(config), "--format=json", "--output-file=" + str(output)] + [("--sbom=" + p) if osv_input(p) == "sbom" else "--lockfile=" + (("requirements.txt:" + p) if osv_input(p) == "requirements.txt" else p) for p in locks], output)
                 packages = 0
+                evaluated = set()
                 for result in payload.get("results", []):
                     path = safe.get(result.get("source", {}).get("path"), "archivo de dependencias seleccionado")
                     for package in result.get("packages", []):
@@ -76,16 +96,22 @@ def scan(files, runner=run, *, source_root=None):
                         if not pkg.get("version"):
                             continue
                         packages += 1
+                        if path in safe.values():
+                            evaluated.add(path)
                         for vuln in package.get("vulnerabilities", []):
                             identifier = str(vuln.get("id", ""))
                             if not re.fullmatch(r"[A-Za-z0-9_.-]{1,100}", identifier):
                                 continue
                             item["findings"].append({"path": path, "summary": redact(f"{pkg.get('name', '?')} {pkg['version']} · {identifier}. Coincidencia de versión; alcance y explotación por validar.")})
+                item["evaluated_files"] = sorted(evaluated)
+                item["unevaluated_files"] = [safe[p] for p in locks if safe[p] not in evaluated]
                 item.update(status="detecciones_por_validar" if item["findings"] else "sin_detecciones_en_seleccion" if packages else "no_evaluado",
-                            detail=f"{packages} paquetes con versión en la respuesta; {len(locks)} archivos enviados. Consulta OSV en línea con metadatos de paquetes. Sin instalar dependencias ni analizar llamadas; no demuestra ausencia de vulnerabilidades.")
+                            detail=f"{packages} paquetes con versión en la respuesta; {len(locks)} archivos enviados, {len(evaluated)} con paquetes versionados y {len(item["unevaluated_files"])} sin paquetes versionados. Consulta OSV en línea con metadatos de paquetes. Resolución Maven habilitada por metadatos (deps.dev); sin instalar dependencias ni ejecutar builds/código, sin analizar llamadas. No prueba versiones instaladas ni ausencia de vulnerabilidades.")
             except (OSError, ValueError, KeyError, TypeError, AttributeError, subprocess.TimeoutExpired):
                 item.update(status="error", detail="OSV no completó la comprobación (formato, acceso o tiempo). Dependencias pendientes de evaluación.")
         item["seconds"] = round(time.monotonic() - started, 3)
         item["input_files"] = [safe[p] for p in locks]
+        item["input_kinds"] = {safe[p]: osv_input(p) for p in locks}
         results.append(item)
+        results.append(scan_source(safe, root, runner))
         return results

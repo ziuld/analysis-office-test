@@ -1,4 +1,5 @@
 """Complete immutable GitHub snapshot. Operational limits fail closed, never sample."""
+import base64
 import hashlib
 import os
 import tarfile
@@ -78,8 +79,21 @@ def acquire_complete(url, workspace, *, fetch=github, downloader=download):
                 else:
                     raise AuditError("Snapshot incompleto: tipo de archivo no recuperable.")
                 blob = hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest()
+                retrieval = "archive"
                 if blob != item["sha"]:
-                    raise AuditError("Snapshot incompleto: contenido no coincide con el commit.")
+                    # Git archives can apply .gitattributes (e.g. eol=crlf).
+                    # Recover canonical bytes by immutable blob ID, never waive the hash check.
+                    original = fetch(root + "/git/blobs/" + item["sha"])
+                    if original.get("encoding") != "base64" or not isinstance(original.get("content"), str):
+                        raise AuditError("Snapshot incompleto: blob original no recuperable.")
+                    canonical = base64.b64decode("".join(original["content"].split()), validate=True)
+                    canonical_hash = hashlib.sha1(b"blob " + str(len(canonical)).encode() + b"\0" + canonical).hexdigest()
+                    if canonical_hash != item["sha"]:
+                        raise AuditError("Snapshot incompleto: contenido no coincide con el commit.")
+                    total += len(canonical) - len(raw)
+                    if total > maximum or time.monotonic() - started > seconds:
+                        raise AuditError("Snapshot incompleto: recuperar blob supera capacidad o tiempo.")
+                    raw, blob, retrieval = canonical, canonical_hash, "git_blob"
                 if raw.splitlines()[:1] == [b"version https://git-lfs.github.com/spec/v1"]:
                     raise AuditError("Snapshot incompleto: puntero LFS sin contenido; no se inicia el análisis.")
                 target = source.joinpath(*PurePosixPath(path).parts)
@@ -93,7 +107,7 @@ def acquire_complete(url, workspace, *, fetch=github, downloader=download):
                     kind = "binary"
                 records.append({"path": path, "text": text, "kind": kind})
                 inventory.append({"path": path, "kind": kind, "bytes": len(raw), "git_blob": blob,
-                                  "sha256": hashlib.sha256(raw).hexdigest()})
+                                  "sha256": hashlib.sha256(raw).hexdigest(), "retrieval": retrieval})
                 seen.add(path)
         if seen != set(expected):
             raise AuditError("Snapshot incompleto: faltan archivos del árbol; no se inicia el análisis.")

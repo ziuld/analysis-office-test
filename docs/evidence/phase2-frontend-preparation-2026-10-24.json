@@ -1,0 +1,72 @@
+{
+  "date": "2026-10-24",
+  "repository": "https://github.com/ziuld/beneath-the-code-page",
+  "commit": "95ede5bccc881a2230f874944299b4a73101337d",
+  "first_attempt": {
+    "id": "6fcd5f7a-35a6-49e1-8fc0-9da6921984f6",
+    "repository": "https://github.com/ziuld/beneath-the-code-page",
+    "estado": "error",
+    "created": "2026-10-24T20:39:13.297844+00:00",
+    "error": "Snapshot incompleto: contenido no coincide con el commit."
+  },
+  "second_attempt": {
+    "id": "f1bc20ad-6df9-4f2a-9119-9df68f1ac709",
+    "repository": "https://github.com/ziuld/beneath-the-code-page",
+    "estado": "error",
+    "created": "2026-10-24T20:43:05.171378+00:00",
+    "error": "Preparación incompleta: mapa incomplete_extraction_or_capacity; truncado=False; archivos con error: .vscode/settings.json, docs/planning/history/F11-removed-2026-10-21.json, docs/planning/plan.json, security/applicability.json, security/history/F16-applicability.json, src/main/frontend/package-lock.json, tests/e2e/package-lock.json. No se inicia el análisis."
+  },
+  "preparation_failures_model_calls": 0,
+  "acquisition_diagnostic": {
+    "commit": "95ede5bccc881a2230f874944299b4a73101337d",
+    "branch": "main",
+    "files": 567,
+    "mismatches": [
+      {
+        "path": "mvnw.cmd",
+        "expected_bytes": 8292,
+        "archive_bytes": 8481,
+        "git_blob_bytes": 8292,
+        "expected_sha": "92450f93273470af42eeee491874afb2039b700a",
+        "archive_sha": "5761d948924c19571d27b465c519b2e2f9e30351",
+        "lfs_pointer": false,
+        "has_export_substitution": false,
+        "direct_blob_verified": true
+      }
+    ],
+    "missing": []
+  },
+  "fixes": [
+    {
+      "cause": "GitHub archive applies .gitattributes eol=crlf to mvnw.cmd; archive has 8481 bytes vs canonical blob 8292.",
+      "change": "Fetch canonical blob by expected immutable SHA when archive hash differs; recheck SHA and time/size limits. Original failure remains recorded.",
+      "tests": "Two directed acquisition regressions passed in 0.022 s; transformed archive recovered, corrupt blob rejected, complete/partial/LFS fixtures retain protections."
+    },
+    {
+      "cause": "Native Graphify exclusions for JSON data treated as fatal extractor errors by our adapter.",
+      "change": "Recognize only two explicit native data JSON skip reasons as unsupported_json_data_schema, preserve coverage and raw source; actual parser/capacity errors still stop.",
+      "tests": "Two directed installed Graphify regressions passed in 3.269 s; manifest processed, data/lockfile exclusion counted, real capacity error remains error."
+    }
+  ],
+  "confirmed_preparation": {
+    "files": 567,
+    "text_files": 557,
+    "binary_files": 10,
+    "bytes": 10200922,
+    "map_processed": 439,
+    "map_unsupported": 128,
+    "osv_versioned_packages": 273,
+    "semgrep_patterns": 1
+  },
+  "active_run": "147509c2-56ea-45c5-96c5-ee2aefc92329",
+  "model_profile": "gpt-6.1-sol / medium",
+  "target_code_executed": false,
+  "CI_CD_changed": false,
+  "version_changed": false,
+  "limitations": [
+    "No afirmar cobertura AST para formatos incompatibles.",
+    "No atribuir preparación a mayor inteligencia del modelo: es determinista.",
+    "Primeros intentos no invocaron modelos; ejecución activa sí consume cuota.",
+    "No repetir automáticamente otra tanda con modelos para buscar un resultado favorable."
+  ]
+}

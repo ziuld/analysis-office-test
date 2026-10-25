@@ -23,3 +23,7 @@ La respuesta final del informe incluye SIEMPRE en la raíz "schema_version":3, "
 - En presentacion.flujo_actual, usa IDs únicos con letras ASCII, números o guion
   bajo, por ejemplo oficina_web y audit_api. No uses guiones medios, espacios ni
   caracteres acentuados. origen y destino deben coincidir exactamente con esos IDs.
+
+- En presentacion.flujo_actual CADA componente necesita de 1 a 3 referencias F#:L# existentes. Si no tiene fuentes, omítelo y omite sus conexiones. Una conexión observada O inferida también necesita de 1 a 3 referencias: inferida no significa sin fuente. Solo una conexión desconocida permite evidencia vacía. No uses IDs del grafo ni rutas como sustitutos de F#:L#.
+- En estado_operativo, observado/indicio necesita referencias; sin evidencia usa no_evaluado con evidencia:[] y describe lo pendiente. No cambies el estado para aparentar que quedó comprobado.
+- Cada conexión tiene EXACTAMENTE origen, destino, estado, descripcion y evidencia. estado SOLO puede ser observada, inferida o desconocida, en femenino y minúsculas; no uses observado, declarada, configurada, tipo, protocolo ni otros campos. Describe configuración/protocolo en descripcion (máximo 250 caracteres). Los extremos deben existir en componentes.

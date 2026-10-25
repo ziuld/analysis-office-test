@@ -44,9 +44,9 @@ def validate_v3(data, snapshot, limits, validate_legacy):
                 if key in item:
                     from arktic_office.reporting.presentation import string
                     extra[key] = string(item.pop(key), cap)
-            if not isinstance(extra["severidad"], str) or not isinstance(extra["control"], str) or extra["severidad"] not in SEVERITIES or extra["control"] not in {*CONTROLS, "contexto"}:
+            if not isinstance(extra["severidad"], str) or not isinstance(extra["control"], str) or extra["severidad"] not in SEVERITIES or extra["control"] not in {*CONTROLS, "contexto", "por_clasificar"}:
                 raise AuditError("Severidad o control inválido.")
-            if any(not isinstance(extra[k], str) or not extra[k].strip() or len(extra[k]) > 400 for k in ("accion", "condiciones")):
+            if any(not isinstance(extra[k], str) or not extra[k].strip() or len(extra[k]) > 1200 for k in ("accion", "condiciones")):
                 raise AuditError("Falta acción o condición del riesgo.")
             if extra["control"] == "contexto" and extra["severidad"] != "informativa":
                 raise AuditError("El contexto no se cuenta como riesgo.")

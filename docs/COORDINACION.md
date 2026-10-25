@@ -100,3 +100,74 @@ La prueba final real de bookingApi ejecutó siete llamadas de `gpt-6-luna`/`low`
 El foco y checklist de cada uno de los tres especialistas actuales se definen en `resources/profiles/agents.json`; `resources/profiles/agent-common.md` fija las reglas comunes. El constructor compartido `reporting/agent_instructions.py` entrega ese mismo brief antes de elegir fuentes y durante el análisis. No es una skill nueva ni depende de cargar SOUL o personalidades del gateway Hermes. El coordinador recibe las reglas comunes y sus propios límites de orquestación/síntesis. Los esquemas JSON siguen dependiendo de cada etapa.
 
 Inventario identifica motores o archivos y perfiles declarados; Arquitectura explica uso, conexiones y ubicación configurable; Seguridad revisa acceso y exposición. Una dependencia de base de datos no prueba uso, una ruta/URL no prueba el despliegue efectivo y un volumen no acredita backup. La investigación dirige `query` al símbolo/texto y `paths` al archivo, agrupa fuentes y reserva configuración relevante sin cambiar caps. Nuevos roles DevOps/Privacidad siguen como propuesta en el plan de Fase 2.
+
+## Infraestructura actual e informe útil — Parte 2
+
+Se conserva el mecanismo de investigación y recuperación del commit c31041a, salvo los nuevos presupuestos y ventanas de lectura aprobados en la sección siguiente. Arquitectura describe y representa en presentacion.flujo_actual la infraestructura que pueda sostener con Docker/Compose, CI/CD, documentación y código. Distingue configuración declarada de ejecución efectiva y conexiones observadas de inferidas. No se exige conocer una VPN o servidor no documentado. El contrato de citas continúa sin cambios.
+
+El informe abre con observaciones respaldadas e implicaciones, preservando fuentes y condiciones de riesgos. Las preguntas generales y alcance detallado quedan en anexos. Los ajustes experimentales de recuperación posteriores a c31041a fueron retirados tras el feedback; su prueba parcial se conserva en el plan como evidencia histórica.
+
+
+## Presupuestos vigentes aprobados — 24/10/2026
+
+| Especialista | Archivos distintos acumulados | Bytes de fuentes acumulados | Rondas máximas |
+|---|---:|---:|---:|
+| Seguridad | 20 | 100000 | 2 |
+| Arquitectura | 12 | 60000 | 2 |
+| Inventario | 8 | 32000 | 1 |
+
+Cada ronda permite hasta cuatro consultas de hasta tres archivos; las rondas comparten el presupuesto. Una ruta releída no cuenta como archivo distinto nuevo, pero ampliar el texto consume bytes. La segunda ronda es opcional; si la primera entrega basta, el especialista devuelve el informe. Máximo tres llamadas por Seguridad/Arquitectura y dos por Inventario; con reparto/síntesis, ocho llamadas si no se usa ninguna ronda extra y diez si ambos la usan. Sin reintentos automáticos.
+
+Fragmentos de hasta 200 líneas, conservando los límites de 6000 bytes de contenido por fragmento y 12000 bytes con padding original. Un archivo largo no se entrega entero obligatoriamente. No cambian el coordinador, modelos Luna/low, límites de salida ni la adquisición íntegra. Valores predeterminados en models.json; rondas sobrescribibles con las variables existentes. El número de archivos y bytes se mantiene definido en el registro, sin nuevas variables.
+
+Herramientas deterministas integradas: Graphify (mapa estático, sin modelos), Gitleaks 8.30.1 (posibles secretos del snapshot, sin historial Git) y OSV-Scanner 2.7.0 (vulnerabilidades conocidas en versiones resueltas compatibles). OSV puede quedar no_evaluado sin entrada compatible; eso no es un resultado sin vulnerabilidades. Semgrep está diferido, no integrado; no hay SonarQube ni un SAST equivalente ejecutándose actualmente.
+
+
+## Ampliación de scanners y lectura por símbolo — Punto 2
+
+El catálogo determinista vigente pasa a Graphify más tres scanners: Gitleaks, OSV y Semgrep CE. La lista anterior de tres herramientas corresponde al estado previo. OSV selecciona automáticamente formatos multitecnología y SBOM; Semgrep usa únicamente las nueve reglas locales y cuatro familias de lenguajes descritas en SEGURIDAD.md. Los resultados entran al contexto común ya existente con estado, candidatos limitados y carencias; no se añaden llamadas a modelos por ejecutar scanners.
+
+La búsqueda conserva su mecanismo anterior, con una corrección localizada: cuando el grafo ofrece la definición del símbolo en el archivo leído, se centra allí la ventana en vez de escoger la primera aparición textual (que podía ser una llamada). Se mantienen rutas, relaciones, consultas por líneas y presupuestos aprobados. Se comprobaron manejador HTTP/autorización y recuperación con llamadas anteriores a sus definiciones, conservando líneas originales. No se adopta el rediseño experimental de alcance de rutas retirado anteriormente.
+
+
+## Comprobación previa al commit: agrupaciones de rutas
+
+Un especialista puede agrupar por error más de tres rutas en una consulta. Core divide de forma determinista grupos de 4–12 rutas en consultas de hasta tres solo si toda la ronda resultante sigue dentro de cuatro consultas. La traza registra original_paths, part y parts en request_split. Si no cabe, se conserva el manejo acotado de error de la consulta original: no se omiten peticiones ni se ejecuta una quinta consulta. Continúan las validaciones de rutas y los presupuestos acumulados; no añade llamadas a modelos ni reintentos. El prompt aclara explícitamente el límite de paths y cómo repartir cinco rutas.
+
+El contrato final aclara las fuentes obligatorias por nodo y conexión del diagrama (incluidas inferidas) y por estado operativo observado/indicio. Sin fuentes no se publica un componente ni se finge un estado comprobado. Los validadores permanecen sin relajar.
+
+
+El ejemplo de Arquitectura incluye ahora una conexión completa con ambos extremos y claves exactas, validada en prueba contra presentation.validate. Se prohíben estados alternativos o campos adicionales del diagrama; no cambia el esquema admitido. Los avisos parciales generan `.respuesta-parcial.txt` ocultada y limitada, solo como diagnóstico local del rechazo; no se muestra ni reutiliza como resultado validado.
+
+
+## Contrato compacto de especialistas y composición de Core — 24/10/2026
+
+Los especialistas reciben ahora un solo contrato de salida activo, `compact-v1`, definido en `reporting/specialist.py`, junto al brief profesional común/por rol. No se concatenan el estándar editorial del informe, security-v1, report-contract, review-request, cell-output-contract y la skill legacy para pedirles que construyan el informe v3. Los contratos anteriores se conservan para compatibilidad/lectura histórica; el prompt standalone mantiene su referencia exacta.
+
+Observación mínima: observacion, certeza observado/indicio y evidencia F#:L#. Opcionales: implicacion, condicion, recomendacion, gravedad expresamente evaluada. Seguridad aporta controles que pudo revisar; Core completa los ausentes como no_evaluado. Inventario entrega componentes directamente (nombre, función, tecnología si se conoce, fuentes), sin tema ni objeto adicional condicional. Arquitectura aporta componentes y conexiones entre sus nombres; Core genera n1/n2/... y comprueba extremos existentes. Las observaciones recogen persistencia/operación sin exigir ocho filas vacías. Azure continúa siendo una capacidad explícita y conserva su contrato opcional.
+
+Core construye el formato 3 existente y sus metadatos editoriales. Los textos técnicos vienen del especialista; los valores de respaldo del adaptador son etiquetas genéricas de revisión, no hechos técnicos ni recomendaciones de infraestructura. No infiere gravedad, condiciones concretas, dominio técnico ni relaciones ausentes. Un riesgo con gravedad explícita sin dominio queda por_clasificar; certeza indicio nunca se convierte en observado. Cada fuente se comprueba con el índice de los fragmentos entregados y el validador de cita exacta, incluidas líneas vacías/ocultadas. Una referencia inventada rechaza su elemento, conservando los otros. Categoría/formato correcto no demuestra interpretación correcta.
+
+Se admiten hasta doce IDs o rangos F#:L#-L# por elemento. Cada rango abarca como máximo cuarenta líneas y se expande a las líneas no vacías realmente entregadas, hasta ochenta fuentes únicas por elemento. Se rechazan rangos invertidos, fuera del fragmento o sin texto; cada fuente se contrasta individualmente. El resumen muestra tres; el detalle y los anexos conservan las adicionales, sin truncar el resultado. Observaciones de hasta 1200 caracteres y explicaciones de ese orden se conservan en el informe; el título y detalle inicial son derivados editoriales de Core. Límites de listas y tipos siguen acotados; no se incrementan rondas, archivos, modelos o presupuesto de salida. Los informes compactos incorporan un anexo de observaciones y fuentes completas. Los informes históricos conservan su presentación y referencias guardadas.
+
+Validación: replay de las últimas respuestas rechazadas, sin red/scanners/modelos y usando únicamente las ventanas originalmente entregadas; conserva tres observaciones de Seguridad, seis de Arquitectura y cuatro de Inventario, más seis nodos y cinco conexiones de Arquitectura. La adaptación de nombres del diagrama reutiliza nombres ya emitidos, no reconstruye componentes omitidos por Inventario. Regresión de contratos/formatos/compatibilidad/Azure: sesenta pruebas ejecutadas, cincuenta y nueve correctas y una referencia visual opcional omitida; después ocho casos del adaptador correctos al añadir el límite de nombre de nodo. Pilotos de generación directa se registran en el plan.
+
+
+Comprobación aislada posterior: siete llamadas Luna/low (dos casos por rol y una repetición dirigida de Seguridad). Se explicita que hallazgo exige patrón de riesgo y que una defensa visible con autorización adicional desconocida no implica defecto. El adaptador de transporte acepta únicamente un sufijo </final> después de un objeto JSON ya válido y registra format_normalization en el envelope; no busca objetos dentro de prosa ni repara JSON roto. Siete respuestas conservadas y reproducidas offline; la séptima había fallado antes de esta normalización. Treinta y una pruebas dirigidas correctas. Evidencia y limitaciones en el plan; no prueba coordinador ni recuperación de código.
+
+
+## Presentación ejecutiva v14 — 24/10/2026
+
+El renderer adopta la propuesta v14: prioridades con enlaces a un detalle por riesgo, componentes/conexiones y observaciones originales, recomendaciones opcionales y anexos. Core no pide nuevos campos a los especialistas ni genera conclusiones adicionales. Las referencias de render de las versiones de datos anteriores cambian por el diseño aprobado; sus JSON y archivos guardados no se reescriben. CSS v12 compartido conserva activos corporativos; report-v14.css aporta jerarquía responsive e impresión. El contenido técnico existe sin JavaScript; este solo facilita navegación y apertura/restauración de anexos al imprimir. Sin propuesta Azure explícita válida no se muestra una arquitectura cloud predeterminada. Los dominios sin asignar conservan sus acciones. Los controles no evaluados y los estados/detalles de cada herramienta se conservan en cobertura, sin convertirlos en aprobados.
+
+Configuración de las próximas ejecuciones: Seguridad gpt-6-luna/medium; demás perfiles conservados. Este ajuste está en .env/.env.example, no se eleva el razonamiento global ni los presupuestos. La vista previa reutiliza respuestas low guardadas y no mide los resultados de medium.
+
+
+### Síntesis compacta — 25/10/2026
+
+El orquestador recibe aportaciones validadas por ID con su texto, certeza, gravedad, condiciones y acciones; las citas completas permanecen en Core. Al recibir aportaciones de la síntesis, Core resuelve los IDs originales, conserva todas las fuentes, revalida sus líneas y mantiene las condiciones. No se eleva el límite de 32000 bytes ni se añaden llamadas. En los dos informes guardados el prompt baja de 80010/92535 a 22083/23560 bytes, sin eliminar ninguna de las 24/22 aportaciones. Verificación offline con salida simulada; falta confirmar generación real. Una muestra mucho mayor aún puede superar el límite y conserva el fallo explícito, sin truncado silencioso.
+
+
+### Perfil económico de cierre y referencias — 25/10/2026
+
+Se vuelve a gpt-6-luna/medium en todos los roles por petición del usuario. Las entradas anteriores Sol/medium y 40/80 referencias son registros históricos. Límite vigente de citas: MAX_EVIDENCE_REFS=200, compartido por los validadores, igual que la ventana máxima de investigación; hasta doce IDs/rangos por elemento, cada rango hasta 200 líneas y 200 fuentes únicas expandidas en total. No aumenta la cantidad de código leído por el agente. Todas las fuentes se verifican y las ocultadas siguen rechazadas. Los resúmenes de scanners se muestran por separado y no permiten marcar favorable un control sin citas de código; en ese caso queda no_evaluado con el resultado de herramienta explicado en el motivo.

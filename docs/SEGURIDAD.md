@@ -54,7 +54,7 @@ Las detecciones aparecen separadas de los riesgos del modelo para evitar duplica
 
 No se analizan `.env`, claves privadas reconocidas por nombre, archivos excluidos, historial Git ni dependencias no descargadas. La ocultación de secretos tiene límites, incluso con Gitleaks. El código seleccionado y ocultado se envía al proveedor del modelo; esto debe ser compatible con las reglas de datos de la empresa.
 
-Semgrep queda para una ampliación posterior con reglas revisadas para los lenguajes reales. Esta versión no hace pentesting, análisis dinámico, mediciones de carga ni validación de copias/restauración. La decisión de despliegue sigue siendo humana.
+En el MVP Semgrep quedó diferido; la ampliación de Fase 2 descrita al final ya lo integra con reglas locales acotadas. Esta versión no hace pentesting, análisis dinámico, mediciones de carga ni validación de copias/restauración. La decisión de despliegue sigue siendo humana.
 
 ## Comprobar cambios
 
@@ -81,3 +81,16 @@ La rama se resuelve desde los metadatos reales de GitHub y se fija el commit. El
 ## Coordinación del Bloque 5
 
 La coordinación IA opcional añade hasta dos llamadas sobre inventario o aportaciones ya validadas, sin herramientas, búsquedas ni reintentos. Las referencias de síntesis se heredan de aportaciones existentes y se contrastan con el snapshot; su corrección no demuestra fidelidad semántica de la interpretación. Los originales y los fallos se conservan. Azure requiere un encargo explícito y su ausencia no invalida un encargo que no la solicita. Configuración, límites y pruebas sin consumo real: [COORDINACION.md](COORDINACION.md).
+
+
+## Scanners ampliados en Fase 2 — 24/10/2026
+
+Detección automática por archivos, sin solicitar la tecnología principal. OSV 2.7.0 admite desde el adaptador lockfiles/manifiestos Python (`requirements*.txt`, directorios requirements, Pipfile.lock, poetry.lock, pdm.lock, pylock.toml, uv.lock), npm/yarn/pnpm/bun, Maven/Gradle, .NET (packages.config, packages.lock.json, *.deps.json), Go y otros ecosistemas contemplados en `adapters/scanners.py`. Incluye SBOM CycloneDX (`bom.json`, `bom.xml`, *.cdx.json/xml) y SPDX (*.spdx, *.spdx.json/yml/rdf/rdf.xml). No se generan SBOM ejecutando el proyecto ni se inventan versiones. `package.json`, `pyproject.toml`, csproj o build.gradle solos no equivalen a versiones instaladas resueltas. La capacidad de extracción de cada formato depende de OSV fijado y del contenido; el adaptador registra entradas y cuáles aportaron paquetes versionados.
+
+Se habilita resolución transitiva de Maven mediante metadatos de deps.dev. OSV consulta servicios externos con nombres/versiones/coordenadas de dependencias; no necesita modelos ni instalar dependencias o ejecutar builds del objetivo. Manifiestos con rangos y resolución remota no prueban qué está instalado en producción. Un archivo enviado sin paquetes extraídos sigue siendo una carencia, no una comprobación favorable. Compatibilidad de referencia: https://google.github.io/osv-scanner/supported-languages-and-lockfiles/ .
+
+Semgrep CE 1.182.1 se instala con dependencias fijadas por hashes en un entorno separado. Nueve reglas propias para Python, JavaScript/TypeScript, Java y C# cubren patrones de ejecución dinámica, deserialización, comandos, destinos HTML y SQL concatenado según lenguaje. No es un perfil OWASP completo, ni análisis entre archivos ni validación de explotación. No reemplaza a OSV/Gitleaks ni certifica ausencia de vulnerabilidades. Los candidatos se entregan a los agentes como pistas con archivo y línea.
+
+SAST trabaja en una copia temporal de todos los archivos con extensiones compatibles del snapshot, incluidos ocultos/tests; no usa .semgrepignore/config/reglas del objetivo. Reglas locales, métricas y comprobación de versión desactivadas; sin descargas de reglas, modelos ni llamadas externas por Semgrep. Devuelve metadatos de patrón y ubicación, sin copiar fragmentos ni mensajes arbitrarios del scanner al contexto. Se comprueba la lista realmente procesada; errores/omisiones no se convierten en un resultado limpio. Fuentes temporales se eliminan al salir. Límite de ejecución por scanner 90 s y salida 8 MB; si falla la preparación no se inicia el equipo con una muestra silenciosa.
+
+Validación controlada: OSV extrae nueve paquetes de siete archivos de Python, npm, Maven, .NET, Go y SBOM CycloneDX/SPDX; encuentra 51 coincidencias de avisos en dependencias deliberadamente antiguas. Semgrep procesa siete archivos, detecta los seis patrones preparados en cuatro lenguajes y no marca el archivo TypeScript de control. La primera ejecución del fixture npm no incluía el origen resolved y no produjo una detección para ese archivo; se corrigió el fixture y se conservó el fallo en el registro. Estas pruebas no miden cobertura o precisión general ni certifican todos los formatos enumerados.

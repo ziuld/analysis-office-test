@@ -14,31 +14,18 @@ def evidence_index(snapshot):
 
 
 def make_prompt(snapshot, cell=None):
-    from arktic_office.reporting.editorial import instructions as editorial_instructions, contract as editorial_contract
-    editorial = editorial_instructions(cell["id"] if cell else None) + editorial_contract(cell["id"] if cell else None)
+    if cell:
+        from arktic_office.reporting.specialist import prompt
+        return prompt(snapshot, cell)
+    # Preserve the historical standalone prompt byte-for-byte.
+    from arktic_office.reporting.editorial import instructions
     evidence = [{"id": f"F{n}", "path": f["path"], "partial": f.get("partial", False), "content": "\n".join(f"L{i} | {line}" for i, line in enumerate(f["text"].splitlines(), 1) if line.strip())} for n, f in enumerate(snapshot["files"], 1)]
-    from arktic_office.reporting.agent_instructions import instructions as role_instructions
-    focus = (role_instructions(cell["id"]) + f"Célula: {cell['name']}.\n"
-             "Límite de respuesta: 8 confirmados, 5 indicios y 6 dudas; prioriza riesgos relevantes, sin rellenar cupos.\n") if cell else ""
-    from arktic_office.reporting.security import instructions
-    profile = instructions() if cell and cell["id"] == "security" else ""
-    if cell and cell["id"] == "architecture":
-        if "azure" in cell.get("capabilities", []):
-            from arktic_office.reporting.azure_proposal import instructions as azure_instructions
-            profile = azure_instructions()
-        else:
-            import re
-            editorial = re.sub(r"Azure:.*?(?=\n\n|$)", "", editorial, flags=re.S)
-            profile = "El encargo no solicita Azure: omite propuesta_azure y recomendaciones de despliegue en Azure.\n"
     contract = resource_path("profiles", "report-contract.md").read_text(encoding="utf-8")
     request = resource_path("profiles", "review-request.md").read_text(encoding="utf-8")
-    if cell:
-        profile += resource_path("skills", "arktic-review", "SKILL.md").read_text(encoding="utf-8")
-        if "azure" not in cell.get("capabilities", []):
-            contract = "\n".join(line for line in contract.split("\n") if "Para Azure" not in line)
-            request = "\n".join(line for line in request.split("\n") if not line.startswith("Solo Arquitectura añade propuesta_azure"))
-    final_contract = "\nFIN DE LOS ARCHIVOS.\n" + resource_path("profiles", "cell-output-contract.md").read_text(encoding="utf-8") if cell else ""
-    return editorial + "\n" + profile + "\n" + contract + focus + f"Rama revisada: {snapshot.get('branch', 'main')}.\n" + request + json.dumps(evidence, ensure_ascii=False, separators=(",", ":")) + final_contract
+    return instructions() + "\n\n" + contract + f"Rama revisada: {snapshot.get('branch', 'main')}.\n" + request + json.dumps(evidence, ensure_ascii=False, separators=(",", ":"))
+
+
+MAX_EVIDENCE_REFS = 200  # One complete research fragment; no extra source reads.
 
 
 def validate_report(raw, snapshot, limits=None):
@@ -73,7 +60,7 @@ def validate_report(raw, snapshot, limits=None):
             if version2 and (not isinstance(item["tema"], str) or item["tema"] not in TOPICS):
                 raise AuditError("Tema de hallazgo no admitido.")
             for field in expected - {"evidencia", "componente"}:
-                limit = 420 if version2 and field == "observacion" else 300 if version2 and field in {"importancia", "pendiente", "por_confirmar"} else 1500
+                limit = 1200 if version2 else 1500
                 if not isinstance(item[field], str) or not item[field].strip() or len(item[field]) > limit:
                     raise AuditError("Texto de hallazgo inválido.")
             if "componente" in expected:
@@ -81,7 +68,7 @@ def validate_report(raw, snapshot, limits=None):
                 if not isinstance(component, dict) or set(component) != {"nombre", "tecnologia", "funcion"} or any(not isinstance(v, str) or not v.strip() or len(v) > 180 for v in component.values()):
                     raise AuditError("Componente con formato inválido.")
             refs = item["evidencia"]
-            if not isinstance(refs, list) or not 1 <= len(refs) <= 3:
+            if not isinstance(refs, list) or not 1 <= len(refs) <= MAX_EVIDENCE_REFS:
                 raise AuditError("Hallazgo sin evidencia válida.")
             for ref in refs:
                 if not isinstance(ref, dict) or set(ref) != {"path", "line", "quote"}:

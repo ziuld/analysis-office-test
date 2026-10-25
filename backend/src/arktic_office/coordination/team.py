@@ -231,6 +231,13 @@ def prepare_response(raw, snapshot):
 
 def prepare_cell_response(raw, snapshot, cell_id):
     """Optional presentation errors cannot discard an independently valid core."""
+    try:
+        compact = json.loads(raw)
+    except (ValueError, TypeError):
+        compact = None
+    if isinstance(compact, dict) and "observaciones" in compact:
+        from arktic_office.reporting.specialist import compose
+        return compose(raw, snapshot, cell_id)
     if cell_id != "architecture":
         report, omitted = prepare_response(raw, snapshot)
         return report, omitted, []
@@ -268,6 +275,9 @@ def prepare_partial_response(raw, snapshot, cell_id):
         data = json.loads(raw)
     except (ValueError, TypeError):
         return prepare_cell_response(raw, snapshot, cell_id)
+    if isinstance(data, dict) and "observaciones" in data:
+        from arktic_office.reporting.specialist import compose
+        return compose(raw, snapshot, cell_id)
     if not isinstance(data, dict) or data.get("schema_version") != 3:
         return prepare_cell_response(raw, snapshot, cell_id)
     if any(not isinstance(data.get(k), list) for k in ("confirmados", "indicios", "dudas", "controles")):
@@ -359,6 +369,8 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print, evidence=None):
                 envelope = invoke(make_prompt(subset, config), config)
                 state["usage"] = envelope.get("usage")
             raw = envelope["report"]
+            if isinstance(raw, str) and "\"observaciones\"" in raw:
+                state["contrato_salida"] = "compact-v1"
             if config["id"] == "architecture" and "azure" not in config["capabilities"]:
                 try:
                     payload = json.loads(raw)
@@ -372,6 +384,9 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print, evidence=None):
                 warnings.extend("Consulta no completada: " + q["result"]["error"] for q in state["retrievals"] if q["result"].get("error"))
             proposal_error = "Algunos apartados no superaron la validación; se conservan las aportaciones válidas. No se reintentó." if warnings else None
             if warnings:
+                from arktic_office.preparation.repository import redact
+                # Diagnostics only, never rendered or reused as validated evidence.
+                (output / "celulas" / (config["id"] + ".respuesta-parcial.txt")).write_text(redact(raw)[:120000], encoding="utf-8")
                 state["advertencias"] = warnings
             for item in report["confirmados"] + report["indicios"]:
                 if item.get("severidad") != "informativa" and not {"titulo", "resultado_esperado", "detalle_tecnico"} <= set(item):

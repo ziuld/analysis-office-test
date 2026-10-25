@@ -20,13 +20,19 @@ for p in supported:
     relative_path = p.relative_to(root).as_posix()
     if relative_path not in failed | skipped:
         continue
-    # Native YAML dialect/data exclusions are incompatibility, not successful AST coverage.
+    # Native data/dialect exclusions are incompatibility, not successful AST coverage.
     if p.suffix.lower() in {".yaml", ".yml"}:
         detail = _DISPATCH[p.suffix.lower()](p)
         reason = detail.get("skipped")
         error = str(detail.get("error", ""))
         if reason in {"scalar yaml", "data yaml (not a config/manifest)"} or "could not determine a constructor for the tag" in error or "could not determine a constructor for tag" in error:
             unsupported[relative_path] = "unsupported_yaml_dialect_or_data_schema"
+            failed.discard(relative_path)
+            skipped.discard(relative_path)
+    elif p.suffix.lower() == ".json":
+        detail = _DISPATCH[".json"](p)
+        if detail.get("skipped") in {"data json (not a config/manifest)", "data json (non-object root)"}:
+            unsupported[relative_path] = "unsupported_json_data_schema"
             failed.discard(relative_path)
             skipped.discard(relative_path)
 for node in result.get("nodes", []):

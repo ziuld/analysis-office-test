@@ -22,6 +22,8 @@ def contract(cell_id):
         sample = {"resumen": {"descripcion": "Qué hace, solo si está documentado", "tecnologia_principal": "Tecnología principal declarada", "evidencia": ["F1:L7"]}}
     elif cell_id == "architecture":
         sample = {"flujo_actual": {"componentes": [{"id": "app", "nombre": "Aplicación", "descripcion": "Función observada", "evidencia": ["F1:L7"]}], "conexiones": []}, "estado_operativo": [{"aspecto": "capacidad", "estado": "no_evaluado", "descripcion": "No hay mediciones aportadas", "pendiente": "Qué medir", "evidencia": []}], "decision": {"propuesta": "Qué se propone decidir", "evidencia_pendiente": ["Qué falta aportar"], "siguiente_paso": "Acción para revisión humana"}}
+        sample["flujo_actual"]["componentes"].append({"id": "datos", "nombre": "Almacén", "descripcion": "Persistencia declarada", "evidencia": ["F1:L7"]})
+        sample["flujo_actual"]["conexiones"] = [{"origen": "app", "destino": "datos", "estado": "inferida", "descripcion": "Conexión inferida de configuración, sin comprobar ejecución", "evidencia": ["F1:L7"]}]
     else:
         return ""
     return "\nAñade presentacion a la raíz del JSON. Solo bloques de tu célula; adapta los valores y fuentes, no copies el ejemplo: " + json.dumps(sample, ensure_ascii=False) + "\nLos bloques sin evidencia se omiten; no fabriques un resumen ni nodos sin fuentes. Estado operativo: observado/indicio/no_evaluado; conexiones: observada/inferida/desconocida.\n"

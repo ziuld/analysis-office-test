@@ -142,7 +142,12 @@ class Coordinator:
                                       "pendientes": list(dict.fromkeys(s["pendiente"] for s in sources if s.get("pendiente"))),
                                       "severidades": list(dict.fromkeys(s["severidad"] for s in sources if s.get("severidad")))} if self.evidence else {})})
             return summaries
+        # The orchestrator summarizes validated contributions, not source code again.
+        # Keep full citations here for ID resolution and verification after its response.
+        brief = {key: {k: v for k, v in item.items() if k != "evidencia"}
+                 for key, item in contributions.items()}
         return self.call("synthesis", 'Sintetiza hasta cinco conclusiones útiles usando SOLO las aportaciones recibidas. '
                          'No añadas hallazgos, no resuelvas contradicciones como hechos ni eleves certeza. '
                          'Devuelve SOLO JSON {"resumen":[{"texto":"hasta 350 caracteres","aportaciones":["id exacto"]}]}. '
-                         'La síntesis acompaña a los originales, no los reemplaza.', contributions, validate) or []
+                         'Las fuentes completas permanecen en Core y se enlazan mediante los IDs exactos de aportaciones. '
+                         'La síntesis acompaña a los originales, no los reemplaza.', brief, validate) or []

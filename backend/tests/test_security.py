@@ -97,8 +97,9 @@ class SecurityTests(unittest.TestCase):
         valid, _ = prepare_response(json.dumps(d), s)
         md = render_markdown(valid, s, "test")
         summary = md.split("## 2. Diagnóstico y riesgos")[0]
-        self.assertNotIn("Entrada concatenada", summary)
-        self.assertIn("No he podido determinar", summary)
+        self.assertIn("Resultados de la revisión estática del repositorio.", summary)
+        self.assertIn("**Observado:** Entrada concatenada", summary)
+        self.assertNotIn("No he podido determinar", summary)
 
     def test_component_variants_are_collapsed_but_retained_in_detail(self):
         from arktic_office.reporting.executive import primary_components

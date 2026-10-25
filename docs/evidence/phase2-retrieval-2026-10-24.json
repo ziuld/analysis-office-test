@@ -1,0 +1,3537 @@
+{
+  "date": "2026-10-24",
+  "phase": 2,
+  "scope": "F2-04 a F2-06: recuperación precisa, infraestructura declarada y resumen útil",
+  "replay": {
+    "before": {
+      "commit": "b6b8adec2a36a43248ed5194bdc86b38bfeaccb6",
+      "acquired_files": 69,
+      "model_calls": 0,
+      "scanners_executed": false,
+      "roles": {
+        "security": {
+          "requests": [
+            {
+              "paths": [
+                "compose.yaml",
+                "compose.ci.yaml",
+                ".env.example"
+              ],
+              "query": "environment"
+            },
+            {
+              "paths": [
+                "docker/Auditor.Dockerfile",
+                "docker/Hermes3D.Dockerfile",
+                "docker/install_scanners.py"
+              ],
+              "query": "USER"
+            },
+            {
+              "paths": [
+                "auditor/server.py"
+              ],
+              "query": "do_POST"
+            },
+            {
+              "paths": [
+                "auditor/security.py",
+                "auditor/settings.py",
+                "auditor/repository.py"
+              ],
+              "query": "def "
+            }
+          ],
+          "requested_paths": [
+            "compose.yaml",
+            "compose.ci.yaml",
+            ".env.example",
+            "docker/Auditor.Dockerfile",
+            "docker/Hermes3D.Dockerfile",
+            "docker/install_scanners.py",
+            "auditor/server.py",
+            "auditor/security.py",
+            "auditor/settings.py",
+            "auditor/repository.py"
+          ],
+          "delivered_paths": [
+            "compose.yaml",
+            "compose.ci.yaml",
+            ".env.example",
+            "docker/Auditor.Dockerfile",
+            "docker/Hermes3D.Dockerfile",
+            "docker/install_scanners.py",
+            "auditor/server.py",
+            "auditor/repository.py",
+            "auditor/security.py",
+            "auditor/settings.py"
+          ],
+          "unrequested_delivered_paths": [],
+          "bytes": 19795,
+          "trace": [
+            {
+              "request": {
+                "paths": [
+                  "compose.yaml",
+                  "compose.ci.yaml",
+                  ".env.example"
+                ],
+                "query": "environment"
+              },
+              "result": {
+                "fragments": [
+                  {
+                    "path": "compose.yaml",
+                    "partial": true,
+                    "start": 37,
+                    "end": 97
+                  },
+                  {
+                    "path": "compose.ci.yaml",
+                    "partial": false,
+                    "start": 1,
+                    "end": 18
+                  },
+                  {
+                    "path": ".env.example",
+                    "partial": false,
+                    "start": 1,
+                    "end": 19
+                  }
+                ],
+                "relations": [],
+                "unavailable_paths": [],
+                "symbols": [],
+                "limitation": "Relaciones estáticas auxiliares; las conclusiones requieren fuentes de texto.",
+                "omitted_by_budget": []
+              }
+            },
+            {
+              "request": {
+                "paths": [
+                  "docker/Auditor.Dockerfile",
+                  "docker/Hermes3D.Dockerfile",
+                  "docker/install_scanners.py"
+                ],
+                "query": "USER"
+              },
+              "result": {
+                "fragments": [
+                  {
+                    "path": "docker/Auditor.Dockerfile",
+                    "partial": true,
+                    "start": 5,
+                    "end": 22
+                  },
+                  {
+                    "path": "docker/Hermes3D.Dockerfile",
+                    "partial": false,
+                    "start": 1,
+                    "end": 33
+                  },
+                  {
+                    "path": "docker/install_scanners.py",
+                    "partial": false,
+                    "start": 1,
+                    "end": 23
+                  }
+                ],
+                "relations": [
+                  {
+                    "source": "auditor_server_rationale_1",
+                    "target": "auditor_server",
+                    "relation": "rationale_for",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "docker_install_scanners",
+                    "target": "hashlib",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "docker_install_scanners",
+                    "target": "io",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "docker_install_scanners",
+                    "target": "os",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "docker_install_scanners",
+                    "target": "pathlib",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "docker_install_scanners",
+                    "target": "tarfile",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "docker_install_scanners",
+                    "target": "urllib_request",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "docker_install_scanners_rationale_1",
+                    "target": "docker_install_scanners",
+                    "relation": "rationale_for",
+                    "confidence": "EXTRACTED"
+                  }
+                ],
+                "unavailable_paths": [],
+                "symbols": [
+                  {
+                    "id": "auditor_server",
+                    "label": "server.py",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_server_rationale_1",
+                    "label": "Internal single-user API. No host ports; accessed through Studio's proxy.",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "docker_install_scanners",
+                    "label": "install_scanners.py",
+                    "source_file": "docker/install_scanners.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "docker_install_scanners_rationale_1",
+                    "label": "Install immutable upstream Linux/amd64 releases; fail closed on hash mismatch.",
+                    "source_file": "docker/install_scanners.py",
+                    "source_location": "L1"
+                  }
+                ],
+                "limitation": "Relaciones estáticas auxiliares; las conclusiones requieren fuentes de texto.",
+                "omitted_by_budget": []
+              }
+            },
+            {
+              "request": {
+                "paths": [
+                  "auditor/server.py"
+                ],
+                "query": "do_POST"
+              },
+              "result": {
+                "fragments": [
+                  {
+                    "path": "auditor/server.py",
+                    "partial": true,
+                    "start": 220,
+                    "end": 257
+                  },
+                  {
+                    "path": "auditor/repository.py",
+                    "partial": true,
+                    "start": 1,
+                    "end": 100
+                  }
+                ],
+                "relations": [
+                  {
+                    "source": "auditor_server",
+                    "target": "json",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server",
+                    "target": "os",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server",
+                    "target": "re",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server",
+                    "target": "subprocess",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server",
+                    "target": "sys",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server",
+                    "target": "threading",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server",
+                    "target": "uuid",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server",
+                    "target": "fcntl",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server",
+                    "target": "datetime",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server",
+                    "target": "http_server",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server",
+                    "target": "pathlib",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  }
+                ],
+                "unavailable_paths": [],
+                "symbols": [
+                  {
+                    "id": "auditor_repository",
+                    "label": "repository.py",
+                    "source_file": "auditor/repository.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_server",
+                    "label": "server.py",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_server_read_json",
+                    "label": "read_json()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L25"
+                  },
+                  {
+                    "id": "auditor_server_jobs",
+                    "label": "Jobs",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L32"
+                  },
+                  {
+                    "id": "auditor_server_jobs_init",
+                    "label": ".__init__()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L33"
+                  },
+                  {
+                    "id": "auditor_server_jobs_directory",
+                    "label": ".directory()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L52"
+                  },
+                  {
+                    "id": "auditor_server_jobs_detail",
+                    "label": ".detail()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L60"
+                  },
+                  {
+                    "id": "auditor_server_jobs_listing",
+                    "label": ".listing()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L78"
+                  },
+                  {
+                    "id": "auditor_server_jobs_start",
+                    "label": ".start()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L89"
+                  },
+                  {
+                    "id": "auditor_server_jobs_question",
+                    "label": ".question()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L103"
+                  },
+                  {
+                    "id": "auditor_server_jobs_ask",
+                    "label": ".ask()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L114"
+                  },
+                  {
+                    "id": "auditor_server_jobs_question_work",
+                    "label": ".question_work()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L136"
+                  }
+                ],
+                "limitation": "Relaciones estáticas auxiliares; las conclusiones requieren fuentes de texto.",
+                "omitted_by_budget": []
+              }
+            },
+            {
+              "request": {
+                "paths": [
+                  "auditor/security.py",
+                  "auditor/settings.py",
+                  "auditor/repository.py"
+                ],
+                "query": "def "
+              },
+              "result": {
+                "fragments": [
+                  {
+                    "path": "auditor/security.py",
+                    "partial": true,
+                    "start": 11,
+                    "end": 89
+                  },
+                  {
+                    "path": "auditor/settings.py",
+                    "partial": false,
+                    "start": 1,
+                    "end": 24
+                  },
+                  {
+                    "path": "auditor/repository.py",
+                    "partial": true,
+                    "start": 26,
+                    "end": 125
+                  }
+                ],
+                "relations": [
+                  {
+                    "source": "auditor_audit",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_audit",
+                    "target": "auditor_settings",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_azure_proposal",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_brief",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_editorial",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_executive",
+                    "target": "auditor_security",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_outcome",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_presentation",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_preview",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_preview",
+                    "target": "auditor_settings",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_questions",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_questions",
+                    "target": "auditor_settings",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  }
+                ],
+                "unavailable_paths": [],
+                "symbols": [
+                  {
+                    "id": "auditor_audit",
+                    "label": "audit.py",
+                    "source_file": "auditor/audit.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_azure_proposal",
+                    "label": "azure_proposal.py",
+                    "source_file": "auditor/azure_proposal.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_brief",
+                    "label": "brief.py",
+                    "source_file": "auditor/brief.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_editorial",
+                    "label": "editorial.py",
+                    "source_file": "auditor/editorial.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_executive",
+                    "label": "executive.py",
+                    "source_file": "auditor/executive.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_outcome",
+                    "label": "outcome.py",
+                    "source_file": "auditor/outcome.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_presentation",
+                    "label": "presentation.py",
+                    "source_file": "auditor/presentation.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_preview",
+                    "label": "preview.py",
+                    "source_file": "auditor/preview.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_questions",
+                    "label": "questions.py",
+                    "source_file": "auditor/questions.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_repository",
+                    "label": "repository.py",
+                    "source_file": "auditor/repository.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_repository_auditerror",
+                    "label": "AuditError",
+                    "source_file": "auditor/repository.py",
+                    "source_location": "L25"
+                  },
+                  {
+                    "id": "auditor_repository_githubnotfound",
+                    "label": "GitHubNotFound",
+                    "source_file": "auditor/repository.py",
+                    "source_location": "L29"
+                  }
+                ],
+                "limitation": "Relaciones estáticas auxiliares; las conclusiones requieren fuentes de texto.",
+                "omitted_by_budget": []
+              }
+            }
+          ]
+        },
+        "architecture": {
+          "requests": [
+            {
+              "paths": [
+                "auditor/server.py",
+                "auditor/runtime.py",
+                "auditor/settings.py"
+              ]
+            },
+            {
+              "paths": [
+                "auditor/repository.py",
+                "compose.yaml",
+                "docker/Auditor.Dockerfile"
+              ]
+            },
+            {
+              "paths": [
+                "README.md",
+                "docs/OPERACION.md",
+                "compose.ci.yaml"
+              ]
+            }
+          ],
+          "requested_paths": [
+            "auditor/server.py",
+            "auditor/runtime.py",
+            "auditor/settings.py",
+            "auditor/repository.py",
+            "compose.yaml",
+            "docker/Auditor.Dockerfile",
+            "README.md",
+            "docs/OPERACION.md",
+            "compose.ci.yaml"
+          ],
+          "delivered_paths": [
+            "auditor/server.py",
+            "auditor/runtime.py",
+            "auditor/settings.py",
+            "auditor/repository.py",
+            "compose.yaml",
+            "docker/Auditor.Dockerfile"
+          ],
+          "unrequested_delivered_paths": [],
+          "bytes": 16528,
+          "trace": [
+            {
+              "request": {
+                "paths": [
+                  "auditor/server.py",
+                  "auditor/runtime.py",
+                  "auditor/settings.py"
+                ]
+              },
+              "result": {
+                "fragments": [
+                  {
+                    "path": "auditor/server.py",
+                    "partial": true,
+                    "start": 1,
+                    "end": 100
+                  },
+                  {
+                    "path": "auditor/runtime.py",
+                    "partial": false,
+                    "start": 1,
+                    "end": 62
+                  },
+                  {
+                    "path": "auditor/settings.py",
+                    "partial": false,
+                    "start": 1,
+                    "end": 24
+                  }
+                ],
+                "relations": [
+                  {
+                    "source": "auditor_audit",
+                    "target": "auditor_settings",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_preview",
+                    "target": "auditor_settings",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_questions",
+                    "target": "auditor_settings",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_runtime",
+                    "target": "contextlib",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_runtime",
+                    "target": "io",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_runtime",
+                    "target": "json",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_runtime",
+                    "target": "os",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_runtime",
+                    "target": "sys",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_runtime",
+                    "target": "re",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_runtime",
+                    "target": "auditor_settings",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_runtime",
+                    "target": "auditor_runtime_failure_code",
+                    "relation": "contains",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_runtime",
+                    "target": "auditor_runtime_main",
+                    "relation": "contains",
+                    "confidence": "EXTRACTED"
+                  }
+                ],
+                "unavailable_paths": [],
+                "symbols": [
+                  {
+                    "id": "auditor_audit",
+                    "label": "audit.py",
+                    "source_file": "auditor/audit.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_preview",
+                    "label": "preview.py",
+                    "source_file": "auditor/preview.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_questions",
+                    "label": "questions.py",
+                    "source_file": "auditor/questions.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_runtime",
+                    "label": "runtime.py",
+                    "source_file": "auditor/runtime.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_runtime_failure_code",
+                    "label": "failure_code()",
+                    "source_file": "auditor/runtime.py",
+                    "source_location": "L12"
+                  },
+                  {
+                    "id": "auditor_runtime_main",
+                    "label": "main()",
+                    "source_file": "auditor/runtime.py",
+                    "source_location": "L23"
+                  },
+                  {
+                    "id": "auditor_runtime_rationale_1",
+                    "label": "Real Hermes runtime; deliberately no agent tools or cross-project memory.",
+                    "source_file": "auditor/runtime.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_server",
+                    "label": "server.py",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_server_read_json",
+                    "label": "read_json()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L25"
+                  },
+                  {
+                    "id": "auditor_server_jobs",
+                    "label": "Jobs",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L32"
+                  },
+                  {
+                    "id": "auditor_server_jobs_init",
+                    "label": ".__init__()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L33"
+                  },
+                  {
+                    "id": "auditor_server_jobs_directory",
+                    "label": ".directory()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L52"
+                  }
+                ],
+                "limitation": "Relaciones estáticas auxiliares; las conclusiones requieren fuentes de texto.",
+                "omitted_by_budget": []
+              }
+            },
+            {
+              "request": {
+                "paths": [
+                  "auditor/repository.py",
+                  "compose.yaml",
+                  "docker/Auditor.Dockerfile"
+                ]
+              },
+              "result": {
+                "fragments": [
+                  {
+                    "path": "auditor/repository.py",
+                    "partial": true,
+                    "start": 1,
+                    "end": 100
+                  },
+                  {
+                    "path": "compose.yaml",
+                    "partial": false,
+                    "start": 1,
+                    "end": 97
+                  },
+                  {
+                    "path": "docker/Auditor.Dockerfile",
+                    "partial": false,
+                    "start": 1,
+                    "end": 22
+                  }
+                ],
+                "relations": [
+                  {
+                    "source": "auditor_audit",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_azure_proposal",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_brief",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_editorial",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_outcome",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_presentation",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_preview",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_questions",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_report_view",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_reporting",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_repository",
+                    "target": "base64",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_repository",
+                    "target": "json",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  }
+                ],
+                "unavailable_paths": [],
+                "symbols": [
+                  {
+                    "id": "auditor_audit",
+                    "label": "audit.py",
+                    "source_file": "auditor/audit.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_azure_proposal",
+                    "label": "azure_proposal.py",
+                    "source_file": "auditor/azure_proposal.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_brief",
+                    "label": "brief.py",
+                    "source_file": "auditor/brief.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_editorial",
+                    "label": "editorial.py",
+                    "source_file": "auditor/editorial.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_outcome",
+                    "label": "outcome.py",
+                    "source_file": "auditor/outcome.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_presentation",
+                    "label": "presentation.py",
+                    "source_file": "auditor/presentation.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_preview",
+                    "label": "preview.py",
+                    "source_file": "auditor/preview.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_questions",
+                    "label": "questions.py",
+                    "source_file": "auditor/questions.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_report_view",
+                    "label": "report_view.py",
+                    "source_file": "auditor/report_view.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_reporting",
+                    "label": "reporting.py",
+                    "source_file": "auditor/reporting.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_repository",
+                    "label": "repository.py",
+                    "source_file": "auditor/repository.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_repository_auditerror",
+                    "label": "AuditError",
+                    "source_file": "auditor/repository.py",
+                    "source_location": "L25"
+                  }
+                ],
+                "limitation": "Relaciones estáticas auxiliares; las conclusiones requieren fuentes de texto.",
+                "omitted_by_budget": []
+              }
+            },
+            {
+              "request": {
+                "paths": [
+                  "README.md",
+                  "docs/OPERACION.md",
+                  "compose.ci.yaml"
+                ]
+              },
+              "result": {
+                "fragments": [],
+                "relations": [
+                  {
+                    "source": "readme",
+                    "target": "readme_arktic_office",
+                    "relation": "contains",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "readme",
+                    "target": "changelog",
+                    "relation": "references",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "readme_arktic_office",
+                    "target": "readme_empezar",
+                    "relation": "contains",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "readme",
+                    "target": "docs_inicio_rapido",
+                    "relation": "references",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "readme",
+                    "target": "docs_workflow",
+                    "relation": "references",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "readme",
+                    "target": "docs_operacion",
+                    "relation": "references",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "readme",
+                    "target": "docs_seguridad",
+                    "relation": "references",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "readme",
+                    "target": "docs_estandar_comunicacion_informes",
+                    "relation": "references",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "readme",
+                    "target": "docs_repositorio",
+                    "relation": "references",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "readme",
+                    "target": "plan_mvp",
+                    "relation": "references",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "readme",
+                    "target": "docs_plan_fase_1",
+                    "relation": "references",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "readme_arktic_office",
+                    "target": "readme_qué_incluye",
+                    "relation": "contains",
+                    "confidence": "EXTRACTED"
+                  }
+                ],
+                "unavailable_paths": [],
+                "symbols": [
+                  {
+                    "id": "changelog",
+                    "label": "CHANGELOG.md",
+                    "source_file": "CHANGELOG.md",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "plan_mvp",
+                    "label": "PLAN_MVP.md",
+                    "source_file": "PLAN_MVP.md",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "readme",
+                    "label": "README.md",
+                    "source_file": "README.md",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "readme_arktic_office",
+                    "label": "Arktic Office",
+                    "source_file": "README.md",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "readme_empezar",
+                    "label": "Empezar",
+                    "source_file": "README.md",
+                    "source_location": "L9"
+                  },
+                  {
+                    "id": "readme_qué_incluye",
+                    "label": "Qué incluye",
+                    "source_file": "README.md",
+                    "source_location": "L28"
+                  },
+                  {
+                    "id": "readme_arquitectura_y_estructura",
+                    "label": "Arquitectura y estructura",
+                    "source_file": "README.md",
+                    "source_location": "L41"
+                  },
+                  {
+                    "id": "readme_acceso_y_coste",
+                    "label": "Acceso y coste",
+                    "source_file": "README.md",
+                    "source_location": "L63"
+                  },
+                  {
+                    "id": "readme_datos_y_despliegue_local",
+                    "label": "Datos y despliegue local",
+                    "source_file": "README.md",
+                    "source_location": "L69"
+                  },
+                  {
+                    "id": "readme_estado_y_proyectos_originales",
+                    "label": "Estado y proyectos originales",
+                    "source_file": "README.md",
+                    "source_location": "L75"
+                  },
+                  {
+                    "id": "docs_estandar_comunicacion_informes",
+                    "label": "ESTANDAR_COMUNICACION_INFORMES.md",
+                    "source_file": "docs/ESTANDAR_COMUNICACION_INFORMES.md",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "docs_inicio_rapido",
+                    "label": "INICIO_RAPIDO.md",
+                    "source_file": "docs/INICIO_RAPIDO.md",
+                    "source_location": "L1"
+                  }
+                ],
+                "limitation": "Relaciones estáticas auxiliares; las conclusiones requieren fuentes de texto.",
+                "omitted_by_budget": [
+                  "README.md",
+                  "docs/OPERACION.md",
+                  "compose.ci.yaml"
+                ]
+              }
+            }
+          ]
+        },
+        "inventory": {
+          "requests": [
+            {
+              "paths": [
+                "auditor/repository.py",
+                "auditor/settings.py",
+                "auditor/runtime.py"
+              ]
+            },
+            {
+              "paths": [
+                "auditor/server.py",
+                "compose.yaml",
+                "docker/Auditor.Dockerfile"
+              ]
+            }
+          ],
+          "requested_paths": [
+            "auditor/repository.py",
+            "auditor/settings.py",
+            "auditor/runtime.py",
+            "auditor/server.py",
+            "compose.yaml",
+            "docker/Auditor.Dockerfile"
+          ],
+          "delivered_paths": [
+            "auditor/repository.py",
+            "auditor/settings.py",
+            "auditor/runtime.py",
+            "auditor/server.py",
+            "compose.yaml",
+            "docker/Auditor.Dockerfile"
+          ],
+          "unrequested_delivered_paths": [],
+          "bytes": 16528,
+          "trace": [
+            {
+              "request": {
+                "paths": [
+                  "auditor/repository.py",
+                  "auditor/settings.py",
+                  "auditor/runtime.py"
+                ]
+              },
+              "result": {
+                "fragments": [
+                  {
+                    "path": "auditor/repository.py",
+                    "partial": true,
+                    "start": 1,
+                    "end": 100
+                  },
+                  {
+                    "path": "auditor/settings.py",
+                    "partial": false,
+                    "start": 1,
+                    "end": 24
+                  },
+                  {
+                    "path": "auditor/runtime.py",
+                    "partial": false,
+                    "start": 1,
+                    "end": 62
+                  }
+                ],
+                "relations": [
+                  {
+                    "source": "auditor_audit",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_audit",
+                    "target": "auditor_settings",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_azure_proposal",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_brief",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_editorial",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_outcome",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_presentation",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_preview",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_preview",
+                    "target": "auditor_settings",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_questions",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_questions",
+                    "target": "auditor_settings",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_report_view",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  }
+                ],
+                "unavailable_paths": [],
+                "symbols": [
+                  {
+                    "id": "auditor_audit",
+                    "label": "audit.py",
+                    "source_file": "auditor/audit.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_azure_proposal",
+                    "label": "azure_proposal.py",
+                    "source_file": "auditor/azure_proposal.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_brief",
+                    "label": "brief.py",
+                    "source_file": "auditor/brief.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_editorial",
+                    "label": "editorial.py",
+                    "source_file": "auditor/editorial.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_outcome",
+                    "label": "outcome.py",
+                    "source_file": "auditor/outcome.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_presentation",
+                    "label": "presentation.py",
+                    "source_file": "auditor/presentation.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_preview",
+                    "label": "preview.py",
+                    "source_file": "auditor/preview.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_questions",
+                    "label": "questions.py",
+                    "source_file": "auditor/questions.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_report_view",
+                    "label": "report_view.py",
+                    "source_file": "auditor/report_view.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_repository",
+                    "label": "repository.py",
+                    "source_file": "auditor/repository.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_repository_auditerror",
+                    "label": "AuditError",
+                    "source_file": "auditor/repository.py",
+                    "source_location": "L25"
+                  },
+                  {
+                    "id": "auditor_repository_githubnotfound",
+                    "label": "GitHubNotFound",
+                    "source_file": "auditor/repository.py",
+                    "source_location": "L29"
+                  }
+                ],
+                "limitation": "Relaciones estáticas auxiliares; las conclusiones requieren fuentes de texto.",
+                "omitted_by_budget": []
+              }
+            },
+            {
+              "request": {
+                "paths": [
+                  "auditor/server.py",
+                  "compose.yaml",
+                  "docker/Auditor.Dockerfile"
+                ]
+              },
+              "result": {
+                "fragments": [
+                  {
+                    "path": "auditor/server.py",
+                    "partial": true,
+                    "start": 1,
+                    "end": 100
+                  },
+                  {
+                    "path": "compose.yaml",
+                    "partial": false,
+                    "start": 1,
+                    "end": 97
+                  },
+                  {
+                    "path": "docker/Auditor.Dockerfile",
+                    "partial": false,
+                    "start": 1,
+                    "end": 22
+                  }
+                ],
+                "relations": [
+                  {
+                    "source": "auditor_server",
+                    "target": "json",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server",
+                    "target": "os",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server",
+                    "target": "re",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server",
+                    "target": "subprocess",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server",
+                    "target": "sys",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server",
+                    "target": "threading",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server",
+                    "target": "uuid",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server",
+                    "target": "fcntl",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server",
+                    "target": "datetime",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server",
+                    "target": "http_server",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server",
+                    "target": "pathlib",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  }
+                ],
+                "unavailable_paths": [],
+                "symbols": [
+                  {
+                    "id": "auditor_repository",
+                    "label": "repository.py",
+                    "source_file": "auditor/repository.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_server",
+                    "label": "server.py",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_server_read_json",
+                    "label": "read_json()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L25"
+                  },
+                  {
+                    "id": "auditor_server_jobs",
+                    "label": "Jobs",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L32"
+                  },
+                  {
+                    "id": "auditor_server_jobs_init",
+                    "label": ".__init__()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L33"
+                  },
+                  {
+                    "id": "auditor_server_jobs_directory",
+                    "label": ".directory()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L52"
+                  },
+                  {
+                    "id": "auditor_server_jobs_detail",
+                    "label": ".detail()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L60"
+                  },
+                  {
+                    "id": "auditor_server_jobs_listing",
+                    "label": ".listing()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L78"
+                  },
+                  {
+                    "id": "auditor_server_jobs_start",
+                    "label": ".start()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L89"
+                  },
+                  {
+                    "id": "auditor_server_jobs_question",
+                    "label": ".question()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L103"
+                  },
+                  {
+                    "id": "auditor_server_jobs_ask",
+                    "label": ".ask()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L114"
+                  },
+                  {
+                    "id": "auditor_server_jobs_question_work",
+                    "label": ".question_work()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L136"
+                  }
+                ],
+                "limitation": "Relaciones estáticas auxiliares; las conclusiones requieren fuentes de texto.",
+                "omitted_by_budget": []
+              }
+            }
+          ]
+        }
+      },
+      "symbol_probe": {
+        "fragments": [
+          {
+            "path": "auditor/server.py",
+            "partial": true,
+            "start": 195,
+            "end": 257
+          },
+          {
+            "path": "auditor/repository.py",
+            "partial": true,
+            "start": 1,
+            "end": 100
+          }
+        ],
+        "relations": [
+          {
+            "source": "auditor_server",
+            "target": "json",
+            "relation": "imports",
+            "confidence": "EXTRACTED"
+          },
+          {
+            "source": "auditor_server",
+            "target": "os",
+            "relation": "imports",
+            "confidence": "EXTRACTED"
+          },
+          {
+            "source": "auditor_server",
+            "target": "re",
+            "relation": "imports",
+            "confidence": "EXTRACTED"
+          },
+          {
+            "source": "auditor_server",
+            "target": "subprocess",
+            "relation": "imports",
+            "confidence": "EXTRACTED"
+          },
+          {
+            "source": "auditor_server",
+            "target": "sys",
+            "relation": "imports",
+            "confidence": "EXTRACTED"
+          },
+          {
+            "source": "auditor_server",
+            "target": "threading",
+            "relation": "imports",
+            "confidence": "EXTRACTED"
+          },
+          {
+            "source": "auditor_server",
+            "target": "uuid",
+            "relation": "imports",
+            "confidence": "EXTRACTED"
+          },
+          {
+            "source": "auditor_server",
+            "target": "fcntl",
+            "relation": "imports",
+            "confidence": "EXTRACTED"
+          },
+          {
+            "source": "auditor_server",
+            "target": "datetime",
+            "relation": "imports_from",
+            "confidence": "EXTRACTED"
+          },
+          {
+            "source": "auditor_server",
+            "target": "http_server",
+            "relation": "imports_from",
+            "confidence": "EXTRACTED"
+          },
+          {
+            "source": "auditor_server",
+            "target": "pathlib",
+            "relation": "imports_from",
+            "confidence": "EXTRACTED"
+          },
+          {
+            "source": "auditor_server",
+            "target": "auditor_repository",
+            "relation": "imports_from",
+            "confidence": "EXTRACTED"
+          }
+        ],
+        "unavailable_paths": [],
+        "symbols": [
+          {
+            "id": "auditor_repository",
+            "label": "repository.py",
+            "source_file": "auditor/repository.py",
+            "source_location": "L1"
+          },
+          {
+            "id": "auditor_server",
+            "label": "server.py",
+            "source_file": "auditor/server.py",
+            "source_location": "L1"
+          },
+          {
+            "id": "auditor_server_read_json",
+            "label": "read_json()",
+            "source_file": "auditor/server.py",
+            "source_location": "L25"
+          },
+          {
+            "id": "auditor_server_jobs",
+            "label": "Jobs",
+            "source_file": "auditor/server.py",
+            "source_location": "L32"
+          },
+          {
+            "id": "auditor_server_jobs_init",
+            "label": ".__init__()",
+            "source_file": "auditor/server.py",
+            "source_location": "L33"
+          },
+          {
+            "id": "auditor_server_jobs_directory",
+            "label": ".directory()",
+            "source_file": "auditor/server.py",
+            "source_location": "L52"
+          },
+          {
+            "id": "auditor_server_jobs_detail",
+            "label": ".detail()",
+            "source_file": "auditor/server.py",
+            "source_location": "L60"
+          },
+          {
+            "id": "auditor_server_jobs_listing",
+            "label": ".listing()",
+            "source_file": "auditor/server.py",
+            "source_location": "L78"
+          },
+          {
+            "id": "auditor_server_jobs_start",
+            "label": ".start()",
+            "source_file": "auditor/server.py",
+            "source_location": "L89"
+          },
+          {
+            "id": "auditor_server_jobs_question",
+            "label": ".question()",
+            "source_file": "auditor/server.py",
+            "source_location": "L103"
+          },
+          {
+            "id": "auditor_server_jobs_ask",
+            "label": ".ask()",
+            "source_file": "auditor/server.py",
+            "source_location": "L114"
+          },
+          {
+            "id": "auditor_server_jobs_question_work",
+            "label": ".question_work()",
+            "source_file": "auditor/server.py",
+            "source_location": "L136"
+          }
+        ],
+        "limitation": "Relaciones estáticas auxiliares; las conclusiones requieren fuentes de texto."
+      }
+    },
+    "after": {
+      "commit": "b6b8adec2a36a43248ed5194bdc86b38bfeaccb6",
+      "acquired_files": 69,
+      "model_calls": 0,
+      "scanners_executed": false,
+      "roles": {
+        "security": {
+          "requests": [
+            {
+              "paths": [
+                "compose.yaml",
+                "compose.ci.yaml",
+                ".env.example"
+              ],
+              "query": "environment"
+            },
+            {
+              "paths": [
+                "docker/Auditor.Dockerfile",
+                "docker/Hermes3D.Dockerfile",
+                "docker/install_scanners.py"
+              ],
+              "query": "USER"
+            },
+            {
+              "paths": [
+                "auditor/server.py"
+              ],
+              "query": "do_POST"
+            },
+            {
+              "paths": [
+                "auditor/security.py",
+                "auditor/settings.py",
+                "auditor/repository.py"
+              ],
+              "query": "def "
+            }
+          ],
+          "requested_paths": [
+            "compose.yaml",
+            "compose.ci.yaml",
+            ".env.example",
+            "docker/Auditor.Dockerfile",
+            "docker/Hermes3D.Dockerfile",
+            "docker/install_scanners.py",
+            "auditor/server.py",
+            "auditor/security.py",
+            "auditor/settings.py",
+            "auditor/repository.py"
+          ],
+          "delivered_paths": [
+            "compose.yaml",
+            "compose.ci.yaml",
+            ".env.example",
+            "docker/Auditor.Dockerfile",
+            "docker/Hermes3D.Dockerfile",
+            "docker/install_scanners.py",
+            "auditor/server.py",
+            "auditor/security.py",
+            "auditor/settings.py",
+            "auditor/repository.py"
+          ],
+          "unrequested_delivered_paths": [],
+          "bytes": 18657,
+          "trace": [
+            {
+              "request": {
+                "paths": [
+                  "compose.yaml",
+                  "compose.ci.yaml",
+                  ".env.example"
+                ],
+                "query": "environment"
+              },
+              "result": {
+                "fragments": [
+                  {
+                    "path": "compose.yaml",
+                    "partial": true,
+                    "start": 37,
+                    "end": 97
+                  },
+                  {
+                    "path": "compose.ci.yaml",
+                    "partial": false,
+                    "start": 1,
+                    "end": 18
+                  },
+                  {
+                    "path": ".env.example",
+                    "partial": false,
+                    "start": 1,
+                    "end": 19
+                  }
+                ],
+                "relations": [],
+                "unavailable_paths": [],
+                "related_paths": [],
+                "query_not_found": [
+                  "compose.ci.yaml",
+                  ".env.example"
+                ],
+                "window_omissions": [],
+                "symbols": [],
+                "limitation": "Relaciones estáticas auxiliares; las conclusiones requieren fuentes de texto.",
+                "omitted_by_budget": []
+              }
+            },
+            {
+              "request": {
+                "paths": [
+                  "docker/Auditor.Dockerfile",
+                  "docker/Hermes3D.Dockerfile",
+                  "docker/install_scanners.py"
+                ],
+                "query": "USER"
+              },
+              "result": {
+                "fragments": [
+                  {
+                    "path": "docker/Auditor.Dockerfile",
+                    "partial": true,
+                    "start": 5,
+                    "end": 22
+                  },
+                  {
+                    "path": "docker/Hermes3D.Dockerfile",
+                    "partial": false,
+                    "start": 1,
+                    "end": 33
+                  },
+                  {
+                    "path": "docker/install_scanners.py",
+                    "partial": false,
+                    "start": 1,
+                    "end": 23
+                  }
+                ],
+                "relations": [
+                  {
+                    "source": "docker_install_scanners",
+                    "target": "hashlib",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "docker_install_scanners",
+                    "target": "io",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "docker_install_scanners",
+                    "target": "os",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "docker_install_scanners",
+                    "target": "pathlib",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "docker_install_scanners",
+                    "target": "tarfile",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "docker_install_scanners",
+                    "target": "urllib_request",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "docker_install_scanners_rationale_1",
+                    "target": "docker_install_scanners",
+                    "relation": "rationale_for",
+                    "confidence": "EXTRACTED"
+                  }
+                ],
+                "unavailable_paths": [],
+                "related_paths": [],
+                "query_not_found": [
+                  "docker/install_scanners.py"
+                ],
+                "window_omissions": [],
+                "symbols": [
+                  {
+                    "id": "docker_install_scanners",
+                    "label": "install_scanners.py",
+                    "source_file": "docker/install_scanners.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "docker_install_scanners_rationale_1",
+                    "label": "Install immutable upstream Linux/amd64 releases; fail closed on hash mismatch.",
+                    "source_file": "docker/install_scanners.py",
+                    "source_location": "L1"
+                  }
+                ],
+                "limitation": "Relaciones estáticas auxiliares; las conclusiones requieren fuentes de texto.",
+                "omitted_by_budget": []
+              }
+            },
+            {
+              "request": {
+                "paths": [
+                  "auditor/server.py"
+                ],
+                "query": "do_POST"
+              },
+              "result": {
+                "fragments": [
+                  {
+                    "path": "auditor/server.py",
+                    "partial": true,
+                    "start": 220,
+                    "end": 257
+                  }
+                ],
+                "relations": [
+                  {
+                    "source": "auditor_server_handler_for",
+                    "target": "auditor_server_handler_for_do_post",
+                    "relation": "contains",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server_handler_for_do_post",
+                    "target": "auditor_server_handler_for_send",
+                    "relation": "calls",
+                    "confidence": "EXTRACTED"
+                  }
+                ],
+                "unavailable_paths": [],
+                "related_paths": [],
+                "query_not_found": [],
+                "window_omissions": [],
+                "symbols": [
+                  {
+                    "id": "auditor_server_handler_for_do_post",
+                    "label": "do_POST()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L228"
+                  },
+                  {
+                    "id": "auditor_server_handler_for",
+                    "label": "handler_for()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L186"
+                  },
+                  {
+                    "id": "auditor_server_handler_for_send",
+                    "label": "send()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L191"
+                  }
+                ],
+                "limitation": "Relaciones estáticas auxiliares; las conclusiones requieren fuentes de texto.",
+                "omitted_by_budget": []
+              }
+            },
+            {
+              "request": {
+                "paths": [
+                  "auditor/security.py",
+                  "auditor/settings.py",
+                  "auditor/repository.py"
+                ],
+                "query": "def "
+              },
+              "result": {
+                "fragments": [
+                  {
+                    "path": "auditor/security.py",
+                    "partial": true,
+                    "start": 11,
+                    "end": 89
+                  },
+                  {
+                    "path": "auditor/settings.py",
+                    "partial": false,
+                    "start": 1,
+                    "end": 24
+                  },
+                  {
+                    "path": "auditor/repository.py",
+                    "partial": true,
+                    "start": 26,
+                    "end": 125
+                  }
+                ],
+                "relations": [
+                  {
+                    "source": "auditor_audit",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_audit",
+                    "target": "auditor_settings",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_azure_proposal",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_brief",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_editorial",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_executive",
+                    "target": "auditor_security",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_outcome",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_presentation",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_preview",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_preview",
+                    "target": "auditor_settings",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_questions",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_questions",
+                    "target": "auditor_settings",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  }
+                ],
+                "unavailable_paths": [],
+                "related_paths": [
+                  "auditor/audit.py",
+                  "auditor/azure_proposal.py",
+                  "auditor/brief.py",
+                  "auditor/editorial.py",
+                  "auditor/executive.py",
+                  "auditor/outcome.py",
+                  "auditor/presentation.py",
+                  "auditor/preview.py",
+                  "auditor/questions.py"
+                ],
+                "query_not_found": [],
+                "window_omissions": [],
+                "symbols": [
+                  {
+                    "id": "auditor_audit",
+                    "label": "audit.py",
+                    "source_file": "auditor/audit.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_azure_proposal",
+                    "label": "azure_proposal.py",
+                    "source_file": "auditor/azure_proposal.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_brief",
+                    "label": "brief.py",
+                    "source_file": "auditor/brief.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_editorial",
+                    "label": "editorial.py",
+                    "source_file": "auditor/editorial.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_executive",
+                    "label": "executive.py",
+                    "source_file": "auditor/executive.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_outcome",
+                    "label": "outcome.py",
+                    "source_file": "auditor/outcome.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_presentation",
+                    "label": "presentation.py",
+                    "source_file": "auditor/presentation.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_preview",
+                    "label": "preview.py",
+                    "source_file": "auditor/preview.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_questions",
+                    "label": "questions.py",
+                    "source_file": "auditor/questions.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_repository",
+                    "label": "repository.py",
+                    "source_file": "auditor/repository.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_repository_auditerror",
+                    "label": "AuditError",
+                    "source_file": "auditor/repository.py",
+                    "source_location": "L25"
+                  },
+                  {
+                    "id": "auditor_repository_githubnotfound",
+                    "label": "GitHubNotFound",
+                    "source_file": "auditor/repository.py",
+                    "source_location": "L29"
+                  }
+                ],
+                "limitation": "Relaciones estáticas auxiliares; las conclusiones requieren fuentes de texto.",
+                "omitted_by_budget": []
+              }
+            }
+          ]
+        },
+        "architecture": {
+          "requests": [
+            {
+              "paths": [
+                "auditor/server.py",
+                "auditor/runtime.py",
+                "auditor/settings.py"
+              ]
+            },
+            {
+              "paths": [
+                "auditor/repository.py",
+                "compose.yaml",
+                "docker/Auditor.Dockerfile"
+              ]
+            },
+            {
+              "paths": [
+                "README.md",
+                "docs/OPERACION.md",
+                "compose.ci.yaml"
+              ]
+            }
+          ],
+          "requested_paths": [
+            "auditor/server.py",
+            "auditor/runtime.py",
+            "auditor/settings.py",
+            "auditor/repository.py",
+            "compose.yaml",
+            "docker/Auditor.Dockerfile",
+            "README.md",
+            "docs/OPERACION.md",
+            "compose.ci.yaml"
+          ],
+          "delivered_paths": [
+            "auditor/server.py",
+            "auditor/runtime.py",
+            "auditor/settings.py",
+            "auditor/repository.py",
+            "compose.yaml",
+            "docker/Auditor.Dockerfile"
+          ],
+          "unrequested_delivered_paths": [],
+          "bytes": 16528,
+          "trace": [
+            {
+              "request": {
+                "paths": [
+                  "auditor/server.py",
+                  "auditor/runtime.py",
+                  "auditor/settings.py"
+                ]
+              },
+              "result": {
+                "fragments": [
+                  {
+                    "path": "auditor/server.py",
+                    "partial": true,
+                    "start": 1,
+                    "end": 100
+                  },
+                  {
+                    "path": "auditor/runtime.py",
+                    "partial": false,
+                    "start": 1,
+                    "end": 62
+                  },
+                  {
+                    "path": "auditor/settings.py",
+                    "partial": false,
+                    "start": 1,
+                    "end": 24
+                  }
+                ],
+                "relations": [
+                  {
+                    "source": "auditor_audit",
+                    "target": "auditor_settings",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_preview",
+                    "target": "auditor_settings",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_questions",
+                    "target": "auditor_settings",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_runtime",
+                    "target": "contextlib",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_runtime",
+                    "target": "io",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_runtime",
+                    "target": "json",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_runtime",
+                    "target": "os",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_runtime",
+                    "target": "sys",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_runtime",
+                    "target": "re",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_runtime",
+                    "target": "auditor_settings",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_runtime",
+                    "target": "auditor_runtime_failure_code",
+                    "relation": "contains",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_runtime",
+                    "target": "auditor_runtime_main",
+                    "relation": "contains",
+                    "confidence": "EXTRACTED"
+                  }
+                ],
+                "unavailable_paths": [],
+                "related_paths": [
+                  "auditor/audit.py",
+                  "auditor/preview.py",
+                  "auditor/questions.py"
+                ],
+                "query_not_found": [],
+                "window_omissions": [],
+                "symbols": [
+                  {
+                    "id": "auditor_audit",
+                    "label": "audit.py",
+                    "source_file": "auditor/audit.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_preview",
+                    "label": "preview.py",
+                    "source_file": "auditor/preview.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_questions",
+                    "label": "questions.py",
+                    "source_file": "auditor/questions.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_runtime",
+                    "label": "runtime.py",
+                    "source_file": "auditor/runtime.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_runtime_failure_code",
+                    "label": "failure_code()",
+                    "source_file": "auditor/runtime.py",
+                    "source_location": "L12"
+                  },
+                  {
+                    "id": "auditor_runtime_main",
+                    "label": "main()",
+                    "source_file": "auditor/runtime.py",
+                    "source_location": "L23"
+                  },
+                  {
+                    "id": "auditor_runtime_rationale_1",
+                    "label": "Real Hermes runtime; deliberately no agent tools or cross-project memory.",
+                    "source_file": "auditor/runtime.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_server",
+                    "label": "server.py",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_server_read_json",
+                    "label": "read_json()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L25"
+                  },
+                  {
+                    "id": "auditor_server_jobs",
+                    "label": "Jobs",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L32"
+                  },
+                  {
+                    "id": "auditor_server_jobs_init",
+                    "label": ".__init__()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L33"
+                  },
+                  {
+                    "id": "auditor_server_jobs_directory",
+                    "label": ".directory()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L52"
+                  }
+                ],
+                "limitation": "Relaciones estáticas auxiliares; las conclusiones requieren fuentes de texto.",
+                "omitted_by_budget": []
+              }
+            },
+            {
+              "request": {
+                "paths": [
+                  "auditor/repository.py",
+                  "compose.yaml",
+                  "docker/Auditor.Dockerfile"
+                ]
+              },
+              "result": {
+                "fragments": [
+                  {
+                    "path": "auditor/repository.py",
+                    "partial": true,
+                    "start": 1,
+                    "end": 100
+                  },
+                  {
+                    "path": "compose.yaml",
+                    "partial": false,
+                    "start": 1,
+                    "end": 97
+                  },
+                  {
+                    "path": "docker/Auditor.Dockerfile",
+                    "partial": false,
+                    "start": 1,
+                    "end": 22
+                  }
+                ],
+                "relations": [
+                  {
+                    "source": "auditor_audit",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_azure_proposal",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_brief",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_editorial",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_outcome",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_presentation",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_preview",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_questions",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_report_view",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_reporting",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_repository",
+                    "target": "base64",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_repository",
+                    "target": "json",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  }
+                ],
+                "unavailable_paths": [],
+                "related_paths": [
+                  "auditor/audit.py",
+                  "auditor/azure_proposal.py",
+                  "auditor/brief.py",
+                  "auditor/editorial.py",
+                  "auditor/outcome.py",
+                  "auditor/presentation.py",
+                  "auditor/preview.py",
+                  "auditor/questions.py",
+                  "auditor/report_view.py",
+                  "auditor/reporting.py"
+                ],
+                "query_not_found": [],
+                "window_omissions": [],
+                "symbols": [
+                  {
+                    "id": "auditor_audit",
+                    "label": "audit.py",
+                    "source_file": "auditor/audit.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_azure_proposal",
+                    "label": "azure_proposal.py",
+                    "source_file": "auditor/azure_proposal.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_brief",
+                    "label": "brief.py",
+                    "source_file": "auditor/brief.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_editorial",
+                    "label": "editorial.py",
+                    "source_file": "auditor/editorial.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_outcome",
+                    "label": "outcome.py",
+                    "source_file": "auditor/outcome.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_presentation",
+                    "label": "presentation.py",
+                    "source_file": "auditor/presentation.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_preview",
+                    "label": "preview.py",
+                    "source_file": "auditor/preview.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_questions",
+                    "label": "questions.py",
+                    "source_file": "auditor/questions.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_report_view",
+                    "label": "report_view.py",
+                    "source_file": "auditor/report_view.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_reporting",
+                    "label": "reporting.py",
+                    "source_file": "auditor/reporting.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_repository",
+                    "label": "repository.py",
+                    "source_file": "auditor/repository.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_repository_auditerror",
+                    "label": "AuditError",
+                    "source_file": "auditor/repository.py",
+                    "source_location": "L25"
+                  }
+                ],
+                "limitation": "Relaciones estáticas auxiliares; las conclusiones requieren fuentes de texto.",
+                "omitted_by_budget": []
+              }
+            },
+            {
+              "request": {
+                "paths": [
+                  "README.md",
+                  "docs/OPERACION.md",
+                  "compose.ci.yaml"
+                ]
+              },
+              "result": {
+                "fragments": [],
+                "relations": [
+                  {
+                    "source": "readme",
+                    "target": "readme_arktic_office",
+                    "relation": "contains",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "readme",
+                    "target": "changelog",
+                    "relation": "references",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "readme_arktic_office",
+                    "target": "readme_empezar",
+                    "relation": "contains",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "readme",
+                    "target": "docs_inicio_rapido",
+                    "relation": "references",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "readme",
+                    "target": "docs_workflow",
+                    "relation": "references",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "readme",
+                    "target": "docs_operacion",
+                    "relation": "references",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "readme",
+                    "target": "docs_seguridad",
+                    "relation": "references",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "readme",
+                    "target": "docs_estandar_comunicacion_informes",
+                    "relation": "references",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "readme",
+                    "target": "docs_repositorio",
+                    "relation": "references",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "readme",
+                    "target": "plan_mvp",
+                    "relation": "references",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "readme",
+                    "target": "docs_plan_fase_1",
+                    "relation": "references",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "readme_arktic_office",
+                    "target": "readme_qué_incluye",
+                    "relation": "contains",
+                    "confidence": "EXTRACTED"
+                  }
+                ],
+                "unavailable_paths": [],
+                "related_paths": [
+                  "CHANGELOG.md",
+                  "PLAN_MVP.md",
+                  "docs/ESTANDAR_COMUNICACION_INFORMES.md",
+                  "docs/INICIO_RAPIDO.md",
+                  "docs/PLAN_FASE_1.md",
+                  "docs/REPOSITORIO.md",
+                  "docs/SEGURIDAD.md",
+                  "docs/WORKFLOW.md"
+                ],
+                "query_not_found": [],
+                "window_omissions": [],
+                "symbols": [
+                  {
+                    "id": "changelog",
+                    "label": "CHANGELOG.md",
+                    "source_file": "CHANGELOG.md",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "plan_mvp",
+                    "label": "PLAN_MVP.md",
+                    "source_file": "PLAN_MVP.md",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "readme",
+                    "label": "README.md",
+                    "source_file": "README.md",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "readme_arktic_office",
+                    "label": "Arktic Office",
+                    "source_file": "README.md",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "readme_empezar",
+                    "label": "Empezar",
+                    "source_file": "README.md",
+                    "source_location": "L9"
+                  },
+                  {
+                    "id": "readme_qué_incluye",
+                    "label": "Qué incluye",
+                    "source_file": "README.md",
+                    "source_location": "L28"
+                  },
+                  {
+                    "id": "readme_arquitectura_y_estructura",
+                    "label": "Arquitectura y estructura",
+                    "source_file": "README.md",
+                    "source_location": "L41"
+                  },
+                  {
+                    "id": "readme_acceso_y_coste",
+                    "label": "Acceso y coste",
+                    "source_file": "README.md",
+                    "source_location": "L63"
+                  },
+                  {
+                    "id": "readme_datos_y_despliegue_local",
+                    "label": "Datos y despliegue local",
+                    "source_file": "README.md",
+                    "source_location": "L69"
+                  },
+                  {
+                    "id": "readme_estado_y_proyectos_originales",
+                    "label": "Estado y proyectos originales",
+                    "source_file": "README.md",
+                    "source_location": "L75"
+                  },
+                  {
+                    "id": "docs_estandar_comunicacion_informes",
+                    "label": "ESTANDAR_COMUNICACION_INFORMES.md",
+                    "source_file": "docs/ESTANDAR_COMUNICACION_INFORMES.md",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "docs_inicio_rapido",
+                    "label": "INICIO_RAPIDO.md",
+                    "source_file": "docs/INICIO_RAPIDO.md",
+                    "source_location": "L1"
+                  }
+                ],
+                "limitation": "Relaciones estáticas auxiliares; las conclusiones requieren fuentes de texto.",
+                "omitted_by_budget": [
+                  "README.md",
+                  "docs/OPERACION.md",
+                  "compose.ci.yaml"
+                ]
+              }
+            }
+          ]
+        },
+        "inventory": {
+          "requests": [
+            {
+              "paths": [
+                "auditor/repository.py",
+                "auditor/settings.py",
+                "auditor/runtime.py"
+              ]
+            },
+            {
+              "paths": [
+                "auditor/server.py",
+                "compose.yaml",
+                "docker/Auditor.Dockerfile"
+              ]
+            }
+          ],
+          "requested_paths": [
+            "auditor/repository.py",
+            "auditor/settings.py",
+            "auditor/runtime.py",
+            "auditor/server.py",
+            "compose.yaml",
+            "docker/Auditor.Dockerfile"
+          ],
+          "delivered_paths": [
+            "auditor/repository.py",
+            "auditor/settings.py",
+            "auditor/runtime.py",
+            "auditor/server.py",
+            "compose.yaml",
+            "docker/Auditor.Dockerfile"
+          ],
+          "unrequested_delivered_paths": [],
+          "bytes": 16528,
+          "trace": [
+            {
+              "request": {
+                "paths": [
+                  "auditor/repository.py",
+                  "auditor/settings.py",
+                  "auditor/runtime.py"
+                ]
+              },
+              "result": {
+                "fragments": [
+                  {
+                    "path": "auditor/repository.py",
+                    "partial": true,
+                    "start": 1,
+                    "end": 100
+                  },
+                  {
+                    "path": "auditor/settings.py",
+                    "partial": false,
+                    "start": 1,
+                    "end": 24
+                  },
+                  {
+                    "path": "auditor/runtime.py",
+                    "partial": false,
+                    "start": 1,
+                    "end": 62
+                  }
+                ],
+                "relations": [
+                  {
+                    "source": "auditor_audit",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_audit",
+                    "target": "auditor_settings",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_azure_proposal",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_brief",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_editorial",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_outcome",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_presentation",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_preview",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_preview",
+                    "target": "auditor_settings",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_questions",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_questions",
+                    "target": "auditor_settings",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_report_view",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  }
+                ],
+                "unavailable_paths": [],
+                "related_paths": [
+                  "auditor/audit.py",
+                  "auditor/azure_proposal.py",
+                  "auditor/brief.py",
+                  "auditor/editorial.py",
+                  "auditor/outcome.py",
+                  "auditor/presentation.py",
+                  "auditor/preview.py",
+                  "auditor/questions.py",
+                  "auditor/report_view.py"
+                ],
+                "query_not_found": [],
+                "window_omissions": [],
+                "symbols": [
+                  {
+                    "id": "auditor_audit",
+                    "label": "audit.py",
+                    "source_file": "auditor/audit.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_azure_proposal",
+                    "label": "azure_proposal.py",
+                    "source_file": "auditor/azure_proposal.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_brief",
+                    "label": "brief.py",
+                    "source_file": "auditor/brief.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_editorial",
+                    "label": "editorial.py",
+                    "source_file": "auditor/editorial.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_outcome",
+                    "label": "outcome.py",
+                    "source_file": "auditor/outcome.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_presentation",
+                    "label": "presentation.py",
+                    "source_file": "auditor/presentation.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_preview",
+                    "label": "preview.py",
+                    "source_file": "auditor/preview.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_questions",
+                    "label": "questions.py",
+                    "source_file": "auditor/questions.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_report_view",
+                    "label": "report_view.py",
+                    "source_file": "auditor/report_view.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_repository",
+                    "label": "repository.py",
+                    "source_file": "auditor/repository.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_repository_auditerror",
+                    "label": "AuditError",
+                    "source_file": "auditor/repository.py",
+                    "source_location": "L25"
+                  },
+                  {
+                    "id": "auditor_repository_githubnotfound",
+                    "label": "GitHubNotFound",
+                    "source_file": "auditor/repository.py",
+                    "source_location": "L29"
+                  }
+                ],
+                "limitation": "Relaciones estáticas auxiliares; las conclusiones requieren fuentes de texto.",
+                "omitted_by_budget": []
+              }
+            },
+            {
+              "request": {
+                "paths": [
+                  "auditor/server.py",
+                  "compose.yaml",
+                  "docker/Auditor.Dockerfile"
+                ]
+              },
+              "result": {
+                "fragments": [
+                  {
+                    "path": "auditor/server.py",
+                    "partial": true,
+                    "start": 1,
+                    "end": 100
+                  },
+                  {
+                    "path": "compose.yaml",
+                    "partial": false,
+                    "start": 1,
+                    "end": 97
+                  },
+                  {
+                    "path": "docker/Auditor.Dockerfile",
+                    "partial": false,
+                    "start": 1,
+                    "end": 22
+                  }
+                ],
+                "relations": [
+                  {
+                    "source": "auditor_server",
+                    "target": "json",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server",
+                    "target": "os",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server",
+                    "target": "re",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server",
+                    "target": "subprocess",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server",
+                    "target": "sys",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server",
+                    "target": "threading",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server",
+                    "target": "uuid",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server",
+                    "target": "fcntl",
+                    "relation": "imports",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server",
+                    "target": "datetime",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server",
+                    "target": "http_server",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server",
+                    "target": "pathlib",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  },
+                  {
+                    "source": "auditor_server",
+                    "target": "auditor_repository",
+                    "relation": "imports_from",
+                    "confidence": "EXTRACTED"
+                  }
+                ],
+                "unavailable_paths": [],
+                "related_paths": [
+                  "auditor/repository.py"
+                ],
+                "query_not_found": [],
+                "window_omissions": [],
+                "symbols": [
+                  {
+                    "id": "auditor_repository",
+                    "label": "repository.py",
+                    "source_file": "auditor/repository.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_server",
+                    "label": "server.py",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L1"
+                  },
+                  {
+                    "id": "auditor_server_read_json",
+                    "label": "read_json()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L25"
+                  },
+                  {
+                    "id": "auditor_server_jobs",
+                    "label": "Jobs",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L32"
+                  },
+                  {
+                    "id": "auditor_server_jobs_init",
+                    "label": ".__init__()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L33"
+                  },
+                  {
+                    "id": "auditor_server_jobs_directory",
+                    "label": ".directory()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L52"
+                  },
+                  {
+                    "id": "auditor_server_jobs_detail",
+                    "label": ".detail()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L60"
+                  },
+                  {
+                    "id": "auditor_server_jobs_listing",
+                    "label": ".listing()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L78"
+                  },
+                  {
+                    "id": "auditor_server_jobs_start",
+                    "label": ".start()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L89"
+                  },
+                  {
+                    "id": "auditor_server_jobs_question",
+                    "label": ".question()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L103"
+                  },
+                  {
+                    "id": "auditor_server_jobs_ask",
+                    "label": ".ask()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L114"
+                  },
+                  {
+                    "id": "auditor_server_jobs_question_work",
+                    "label": ".question_work()",
+                    "source_file": "auditor/server.py",
+                    "source_location": "L136"
+                  }
+                ],
+                "limitation": "Relaciones estáticas auxiliares; las conclusiones requieren fuentes de texto.",
+                "omitted_by_budget": []
+              }
+            }
+          ]
+        }
+      },
+      "symbol_probe": {
+        "fragments": [
+          {
+            "path": "auditor/server.py",
+            "partial": true,
+            "start": 195,
+            "end": 257
+          }
+        ],
+        "relations": [
+          {
+            "source": "auditor_server_handler_for",
+            "target": "auditor_server_handler_for_do_get",
+            "relation": "contains",
+            "confidence": "EXTRACTED"
+          },
+          {
+            "source": "auditor_server_handler_for_do_get",
+            "target": "auditor_server_handler_for_send",
+            "relation": "calls",
+            "confidence": "EXTRACTED"
+          }
+        ],
+        "unavailable_paths": [],
+        "related_paths": [],
+        "query_not_found": [],
+        "window_omissions": [],
+        "symbols": [
+          {
+            "id": "auditor_server_handler_for_do_get",
+            "label": "do_GET()",
+            "source_file": "auditor/server.py",
+            "source_location": "L203"
+          },
+          {
+            "id": "auditor_server_handler_for",
+            "label": "handler_for()",
+            "source_file": "auditor/server.py",
+            "source_location": "L186"
+          },
+          {
+            "id": "auditor_server_handler_for_send",
+            "label": "send()",
+            "source_file": "auditor/server.py",
+            "source_location": "L191"
+          }
+        ],
+        "limitation": "Relaciones estáticas auxiliares; las conclusiones requieren fuentes de texto."
+      }
+    }
+  },
+  "pilot": {
+    "citation_check": {
+      "unique": 20,
+      "invalid": []
+    },
+    "job": {
+      "id": "703a709a-0a0c-4a76-861c-cab6ceb4e38e",
+      "repository": "https://github.com/ziuld/analysis-office-test",
+      "estado": "parcial",
+      "created": "2026-10-24T16:31:23.911707+00:00"
+    },
+    "directory": "reports\\2026-10-24\\163123-analysis-office-test\\703a709a-0a0c-4a76-861c-cab6ceb4e38e",
+    "commit": "b6b8adec2a36a43248ed5194bdc86b38bfeaccb6",
+    "branch": "main",
+    "acquisition": {
+      "complete": true,
+      "expected": 69,
+      "actual": 69,
+      "bytes": 1603313,
+      "seconds": 2.068,
+      "kinds": {
+        "text": 68,
+        "binary": 1
+      }
+    },
+    "map": {
+      "status": "ready",
+      "engine": {
+        "version": "0.9.95",
+        "commit": "92741d162b2094ffc2fed58cfbd8ee823e9da62c"
+      },
+      "diagnostic_lines": 0,
+      "truncated": false,
+      "processing_complete": true,
+      "unresolved_relations": 194,
+      "exit_code": 0,
+      "timeout": false,
+      "seconds": 2.072,
+      "node_count": 493,
+      "edge_count": 1487
+    },
+    "map_coverage": {
+      "unsupported": 19,
+      "processed": 50
+    },
+    "scanners": [
+      {
+        "name": "Gitleaks 8.30.1",
+        "status": "sin_detecciones_en_seleccion",
+        "detail": "Snapshot completo ofrecido a Gitleaks; reglas y límites nativos, sin historial Git. Binarios y enlaces no equivalen a texto analizable.",
+        "seconds": 1.058,
+        "input_count": 69,
+        "finding_count": 0
+      },
+      {
+        "name": "OSV-Scanner 2.7.0",
+        "status": "no_evaluado",
+        "detail": "No hay archivos de versiones resueltas admitidos en la selección. Revisar dependencias queda pendiente.",
+        "seconds": 0.0,
+        "input_count": 0,
+        "finding_count": 0
+      }
+    ],
+    "stages": {
+      "routing": {
+        "status": "complete",
+        "calls": 1,
+        "usage": {
+          "input_tokens": 2878,
+          "output_tokens": 109,
+          "reasoning_tokens": 0,
+          "total_tokens": 2987,
+          "api_calls": 1
+        },
+        "prompt_bytes": 9409
+      },
+      "synthesis": {
+        "status": "complete",
+        "calls": 1,
+        "usage": {
+          "input_tokens": 3327,
+          "output_tokens": 257,
+          "reasoning_tokens": 0,
+          "total_tokens": 3584,
+          "api_calls": 1
+        },
+        "prompt_bytes": 11892
+      }
+    },
+    "cells": [
+      {
+        "id": "security",
+        "estado": "completada",
+        "model": "gpt-6-luna",
+        "reasoning": "low",
+        "archivos": [
+          "compose.yaml",
+          "compose.ci.yaml",
+          ".github/workflows/ci.yaml",
+          "auditor/server.py",
+          "auditor/security.py",
+          "auditor/runtime.py",
+          ".env.example",
+          "docker/Auditor.Dockerfile",
+          "auditor/settings.py"
+        ],
+        "calls": 2,
+        "execution": "completed",
+        "coverage": "partial",
+        "missing": [],
+        "usage": {
+          "api_calls": 2,
+          "reasoning_tokens": 158,
+          "input_tokens": 19436,
+          "output_tokens": 1174,
+          "total_tokens": 20610
+        },
+        "valid_findings": 2,
+        "retrieval_count": 4,
+        "retrieved_paths": [
+          "compose.yaml",
+          "compose.ci.yaml",
+          ".github/workflows/ci.yaml",
+          "auditor/server.py",
+          "auditor/server.py",
+          "auditor/security.py",
+          "auditor/runtime.py",
+          ".env.example",
+          "docker/Auditor.Dockerfile",
+          "auditor/settings.py"
+        ]
+      },
+      {
+        "id": "architecture",
+        "estado": "informacion_insuficiente",
+        "model": "gpt-6-luna",
+        "reasoning": "low",
+        "archivos": [
+          "compose.yaml",
+          "compose.ci.yaml",
+          "docker/Auditor.Dockerfile",
+          "auditor/server.py",
+          "auditor/runtime.py",
+          "auditor/repository.py"
+        ],
+        "calls": 2,
+        "execution": "completed",
+        "coverage": "insufficient",
+        "missing": [],
+        "usage": {
+          "api_calls": 2,
+          "reasoning_tokens": 139,
+          "input_tokens": 15421,
+          "output_tokens": 1803,
+          "total_tokens": 17224
+        },
+        "advertencias": [
+          "Bloque de presentación rechazado: Contenido editorial con fuente inexistente.",
+          "Bloque de presentación rechazado: Contenido editorial con fuente inexistente.",
+          "confirmados[0] rechazado: La célula citó un identificador de evidencia inexistente.",
+          "confirmados[1] rechazado: La célula citó un identificador de evidencia inexistente.",
+          "confirmados[2] rechazado: La célula citó un identificador de evidencia inexistente."
+        ],
+        "mensaje": "La información recibida no permite elaborar una evaluación útil de esta especialidad.",
+        "valid_findings": 0,
+        "retrieval_count": 2,
+        "retrieved_paths": [
+          "compose.yaml",
+          "compose.ci.yaml",
+          "docker/Auditor.Dockerfile",
+          "auditor/server.py",
+          "auditor/runtime.py",
+          "auditor/repository.py"
+        ]
+      },
+      {
+        "id": "inventory",
+        "estado": "completada",
+        "model": "gpt-6-luna",
+        "reasoning": "low",
+        "archivos": [
+          "auditor/repository.py",
+          "auditor/audit.py",
+          "auditor/reporting.py",
+          "auditor/settings.py",
+          "compose.yaml",
+          "compose.ci.yaml"
+        ],
+        "calls": 2,
+        "execution": "completed",
+        "coverage": "partial",
+        "missing": [],
+        "usage": {
+          "api_calls": 2,
+          "reasoning_tokens": 328,
+          "input_tokens": 17800,
+          "output_tokens": 1696,
+          "total_tokens": 19496
+        },
+        "valid_findings": 5,
+        "retrieval_count": 4,
+        "retrieved_paths": [
+          "auditor/repository.py",
+          "auditor/audit.py",
+          "auditor/reporting.py",
+          "auditor/settings.py",
+          "compose.yaml",
+          "compose.ci.yaml"
+        ]
+      }
+    ],
+    "elapsed_seconds": 113.974,
+    "model_calls": 8,
+    "known_tokens": 63901,
+    "findings": {
+      "confirmados": 7,
+      "indicios": 0,
+      "synthesis": 5
+    },
+    "coverage": {
+      "snapshot": "complete",
+      "semantic": "partial",
+      "cells": {
+        "security": "partial",
+        "architecture": "insufficient",
+        "inventory": "partial"
+      },
+      "limitation": "Ejecución terminada no demuestra exhaustividad semántica; consultar inventario y controles no evaluados."
+    },
+    "control_states": {
+      "no_evaluado": 4,
+      "evidencia_favorable_limitada": 2
+    }
+  },
+  "verification": {
+    "targeted_tests": 40,
+    "passed": 39,
+    "optional_skipped": 1,
+    "seconds": 0.723,
+    "services_healthy": [
+      "audit-api",
+      "preparator",
+      "office"
+    ],
+    "office_http": 200,
+    "report_http": 200,
+    "download_http": 200,
+    "active_runs": 0,
+    "question_active": null,
+    "snapshot_temporaries": 0,
+    "index_temporaries": 0,
+    "visual_inspection": false
+  },
+  "interpretation": [
+    "La reproducción determinista corrige alcance y símbolo sobre el mismo commit, sin modelos ni scanners.",
+    "El piloto terminó sin bloqueo, pero Arquitectura perdió tres observaciones y dos bloques de presentación por identificadores de evidencia inexistentes. No prueba falta de código; no se conserva la respuesta cruda de rechazos parciales y no puede reconstruirse aquí el identificador emitido.",
+    "Seguridad usó una ronda de consultas y análisis; no solicitó la segunda ronda opcional. No se puede atribuir mejora a elevar ese límite.",
+    "Dos controles con evidencia favorable limitada y cuatro no evaluados. No es una certificación de seguridad.",
+    "Se cambiaron recuperación y presentación/instrucciones, por lo que el piloto no aísla causalidad ni demuestra mejora general. No hubo reintento para ocultar el rechazo.",
+    "Grafo: 50 procesados y 19 incompatibles; OSV sin entrada; Gitleaks sin historial. El objetivo fue main remoto, no los cambios locales."
+  ]
+}

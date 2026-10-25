@@ -1,0 +1,364 @@
+{
+  "date": "2026-10-24",
+  "scope": "Corrección de alcance: recuperador c31041a, una ronda por especialista, instrucciones de infraestructura actual y orden del informe",
+  "pilot": {
+    "citation_check": {
+      "unique": 30,
+      "invalid": []
+    },
+    "job": {
+      "id": "b92264e6-6879-415a-aaa5-0dd781c601ad",
+      "repository": "https://github.com/ziuld/analysis-office-test",
+      "estado": "parcial",
+      "created": "2026-10-24T16:40:15.672535+00:00"
+    },
+    "directory": "reports\\2026-10-24\\164015-analysis-office-test\\b92264e6-6879-415a-aaa5-0dd781c601ad",
+    "commit": "b6b8adec2a36a43248ed5194bdc86b38bfeaccb6",
+    "branch": "main",
+    "acquisition": {
+      "complete": true,
+      "expected": 69,
+      "actual": 69,
+      "bytes": 1603313,
+      "seconds": 2.024,
+      "kinds": {
+        "text": 68,
+        "binary": 1
+      }
+    },
+    "map": {
+      "status": "ready",
+      "engine": {
+        "version": "0.9.95",
+        "commit": "92741d162b2094ffc2fed58cfbd8ee823e9da62c"
+      },
+      "diagnostic_lines": 0,
+      "truncated": false,
+      "processing_complete": true,
+      "unresolved_relations": 194,
+      "exit_code": 0,
+      "timeout": false,
+      "seconds": 2.273,
+      "node_count": 493,
+      "edge_count": 1487
+    },
+    "map_coverage": {
+      "unsupported": 19,
+      "processed": 50
+    },
+    "scanners": [
+      {
+        "name": "Gitleaks 8.30.1",
+        "status": "sin_detecciones_en_seleccion",
+        "detail": "Snapshot completo ofrecido a Gitleaks; reglas y límites nativos, sin historial Git. Binarios y enlaces no equivalen a texto analizable.",
+        "seconds": 1.082,
+        "input_count": 69,
+        "finding_count": 0
+      },
+      {
+        "name": "OSV-Scanner 2.7.0",
+        "status": "no_evaluado",
+        "detail": "No hay archivos de versiones resueltas admitidos en la selección. Revisar dependencias queda pendiente.",
+        "seconds": 0.0,
+        "input_count": 0,
+        "finding_count": 0
+      }
+    ],
+    "stages": {
+      "routing": {
+        "status": "complete",
+        "calls": 1,
+        "usage": {
+          "input_tokens": 2947,
+          "output_tokens": 181,
+          "reasoning_tokens": 0,
+          "total_tokens": 3128,
+          "api_calls": 1
+        },
+        "prompt_bytes": 9756
+      },
+      "synthesis": {
+        "status": "complete",
+        "calls": 1,
+        "usage": {
+          "input_tokens": 4195,
+          "output_tokens": 326,
+          "reasoning_tokens": 0,
+          "total_tokens": 4521,
+          "api_calls": 1
+        },
+        "prompt_bytes": 15262
+      }
+    },
+    "cells": [
+      {
+        "id": "security",
+        "estado": "parcial",
+        "model": "gpt-6-luna",
+        "reasoning": "low",
+        "archivos": [
+          "compose.yaml",
+          "compose.ci.yaml",
+          "docker/Auditor.Dockerfile",
+          ".env.example",
+          ".github/workflows/ci.yaml",
+          "auditor/settings.py",
+          "auditor/server.py",
+          "auditor/repository.py",
+          "auditor/security.py",
+          "auditor/runtime.py"
+        ],
+        "calls": 2,
+        "execution": "completed",
+        "coverage": "partial",
+        "missing": [],
+        "usage": {
+          "total_tokens": 20746,
+          "input_tokens": 19464,
+          "reasoning_tokens": 245,
+          "api_calls": 2,
+          "output_tokens": 1282
+        },
+        "advertencias": [
+          "confirmados[0] rechazado: Hallazgo con formato inválido.",
+          "confirmados[1] rechazado: Hallazgo con formato inválido.",
+          "control[4] rechazado: Hallazgo sin evidencia válida.",
+          "Control no evaluado: configuracion"
+        ],
+        "mensaje": "Algunos apartados no superaron la validación; se conservan las aportaciones válidas. No se reintentó.",
+        "valid_findings": 0,
+        "retrieval_count": 4,
+        "retrieved_paths": [
+          "compose.yaml",
+          "compose.ci.yaml",
+          "docker/Auditor.Dockerfile",
+          ".env.example",
+          ".github/workflows/ci.yaml",
+          "auditor/settings.py",
+          "auditor/server.py",
+          "auditor/repository.py",
+          "auditor/security.py",
+          "auditor/repository.py",
+          "auditor/runtime.py"
+        ]
+      },
+      {
+        "id": "architecture",
+        "estado": "parcial",
+        "model": "gpt-6-luna",
+        "reasoning": "low",
+        "archivos": [
+          "compose.yaml",
+          "compose.ci.yaml",
+          "docker/Auditor.Dockerfile",
+          "auditor/server.py",
+          "auditor/runtime.py",
+          "auditor/repository.py"
+        ],
+        "calls": 2,
+        "execution": "completed",
+        "coverage": "partial",
+        "missing": [],
+        "usage": {
+          "total_tokens": 18441,
+          "input_tokens": 15415,
+          "reasoning_tokens": 131,
+          "api_calls": 2,
+          "output_tokens": 3026
+        },
+        "advertencias": [
+          "Bloque de presentación rechazado: Faltan fuentes para el contenido estructurado."
+        ],
+        "mensaje": "Algunos apartados no superaron la validación; se conservan las aportaciones válidas. No se reintentó.",
+        "valid_findings": 8,
+        "retrieval_count": 2,
+        "retrieved_paths": [
+          "compose.yaml",
+          "compose.ci.yaml",
+          "docker/Auditor.Dockerfile",
+          "auditor/server.py",
+          "auditor/runtime.py",
+          "auditor/repository.py"
+        ]
+      },
+      {
+        "id": "inventory",
+        "estado": "completada",
+        "model": "gpt-6-luna",
+        "reasoning": "low",
+        "archivos": [
+          "auditor/repository.py",
+          "auditor/runtime.py",
+          "auditor/audit.py",
+          "auditor/settings.py",
+          "auditor/server.py",
+          "compose.yaml"
+        ],
+        "calls": 2,
+        "execution": "completed",
+        "coverage": "available_evidence",
+        "missing": [],
+        "usage": {
+          "total_tokens": 18433,
+          "input_tokens": 17283,
+          "reasoning_tokens": 182,
+          "api_calls": 2,
+          "output_tokens": 1150
+        },
+        "valid_findings": 3,
+        "retrieval_count": 3,
+        "retrieved_paths": [
+          "auditor/repository.py",
+          "auditor/runtime.py",
+          "auditor/audit.py",
+          "auditor/settings.py",
+          "auditor/server.py",
+          "auditor/audit.py",
+          "compose.yaml"
+        ]
+      }
+    ],
+    "elapsed_seconds": 130.795,
+    "model_calls": 8,
+    "known_tokens": 65269,
+    "findings": {
+      "confirmados": 11,
+      "indicios": 0,
+      "synthesis": 5
+    },
+    "coverage": {
+      "snapshot": "complete",
+      "semantic": "partial",
+      "cells": {
+        "security": "partial",
+        "architecture": "partial",
+        "inventory": "available_evidence"
+      },
+      "limitation": "Ejecución terminada no demuestra exhaustividad semántica; consultar inventario y controles no evaluados."
+    },
+    "control_states": {
+      "no_evaluado": 5,
+      "hallazgo": 1
+    }
+  },
+  "architecture_flow": {
+    "componentes": [
+      {
+        "id": "oficina_web",
+        "nombre": "Oficina web",
+        "descripcion": "Servicio Compose con puerto local 3000, estado configurado en /data/hermes y URL declarada para la API.",
+        "evidencia": [
+          {
+            "path": "compose.yaml",
+            "line": 66,
+            "quote": "    ports:"
+          },
+          {
+            "path": "compose.yaml",
+            "line": 75,
+            "quote": "      AUDIT_API_URL: http://audit-api:8080"
+          },
+          {
+            "path": "compose.yaml",
+            "line": 77,
+            "quote": "      - studio:/data/hermes"
+          }
+        ]
+      },
+      {
+        "id": "audit_api",
+        "nombre": "API de auditoría",
+        "descripcion": "Servicio Compose con entrada Python y comprobación HTTP de salud en el puerto 8080.",
+        "evidencia": [
+          {
+            "path": "compose.yaml",
+            "line": 4,
+            "quote": "  audit-api:"
+          },
+          {
+            "path": "compose.yaml",
+            "line": 8,
+            "quote": "    entrypoint: [python, /app/server.py]"
+          },
+          {
+            "path": "compose.yaml",
+            "line": 9,
+            "quote": "    healthcheck:"
+          }
+        ]
+      },
+      {
+        "id": "github_api",
+        "nombre": "API de GitHub",
+        "descripcion": "Destino externo previsto por el lector de repositorios para consultar GitHub.",
+        "evidencia": [
+          {
+            "path": "auditor/repository.py",
+            "line": 50,
+            "quote": "def github(endpoint):"
+          },
+          {
+            "path": "auditor/repository.py",
+            "line": 57,
+            "quote": "        with build_opener(NoRedirect()).open(Request(\"https://api.github.com\" + endpoint, headers=headers), timeout=30) as response:"
+          }
+        ]
+      }
+    ],
+    "conexiones": [
+      {
+        "origen": "oficina_web",
+        "destino": "audit_api",
+        "estado": "inferida",
+        "descripcion": "La variable AUDIT_API_URL apunta a audit-api:8080 y ambos servicios declaran la red office; falta confirmar el uso por el código y la conectividad efectiva.",
+        "evidencia": [
+          {
+            "path": "compose.yaml",
+            "line": 75,
+            "quote": "      AUDIT_API_URL: http://audit-api:8080"
+          },
+          {
+            "path": "compose.yaml",
+            "line": 90,
+            "quote": "    networks: [office]"
+          }
+        ]
+      },
+      {
+        "origen": "audit_api",
+        "destino": "github_api",
+        "estado": "observada",
+        "descripcion": "El código del lector construye solicitudes HTTPS a api.github.com para obtener recursos del repositorio.",
+        "evidencia": [
+          {
+            "path": "auditor/repository.py",
+            "line": 50,
+            "quote": "def github(endpoint):"
+          },
+          {
+            "path": "auditor/repository.py",
+            "line": 57,
+            "quote": "        with build_opener(NoRedirect()).open(Request(\"https://api.github.com\" + endpoint, headers=headers), timeout=30) as response:"
+          }
+        ]
+      }
+    ]
+  },
+  "tests": {
+    "run": 24,
+    "passed": 23,
+    "optional_skipped": 1,
+    "seconds": 0.278
+  },
+  "checks": {
+    "flow_components_in_html": true,
+    "valid_published_citations": true,
+    "visual_browser_inspection": false
+  },
+  "limitations": [
+    "La comparación no demuestra cuál cambio o variación del modelo causó las referencias inválidas del piloto anterior.",
+    "Arquitectura aportó ocho observaciones y flujo válido, pero otro bloque editorial fue rechazado por falta de fuentes.",
+    "Seguridad tuvo dos observaciones rechazadas por formato y un control sin evidencia válida; no se considera recorrido sin errores.",
+    "Sin reintentos automáticos ni relajación del validador. Sin cambios de CI/CD, versiones, modelos o caps."
+  ]
+}

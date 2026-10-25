@@ -1,0 +1,431 @@
+{
+  "citation_check": {
+    "unique": 301,
+    "invalid": []
+  },
+  "job": {
+    "id": "147509c2-56ea-45c5-96c5-ee2aefc92329",
+    "repository": "https://github.com/ziuld/beneath-the-code-page",
+    "estado": "parcial",
+    "created": "2026-10-24T20:46:59.729298+00:00",
+    "error": "Se guardó un informe parcial; revisar las células pendientes. No equivale a una revisión completa del equipo."
+  },
+  "directory": "reports\\2026-10-24\\204659-beneath-the-code-page\\147509c2-56ea-45c5-96c5-ee2aefc92329",
+  "commit": "95ede5bccc881a2230f874944299b4a73101337d",
+  "branch": "main",
+  "acquisition": {
+    "complete": true,
+    "expected": 567,
+    "actual": 567,
+    "bytes": 10200922,
+    "seconds": 3.493,
+    "kinds": {
+      "text": 557,
+      "binary": 10
+    }
+  },
+  "map": {
+    "status": "partial",
+    "engine": {
+      "version": "0.9.95",
+      "commit": "92741d162b2094ffc2fed58cfbd8ee823e9da62c"
+    },
+    "diagnostic_lines": 2,
+    "truncated": false,
+    "processing_complete": true,
+    "unresolved_relations": 517,
+    "exit_code": 0,
+    "timeout": false,
+    "seconds": 10.409,
+    "node_count": 3108,
+    "edge_count": 5080
+  },
+  "map_coverage": {
+    "unsupported": 128,
+    "processed": 439
+  },
+  "scanners": [
+    {
+      "name": "Gitleaks 8.30.1",
+      "status": "sin_detecciones_en_seleccion",
+      "detail": "Snapshot completo ofrecido a Gitleaks; reglas y límites nativos, sin historial Git. Binarios y enlaces no equivalen a texto analizable.",
+      "seconds": 1.519,
+      "input_count": 567,
+      "finding_count": 0
+    },
+    {
+      "name": "OSV-Scanner 2.7.0",
+      "status": "sin_detecciones_en_seleccion",
+      "detail": "273 paquetes con versión en la respuesta; 3 archivos enviados, 3 con paquetes versionados y 0 sin paquetes versionados. Consulta OSV en línea con metadatos de paquetes. Resolución Maven habilitada por metadatos (deps.dev); sin instalar dependencias ni ejecutar builds/código, sin analizar llamadas. No prueba versiones instaladas ni ausencia de vulnerabilidades.",
+      "evaluated_files": [
+        "pom.xml",
+        "src/main/frontend/package-lock.json",
+        "tests/e2e/package-lock.json"
+      ],
+      "unevaluated_files": [],
+      "seconds": 26.599,
+      "input_kinds": {
+        "pom.xml": "lockfile",
+        "src/main/frontend/package-lock.json": "lockfile",
+        "tests/e2e/package-lock.json": "lockfile"
+      },
+      "input_count": 3,
+      "finding_count": 0
+    },
+    {
+      "name": "Semgrep 1.182.1",
+      "status": "detecciones_por_validar",
+      "detail": "Reglas locales acotadas para Python, JavaScript/TypeScript, Java y C#. Sin análisis exhaustivo ni explotación probada.",
+      "processed_files": [
+        "docker/HealthCheck.java",
+        "scripts/check-maven-wrapper.py",
+        "scripts/check-planning.py",
+        "scripts/install-security-tools.py",
+        "scripts/planning_delivery.py",
+        "scripts/planning_documents.py",
+        "scripts/planning_rules.py",
+        "scripts/planning_specs.py",
+        "scripts/prepare-webkit-local.py",
+        "scripts/render-backlog.py",
+        "scripts/render-roadmap.py",
+        "scripts/smoke-java-baseline.py",
+        "scripts/test-container-security.py",
+        "scripts/test-planning-rules.py",
+        "scripts/test-security.py",
+        "scripts/verify-container-security.py",
+        "scripts/verify-container.py",
+        "scripts/verify-home-browser.py",
+        "scripts/verify-java-baseline.py",
+        "scripts/verify-security.py",
+        "src/main/frontend/design-system/components/editor-policy.test.ts",
+        "src/main/frontend/design-system/components/editor-policy.ts",
+        "src/main/frontend/design-system/components/editor-workspace.ts",
+        "src/main/frontend/design-system/components/editor.test.ts",
+        "src/main/frontend/design-system/components/editor.ts",
+        "src/main/frontend/entries/site.ts",
+        "src/main/frontend/eslint.config.js",
+        "src/main/frontend/eslint.config.test.ts",
+        "src/main/frontend/platform/text-budget.test.ts",
+        "src/main/frontend/platform/text-budget.ts",
+        "src/main/frontend/platform/tool-session.test.ts",
+        "src/main/frontend/platform/tool-session.ts",
+        "src/main/frontend/platform/worker-input.test.ts",
+        "src/main/frontend/platform/worker-input.ts",
+        "src/main/frontend/platform/worker-manager.test.ts",
+        "src/main/frontend/platform/worker-manager.ts",
+        "src/main/frontend/tools/base64/algorithms/codec.ts",
+        "src/main/frontend/tools/base64/codec.test.ts",
+        "src/main/frontend/tools/base64/worker-protocol.test.ts",
+        "src/main/frontend/tools/base64/worker-protocol.ts",
+        "src/main/frontend/tools/base64/workspace.ts",
+        "src/main/frontend/tools/json/algorithms/formatter.test.ts",
+        "src/main/frontend/tools/json/algorithms/formatter.ts",
+        "src/main/frontend/tools/json/algorithms/minifier.test.ts",
+        "src/main/frontend/tools/json/algorithms/minifier.ts",
+        "src/main/frontend/tools/json/algorithms/position.test.ts",
+        "src/main/frontend/tools/json/algorithms/position.ts",
+        "src/main/frontend/tools/json/algorithms/validation.test.ts",
+        "src/main/frontend/tools/json/algorithms/validation.ts",
+        "src/main/frontend/tools/json/formatter-session.test.ts",
+        "src/main/frontend/tools/json/formatter-session.ts",
+        "src/main/frontend/tools/json/formatter-workspace.ts",
+        "src/main/frontend/tools/json/formatter.worker.ts",
+        "src/main/frontend/tools/json/worker-protocol.test.ts",
+        "src/main/frontend/tools/json/worker-protocol.ts",
+        "src/main/frontend/tools/jwt/algorithms/decode.test.ts",
+        "src/main/frontend/tools/jwt/algorithms/decode.ts",
+        "src/main/frontend/tools/jwt/workspace.ts",
+        "src/main/frontend/tools/uuid/generate.test.ts",
+        "src/main/frontend/tools/uuid/generate.ts",
+        "src/main/frontend/tools/uuid/workspace.ts",
+        "src/main/frontend/vite.config.test.ts",
+        "src/main/frontend/vite.config.ts",
+        "src/main/frontend/vite.worker-proof.config.ts",
+        "src/main/java/dev/beneaththecode/BeneathTheCodeApplication.java",
+        "src/main/java/dev/beneaththecode/bootstrap/LearningConfiguration.java",
+        "src/main/java/dev/beneaththecode/learning/adapter/in/web/LearningController.java",
+        "src/main/java/dev/beneaththecode/learning/adapter/in/web/LessonHtmlRenderer.java",
+        "src/main/java/dev/beneaththecode/learning/adapter/out/content/ClasspathCourseContentSource.java",
+        "src/main/java/dev/beneaththecode/learning/application/LearningPages.java",
+        "src/main/java/dev/beneaththecode/learning/application/port/out/CourseContentSource.java",
+        "src/main/java/dev/beneaththecode/learning/domain/LearningCatalogue.java",
+        "src/main/java/dev/beneaththecode/platform/web/assets/AssetManifest.java",
+        "src/main/java/dev/beneaththecode/platform/web/assets/AssetSource.java",
+        "src/main/java/dev/beneaththecode/platform/web/assets/LocalAssetWebConfiguration.java",
+        "src/main/java/dev/beneaththecode/platform/web/i18n/HomeLocaleConfiguration.java",
+        "src/main/java/dev/beneaththecode/platform/web/i18n/LanguagePreferenceController.java",
+        "src/main/java/dev/beneaththecode/platform/web/i18n/PreferenceCookiePolicy.java",
+        "src/main/java/dev/beneaththecode/platform/web/i18n/PreferenceLocaleResolver.java",
+        "src/main/java/dev/beneaththecode/platform/web/i18n/PreferenceReturnPaths.java",
+        "src/main/java/dev/beneaththecode/platform/web/security/ContainerRejectionHeaders.java",
+        "src/main/java/dev/beneaththecode/platform/web/security/HttpBoundaryConfiguration.java",
+        "src/main/java/dev/beneaththecode/platform/web/security/PreferenceRequestBoundary.java",
+        "src/main/java/dev/beneaththecode/platform/web/security/PublicPageSecurity.java",
+        "src/main/java/dev/beneaththecode/platform/web/security/SafeErrorController.java",
+        "src/main/java/dev/beneaththecode/platform/web/security/SafeHttpErrors.java",
+        "src/main/java/dev/beneaththecode/platform/web/security/SafeMvcErrors.java",
+        "src/main/java/dev/beneaththecode/platform/web/security/SecurityResponseHeaders.java",
+        "src/main/java/dev/beneaththecode/site/adapter/in/web/HomeController.java",
+        "src/main/java/dev/beneaththecode/site/adapter/in/web/HomeNavigation.java",
+        "src/main/java/dev/beneaththecode/site/adapter/in/web/SharedNavigationAdvice.java",
+        "src/main/java/dev/beneaththecode/tools/adapter/in/web/ToolsController.java",
+        "src/test/frontend/proof.worker.ts",
+        "src/test/frontend/worker-proof.ts",
+        "src/test/java/btc/fixtures/AssetFixtureApplication.java",
+        "src/test/java/btc/fixtures/AssetFixtureController.java",
+        "src/test/java/btc/fixtures/AssetFixtureSecurity.java",
+        "src/test/java/btc/fixtures/EditorFixtureController.java",
+        "src/test/java/btc/fixtures/HttpFailureApplication.java",
+        "src/test/java/btc/fixtures/HttpFailureController.java",
+        "src/test/java/btc/fixtures/LearningFixtureConfiguration.java",
+        "src/test/java/btc/fixtures/ShellFixtureApplication.java",
+        "src/test/java/btc/fixtures/ShellFixtureController.java",
+        "src/test/java/btc/fixtures/ShellFixtureSecurity.java",
+        "src/test/java/dev/beneaththecode/BeneathTheCodeApplicationTests.java",
+        "src/test/java/dev/beneaththecode/architecture/ArchitectureRules.java",
+        "src/test/java/dev/beneaththecode/architecture/ArchitectureTests.java",
+        "src/test/java/dev/beneaththecode/architecture/BoundaryFixtureTests.java",
+        "src/test/java/dev/beneaththecode/learning/adapter/in/web/EmptyLearningCatalogueTests.java",
+        "src/test/java/dev/beneaththecode/learning/adapter/in/web/LearningRenderingTests.java",
+        "src/test/java/dev/beneaththecode/learning/adapter/in/web/LessonHtmlRendererTests.java",
+        "src/test/java/dev/beneaththecode/learning/adapter/in/web/PublishedLearningTests.java",
+        "src/test/java/dev/beneaththecode/learning/adapter/out/content/LearningContentTests.java",
+        "src/test/java/dev/beneaththecode/learning/adapter/out/content/LearningLessonExamplesTests.java",
+        "src/test/java/dev/beneaththecode/platform/web/assets/AssetManifestTests.java",
+        "src/test/java/dev/beneaththecode/platform/web/assets/AssetSourceTests.java",
+        "src/test/java/dev/beneaththecode/platform/web/assets/PackagedAssetsIT.java",
+        "src/test/java/dev/beneaththecode/platform/web/i18n/ContainerLanguagePreferenceTests.java",
+        "src/test/java/dev/beneaththecode/platform/web/i18n/LanguagePreferenceTests.java",
+        "src/test/java/dev/beneaththecode/platform/web/i18n/LocalLanguagePreferenceTests.java",
+        "src/test/java/dev/beneaththecode/platform/web/i18n/LocaleRenderingTests.java",
+        "src/test/java/dev/beneaththecode/platform/web/i18n/PreferenceCookiePolicyTests.java",
+        "src/test/java/dev/beneaththecode/platform/web/i18n/PreferenceLocaleResolverTests.java",
+        "src/test/java/dev/beneaththecode/platform/web/security/PreferenceRequestBoundaryTests.java",
+        "src/test/java/dev/beneaththecode/platform/web/security/SafeHttpErrorsTests.java",
+        "src/test/java/dev/beneaththecode/platform/web/security/SecurityResponseHeadersTests.java",
+        "src/test/java/dev/beneaththecode/site/adapter/in/web/EditorComponentTests.java",
+        "src/test/java/dev/beneaththecode/site/adapter/in/web/HomePublicationTests.java",
+        "src/test/java/dev/beneaththecode/site/adapter/in/web/HomeRenderingTests.java",
+        "src/test/java/dev/beneaththecode/site/adapter/in/web/HomeSecurityTests.java",
+        "src/test/java/dev/beneaththecode/site/adapter/in/web/SharedComponentTests.java",
+        "src/test/java/dev/beneaththecode/tools/adapter/in/web/ToolsRenderingTests.java"
+      ],
+      "seconds": 7.092,
+      "input_count": 132,
+      "finding_count": 1
+    }
+  ],
+  "stages": {
+    "routing": {
+      "status": "complete",
+      "calls": 1,
+      "usage": {
+        "input_tokens": 4423,
+        "output_tokens": 325,
+        "reasoning_tokens": 0,
+        "total_tokens": 4748,
+        "api_calls": 1
+      },
+      "prompt_bytes": 14968
+    },
+    "synthesis": {
+      "status": "error",
+      "calls": 0,
+      "usage": null,
+      "prompt_bytes": 92535,
+      "error": "Respuesta o llamada inválida; sin reintento."
+    }
+  },
+  "cells": [
+    {
+      "id": "security",
+      "estado": "completada",
+      "model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "archivos": [
+        "Dockerfile",
+        ".github/workflows/container.yml",
+        ".github/workflows/java.yml",
+        "pom.xml",
+        "src/main/java/dev/beneaththecode/learning/adapter/in/web/LearningController.java",
+        "src/main/java/dev/beneaththecode/site/adapter/in/web/HomeController.java",
+        "src/main/java/dev/beneaththecode/tools/adapter/in/web/ToolsController.java",
+        "src/test/frontend/proof.worker.ts",
+        "src/main/frontend/platform/text-budget.ts",
+        "src/main/frontend/platform/worker-input.ts",
+        "src/main/java/dev/beneaththecode/bootstrap/LearningConfiguration.java",
+        "src/main/java/dev/beneaththecode/learning/adapter/in/web/LessonHtmlRenderer.java"
+      ],
+      "calls": 3,
+      "execution": "completed",
+      "coverage": "partial",
+      "missing": [],
+      "usage": {
+        "output_tokens": 2169,
+        "reasoning_tokens": 343,
+        "input_tokens": 34086,
+        "total_tokens": 36255,
+        "api_calls": 3
+      },
+      "valid_findings": 5,
+      "retrieval_count": 5,
+      "retrieved_paths": [
+        "Dockerfile",
+        ".github/workflows/container.yml",
+        ".github/workflows/java.yml",
+        "pom.xml",
+        "src/main/java/dev/beneaththecode/learning/adapter/in/web/LearningController.java",
+        "src/main/java/dev/beneaththecode/site/adapter/in/web/HomeController.java",
+        "src/main/java/dev/beneaththecode/tools/adapter/in/web/ToolsController.java",
+        "src/test/frontend/proof.worker.ts",
+        "src/main/frontend/platform/text-budget.ts",
+        "src/main/frontend/platform/worker-input.ts",
+        "src/main/java/dev/beneaththecode/bootstrap/LearningConfiguration.java",
+        "src/main/java/dev/beneaththecode/learning/adapter/in/web/LearningController.java",
+        "src/main/java/dev/beneaththecode/learning/adapter/in/web/LessonHtmlRenderer.java"
+      ]
+    },
+    {
+      "id": "architecture",
+      "estado": "completada",
+      "model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "archivos": [
+        "Dockerfile",
+        ".github/workflows/container.yml",
+        "docs/architecture/technical-architecture-v1.md",
+        "harness/tasks/F12-mvp-navigation-and-local-runtime.md",
+        "openspec/changes/archive/2026-10-18-f12-mvp-navigation-and-local-runtime/.openspec.yaml",
+        "openspec/changes/archive/2026-10-18-f12-mvp-navigation-and-local-runtime/design.md",
+        "src/main/frontend/eslint.config.js",
+        "src/main/frontend/eslint.config.test.ts",
+        "tests/e2e/base64.spec.mjs",
+        "docs/architecture/adr-006-worker-startup-privacy.md",
+        "docs/delivery/editor-and-worker-proof.md",
+        "harness/evidence/F05-UH02-bounded-worker-processing.md"
+      ],
+      "calls": 3,
+      "execution": "completed",
+      "coverage": "available_evidence",
+      "missing": [],
+      "usage": {
+        "output_tokens": 2859,
+        "reasoning_tokens": 45,
+        "input_tokens": 40476,
+        "total_tokens": 43335,
+        "api_calls": 3
+      },
+      "valid_findings": 17,
+      "retrieval_count": 5,
+      "retrieved_paths": [
+        "Dockerfile",
+        ".github/workflows/container.yml",
+        "docs/architecture/technical-architecture-v1.md",
+        "harness/tasks/F12-mvp-navigation-and-local-runtime.md",
+        "openspec/changes/archive/2026-10-18-f12-mvp-navigation-and-local-runtime/.openspec.yaml",
+        "openspec/changes/archive/2026-10-18-f12-mvp-navigation-and-local-runtime/design.md",
+        "src/main/frontend/eslint.config.js",
+        "src/main/frontend/eslint.config.test.ts",
+        "tests/e2e/base64.spec.mjs",
+        "docs/architecture/adr-006-worker-startup-privacy.md",
+        "docs/delivery/editor-and-worker-proof.md",
+        "harness/evidence/F05-UH02-bounded-worker-processing.md",
+        "docs/delivery/editor-and-worker-proof.md",
+        "harness/evidence/F05-UH02-bounded-worker-processing.md"
+      ]
+    },
+    {
+      "id": "inventory",
+      "estado": "error",
+      "model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "archivos": [],
+      "calls": 1,
+      "execution": "error",
+      "coverage": "incomplete",
+      "missing": [],
+      "usage": null,
+      "valid_findings": 0,
+      "retrieval_count": 0,
+      "retrieved_paths": []
+    }
+  ],
+  "elapsed_seconds": 283.411,
+  "model_calls": 8,
+  "known_tokens": 84338,
+  "findings": {
+    "confirmados": 22,
+    "indicios": 0,
+    "synthesis": 0
+  },
+  "coverage": {
+    "snapshot": "complete",
+    "semantic": "partial",
+    "cells": {
+      "security": "partial",
+      "architecture": "available_evidence",
+      "inventory": "incomplete"
+    },
+    "limitation": "Ejecución terminada no demuestra exhaustividad semántica; consultar inventario y controles no evaluados."
+  },
+  "control_states": {
+    "no_evaluado": 2,
+    "evidencia_favorable_limitada": 4
+  },
+  "reviewed_date": "2026-10-25",
+  "first_preparation_attempts": {
+    "zero_model_calls": true,
+    "record": "phase2-frontend-preparation-2026-10-24.json"
+  },
+  "canonical_blob_recovery": [
+    {
+      "path": "mvnw.cmd",
+      "retrieval": "git_blob"
+    }
+  ],
+  "report_check": {
+    "duplicate_ids": 0,
+    "broken_links": [],
+    "nodes": 6,
+    "edges": 6
+  },
+  "inventory_error": "Hermes no completó la célula: cuota o límite de peticiones. Sin reintento automático.",
+  "synthesis_offline_fix": [
+    {
+      "job": "9755814d-b669-4ba2-b2d2-ca86107ad71b",
+      "old_prompt_bytes": 80010,
+      "new_prompt_bytes": 22083,
+      "limit": 32000,
+      "contributions": 24,
+      "provider_calls": 0,
+      "mock_calls": 1,
+      "synthetic_output_only": true,
+      "contract_validation": "complete"
+    },
+    {
+      "job": "147509c2-56ea-45c5-96c5-ee2aefc92329",
+      "old_prompt_bytes": 92535,
+      "new_prompt_bytes": 23560,
+      "limit": 32000,
+      "contributions": 22,
+      "provider_calls": 0,
+      "mock_calls": 1,
+      "synthetic_output_only": true,
+      "contract_validation": "complete"
+    }
+  ],
+  "new_provider_calls_this_continuation": 0,
+  "coordinator_tests": {
+    "run": 5,
+    "passed": 5,
+    "seconds": 0.49
+  },
+  "limitations": [
+    "Inventario no produjo resultado; no se sustituye con una simulación.",
+    "La cuota o límite de peticiones no equivale a un error de razonamiento. No se comunicó consumo de esa llamada; no se interpreta como cero.",
+    "La corrección de síntesis se verifica offline con salida simulada; no se incorpora al informe como síntesis real ni se afirma prueba real exitosa.",
+    "Arquitectura eligió principalmente documentación y Docker; sus descripciones de flujos son declaradas, no comprobación exhaustiva de implementaciones Java.",
+    "No se ejecutó código del objetivo ni se cambió CI/CD o versión.",
+    "No se repite el recorrido ni se hace commit/push de cierre."
+  ]
+}

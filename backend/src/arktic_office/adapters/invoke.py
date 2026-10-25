@@ -6,6 +6,19 @@ import sys
 from arktic_office.core.errors import AuditError
 
 
+def normalize_json_report(raw):
+    """Remove only a known transport suffix after an otherwise complete JSON object."""
+    value = raw.rstrip()
+    if value.endswith("</final>"):
+        candidate = value[:-8].rstrip()
+        try:
+            if isinstance(json.loads(candidate), dict):
+                return candidate
+        except ValueError:
+            pass
+    return raw
+
+
 def invoke_hermes(prompt, config):
     env = dict(os.environ, AUDIT_MODEL=config["model"], AUDIT_REASONING=config["reasoning"])
     if "provider" in config:
@@ -31,5 +44,9 @@ def invoke_hermes(prompt, config):
             raise ValueError()
     except (ValueError, TypeError):
         raise AuditError("El runtime no devolvió una respuesta estructurada válida.") from None
+    normalized = normalize_json_report(envelope["report"])
+    if normalized != envelope["report"]:
+        envelope["report"] = normalized
+        envelope["format_normalization"] = "removed_final_closing_tag"
     return envelope
 

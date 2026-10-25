@@ -33,6 +33,46 @@ def structured():
     return snapshot, data
 
 class EditorialTests(unittest.TestCase):
+    def test_v14_keeps_compact_persistence_without_requiring_operation_rows(self):
+        from arktic_office.reporting.specialist import compose
+        source = {'repository':'https://github.com/acme/demo', 'commit':'a'*40,
+                  'files':[{'path':'app.py','text':"db = sqlite3.connect('/data/app.db')\n"}]}
+        report, _, warnings = compose(json.dumps({'observaciones':[{'observacion':'El código abre SQLite en /data/app.db.', 'certeza':'observado','evidencia':['F1:L1']}]}), source, 'inventory')
+        report['celulas'] = [{'id':'inventory','estado':'completada','contrato_salida':'compact-v1'}]
+        html = render_html(report, source)
+        self.assertFalse(warnings)
+        self.assertIn('id="contexto-aplicacion"', html)
+        self.assertIn('SQLite en /data/app.db', html)
+        self.assertNotIn('id="azure"', html)
+        self.assertNotIn('Sin dato estructurado para este aspecto', html)
+
+    def test_v14_risk_is_static_and_unknown_domain_does_not_hide_its_action(self):
+        snapshot, data = structured()
+        data['confirmados'][0]['control'] = 'por_clasificar'
+        valid, _ = prepare_response(json.dumps(data), snapshot)
+        html = render_html(valid, snapshot)
+        self.assertEqual(html.count('id="R01"'), 1)
+        self.assertNotIn('id="destacado-R01"', html)
+        controls = html.split('id="controles-objetivo"',1)[1].split('</details>',1)[0]
+        self.assertIn('Sin dominio asignado', controls)
+        self.assertIn(valid['confirmados'][0]['accion'], controls)
+        self.assertIn('No evaluado', html.split('id="controles"',1)[1])
+        self.assertIn('beforeprint', html)
+        self.assertIn('@media print', html)
+
+    def test_architecture_prompt_example_includes_a_valid_complete_connection(self):
+        from arktic_office.reporting.editorial import contract
+        prompt = contract("architecture")
+        example, _ = json.JSONDecoder().raw_decode(prompt[prompt.index("{"):])
+        example = json.loads(json.dumps(example).replace("F1:L7", "F1:L1"))
+        snapshot, data = fixture()
+        data["presentacion"] = example
+        checked, _ = prepare_response(json.dumps(data), snapshot)
+        edge = checked["presentacion"]["flujo_actual"]["conexiones"][0]
+        self.assertEqual(set(edge), {"origen", "destino", "estado", "descripcion", "evidencia"})
+        self.assertEqual(edge["estado"], "inferida")
+
+
     def test_new_generation_requires_risk_wording_but_old_records_still_validate(self):
         import tempfile
         from arktic_office.coordination.team import run_team
@@ -52,16 +92,16 @@ class EditorialTests(unittest.TestCase):
         self.assertIn('título comprensible', result['celulas'][0]['error'])
         self.assertEqual(result['estado'], 'parcial')
 
-    def test_all_prompts_load_common_and_corresponding_section_from_one_source(self):
+    def test_specialists_receive_one_compact_contract_and_their_role_brief(self):
         snapshot, _ = fixture()
-        names = {'security': 'Seguridad', 'architecture': 'Arquitectura', 'inventory': 'Inventario'}
-        source = sections()
         for cell in CELLS:
-            prompt = make_prompt(snapshot, {**cell, "capabilities": ["azure"]})
-            self.assertIn(source['Común'], prompt)
-            self.assertIn(source[names[cell['id']]], prompt)
-            self.assertEqual(prompt.count('ESTÁNDAR EDITORIAL COMPARTIDO'), 1)
-        self.assertIn(source['Consolidación'], instructions())
+            prompt = make_prompt(snapshot, {**cell, "capabilities": []})
+            self.assertEqual(prompt.count('CONTRATO DE SALIDA compact-v1'), 1)
+            self.assertIn('RESPONSABILIDAD: ' + cell['name'], prompt)
+            self.assertNotIn('Comprobación obligatoria del JSON', prompt)
+            self.assertNotIn('ESTÁNDAR EDITORIAL COMPARTIDO', prompt)
+            self.assertNotIn('\"confirmados\":', prompt)
+        self.assertIn(sections()['Consolidación'], instructions())
         self.assertEqual(len(metadata()['sha256']), 64)
 
     def test_structured_sources_are_resolved_and_missing_data_stays_unknown(self):
@@ -138,6 +178,24 @@ class EditorialTests(unittest.TestCase):
         self.assertNotIn('<script>alert(1)', html)
         self.assertIn('&lt;script&gt;alert(1)', html)
 
+    def test_summary_shows_findings_while_general_gaps_stay_in_annexes(self):
+        from arktic_office.reporting.executive import render_markdown
+        snapshot, raw = structured()
+        raw["dudas"] = ["Confirmar el servidor de producción con el responsable."]
+        data, _ = prepare_response(json.dumps(raw), snapshot)
+        html = render_html(data, snapshot)
+        intro = html.split('id="introduccion"', 1)[1].split('id="situacion-actual"', 1)[0]
+        self.assertIn("Entrada concatenada en consulta SQL", intro)
+        self.assertNotIn("Confirmar el servidor de producción", intro)
+        self.assertNotIn("Resultado y siguiente paso", intro)
+        self.assertLess(html.index('id="anexos"'), html.index('id="resultado-lectura"'))
+        self.assertIn("Confirmar el servidor de producción", html)
+        md = render_markdown(data, snapshot)
+        lead = md.split("## 2.", 1)[0]
+        self.assertIn("Entrada concatenada en consulta SQL", lead)
+        self.assertNotIn("Confirmar el servidor de producción", lead)
+        self.assertLess(md.index("## 4. Anexos"), md.index("### Resultado y siguiente paso"))
+
     def test_summary_has_no_example_specific_defaults(self):
         snapshot, data = fixture()
         valid, _ = prepare_response(json.dumps(data), snapshot)
@@ -145,7 +203,7 @@ class EditorialTests(unittest.TestCase):
         self.assertNotIn('Portal de personal', html)
         self.assertNotIn('director de negocio', html)
         self.assertNotIn('React', html)
-        self.assertIn('No he podido determinar', html)
+        self.assertNotIn('No he podido determinar', html)
 
     def test_markdown_keeps_populated_sections_and_sources(self):
         snapshot, data = structured()

@@ -78,8 +78,8 @@ class TeamTests(unittest.TestCase):
         value["files"] += [{"path": f"config{i}.yaml", "text": "x" * 12000} for i in range(10)]
         plan = plan_cells(value)
         for cell in plan:
-            self.assertLessEqual(len(cell["files"]), 12 if cell["id"] == "security" else 6)
-            self.assertLessEqual(cell["bytes"], 64000 if cell["id"] == "security" else 24000)
+            self.assertLessEqual(len(cell["files"]), {"security": 20, "architecture": 12, "inventory": 8}[cell["id"]])
+            self.assertLessEqual(cell["bytes"], {"security": 100000, "architecture": 60000, "inventory": 32000}[cell["id"]])
         inventory = next(c for c in plan if c["id"] == "inventory")
         self.assertNotIn("auth.py", [f["path"] for f in inventory["files"]])
         security = next(c for c in plan if c["id"] == "security")

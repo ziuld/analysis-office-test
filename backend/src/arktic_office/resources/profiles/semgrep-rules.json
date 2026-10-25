@@ -1,0 +1,147 @@
+{
+  "rules": [
+    {
+      "id": "arktic.python-dynamic-execution",
+      "languages": [
+        "python"
+      ],
+      "severity": "WARNING",
+      "message": "Ejecución dinámica: comprobar origen de la entrada y alternativa segura.",
+      "pattern-either": [
+        {
+          "pattern": "eval(...)"
+        },
+        {
+          "pattern": "exec(...)"
+        }
+      ]
+    },
+    {
+      "id": "arktic.python-deserialization",
+      "languages": [
+        "python"
+      ],
+      "severity": "WARNING",
+      "message": "Deserialización peligrosa si recibe datos no confiables.",
+      "pattern-either": [
+        {
+          "pattern": "pickle.loads(...)"
+        },
+        {
+          "pattern": "pickle.load(...)"
+        },
+        {
+          "pattern": "yaml.unsafe_load(...)"
+        }
+      ]
+    },
+    {
+      "id": "arktic.python-shell",
+      "languages": [
+        "python"
+      ],
+      "severity": "WARNING",
+      "message": "Intérprete de comandos: comprobar control de argumentos.",
+      "pattern-either": [
+        {
+          "pattern": "subprocess.run(..., shell=True, ...)"
+        },
+        {
+          "pattern": "subprocess.Popen(..., shell=True, ...)"
+        },
+        {
+          "pattern": "os.system(...)"
+        }
+      ]
+    },
+    {
+      "id": "arktic.js-dynamic-execution",
+      "languages": [
+        "javascript",
+        "typescript"
+      ],
+      "severity": "WARNING",
+      "message": "Ejecución dinámica: comprobar origen de la entrada.",
+      "pattern-either": [
+        {
+          "pattern": "eval(...)"
+        },
+        {
+          "pattern": "new Function(...)"
+        }
+      ]
+    },
+    {
+      "id": "arktic.js-html-sink",
+      "languages": [
+        "javascript",
+        "typescript"
+      ],
+      "severity": "WARNING",
+      "message": "Destino HTML: comprobar escape/sanitización y origen de datos; no prueba XSS.",
+      "pattern-either": [
+        {
+          "pattern": "$E.innerHTML = $V"
+        },
+        {
+          "pattern": "document.write(...)"
+        }
+      ]
+    },
+    {
+      "id": "arktic.java-process",
+      "languages": [
+        "java"
+      ],
+      "severity": "WARNING",
+      "message": "Ejecución de proceso: revisar origen de argumentos.",
+      "pattern-either": [
+        {
+          "pattern": "Runtime.getRuntime().exec(...)"
+        }
+      ]
+    },
+    {
+      "id": "arktic.java-sql-concatenation",
+      "languages": [
+        "java"
+      ],
+      "severity": "WARNING",
+      "message": "SQL concatenado: comprobar datos de entrada y parametrización.",
+      "pattern-either": [
+        {
+          "pattern": "$S.executeQuery($A + $B)"
+        },
+        {
+          "pattern": "$S.executeUpdate($A + $B)"
+        }
+      ]
+    },
+    {
+      "id": "arktic.csharp-process",
+      "languages": [
+        "csharp"
+      ],
+      "severity": "WARNING",
+      "message": "Ejecución de proceso: revisar origen de argumentos.",
+      "pattern-either": [
+        {
+          "pattern": "Process.Start(...)"
+        }
+      ]
+    },
+    {
+      "id": "arktic.csharp-sql-concatenation",
+      "languages": [
+        "csharp"
+      ],
+      "severity": "WARNING",
+      "message": "SQL concatenado: comprobar datos de entrada y parametrización.",
+      "pattern-either": [
+        {
+          "pattern": "new SqlCommand($A + $B, ...)"
+        }
+      ]
+    }
+  ]
+}

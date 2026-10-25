@@ -57,7 +57,7 @@ def compact_html(html, v):
         (not v["decision"], {"decision", "aceptacion"}),
         (not v["decision"].get("evidencia_pendiente"), {"aceptacion"}),
         (not v["entries"] and not a["azure"] and not v["decision"], {"situacion-objetivo"}),
-        (not a["security"] and not a["known"] and not v["flow"].get("componentes"), {"situacion-actual"}),
+        (not a["security"] and not a["known"] and not v["flow"].get("componentes") and not v["data"].get("confirmados") and not v["data"].get("indicios"), {"situacion-actual"}),
         (not any(x.get("severidad") == "informativa" for s in ("confirmados", "indicios") for x in v["data"].get(s, [])), {"aportaciones"}),
     ):
         if condition:

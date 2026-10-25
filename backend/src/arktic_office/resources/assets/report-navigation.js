@@ -15,4 +15,13 @@
   });
   window.addEventListener('hashchange', () => reveal(location.hash.slice(1)));
   if (location.hash) reveal(location.hash.slice(1));
+  let closedForPrint = [];
+  window.addEventListener('beforeprint', () => {
+    closedForPrint = [...document.querySelectorAll('details:not([open])')];
+    for (const node of closedForPrint) node.open = true;
+  });
+  window.addEventListener('afterprint', () => {
+    for (const node of closedForPrint) node.open = false;
+    closedForPrint = [];
+  });
 })();

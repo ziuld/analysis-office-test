@@ -11,7 +11,8 @@ def string(value, limit=400):
     return redact(value)
 
 def refs(value, snapshot, checker, required=True):
-    if not isinstance(value, list) or len(value) > 3 or required and not value:
+    from arktic_office.reporting.reports import MAX_EVIDENCE_REFS
+    if not isinstance(value, list) or len(value) > MAX_EVIDENCE_REFS or required and not value:
         raise AuditError("Faltan fuentes para el contenido estructurado.")
     if value:
         checker(json.dumps({"confirmados": [{"observacion": "Base del contenido estructurado", "evidencia": value}], "indicios": [], "dudas": []}), snapshot)

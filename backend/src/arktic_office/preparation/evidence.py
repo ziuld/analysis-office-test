@@ -42,8 +42,15 @@ class Evidence:
         for path in paths:
             lines = self.files[path]["text"].splitlines()
             hit = next((i for i, line in enumerate(lines) if query and query.casefold() in line.casefold()), 0)
+            # Use the graph's definition location for this file; text hits may be call sites.
+            definition = next((int(m.group(1)) - 1 for n in self.graph.get("nodes", [])
+                if query and n.get("source_file") == path and query.casefold() in str(n.get("label", "")).casefold()
+                and (m := re.match(r"^L(\d+)", str(n.get("source_location", ""))))
+                and 1 <= int(m.group(1)) <= len(lines)), None)
+            if definition is not None:
+                hit = definition
             start = start_line - 1 if start_line is not None else max(0, hit - 8)
-            end = min(len(lines), start + 100)
+            end = min(len(lines), start + 200)
             while end > start and len("\n".join(lines[start:end]).encode()) > 6000:
                 end -= 1
             if end <= start:
@@ -68,9 +75,23 @@ class Evidence:
         """At most four bounded local lookups; return exactly the fragments delivered."""
         if not isinstance(requests, list) or not 1 <= len(requests) <= 4:
             raise AuditError("Una ronda admite entre una y cuatro consultas.")
-        results, files = [], list(initial or [])
+        # Adapt over-grouped path lists without increasing the four-lookup budget.
+        expanded = []
         for request in requests:
+            paths = request.get("paths") if isinstance(request, dict) else None
+            if isinstance(paths, list) and 3 < len(paths) <= 12:
+                parts = [paths[i:i + 3] for i in range(0, len(paths), 3)]
+                expanded.extend(({**request, "paths": part}, {"original_paths": len(paths), "part": n + 1, "parts": len(parts)}) for n, part in enumerate(parts))
+            else:
+                expanded.append((request, None))
+        if len(expanded) > 4:
+            # Preserve existing bounded error handling; never silently drop a query.
+            expanded = [(request, None) for request in requests]
+        results, files = [], list(initial or [])
+        for request, split in expanded:
             result = self.respond(request)
+            if split:
+                result["request_split"] = split
             # Merge same-file windows instead of silently losing earlier evidence.
             candidates = {f["path"]: dict(f) for f in files}
             size = sum(len(f["text"].encode()) for f in files)

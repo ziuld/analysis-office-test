@@ -1,4 +1,5 @@
 import hashlib
+import base64
 import io
 import json
 import os
@@ -15,6 +16,35 @@ from test_team import snapshot, fake_invoke
 
 
 class CompleteFlowTests(unittest.TestCase):
+    def test_archive_line_endings_use_verified_original_blob_or_fail_closed(self):
+        canonical = b'@echo off\necho example\n'
+        sha = hashlib.sha1(b'blob ' + str(len(canonical)).encode() + b'\0' + canonical).hexdigest()
+        for verified in (True, False):
+            with self.subTest(verified=verified), tempfile.TemporaryDirectory() as temp:
+                def fetch(path):
+                    if '/git/blobs/' in path:
+                        self.assertTrue(path.endswith(sha))
+                        return {'encoding':'base64','content':base64.b64encode(canonical if verified else b'corrupt').decode()}
+                    if 'recursive' in path:
+                        return {'truncated':False,'tree':[{'path':'mvnw.cmd','type':'blob','mode':'100644','size':len(canonical),'sha':sha}]}
+                    if '/branches/' in path:
+                        return {'commit':{'sha':'a'*40,'commit':{'tree':{'sha':'b'*40}}}}
+                    return {'default_branch':'main'}
+                def download(owner, repo, commit, destination, limit, seconds):
+                    converted = canonical.replace(b'\n', b'\r\n')
+                    with tarfile.open(destination, 'w:gz') as tar:
+                        item=tarfile.TarInfo('repo/mvnw.cmd');item.size=len(converted)
+                        tar.addfile(item, io.BytesIO(converted))
+                if not verified:
+                    with self.assertRaises(AuditError):
+                        acquire_complete('https://github.com/acme/app', temp, fetch=fetch, downloader=download)
+                else:
+                    result=acquire_complete('https://github.com/acme/app', temp, fetch=fetch, downloader=download)
+                    self.assertTrue(result['acquisition_complete'])
+                    self.assertEqual((Path(temp)/'source/mvnw.cmd').read_bytes(),canonical)
+                    self.assertEqual(result['inventory'][0]['retrieval'],'git_blob')
+                    self.assertEqual(result['inventory'][0]['git_blob'],sha)
+
     def fixture(self, missing=False, lfs=False):
         files = {".hidden.py": b"value = 1", "tests/test_app.py": b"assert True", "asset.bin": b"a\0b"}
         if lfs:
@@ -58,6 +88,17 @@ class CompleteFlowTests(unittest.TestCase):
         failure = evidence.respond({"query": "x" * 121})
         self.assertIn("error", failure)
         self.assertEqual(failure["fragments"], [])
+
+    def test_research_reads_share_file_cap_across_rounds(self):
+        evidence = Evidence([{"path": p, "text": "line\n" * 250} for p in ("a.py", "b.py", "c.py")], {"nodes": [], "edges": []})
+        limits = {"files": 2, "bytes": 10000}
+        first, _ = evidence.batch([{"paths": ["a.py"]}], limits)
+        self.assertEqual(first[0]["end"], 200)
+        second, trace = evidence.batch([{"paths": ["a.py"], "start_line": 201}, {"paths": ["b.py", "c.py"]}], limits, initial=first)
+        self.assertEqual([f["path"] for f in second], ["a.py", "b.py"])
+        self.assertEqual(len(second[0]["text"].splitlines()), 250)
+        self.assertIn("c.py", trace[-1]["result"]["omitted_by_budget"])
+        self.assertLessEqual(sum(len(f["text"].encode()) for f in second), limits["bytes"])
 
     def test_invalid_finding_does_not_discard_valid_one(self):
         value = snapshot(); cell = {"id": "inventory", "name": "Inventory", "files": value["files"]}

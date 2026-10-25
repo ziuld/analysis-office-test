@@ -17,6 +17,11 @@ RUN python -m pm.build_env --source /opt/hermes --python /usr/local/bin/python \
     --out /opt/hermes/.venv --no-install-project --sealed
 ENV PATH="/opt/hermes/.venv/bin:$PATH" PYTHONPATH=/opt/hermes \
     HERMES_HOME=/auth PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+# SAST tool is isolated; Hermes and its sealed dependencies remain unchanged.
+COPY docker/semgrep-requirements.txt /tmp/semgrep-requirements.txt
+RUN uv venv --python /usr/local/bin/python /opt/semgrep \
+    && uv pip install --python /opt/semgrep/bin/python --require-hashes -r /tmp/semgrep-requirements.txt \
+    && ln -s /opt/semgrep/bin/semgrep /usr/local/bin/semgrep
 RUN useradd --uid 1000 --create-home auditor && mkdir /reports /auth && chown auditor:auditor /reports /auth
 WORKDIR /app
 COPY --from=package-build /wheels/ /tmp/arktic-wheels/
