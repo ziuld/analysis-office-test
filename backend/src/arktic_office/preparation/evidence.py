@@ -12,6 +12,39 @@ class Evidence:
         self.graph = graph
 
     def lookup(self, request):
+        if isinstance(request, dict) and "list_paths" in request:
+            if set(request) - {"list_paths", "offset"} or request["list_paths"] is not True:
+                raise AuditError("Consulta de inventario inválida.")
+            offset = request.get("offset", 0)
+            if type(offset) is not int or offset < 0:
+                raise AuditError("Desplazamiento de inventario inválido.")
+            paths = sorted(self.files)
+            page = paths[offset:offset + 100]
+            return {"fragments": [], "paths": page, "total": len(paths), "offset": offset,
+                    "next_offset": offset + len(page) if offset + len(page) < len(paths) else None}
+        if isinstance(request, dict) and "tool" in request:
+            if set(request) - {"tool", "offset"} or not isinstance(request["tool"], str):
+                raise AuditError("Consulta determinista inválida.")
+            offset = request.get("offset", 0)
+            if type(offset) is not int or offset < 0:
+                raise AuditError("Desplazamiento determinista inválido.")
+            item = next((t for t in getattr(self, "deterministic", {}).get("tools", []) if t["id"] == request["tool"]), None)
+            if item is None:
+                raise AuditError("Herramienta no disponible en esta revisión.")
+            result = item["result"]
+            key = "inventory" if item["id"] == "D01" else "file_coverage" if item["id"] == "D05" else "findings"
+            values = result.get(key, [])
+            page, used = [], 0
+            for value in values[offset:offset + 20]:
+                size = len(__import__('json').dumps(value, ensure_ascii=False).encode())
+                if used + size > 12000:
+                    break
+                page.append(value)
+                used += size
+            return {"fragments": [], "relations": [], "symbols": [], "tool": item["id"], "status": item["status"],
+                "detail": item["detail"], key: page, "total": len(values), "offset": offset,
+                "next_offset": offset + len(page) if offset + len(page) < len(values) else None,
+                "limitation": "Página de resultados deterministas; el anexo conserva la salida completa normalizada."}
         if not isinstance(request, dict) or set(request) - {"query", "paths", "start_line"}:
             raise AuditError("Consulta de evidencia inválida.")
         query, paths = request.get("query", ""), request.get("paths", [])
@@ -161,9 +194,13 @@ class Evidence:
         return files
 
 
-def prepare_complete(url, workspace, *, scanner=None, index=index_files, fetch=None, downloader=None):
+def prepare_complete(url, workspace, *, scanner=None, index=index_files, fetch=None, downloader=None, local_snapshot=None, artifact_directory=None):
     kwargs = {k: v for k, v in {"fetch": fetch, "downloader": downloader}.items() if v is not None}
-    acquired = acquire_complete(url, workspace, **kwargs)
+    if local_snapshot is not None:
+        from arktic_office.preparation.local import acquire_local
+        acquired = acquire_local(local_snapshot, workspace)
+    else:
+        acquired = acquire_complete(url, workspace, **kwargs)
     scanners = scanner(acquired["files"], source_root=workspace / "source") if scanner else []
     if any(s["status"] == "error" for s in scanners):
         raise AuditError("Preparación incompleta: un scanner falló; no se envía una muestra al modelo.")
@@ -171,6 +208,13 @@ def prepare_complete(url, workspace, *, scanner=None, index=index_files, fetch=N
             if f["kind"] == "text"]
     mask_findings(pool, scanners)
     graph = index(pool, complete=True)
+    if artifact_directory is not None:
+        from pathlib import Path
+        from arktic_office.storage.jsonio import write_json
+        folder = Path(artifact_directory)
+        folder.mkdir(parents=True,exist_ok=True)
+        write_json(folder/'graphify-respuesta.json',graph)
+        write_json(folder/'scanners-adaptador.json',scanners)
     if graph.get("status") == "error" or graph.get("truncated") or not graph.get("processing_complete"):
         raise AuditError("Preparación incompleta: mapa " + str(graph.get("reason", graph.get("status"))) + "; truncado=" + str(graph.get("truncated", False)) + "; archivos con error: " + ", ".join(f["path"] for f in graph.get("file_coverage", []) if f.get("status") == "error")[:1500] + ". No se inicia el análisis.")
     if set(f["path"] for f in graph.get("file_coverage", [])) != set(f["path"] for f in pool):

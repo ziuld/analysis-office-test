@@ -4,6 +4,7 @@ import tempfile
 import threading
 import time
 import unittest
+from unittest.mock import patch
 from http.server import ThreadingHTTPServer
 from pathlib import Path
 from urllib.error import HTTPError
@@ -16,6 +17,62 @@ from arktic_office.preparation.repository import AuditError
 
 
 class ApiTests(unittest.TestCase):
+    def local_fixture(self):
+        root = self.root/'.local-sources'
+        source_id = '1be44872-72c4-4b70-bc69-cdb5b47821ea'
+        folder = root/source_id
+        folder.mkdir(parents=True)
+        write_json(folder/'snapshot.json', {'schema_version':1,'source_type':'local_git',
+            'dirty':False,'scope':'tracked_HEAD','repository':'local:///web','project_name':'Web local',
+            'source_path':r'C:\Projects\web','branch':'feature/actual','commit':'b'*40,'files':[]})
+        return root,source_id
+
+    def test_local_source_http_start_progress_report_and_no_remote_lookup(self):
+        root,source_id = self.local_fixture()
+        def runner(job_id,folder):
+            self.assertEqual(folder,root/source_id)
+            self.release.wait(3)
+            directory=self.jobs.directory(job_id)
+            write_json(directory/'evidencia.json',{'repository':'local:///web','source_type':'local_git',
+                'branch':'feature/actual','commit':'b'*40})
+            write_json(directory/'informe.json',{'estado':'completo','celulas':[]})
+            (directory/'informe.md').write_text('# Local\n')
+            return 0
+        self.jobs.local_runner=runner
+        with patch.dict('os.environ',{'AUDIT_LOCAL_INPUTS_ROOT':str(root)}):
+            status,body,_=self.request('/local-sources')
+            self.assertEqual(status,200)
+            sources=json.loads(body)['sources']
+            self.assertEqual(sources[0]['branch'],'feature/actual')
+            self.assertNotIn('folder',sources[0]);self.assertNotIn('files',sources[0])
+            status,body,_=self.request('/runs',{'local_source_id':source_id})
+            self.assertEqual(status,202)
+            job=json.loads(body)
+            self.assertEqual(job['branch'],'feature/actual')
+            self.assertEqual(self.jobs.detail(job['id'])['branch'],'feature/actual')
+            status,_,_=self.request('/runs',{'local_source_id':source_id})
+            self.assertEqual(status,409)
+            done=self.await_finished(job['id'])
+            self.assertEqual(done['estado'],'completo')
+            self.assertEqual(done['commit'],'b'*40)
+            self.assertEqual(self.request('/runs/'+job['id']+'/report')[0],200)
+            self.assertEqual(self.request('/runs/'+job['id']+'/download')[0],200)
+
+    def test_local_sources_cannot_start_arbitrary_paths_or_unprepared_inputs(self):
+        root,source_id=self.local_fixture()
+        with patch.dict('os.environ',{'AUDIT_LOCAL_INPUTS_ROOT':str(root)}):
+            for value in ['../../auth',r'C:\Users\private',None,[], '2be44872-72c4-4b70-bc69-cdb5b47821ea']:
+                self.assertEqual(self.request('/runs',{'local_source_id':value})[0],400)
+            self.assertEqual(self.request('/runs',{'local_source_id':source_id,'repository':'https://github.com/acme/app'})[0],400)
+        self.assertEqual(self.jobs.listing(),[])
+
+    def test_symlinked_local_bundle_is_not_exposed(self):
+        root,source_id=self.local_fixture()
+        (root/'2be44872-72c4-4b70-bc69-cdb5b47821ea').symlink_to(root/source_id,target_is_directory=True)
+        with patch.dict('os.environ',{'AUDIT_LOCAL_INPUTS_ROOT':str(root)}):
+            sources=json.loads(self.request('/local-sources')[1])['sources']
+            self.assertEqual([x['id'] for x in sources],[source_id])
+
     def test_simulation_cannot_start_a_billable_question(self):
         path = self.root / "demo-ficticio-test"
         fixture(path)

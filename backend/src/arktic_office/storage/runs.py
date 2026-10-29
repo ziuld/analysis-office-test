@@ -99,7 +99,7 @@ class RunStore:
             job = {**job, "estado": "preparando"}
         cells = team.get("celulas", report.get("celulas", []))
         from arktic_office.execution.activity import project
-        return {**job, "commit": snapshot.get("commit"), "branch": snapshot.get("branch"), "celulas": cells,
+        return {**job, "commit": snapshot.get("commit",job.get('commit')), "branch": snapshot.get("branch",job.get('branch')), "celulas": cells,
                 "activity": project(path, job, cells),
                 "mensaje": report.get("mensaje"), "necesita": report.get("necesita", []),
                 "has_report": (path / "informe.md").is_file(), "evidence_origin": snapshot.get("evidence_origin"),

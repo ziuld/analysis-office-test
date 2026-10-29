@@ -6,28 +6,35 @@ El MVP entrega un informe con evidencia del código, indicios por confirmar y pr
 
 Versiones propias: **frontend 0.3.0** y **backend 0.3.0**, gestionadas de forma independiente en `FRONTEND_VERSION` y `BACKEND_VERSION`. Cambios de cada componente: [CHANGELOG.md](CHANGELOG.md). Los archivos `HERMES3D_VERSION` y `HERMES_AGENT_VERSION` fijan las dependencias originales, no la versión de Arktic Office.
 
+**Extensión de fase 2 (28/10/2026):** las nuevas revisiones incorporan [40 preguntas repartidas entre los especialistas y el coordinador](docs/EXTENSION_FASE_2.md). El HTML muestra el resumen, las respuestas con fuentes y los resultados deterministas completos en anexos, incluidos Graphify y herramientas no evaluadas. Los resultados históricos se conservan. Esta extensión precede a implementar fase 3.
+
 ## Planes del proyecto
 
-Solo hay tres planes canónicos. Las guías de `docs/` describen la operación; no añaden roadmaps independientes.
+Hay cuatro planes canónicos, incluido el histórico. Las guías de `docs/` describen la operación; no añaden roadmaps independientes.
 
 | Plan | Estado | Alcance |
 |---|---|---|
 | [MVP](PLAN_MVP.md) | Cerrado, 0.2.0 | Alcance e histórico inicial |
 | [Fase 1](docs/PLAN_FASE_1.md) | Cerrada y aceptada, 0.3.0 | Base integrada y límites aceptados |
-| [Fase 2](docs/PLAN_FASE_2.md) | En curso; tramo funcional cerrado para revisión | F2-01–06 realizadas; F2-07–12: herramientas → agentes por separado → integración → informe, con el usuario |
+| [Fase 2](docs/PLAN_FASE_2.md) | Cerrada el 28/10/2026 sin alcanzar la calidad esperada | Avances funcionales y evidencias conservados; pendientes sustituidos por Fase 3 |
+| [Fase 3](docs/PLAN_FASE_3.md) | Abierta en planificación; implementación pendiente | Herramientas deterministas, agentes reutilizables por preguntas, orquestador e informe descriptivo con anexos |
 
 ## Empezar
 
 - **Otro ordenador:** [Inicio rápido](docs/INICIO_RAPIDO.md), desde los requisitos hasta la primera revisión.
+- **Repositorio local y rama activa, sin acceso al remoto:** [Análisis local](docs/ANALISIS_LOCAL.md).
 - **Cómo trabaja el equipo:** [Flujo de agentes](docs/WORKFLOW.md).
 - **Configuración, operación y pruebas:** [Operación](docs/OPERACION.md).
 - **Reporte visual, controles y límites:** [Seguridad](docs/SEGURIDAD.md).
 - **Cómo se redacta el informe:** [Estándar de comunicación compartido](docs/ESTANDAR_COMUNICACION_INFORMES.md).
 - **Preparar la subida y mantener las versiones:** [Repositorio y reproducción](docs/REPOSITORIO.md).
 - **MVP actual e histórico:** [PLAN_MVP.md](PLAN_MVP.md), con el alcance y las verificaciones de la entrega 0.2.0.
-- **Fase 1 cerrada (0.3.0):** [alcance, aceptación y evidencias](docs/PLAN_FASE_1.md). **Fase 2 en curso:** [plan y guía para retomar en otro chat](docs/PLAN_FASE_2.md#retomar-en-otro-chat). Siguiente tarea F2-07: revisar juntos las salidas deterministas antes de ajustar agentes o informe.
+- **Fase 1 cerrada (0.3.0):** [alcance, aceptación y evidencias](docs/PLAN_FASE_1.md). **Fase 2 cerrada sin alcanzar la calidad esperada:** [histórico y cierre](docs/PLAN_FASE_2.md). **Fase 3 vigente:** [plan](docs/PLAN_FASE_3.md). Primer trabajo en Arktic: revisar las herramientas deterministas. Los agentes se desarrollarán en un repositorio externo: [prompt de contexto y tabla](docs/PROMPT_AGENTES_REUTILIZABLES.md).
+
 - **Experimento del Bloque 2:** [Validación del indexador](docs/INDEXADOR.md), con recuperación y extracción estructural de muestras dentro de Docker, sin modelos ni ejecución de las aplicaciones.
 - **Núcleo del Bloque 3:** [Paquete Python y compatibilidad](docs/CORE.md), con pruebas manuales mínimas y sin ampliar CI/CD.
+
+El equipo de tres células y el informe descritos a continuación corresponden al funcionamiento actual. La Fase 3 documenta el diseño objetivo; sus nuevos agentes y reglas de informe todavía no están implementados.
 
 Con las dependencias recuperadas, `.env` configurado y la sesión del modelo autorizada:
 

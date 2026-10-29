@@ -1,0 +1,18 @@
+.reading-report .hero{padding:28px 0}.reading-report .hero h1{font-size:42px}
+.reading-report .chapter{margin:36px 0 52px}.reading-report .chapter-heading{margin-bottom:26px}
+.reading-report .reading-panel{padding:28px 32px;margin:18px 0}.reading-report p{line-height:1.8;max-width:86ch}
+.reading-report .reading-panel h3,.reading-report .reading-limits h3{font-size:24px;margin:6px 0 16px}
+.reading-report .reading-risk{margin:18px 0;padding:26px 30px;border-left:4px solid #b44416;color:var(--ink);background:#fff}
+.reading-report .reading-risk h4{font-size:21px;line-height:1.4;margin:14px 0}.reading-report .risk-meta{display:flex;gap:8px;flex-wrap:wrap}
+.reading-report .reading-limits{border-left:3px solid #41c0cf;padding:20px 26px;margin-top:28px;background:#eaf3f7}
+.reading-report .reading-answer{padding:26px 0;border-bottom:1px solid var(--line)}.reading-report .reading-answer:last-child{border-bottom:0}
+.reading-report .reading-answer h4{font-size:20px;line-height:1.5;margin:5px 0 14px}.reading-report .question-id{font-size:11px;letter-spacing:.1em;color:var(--muted)}
+.reading-report .response-note{font-size:13px;line-height:1.75;background:#f2f6f9;color:#526779;border-left:2px solid #bed4df;padding:12px 16px;margin:16px 0}
+.reading-report .reading-answer details,.reading-report .reading-panel details,.reading-report .reading-risk details{box-shadow:none;margin:16px 0 0;border:0;border-top:1px solid var(--line);background:transparent}
+.reading-report .reading-answer summary,.reading-report .reading-panel summary,.reading-report .reading-risk summary{padding:13px 0;font-size:12px}
+.reading-report .source{overflow-wrap:anywhere}.reading-report .nav b{margin-right:7px}
+.reading-report .severity-dot{display:inline-block;flex:none;width:13px;height:13px;border-radius:50%;border:1px solid #0002;vertical-align:middle}
+.reading-report .severity-critica{background:#b71935}.reading-report .severity-alta{background:#df701b}.reading-report .severity-media{background:#e4b622}.reading-report .severity-baja{background:#2782b8}
+.reading-report .severity-legend{display:flex;align-items:center;flex-wrap:wrap;gap:7px;font-size:11px;color:var(--muted)}.reading-report .severity-legend span:not(.severity-dot){margin-right:12px}
+.reading-report .risk-overview{list-style:none;padding:0}.reading-report .risk-overview li{display:flex;align-items:baseline;gap:10px;margin:12px 0}.reading-report .risk-certainty{font-size:12px;color:var(--muted)}
+@media(max-width:700px){.reading-report .wrap{padding-left:20px;padding-right:20px}.reading-report .reading-panel,.reading-report .reading-risk{padding:20px}.reading-report .nav .wrap{gap:12px}.reading-report .nav a{font-size:11px}.reading-report .hero h1{font-size:34px}}

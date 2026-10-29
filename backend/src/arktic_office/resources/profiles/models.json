@@ -1,6 +1,6 @@
 {
   "providers": {
-    "openai-codex": "gpt-6-luna",
+    "openai-codex": "gpt-6.1-sol",
     "openai": "gpt-5.4-mini"
   },
   "reasoning": [
@@ -10,34 +10,34 @@
   ],
   "roles": {
     "security": {
-      "files": 20,
-      "bytes": 100000,
+      "files": 200,
+      "bytes": 600000,
       "seconds": 240,
-      "output_tokens": 4500,
+      "output_tokens": 8000,
       "calls": 1,
-      "research_rounds": 2
+      "research_rounds": 12
     },
     "architecture": {
-      "files": 12,
-      "bytes": 60000,
+      "files": 200,
+      "bytes": 600000,
       "seconds": 240,
-      "output_tokens": 4500,
+      "output_tokens": 8000,
       "calls": 1,
-      "research_rounds": 2
+      "research_rounds": 8
     },
     "inventory": {
-      "files": 8,
-      "bytes": 32000,
+      "files": 200,
+      "bytes": 600000,
       "seconds": 240,
-      "output_tokens": 4500,
+      "output_tokens": 8000,
       "calls": 1,
-      "research_rounds": 1
+      "research_rounds": 6
     },
     "coordinator": {
-      "prompt_bytes": 32000,
-      "response_bytes": 16000,
+      "prompt_bytes": 192000,
+      "response_bytes": 32000,
       "seconds": 60,
-      "output_tokens": 2000,
+      "output_tokens": 6000,
       "calls": 2
     },
     "preparation": {

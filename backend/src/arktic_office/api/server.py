@@ -30,6 +30,9 @@ def handler_for(jobs):
                     return self.send(200, {"ok": True, "version": os.environ.get("ARKTIC_BACKEND_VERSION", "development")})
                 if parts == ["runs"]:
                     return self.send(200, {"runs": jobs.listing(), "question_active": jobs.question_active})
+                if parts == ['local-sources']:
+                    from arktic_office.preparation.local_sources import local_sources
+                    return self.send(200, {'sources':local_sources()})
                 if len(parts) == 4 and parts[0] == "runs" and parts[2] == "questions":
                     if parts[3] in {"coordinator", "security", "architecture", "inventory"}:
                         return self.send(200, jobs.history(parts[1], parts[3]))
@@ -64,6 +67,8 @@ def handler_for(jobs):
                     if not isinstance(data, dict) or set(data) != {"agent", "question"} or not isinstance(data["agent"], str):
                         raise ValueError()
                     return self.send(202, jobs.ask(parts[1], data["agent"], data["question"]))
+                if isinstance(data,dict) and set(data) == {'local_source_id'}:
+                    return self.send(202,jobs.start_local(data['local_source_id']))
                 if not isinstance(data, dict) or set(data) != {"repository"} or not isinstance(data["repository"], str):
                     raise ValueError()
                 return self.send(202, jobs.start(data["repository"].strip()))

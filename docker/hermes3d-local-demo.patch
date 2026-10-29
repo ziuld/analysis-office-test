@@ -5,7 +5,7 @@ index 05eb0ab..328efcf 100644
 @@ -508,7 +508,7 @@ function startAdapter() {
      ws.on("error", () => activeSendEventFns.delete(sendEventFn));
    });
-
+ 
 -  httpServer.listen(ADAPTER_PORT, "127.0.0.1", () => {
 +  httpServer.listen(ADAPTER_PORT, process.env.DEMO_ADAPTER_HOST || "127.0.0.1", () => {
      console.log(`[demo-gateway] Listening on ws://localhost:${ADAPTER_PORT}`);
@@ -17,16 +17,16 @@ index 1bf6457..3aadafa 100644
 +++ b/server/network-policy.js
 @@ -64,6 +64,8 @@ const isPublicHost = (host) => {
  };
-
+ 
  const assertPublicHostAllowed = ({ host, studioAccessToken }) => {
 +  // Local Docker office only: Compose publishes Studio on host loopback exclusively.
 +  if (process.env.HERMES3D_LOCAL_ONLY === "1") return;
    if (!isPublicHost(host)) return;
-
+ 
    const token = String(studioAccessToken ?? "").trim();
 diff --git a/src/app/api/audit/[...path]/route.ts b/src/app/api/audit/[...path]/route.ts
 new file mode 100644
-index 0000000..825db4f
+index 0000000..ce1f1df
 --- /dev/null
 +++ b/src/app/api/audit/[...path]/route.ts
 @@ -0,0 +1,42 @@
@@ -37,11 +37,11 @@ index 0000000..825db4f
 +
 +async function proxy(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
 +  const { path } = await context.params;
-+  const valid = path.length === 1 && path[0] === "runs" ||
++  const valid = path.length === 1 && ["runs", "local-sources"].includes(path[0]) ||
 +    path.length === 2 && path[0] === "runs" && /^[a-zA-Z0-9_-]{8,80}$/.test(path[1]) ||
 +    path.length === 3 && path[0] === "runs" && /^[a-zA-Z0-9_-]{8,80}$/.test(path[1]) && ["report", "download", "questions"].includes(path[2]) ||
 +    path.length === 4 && path[0] === "runs" && /^[a-zA-Z0-9_-]{8,80}$/.test(path[1]) && path[2] === "questions" && (/^[0-9a-f-]{36}$/.test(path[3]) || ["coordinator", "security", "architecture", "inventory"].includes(path[3]));
-+  if (!valid || request.method === "POST" && !(path.length === 1 || path.length === 3 && path[2] === "questions")) {
++  if (!valid || request.method === "POST" && !(path.length === 1 && path[0] === "runs" || path.length === 3 && path[2] === "questions")) {
 +    return NextResponse.json({ error: "Ruta no disponible." }, { status: 404 });
 +  }
 +  if (request.method === "POST") {
@@ -59,7 +59,7 @@ index 0000000..825db4f
 +    }
 +    const upstream = await fetch(`${process.env.AUDIT_API_URL || "http://audit-api:8080"}/${path.join("/")}`, {
 +      method: request.method, body, headers: { "Content-Type": "application/json" }, cache: "no-store",
-+      signal: AbortSignal.timeout(10000), redirect: "error",
++      signal: AbortSignal.timeout(60000), redirect: "error",
 +    });
 +    const headers = new Headers({ "Content-Type": upstream.headers.get("Content-Type") || "application/json", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" });
 +    const disposition = upstream.headers.get("Content-Disposition");
@@ -97,13 +97,13 @@ index 1f452a0..526b855 100644
  import type { Metadata } from "next";
 -import { Bebas_Neue, IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
  import "./globals.css";
-
+ 
  export const metadata: Metadata = {
 -  title: "Hermes3D",
 +  title: "Arktic Office — revisión de código",
    description: "Focused operator studio for the Hermes gateway.",
  };
-
+ 
 -const display = Bebas_Neue({
 -  variable: "--font-display",
 -  weight: "400",
@@ -171,7 +171,7 @@ index 5278885..03cdfca 100644
 -  );
 -}
 +import { AuditOffice } from "@/features/audit/AuditOffice";
-
+ 
  export default function OfficePage() {
 -  const showHermesConsole = readDebugFlag(process.env.DEBUG);
 -
@@ -299,13 +299,13 @@ index 0000000..9441f36
 +}
 diff --git a/src/features/audit/AuditOffice.tsx b/src/features/audit/AuditOffice.tsx
 new file mode 100644
-index 0000000..e42f508
+index 0000000..2f30c0b
 --- /dev/null
 +++ b/src/features/audit/AuditOffice.tsx
-@@ -0,0 +1,130 @@
+@@ -0,0 +1,145 @@
 +"use client";
 +
-+import { useCallback, useEffect, useMemo, useState } from "react";
++import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 +import ReactMarkdown from "react-markdown";
 +import remarkGfm from "remark-gfm";
 +import { PixelOffice2D } from "@/features/pixel-office/PixelOffice2D";
@@ -315,6 +315,7 @@ index 0000000..e42f508
 +
 +interface Cell { id: string; nombre: string; estado: string; model: string; reasoning: string; error?: string; mensaje?: string; necesita?: string[]; coverage?: string; reason?: string; missing?: string[] }
 +interface Activity { state: string; text: string; working: boolean; meeting: boolean }
++interface LocalSource { id: string; name: string; repository: string; branch: string; commit: string; source_path: string }
 +interface Run { activity?: Record<string, Activity>; id: string; repository: string; estado: string; commit?: string; branch?: string; celulas: Cell[]; error?: string; mensaje?: string; necesita?: string[]; has_report: boolean; historical?: boolean; evidence_origin?: string; report_format?: number; derived_from?: string; simulation?: boolean }
 +const roles = [{ id: "coordinator", name: "Coordinador", color: "#38bdf8" }, { id: "security", name: "Seguridad", color: "#fbbf24" }, { id: "architecture", name: "Arquitectura", color: "#a78bfa" }, { id: "inventory", name: "Inventario", color: "#34d399" }];
 +const busy = (state?: string) => state === "preparando" || state === "analizando";
@@ -329,6 +330,9 @@ index 0000000..e42f508
 +
 +export function AuditOffice() {
 +  const [repository, setRepository] = useState("");
++  const [sourceKind, setSourceKind] = useState("github");
++  const [localSources, setLocalSources] = useState<LocalSource[]>([]);
++  const [localSourceId, setLocalSourceId] = useState("");
 +  const [runs, setRuns] = useState<Run[]>([]);
 +  const [selected, setSelected] = useState<string | null>(null);
 +  const [connected, setConnected] = useState(false);
@@ -344,11 +348,16 @@ index 0000000..e42f508
 +  const current = runs.find(r => r.id === selected) || runs[0];
 +  const active = runs.find(r => busy(r.estado));
 +
++  const refreshing = useRef(false);
 +  const refresh = useCallback(async () => {
++    if (refreshing.current) return;
++    refreshing.current = true;
 +    try {
-+      const data = await api("runs");
++      const [data, local] = await Promise.all([api("runs"), api("local-sources")]);
++      setLocalSources(local.sources);
 +      setRuns(data.runs); setQuestionActive(data.question_active || null); setConnected(true); setNetworkError("");
 +    } catch (e) { setConnected(false); setNetworkError(e instanceof Error ? e.message : "Servicio no disponible."); }
++    finally { refreshing.current = false; }
 +  }, []);
 +  useEffect(() => { void refresh(); const timer = window.setInterval(() => void refresh(), 2000); return () => window.clearInterval(timer); }, [refresh]);
 +
@@ -365,7 +374,7 @@ index 0000000..e42f508
 +  async function start(event: React.FormEvent) {
 +    event.preventDefault(); setSubmitting(true); setError(""); setReport(null);
 +    try {
-+      const run = await api("runs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ repository }) });
++      const run = await api("runs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(sourceKind === "local" ? { local_source_id: localSourceId } : { repository }) });
 +      setSelected(run.id); await refresh();
 +    } catch (e) { setError(e instanceof Error ? e.message : "No se pudo iniciar la revisión."); }
 +    finally { setSubmitting(false); }
@@ -400,11 +409,17 @@ index 0000000..e42f508
 +    </header>
 +    {panel && <aside aria-label="Panel de revisión" className="absolute bottom-3 left-3 right-3 top-1/2 z-30 overflow-auto rounded-xl border border-white/15 bg-slate-950/95 p-5 shadow-2xl min-[1000px]:left-auto min-[1000px]:top-16 min-[1000px]:w-[356px]">
 +      <h1 className="text-xl font-semibold">Revisión de repositorio</h1>
-+      <p className="mt-1 text-sm text-slate-400">Solo lectura de la <strong>rama predeterminada</strong>, ligada a un commit. El arquitecto evalúa el resultado.</p>
++      <p className="mt-1 text-sm text-slate-400">Lectura estática ligada a un commit. En repositorios locales se revisa la rama activa al preparar la captura. El arquitecto evalúa el resultado.</p>
 +      <form onSubmit={start} className="mt-5 space-y-3">
-+        <label className="block text-sm" htmlFor="repository">Repositorio de GitHub</label>
-+        <input id="repository" required type="url" placeholder="https://github.com/propietario/repositorio" value={repository} onChange={e => setRepository(e.target.value)} className="w-full rounded-lg border border-white/20 bg-slate-900 px-3 py-3 text-sm" />
-+        <button disabled={!connected || submitting || !!active || !!questionActive} className="w-full rounded-lg bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 disabled:opacity-40">{submitting ? "Iniciando…" : active ? "Revisión en curso" : questionActive ? "Consulta en curso" : "Iniciar revisión"}</button>
++        <label className="block text-sm" htmlFor="source-kind">Origen del repositorio</label>
++        <select id="source-kind" value={sourceKind} onChange={e => setSourceKind(e.target.value)} className="w-full rounded-lg border border-white/20 bg-slate-900 p-3 text-sm"><option value="github">GitHub</option><option value="local">Repositorio local</option></select>
++        {sourceKind === "github" ? <><label className="block text-sm" htmlFor="repository">Repositorio de GitHub</label><input id="repository" required type="url" placeholder="https://github.com/propietario/repositorio" value={repository} onChange={e => setRepository(e.target.value)} className="w-full rounded-lg border border-white/20 bg-slate-900 px-3 py-3 text-sm" /></> : <>
++          <label className="block text-sm" htmlFor="local-source">Repositorio local preparado</label>
++          <select id="local-source" required value={localSourceId} onChange={e => setLocalSourceId(e.target.value)} className="w-full rounded-lg border border-white/20 bg-slate-900 p-3 text-sm"><option value="">Selecciona una captura</option>{localSources.map(s => <option key={s.id} value={s.id}>{s.name} · {s.branch} · {s.commit.slice(0, 12)}</option>)}</select>
++          {localSources.length === 0 && <p className="text-xs text-amber-200">No hay capturas locales preparadas en este equipo.</p>}
++          {localSources.find(s => s.id === localSourceId) && <p className="break-all text-xs text-slate-400">{localSources.find(s => s.id === localSourceId)?.source_path}<br />Rama: {localSources.find(s => s.id === localSourceId)?.branch} · Commit: {localSources.find(s => s.id === localSourceId)?.commit}</p>}
++        </>}
++        <button disabled={!connected || submitting || !!active || !!questionActive || sourceKind === "local" && !localSourceId} className="w-full rounded-lg bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 disabled:opacity-40">{submitting ? "Iniciando…" : active ? "Revisión en curso" : questionActive ? "Consulta en curso" : "Iniciar revisión"}</button>
 +      </form>
 +      {(error || networkError) && <p role="alert" className="mt-4 rounded-lg border border-rose-400/30 bg-rose-950 p-3 text-sm text-rose-200">{error || networkError}</p>}
 +      {runs.length > 0 && <div className="mt-5"><label htmlFor="runs" className="text-xs text-slate-400">Revisiones guardadas</label><select id="runs" value={current?.id || ""} onChange={e => { setSelected(e.target.value); setReport(null); }} className="mt-1 w-full rounded-lg border border-white/20 bg-slate-900 p-2 text-xs">{runs.map(r => <option key={r.id} value={r.id}>{r.simulation ? "SIMULACIÓN · " : r.report_format === 3 ? "Seguridad · " : r.report_format === 2 ? "Formato 2 · " : ""}{r.derived_from ? "Evidencia guardada · " : r.historical ? "Histórico · " : ""}{r.repository.split("/").slice(-2).join("/")} · {label[r.estado] || r.estado} · {r.id.slice(0, 10)}</option>)}</select></div>}
@@ -429,30 +444,23 @@ index 0000000..e42f508
 +      </section>}
 +      {!current && <p className="mt-6 text-sm text-slate-400">El equipo está listo. Introduce un repositorio para comenzar.</p>}
 +    </aside>}
-+    {report !== null && <div role="dialog" aria-modal="true" aria-label="Informe de revisión" className="absolute inset-4 top-16 z-40 flex flex-col rounded-xl border border-white/20 bg-slate-950 p-5 shadow-2xl"><div className="mb-4 flex items-center justify-between"><h2 className="font-semibold">Informe para el arquitecto</h2><button onClick={() => setReport(null)} className="rounded border border-white/20 px-3 py-2">Cerrar informe</button></div>{reportHtml ? <ExecutiveReport html={reportHtml} /> : <div className="overflow-auto break-words text-sm leading-relaxed text-slate-200 [&_h1]:mb-4 [&_h1]:text-2xl [&_h2]:my-5 [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:mt-5 [&_h3]:mb-2 [&_h3]:font-semibold [&_p]:my-3 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:my-2 [&_table]:w-full [&_table]:block [&_table]:overflow-x-auto [&_th]:border [&_th]:border-white/20 [&_th]:p-2 [&_td]:border [&_td]:border-white/20 [&_td]:p-2 [&_a]:text-cyan-300 [&_code]:text-cyan-200"><ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml components={{ a: ({ children, href }) => <a href={href} target="_blank" rel="noopener noreferrer">{children}</a> }}>{report}</ReactMarkdown></div>}</div>}
++    {report !== null && <div role="dialog" aria-modal="true" aria-label="Informe de revisión" className="absolute inset-4 top-16 z-40 flex flex-col rounded-xl border border-white/20 bg-slate-950 p-5 shadow-2xl"><div className="mb-2 flex justify-end"><button onClick={() => setReport(null)} className="rounded border border-white/20 px-3 py-2">Cerrar informe</button></div>{reportHtml ? <ExecutiveReport html={reportHtml} /> : <div className="overflow-auto break-words text-sm leading-relaxed text-slate-200 [&_h1]:mb-4 [&_h1]:text-2xl [&_h2]:my-5 [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:mt-5 [&_h3]:mb-2 [&_h3]:font-semibold [&_p]:my-3 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:my-2 [&_table]:w-full [&_table]:block [&_table]:overflow-x-auto [&_th]:border [&_th]:border-white/20 [&_th]:p-2 [&_td]:border [&_td]:border-white/20 [&_td]:p-2 [&_a]:text-cyan-300 [&_code]:text-cyan-200"><ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml components={{ a: ({ children, href }) => <a href={href} target="_blank" rel="noopener noreferrer">{children}</a> }}>{report}</ReactMarkdown></div>}</div>}
 +    {chat && <AgentQuestion key={`${chat.run.id}-${chat.agent}`} run={chat.run} agent={chat.agent} name={roles.find(r => r.id === chat.agent)?.name || chat.agent} active={questionActive} blocked={!!active || !!questionActive} onStarted={setQuestionActive} onClose={() => setChat(null)} />}
 +  </div>;
 +}
 diff --git a/src/features/audit/ExecutiveReport.tsx b/src/features/audit/ExecutiveReport.tsx
 new file mode 100644
-index 0000000..5b64d92
+index 0000000..a092ac7
 --- /dev/null
 +++ b/src/features/audit/ExecutiveReport.tsx
-@@ -0,0 +1,54 @@
+@@ -0,0 +1,33 @@
 +"use client";
 +
-+import { useRef, useState } from "react";
++import React, { useRef } from "react";
 +
 +export function ExecutiveReport({ html }: { html: string }) {
 +  const frame = useRef<HTMLIFrameElement>(null);
-+  const [filter, setFilter] = useState("all");
-+  const rules: Record<string, string> = {
-+    all: "",
-+    urgent: ".risk:not(.critica):not(.alta){display:none}",
-+    pending: ".risk:not(.pending){display:none}",
-+    confirmed: ".risk:not(.confirmed){display:none}",
-+  };
-+  const source = html.replace(/<script id="arktic-report-navigation">[\s\S]*?<\/script>/g, "").replace("</head>", `<style>@media screen{${rules[filter]}}</style></head>`);
++  const source = html.replace(/<script id="arktic-report-navigation">[\s\S]*?<\/script>/g, "");
 +  function bindNavigation() {
 +    const doc = frame.current?.contentDocument;
 +    if (!doc) return;
@@ -475,22 +483,8 @@ index 0000000..5b64d92
 +      doc.querySelector(`.nav a[href="#${target.closest(".chapter")?.id || id}"]`)?.setAttribute("aria-current", "location");
 +    });
 +  }
-+  function print() {
-+    const doc = frame.current?.contentDocument;
-+    if (doc) doc.querySelectorAll("details").forEach(detail => { detail.open = true; });
-+    frame.current?.contentWindow?.print();
-+  }
 +  return <div className="flex min-h-0 flex-1 flex-col gap-3">
-+    <div className="flex flex-wrap items-center gap-3 text-sm">
-+      <label htmlFor="risk-filter">Ver riesgos</label>
-+      <select id="risk-filter" className="rounded border border-white/20 bg-slate-900 p-2" value={filter} onChange={e => setFilter(e.target.value)}>
-+        <option value="all">Todos</option><option value="urgent">🔴 Críticos y altos</option>
-+        <option value="confirmed">Confirmados en código</option><option value="pending">Indicios por confirmar</option>
-+      </select>
-+      <button onClick={print} className="rounded bg-cyan-300 px-4 py-2 font-semibold text-slate-950">Imprimir / guardar PDF</button>
-+      <span className="text-xs text-slate-400">La impresión incluye todos los hallazgos.</span>
-+    </div>
-+    <iframe ref={frame} onLoad={bindNavigation} title="Reporte ejecutivo de seguridad" sandbox="allow-same-origin allow-modals allow-popups allow-popups-to-escape-sandbox" srcDoc={source} className="min-h-0 flex-1 rounded-lg border-0 bg-white" />
++    <iframe ref={frame} onLoad={bindNavigation} title="Informe de revisión" sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox" srcDoc={source} className="min-h-0 flex-1 rounded-lg border-0 bg-white" />
 +  </div>;
 +}
 diff --git a/src/features/audit/auditStatus.ts b/src/features/audit/auditStatus.ts
@@ -520,14 +514,14 @@ index 6f9b948..4a6513a 100644
 @@ -1,8 +1,6 @@
  // Office renderer preference: immersive 3D scene vs. lightweight 2D pixel scene.
  // Persisted in localStorage so the choice survives reloads.
-
+ 
 -import { detectSoftwareWebGL } from "@/features/retro-office/core/graphicsQuality";
 -
  export type OfficeRenderMode = "3d" | "2d";
-
+ 
  export const OFFICE_RENDER_MODE_STORAGE_KEY = "hermes-office-render-mode-v1";
 @@ -41,11 +39,10 @@ export const loadStoredOfficeRenderMode = (): OfficeRenderMode | null => {
-
+ 
  /**
   * The mode the office should boot with: the user's stored choice, or a
 - * hardware-appropriate default. Machines that rasterize WebGL in software
@@ -537,7 +531,7 @@ index 6f9b948..4a6513a 100644
  export const resolveInitialOfficeRenderMode = (): OfficeRenderMode =>
 -  loadStoredOfficeRenderMode() ?? (detectSoftwareWebGL() ? "2d" : "3d");
 +  loadStoredOfficeRenderMode() ?? "2d";
-
+ 
  export const saveOfficeRenderMode = (mode: OfficeRenderMode) => {
    if (typeof window === "undefined") return;
 diff --git a/src/features/office/screens/OfficeScreen.tsx b/src/features/office/screens/OfficeScreen.tsx
@@ -567,7 +561,7 @@ index 7d2a060..9c4e3c1 100644
    type PixelSceneBridge,
 @@ -29,6 +30,11 @@ type ContextMenuState = {
  };
-
+ 
  export type PixelOffice2DProps = {
 +  compact?: boolean;
 +  selectedAgentId?: string;
@@ -587,15 +581,15 @@ index 7d2a060..9c4e3c1 100644
 +    meetingActive = false,
 +    statusTextByAgentId = {},
    } = props;
-
+ 
    const rootRef = useRef<HTMLDivElement | null>(null);
 @@ -103,7 +114,7 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
    const [settingsOpen, setSettingsOpen] = useState(false);
    const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
-
+ 
 -  const map = useMemo(() => buildHermesHqMap(), []);
 +  const map = useMemo(() => compact ? buildArkticOfficeMap() : buildHermesHqMap(), [compact]);
-
+ 
    if (!bridgeRef.current) {
      bridgeRef.current = createPixelSceneBridge({
 @@ -117,6 +128,12 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
@@ -623,7 +617,7 @@ index 7d2a060..9c4e3c1 100644
      });
 -  }, [agents, animationState, bridge, streamingTextByAgentId]);
 +  }, [agents, animationState, bridge, streamingTextByAgentId, compact, readOnly, selectedAgentId, meetingActive, statusTextByAgentId]);
-
+ 
    useEffect(() => {
      pushBridgeState();
 @@ -148,6 +166,7 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
@@ -640,7 +634,7 @@ index 7d2a060..9c4e3c1 100644
      };
 -  }, [bridge, onAgentChatSelect, onJukeboxInteract, onKanbanInteract]);
 +  }, [bridge, onAgentChatSelect, onJukeboxInteract, onKanbanInteract, readOnly]);
-
+ 
    useEffect(() => {
      let canceled = false;
 @@ -166,11 +185,11 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
@@ -663,11 +657,11 @@ index 7d2a060..9c4e3c1 100644
      };
 -  }, [bridge, map]);
 +  }, [bridge, map, compact]);
-
+ 
    const contextAgent = contextMenu
      ? (agents.find((agent) => agent.id === contextMenu.agentId) ?? null)
 @@ -206,16 +225,16 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
-
+ 
        {/* Office title — top left. */}
        <div className="absolute top-3 left-3 z-20 flex items-center gap-2 select-none">
 -        <div className="rounded-md border border-black/25 bg-[#11131c]/85 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-100 backdrop-blur-sm">
@@ -718,7 +712,7 @@ index 7d2a060..9c4e3c1 100644
 -        </button>
 +        </button>}
        </div>
-
+ 
        {/* Controls hint — bottom center (event console and chat own the corners). */}
        <div className="absolute bottom-3 left-1/2 z-10 -translate-x-1/2 pointer-events-none select-none">
          <div className="rounded-full bg-black/50 px-3 py-1 text-[10px] font-mono text-white/55 backdrop-blur-sm">
@@ -726,7 +720,7 @@ index 7d2a060..9c4e3c1 100644
 +          {readOnly ? "Arrastra para mover · rueda para ampliar · pulsa un agente para consultar" : "drag to pan · scroll to zoom · click an agent to chat"}
          </div>
        </div>
-
+ 
 diff --git a/src/features/pixel-office/map/arkticOfficeMap.ts b/src/features/pixel-office/map/arkticOfficeMap.ts
 new file mode 100644
 index 0000000..73148ab
@@ -816,7 +810,7 @@ index 4708d1d..5ebd129 100644
    seed: string;
 +  hitTarget: HTMLButtonElement | null;
  };
-
+ 
  /** How long a finished speech bubble stays readable, in ms. */
 @@ -81,8 +82,9 @@ export const createPixelOfficeScene = (params: {
    PhaserLib: typeof import("phaser");
@@ -828,7 +822,7 @@ index 4708d1d..5ebd129 100644
 +  const { PhaserLib, bridge, map, fitToView = false } = params;
    const worldWidth = map.cols * TILE;
    const worldHeight = map.rows * TILE;
-
+ 
 @@ -106,7 +108,11 @@ export const createPixelOfficeScene = (params: {
        this.renderZoneLabels();
        this.setupCamera();
@@ -852,13 +846,13 @@ index 4708d1d..5ebd129 100644
            const stationKind = object.kind === "jukebox" ? "jukebox" : "kanban";
            image.setInteractive({ useHandCursor: true });
 @@ -242,7 +249,7 @@ export const createPixelOfficeScene = (params: {
-
+ 
      /** Lowest allowed zoom: never smaller than "whole map in view". */
      private minZoom(): number {
 -      return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, this.containZoom()));
 +      return Math.min(MAX_ZOOM, Math.max(fitToView ? 0.1 : MIN_ZOOM, this.containZoom()));
      }
-
+ 
      private setupCamera() {
 @@ -263,12 +270,12 @@ export const createPixelOfficeScene = (params: {
        // Gather-style default: start close enough that the pixel art reads at
@@ -873,7 +867,7 @@ index 4708d1d..5ebd129 100644
 -      camera.centerOn(worldWidth / 2, worldHeight * 0.42);
 +      camera.centerOn(worldWidth / 2, worldHeight * (fitToView ? 0.5 : 0.42));
      }
-
+ 
      private setupPointerControls() {
 @@ -380,6 +387,7 @@ export const createPixelOfficeScene = (params: {
          if (seen.has(id)) continue;
@@ -886,7 +880,7 @@ index 4708d1d..5ebd129 100644
 @@ -445,6 +453,20 @@ export const createPixelOfficeScene = (params: {
        ]);
        overlay.setDepth(40_000);
-
+ 
 +      // Native hit targets make compact-office characters clickable with
 +      // mouse, keyboard and DOM browser clients, without React frame updates.
 +      const hitTarget = fitToView && id !== JANITOR_ID ? document.createElement("button") : null;
@@ -911,7 +905,7 @@ index 4708d1d..5ebd129 100644
 +        hitTarget,
        };
      }
-
+ 
 @@ -495,15 +518,24 @@ export const createPixelOfficeScene = (params: {
        input: { name: string; status: string; thinking: boolean; awaitingApproval: boolean } | null,
        bubble: string,
@@ -932,11 +926,11 @@ index 4708d1d..5ebd129 100644
        if (this.textures.exists(frameKey) && visual.sprite.texture.key !== frameKey) {
          visual.sprite.setTexture(frameKey);
        }
-
+ 
        const overlayY = pose.y + TILE / 2 - CHARACTER_HEIGHT - 8;
 -      visual.overlay.setPosition(pose.x, overlayY);
 +      visual.overlay.setPosition(seatedX, overlayY);
-
+ 
        // Nameplate pill with the status dot.
        const name = input?.name ?? "Janitor";
 diff --git a/src/features/pixel-office/sim/agentSimulation.ts b/src/features/pixel-office/sim/agentSimulation.ts
@@ -954,7 +948,7 @@ index cd4b188..0909f59 100644
 @@ -332,8 +333,8 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
        return;
      }
-
+ 
 -    // Priority d: working/error agents head to their assigned desk seat.
 -    if (input.status === "working" || input.status === "error") {
 +    // Priority d: audit avatars use desks only while actually working.
@@ -972,7 +966,7 @@ index cd4b188..0909f59 100644
        }
        // No free desk: fall through to wander behavior.
 @@ -505,7 +506,7 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
-
+ 
      // Sticky desk assignment: first free desk in map order, agents by id.
      for (const input of sortedInputs) {
 -      if (input.status !== "working" && input.status !== "error") continue;
@@ -985,7 +979,7 @@ index cdf2601..78576eb 100644
 --- a/src/features/pixel-office/types.ts
 +++ b/src/features/pixel-office/types.ts
 @@ -282,6 +282,8 @@ export const OBJECT_FOOTPRINT: Readonly<Record<PixelObjectKind, [number, number]
-
+ 
  /** What a Hermes agent currently looks like to the pixel office. */
  export type PixelAgentInput = {
 +  controlled?: boolean;
@@ -1144,10 +1138,10 @@ index 0000000..57afddb
 +});
 diff --git a/tests/unit/executiveReport.test.ts b/tests/unit/executiveReport.test.ts
 new file mode 100644
-index 0000000..7163d5a
+index 0000000..27753fc
 --- /dev/null
 +++ b/tests/unit/executiveReport.test.ts
-@@ -0,0 +1,48 @@
+@@ -0,0 +1,38 @@
 +import React from "react";
 +import { afterEach, describe, expect, it, vi } from "vitest";
 +import { cleanup, fireEvent, render, screen } from "@testing-library/react";
@@ -1156,18 +1150,18 @@ index 0000000..7163d5a
 +afterEach(cleanup);
 +
 +describe("executive security report", () => {
-+  it("filters only on screen, keeps all content for print, and disables scripts", () => {
++  it("shows the report directly without filters or print controls, and disables scripts", () => {
 +    render(React.createElement(ExecutiveReport, { html: "<html><head></head><body>complete evidence</body></html>" }));
-+    fireEvent.change(screen.getByLabelText("Ver riesgos"), { target: { value: "urgent" } });
-+    const frame = screen.getByTitle("Reporte ejecutivo de seguridad") as HTMLIFrameElement;
-+    expect(frame.getAttribute("srcdoc")).toContain("@media screen{.risk:not(.critica):not(.alta){display:none}}");
++    expect(screen.queryByLabelText("Ver riesgos")).toBeNull();
++    expect(screen.queryByRole("button", { name: "Imprimir / guardar PDF" })).toBeNull();
++    const frame = screen.getByTitle("Informe de revisión") as HTMLIFrameElement;
 +    expect(frame.getAttribute("srcdoc")).toContain("complete evidence");
 +    expect(frame.getAttribute("sandbox")).not.toContain("allow-scripts");
 +  });
 +
 +  it("navigation reveals nested evidence and keeps the return context without running report scripts", () => {
 +    render(React.createElement(ExecutiveReport, { html: '<html><head></head><body><script id="arktic-report-navigation">unsafe()</script></body></html>' }));
-+    const frame = screen.getByTitle("Reporte ejecutivo de seguridad") as HTMLIFrameElement;
++    const frame = screen.getByTitle("Informe de revisión") as HTMLIFrameElement;
 +    expect(frame.getAttribute("srcdoc")).not.toContain("unsafe()");
 +    frame.contentDocument!.body.innerHTML = '<section class="chapter" id="anexos"><details id="registro"><summary>Registro</summary><article id="R01"><details id="tecnico-R01"><summary>Técnico</summary><p id="fuente">Fuente</p></details></article></details></section><div id="resumen-R01">Contexto</div><a href="#fuente">Ver fuente</a><a href="#resumen-R01">Volver</a>';
 +    const source = frame.contentDocument!.getElementById("fuente")!;
@@ -1185,14 +1179,4 @@ index 0000000..7163d5a
 +    expect(frame.getAttribute("sandbox")).not.toContain("allow-scripts");
 +  });
 +
-+  it("opens evidence details before invoking browser print", () => {
-+    render(React.createElement(ExecutiveReport, { html: "<html><head></head><body></body></html>" }));
-+    const frame = screen.getByTitle("Reporte ejecutivo de seguridad") as HTMLIFrameElement;
-+    const detail = frame.contentDocument!.createElement("details");
-+    frame.contentDocument!.body.append(detail);
-+    const print = vi.spyOn(frame.contentWindow!, "print").mockImplementation(() => {});
-+    fireEvent.click(screen.getByRole("button", { name: "Imprimir / guardar PDF" }));
-+    expect(detail.open).toBe(true);
-+    expect(print).toHaveBeenCalledOnce();
-+  });
 +});

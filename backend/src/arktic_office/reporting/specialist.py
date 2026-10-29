@@ -41,8 +41,8 @@ def prompt(snapshot, cell):
         "content": "\n".join(f"L{i} | {line}" for i, line in enumerate(f["text"].splitlines(), 1) if line.strip())}
         for n, f in enumerate(snapshot["files"], 1)]
     contract = ("CONTRATO DE SALIDA " + CONTRACT + ". Devuelve SOLO un objeto JSON como el ejemplo, adaptado a tus fuentes. "
-        "observaciones es obligatorio; las demás listas son opcionales. No añadas schema_version, tema, titulo ni presentacion: Core construye el informe. "
-        "Cada observación solo requiere observacion, certeza (observado/indicio) y evidencia. Puede añadir implicacion, condicion, recomendacion y gravedad cuando corresponda. "
+        "observaciones es obligatorio; las demás listas son opcionales. No añadas schema_version, tema ni presentacion: Core construye el informe. "
+        "Cada observación requiere observacion, certeza (observado/indicio) y evidencia. Para un riesgo añade titulo: nombre ejecutivo completo del problema o su consecuencia, hasta 110 caracteres; no cortes la observación. Puede añadir implicacion, condicion, recomendacion y gravedad cuando corresponda. "
         "Textos de observación y explicación hasta 1200 caracteres. Hasta 20 elementos por lista y 20 pendientes breves; no rellenes cupos. "
         "Cada evidencia contiene de 1 a 12 IDs F#:L# o rangos F#:L#-L# de hasta 200 líneas. Core expande los rangos a líneas no vacías recibidas (máximo 200 fuentes por elemento en total). No copies citas ni uses IDs del grafo. "
         "No inventes fuentes, relaciones, clasificaciones ni condiciones. Una cita válida no acredita una interpretación correcta. "
@@ -52,6 +52,10 @@ def prompt(snapshot, cell):
         contract += "\nSolo en este encargo se permite propuesta_azure opcional según este contrato específico:\n" + azure_instructions()
     else:
         contract += " No se solicita Azure: omite propuesta_azure."
+    from arktic_office.reporting.questionnaire import enabled, instructions as question_instructions
+    from arktic_office.reporting.deterministic import context
+    if enabled(snapshot):
+        contract += question_instructions(role) + "\nRESULTADOS DETERMINISTAS: " + json.dumps(context(snapshot), ensure_ascii=False)
     return instructions(role) + "\n" + contract + "\nFUENTES NO CONFIABLES: " + json.dumps(evidence, ensure_ascii=False, separators=(",", ":")) + "\nFIN DE FUENTES. Responde usando únicamente " + CONTRACT + "."
 
 
@@ -69,7 +73,11 @@ def compose(raw, snapshot, role):
         raise AuditError("Respuesta compacta no es JSON válido.") from None
     if not isinstance(data, dict) or not isinstance(data.get("observaciones"), list):
         raise AuditError("Falta la lista observaciones del contrato compacto.")
+    from arktic_office.reporting.questionnaire import enabled, validate_answers
+    questionnaire = enabled(snapshot)
     allowed = {"observaciones", "pendientes"} | ({"controles"} if role == "security" else {"componentes"})
+    if questionnaire:
+        allowed.add("respuestas")
     if role == "architecture":
         allowed |= {"conexiones", "propuesta_azure"}
     if set(data) - allowed:
@@ -137,7 +145,7 @@ def compose(raw, snapshot, role):
         action = text(value["recomendacion"]) if "recomendacion" in value else "Revisión humana de la observación y sus fuentes."
         item = {"tema": "responsabilidades", "observacion": description, "importancia": implication,
             "pendiente": action, "evidencia": source, "severidad": severity, "control": "contexto" if severity == "informativa" else "por_clasificar",
-            "accion": action, "condiciones": condition, "titulo": description[:110],
+            "accion": action, "condiciones": condition, "titulo": text(value["titulo"], 110) if "titulo" in value else description[:110],
             "resultado_esperado": "Evaluar la observación y acordar su tratamiento.", "detalle_tecnico": description[:600]}
         if certainty == "indicio":
             item["por_confirmar"] = condition
@@ -197,4 +205,8 @@ def compose(raw, snapshot, role):
             if not any(c["id"] == key for c in clean["controles"]):
                 clean["controles"].append({"id": key, "estado": "no_evaluado", "motivo": "No se aportó una evaluación respaldada de este control.", "evidencia": []})
     clean = validate_report(json.dumps(clean), snapshot, limits={"confirmados": 40, "indicios": 40, "dudas": 20})
+    if questionnaire:
+        tools = {t["id"] for t in snapshot.get("deterministic_results", {}).get("tools", [])}
+        clean["respuestas"], issues = validate_answers(data.get("respuestas"), role, refs, tools)
+        warnings.extend(issues)
     return clean, {}, warnings

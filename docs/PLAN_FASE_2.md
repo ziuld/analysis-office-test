@@ -1,8 +1,22 @@
 # Fase 2 — Mejora de agentes, recuperación y calidad
 
-Estado: **tramo funcional F2-01 a F2-06 cerrado para revisión; F2-07 a F2-12 pendientes de trabajo conjunto**. Integración comprobada con Luna/medium el 25/10/2026; la calidad del último informe NO está aceptada. Fase 2 abierta, versión 0.3.0, merge manual del usuario.
+**Extensión posterior autorizada el 28/10/2026:** [revisión por 40 preguntas y anexos deterministas](EXTENSION_FASE_2.md). Se aplica al flujo actual antes de implementar fase 3; el cierre y las evidencias históricas siguientes se conservan.
 
-**Entrada para otro chat:** leer primero «Retomar en otro chat» y el nuevo punto 3. No continuar automáticamente los experimentos históricos ni ejecutar un flujo completo por defecto.
+Estado: **cerrada el 28/10/2026 por decisión del usuario, sin alcanzar la calidad de análisis esperada**. Se conservan los avances funcionales F2-01 a F2-06 y su integración comprobada el 25/10/2026. El cierre no constituye aceptación de la calidad del informe. Versión 0.3.0; no implica merge, publicación ni cambios de runtime.
+
+**Plan vigente:** [Fase 3 — Análisis por preguntas y agentes reutilizables](PLAN_FASE_3.md). No retomar automáticamente los experimentos ni tareas de esta fase.
+
+## Cierre y traspaso — 28/10/2026
+
+El flujo llegó a funcionar, pero entregaba información demasiado general y poco útil para las preguntas concretas del usuario. Se sustituye su afinado incremental por un rediseño basado en preguntas seleccionadas, especialistas independientes y un informe descriptivo sin recomendaciones generadas por modelos.
+
+- F2-01 a F2-06: se conservan sus cierres funcionales y evidencias, sin atribuirles aceptación de calidad.
+- F2-07: tuvo preparación de resultados, pero no se cerró su revisión conjunta. Su revisión se replantea en F3-01.
+- F2-08 a F2-12: quedan sin completar y sustituidas por el alcance de Fase 3; no se marcan realizadas.
+- Se preservan los informes, intentos fallidos y cambios técnicos existentes. No se ejecutan más análisis ni se altera código por este cierre documental.
+- El usuario desarrollará los agentes y sus skills en un repositorio externo reutilizable. Arktic recibirá esos mismos agentes y adaptará las herramientas y contratos necesarios para integrarlos.
+
+**Todo lo que sigue es histórico.** Las antiguas instrucciones de continuación, propuestas de roles, recomendaciones y estados pendientes describen esta fase; no son el encargo vigente. El roadmap actual es Fase 3.
 
 ## Objetivo
 
@@ -16,7 +30,7 @@ Conseguir respuestas más útiles, precisas y propias de cada especialidad, loca
 - Las últimas consultas fueron por rutas exactas, con relaciones del grafo adjuntas. Esto no demuestra navegación eficiente por símbolos/grafo. Las ventanas de 100 líneas pueden omitir rutas/middleware posteriores; Arquitectura agotó su cap de seis archivos. El padding de líneas consume presupuesto. Aumentar archivos o modelo sin localizar el cuello de botella no garantiza mejor resultado.
 - Baseline `f7043007-40a9-42a3-8b1e-a1478688c25c`: tres especialistas y síntesis, 8 llamadas gpt-6-luna/low, 52.366 tokens comunicados, 7 observaciones y 22 citas verificadas. Informe parcial: un tema inválido rechazado, cinco controles no evaluados, una formulación sobre recuperación de trabajos demasiado amplia. [Evidencia](evidence/orchestrator-research-2026-10-24.json).
 
-## Orden vigente y entregables
+## Orden y entregables históricos
 
 F2-01 a F2-06 conservan su cierre funcional y sus evidencias. El 25/10/2026 el usuario sustituye las antiguas tareas pendientes F2-07 a F2-10 por F2-07 a F2-12, descritas en el punto 3. No se abre otra fase. Primero comprender las herramientas, después acordar la búsqueda de cada agente, integrar y finalmente definir el informe. Los diseños y pruebas anteriores son antecedentes, no aceptación del resultado deseado.
 
@@ -47,6 +61,12 @@ Estas tareas se realizan secuencialmente **con el usuario**. Codex prepara muest
 - [ ] **F2-11 · Verificar integración.** Después de aceptar las estrategias aisladas, ejecutar un recorrido completo acotado. Comprobar encargos del coordinador, uso de evidencia, ausencia de pérdidas/contradicciones y síntesis fiel. Registrar intentos fallidos, llamadas, tiempo, tokens y presupuestos efectivos. No introducir reintentos o evaluaciones automáticas. **Cierre:** integración válida y contenido revisado con el usuario; éxito técnico y calidad se evalúan por separado.
 - [ ] **F2-12 · Acordar output e informe.** Con resultados reales ya comprendidos, proponer contenido, unificarlo con la propuesta del usuario y construir juntos un modelo rellenado que él revise/complemente manualmente. Derivar una plantilla vacía coherente para que Core la rellene; adaptar contratos solo a lo acordado. Diseño/presentación al final, sin imponer el v14 actual. Hallazgos útiles al comienzo; límites detallados y próximos pasos abajo/anexos. **Cierre:** aceptación explícita del modelo y de la plantilla vacía, con trazabilidad a las salidas disponibles.
 
+### Avance F2-07 — 25/10/2026, pendiente de revisión conjunta
+
+Se preparó la carpeta local ignorada `reports/f2-07-2026-10-25/`: `index.html` permite ver cada salida nativa, `INFORME.md` separa la valoración de Codex y `cobertura-por-archivo.csv` enumera las 567 rutas con estados y motivos. Primero se conservaron los registros históricos; después se repitieron únicamente Graphify y scanners sobre el mismo commit, verificando los SHA256 del snapshot. No se ejecutó código del repositorio ni modelos del producto. Evidencia resumida: [phase2-tools-review-2026-10-25.json](evidence/phase2-tools-review-2026-10-25.json).
+
+Scanners coinciden con el histórico: Gitleaks sin coincidencias, OSV con 273 registros versionados sin avisos y Semgrep con un patrón deliberado en un worker de prueba. Graphify produjo 3108 nodos/5081 relaciones, 518 no resueltas; difiere en una relación del resumen histórico, cuya causa no se ha determinado. Se conservó un primer intento fallido por caché en ruta de solo lectura y su corrección de directorio de trabajo. Las recomendaciones de conservar/ajustar son propuestas: **F2-07 sigue abierta hasta el acuerdo del usuario**. No se inicia F2-08 ni se cambian herramientas/reglas/agentes.
+
 ### Forma de colaboración y límites
 
 - Al empezar cada tarea, hacer preguntas concretas sobre el resultado esperado, la muestra y los criterios pendientes; contrastar supuestos y contradicciones con ejemplos. Preguntar cuando exista una duda material, sin volver a pedir permisos ya dados. Esperar respuestas para las decisiones dependientes; avanzar solo en lecturas/preparación independientes.
@@ -56,7 +76,9 @@ Estas tareas se realizan secuencialmente **con el usuario**. Codex prepara muest
 - Separar instrucciones profesionales reutilizables del adaptador Hermes. Portabilidad a Claude Code/OpenCode u otros entornos queda fuera de este tramo; no prometer que el agente funciona sin adaptar sus herramientas.
 - Nuevos roles DevOps/Privacidad, alertas históricas de GitHub, actualizaciones de herramientas y cambios de modelos quedan **diferidos sin tarea activa**. Solo reconsiderarlos si las comprobaciones justifican la necesidad y el usuario lo acuerda.
 
-### Retomar en otro chat
+### Retomar en otro chat — instrucciones históricas, sustituidas
+
+**No continuar esta secuencia.** Para trabajar en Arktic, leer [Fase 3](PLAN_FASE_3.md). Para crear los agentes externos, usar el [prompt de contexto](PROMPT_AGENTES_REUTILIZABLES.md).
 
 1. Leer este punto 3 y la evidencia [última validación funcional](evidence/phase2-luna-validation-2026-10-25.json). El commit funcional es `af7a452`, rama de cierre `codex/fase-2-agentes`; comprobar estado de Git/PR antes de tocar nada. El usuario hace el merge.
 2. No rehacer F2-01 a F2-06 ni optimizar el informe actual. El usuario no quedó satisfecho con su contenido; el cierre acepta esta base funcional, no su calidad final. La fase 2 continúa abierta.
