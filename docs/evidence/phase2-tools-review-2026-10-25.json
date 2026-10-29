@@ -1,0 +1,45 @@
+{
+  "date": "2026-10-25",
+  "task": "F2-07",
+  "status": "prepared_for_user_review_not_accepted",
+  "repository": "ziuld/beneath-the-code-page",
+  "commit": "95ede5bccc881a2230f874944299b4a73101337d",
+  "historical_job": "d506794d-6b23-4d84-bab8-c9438d678d7b",
+  "local_review_directory": "reports/f2-07-2026-10-25",
+  "preservation": {
+    "history": "Three original files copied byte for byte; native graph/scanner JSON was not retained by the historical pipeline.",
+    "new_run": "Native JSON, logs, commands and adapter results preserved separately from interpretation.",
+    "snapshot_files": 567,
+    "snapshot_bytes": 10200922,
+    "snapshot_verified_against_historical_sha256": true,
+    "hash_manifest_files": 606,
+    "hash_mismatches": 0,
+    "changed_snapshot_files_after_scanners": 0,
+    "coverage_csv_rows": 567,
+    "html_links_checked": 26,
+    "broken_links": 0
+  },
+  "graphify": {
+    "version": "0.9.95",
+    "nodes": 3108,
+    "edges": 5081,
+    "unresolved_relations": 518,
+    "processed": 439,
+    "unsupported": 128,
+    "unsupported_reasons": {"no_static_parser": 108, "unsupported_json_data_schema": 7, "unsupported_yaml_dialect_or_data_schema": 13},
+    "processing_complete": true,
+    "attempts": [
+      {"exit_code": 1, "reason": "Review invocation used read-only /app as working directory; native cache could not be created."},
+      {"exit_code": 0, "change": "Working directory /tmp; no tool/source changes."}
+    ],
+    "historical_difference": "One additional unresolved relation; historical full graph unavailable, cause undetermined. New native run uses original snapshot; product maps prepared text."
+  },
+  "scanners": [
+    {"name": "Gitleaks 8.30.1", "offered_files": 567, "findings": 0, "status": "sin_detecciones_en_seleccion", "coverage_limit": "Offered does not mean processed; native log reports about 3.14 MB, not the full 10.20 MB; per-file exclusions unavailable. No Git history."},
+    {"name": "OSV-Scanner 2.7.0", "inputs": ["pom.xml", "src/main/frontend/package-lock.json", "tests/e2e/package-lock.json"], "versioned_package_records": 273, "findings": 0, "status": "sin_detecciones_en_seleccion", "coverage_limit": "Version/advisory matching and Maven metadata resolution; no installed-version or reachability verification."},
+    {"name": "Semgrep 1.182.1", "processed_files": 132, "rules": 9, "findings": 1, "status": "detecciones_por_validar", "manual_review": "arktic.js-dynamic-execution at src/test/frontend/proof.worker.ts:26 matches a deliberate negative security probe using a constant string. Separate proof build configuration corroborates test context. No demonstrated production vulnerability; no target code executed."}
+  ],
+  "proposals_not_decisions": {"Graphify": "Keep as partial structural navigation aid", "Gitleaks": "Keep; agree fictitious positive control before claiming sensitivity", "OSV": "Keep with explicit evaluated/non-evaluated inputs", "Semgrep": "Keep engine provisionally; agree required risk/language coverage before rule expansion"},
+  "historical_controls": "Prior F2-06 controlled scanner inputs/results copied and labeled historical; not rerun.",
+  "limits": ["No product models called", "No target code/builds executed", "No tools, rules, agents, CI or product configuration changed", "No replacement tools installed", "No F2-08 work", "Final keep/adjust/replace decisions require user agreement"]
+}

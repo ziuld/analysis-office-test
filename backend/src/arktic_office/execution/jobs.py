@@ -18,13 +18,14 @@ ACTIVE = ACTIVE_STATES
 
 
 class Jobs:
-    def __init__(self, root=REPORTS, runner=None, answerer=None, *, store=None, event_sink=None):
+    def __init__(self, root=REPORTS, runner=None, answerer=None, *, store=None, event_sink=None, local_runner=None):
         self.store = store if store is not None else RunStore(root)
         self.root = self.store.root
         self.root.mkdir(parents=True, exist_ok=True)
         self.event_sink = event_sink
         self.lock = threading.Lock()
         self.runner = runner or self.execute
+        self.local_runner = local_runner or (lambda job_id,folder: run_audit(job_id,local_snapshot=folder))
         self.answerer = answerer or answer_question
         self.question_active = None
         directories = self.store.directories()
@@ -52,6 +53,14 @@ class Jobs:
 
     def start(self, repository):
         parse_repo(repository)
+        return self._start(repository)
+
+    def start_local(self, source_id):
+        from arktic_office.preparation.local_sources import local_source
+        source = local_source(source_id)
+        return self._start(source['repository'],source)
+
+    def _start(self, repository, local=None):
         with self.lock:
             if self.question_active or any(x["estado"] in ACTIVE for x in self.listing()):
                 raise BlockingIOError()
@@ -59,6 +68,9 @@ class Jobs:
             path = self.store.create(job_id, repository=repository)
             job: JobRecord = {"id": job_id, "repository": repository, "estado": "preparando",
                    "created": datetime.now(timezone.utc).isoformat()}
+            if local:
+                job.update(source_type='local_git',local_source_id=local['id'],branch=local['branch'],
+                           commit=local['commit'],project_name=local['name'])
             write_json(path / "job.json", job)
             self._publish(job_id, "preparando")
             threading.Thread(target=self.work, args=(job_id, repository), daemon=True).start()
@@ -147,7 +159,14 @@ class Jobs:
             job["estado"] = "analizando"
             write_json(path / "job.json", job)
             self._publish(job_id, "analizando")
-            returncode = self.runner(job_id, repository)
+            if job.get('source_type') == 'local_git':
+                from arktic_office.preparation.local_sources import local_source
+                source = local_source(job['local_source_id'])
+                if source['commit'] != job['commit'] or source['branch'] != job['branch']:
+                    raise AuditError('La captura local cambió después de iniciar la revisión.')
+                returncode = self.local_runner(job_id,source['folder'])
+            else:
+                returncode = self.runner(job_id, repository)
             report = read_json(path / "informe.json", {})
             if returncode == 0 and report.get("estado") == "completo":
                 job["estado"] = "completo"

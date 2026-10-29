@@ -26,7 +26,7 @@ def parse_job_id(value):
     return value
 
 
-def run(url, inspect_only=False, job_id=None):
+def run(url, inspect_only=False, job_id=None, *, local_snapshot=None):
     from arktic_office.config.models import validate_configuration, scanners_enabled
     profiles = validate_configuration()
     provider, model = settings()
@@ -49,23 +49,45 @@ def run(url, inspect_only=False, job_id=None):
         from arktic_office.adapters.scanners import scan
         scanner = scan if not inspect_only and scanners_enabled() else None
         mode = os.environ.get("AUDIT_PREPARATION_MODE", "hybrid")
+        if local_snapshot is not None:
+            if url:
+                raise AuditError('Usar una URL o --local-snapshot, no ambas.')
+            mode = 'hybrid'
+            url = 'local:///snapshot'
         if mode not in {"legacy", "hybrid"}:
             raise AuditError("AUDIT_PREPARATION_MODE debe ser legacy o hybrid.")
         stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
         import uuid
         output = RunStore(reports).create(job_id or f"{stamp}-{uuid.uuid4().hex[:8]}", exist_ok=bool(job_id), repository=url)
+        if scanner is not None:
+            from functools import partial
+            from arktic_office.adapters.scanners import run as scanner_run
+            scanner = partial(scan, runner=partial(scanner_run, capture=output/'herramientas'))
         evidence = None
         if mode == "hybrid":
             from arktic_office.preparation.evidence import prepare_complete
             from arktic_office.storage.jsonio import write_json
             write_json(output / "preparacion.json", {"mode": "complete", "status": "running"})
-            snapshot, evidence = prepare_complete(url, Path(workspace), scanner=scanner)
+            snapshot, evidence = prepare_complete(url, Path(workspace), scanner=scanner, local_snapshot=local_snapshot,
+                artifact_directory=output/'herramientas')
             write_json(output / "preparacion.json", snapshot["preparation"])
         else:
             snapshot = collect(url, scanner=scanner)
         snapshot["analyzed_at"] = datetime.now(timezone.utc).isoformat()
         from arktic_office.config.models import request_options
         snapshot["request"] = request_options()
+        from arktic_office.reporting.questionnaire import VERSION
+        from arktic_office.reporting.deterministic import results
+        snapshot["questionnaire_version"] = VERSION
+        deterministic = results(snapshot, evidence.graph if evidence else None, output / "herramientas")
+        # Full outputs are persisted separately; the polling snapshot stays small.
+        from arktic_office.storage.jsonio import write_json
+        (output / "herramientas").mkdir(exist_ok=True)
+        write_json(output / "herramientas" / "resultados-deterministas.json", deterministic)
+        snapshot["deterministic_results"] = {**deterministic, "tools": [
+            {**t, "result": {k: v for k, v in t["result"].items() if k not in {"nodes", "edges", "original_output_redacted"}}} for t in deterministic["tools"]]}
+        if evidence:
+            evidence.deterministic = deterministic
         snapshot["model_profiles"] = profiles
         snapshot["runtime"] = {"provider": provider, "model": model,
                                "reasoning": options["reasoning_config"]["effort"],
@@ -82,6 +104,7 @@ def run(url, inspect_only=False, job_id=None):
             return
         print(f"Revisando {len(snapshot['files'])} archivos de {snapshot['branch']}@{snapshot['commit']} con Hermes Agent...", flush=True)
         data = run_team(snapshot, output, evidence=evidence)
+        data["deterministic_results"] = deterministic
         if evidence:
             snapshot["coverage"]["retained_paths"] = [f["path"] for f in snapshot["files"]]
             snapshot["coverage"]["retained_bytes"] = sum(len(f["text"].encode()) for f in snapshot["files"])
@@ -99,13 +122,16 @@ def run(url, inspect_only=False, job_id=None):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Revisión acotada de la rama predeterminada con Hermes Agent")
-    parser.add_argument("repository", help="https://github.com/propietario/repositorio")
+    parser = argparse.ArgumentParser(description="Revisión de GitHub o de un snapshot de la rama local activa")
+    parser.add_argument("repository", nargs='?', help="https://github.com/propietario/repositorio")
+    parser.add_argument('--local-snapshot', help='Bundle local generado por scripts/analyze-local.ps1')
     parser.add_argument("--inspect-only", action="store_true", help="Verificar lectura sin invocar el modelo")
     parser.add_argument("--job-id", type=parse_job_id, help=argparse.SUPPRESS)
     args = parser.parse_args()
+    if bool(args.repository) == bool(args.local_snapshot):
+        parser.error('Indicar una URL o --local-snapshot.')
     try:
-        run(args.repository, args.inspect_only, args.job_id)
+        run(args.repository, args.inspect_only, args.job_id, local_snapshot=args.local_snapshot)
     except AuditError as exc:
         if args.job_id:
             try:

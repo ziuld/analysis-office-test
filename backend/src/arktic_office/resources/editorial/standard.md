@@ -4,7 +4,9 @@ Versión editorial 1, basada en la referencia visual v12 aprobada. Este document
 
 ## Común
 
-El hilo del informe es: entender la aplicación → conocer sus problemas → evaluar mejoras → consultar evidencia. El arquitecto humano evalúa y decide.
+El hilo del informe es: entender la aplicación → conocer los hallazgos y su impacto → responder las preguntas por temas → consultar los resultados deterministas. La decisión corresponde al equipo responsable.
+
+Redacción ejecutiva y comprensible para un cliente o director de tecnología, sin coletillas de IA, lenguaje promocional ni frases vacías. Expresar la conclusión y su consecuencia con términos concretos; explicar el vocabulario técnico necesario. No repetir fórmulas genéricas de respaldo o insuficiencia. Los títulos de riesgos deben ser completos, breves y comprensibles, nunca fragmentos cortados de una observación. En la presentación actual se muestran como máximo diez riesgos, con código y nombre, círculos de gravedad y una leyenda accesible. No se solicita un bloque de impacto y deuda técnica. «Pendientes de validar» se limita a omisiones concretas documentadas de lectura o cobertura; si no existen, se omite. Un resultado desconocido, una cita rechazada o una prueba en vivo pendiente no demuestran que no se revisó el código.
 
 La lectura insuficiente es un resultado normal: explica qué no puedes determinar y qué evidencia falta; conserva las aportaciones respaldadas y omite los bloques sin contenido útil. Una hipótesis del propósito necesita fuentes y se identifica como indicio; sin pistas, pide una lectura más profunda. No repitas «no encontrado» por cada apartado.
 

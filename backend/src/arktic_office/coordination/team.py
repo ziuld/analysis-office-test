@@ -380,6 +380,9 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print, evidence=None):
                 except (ValueError, TypeError):
                     pass  # Existing response validator produces the technical error.
             report, omitted, warnings = (prepare_partial_response(raw, subset, config["id"]) if evidence else prepare_cell_response(raw, subset, config["id"]))
+            from arktic_office.reporting.questionnaire import enabled, complete
+            if enabled(snapshot) and (not report.get("respuestas") or not complete(report.get("respuestas", []))):
+                warnings.append("Hay preguntas pendientes o respondidas parcialmente; revisar el cuestionario.")
             if evidence:
                 warnings.extend("Consulta no completada: " + q["result"]["error"] for q in state["retrievals"] if q["result"].get("error"))
             proposal_error = "Algunos apartados no superaron la validación; se conservan las aportaciones válidas. No se reintentó." if warnings else None
@@ -439,6 +442,16 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print, evidence=None):
         data["sintesis"] = coordinator.synthesize(results)
         data["coordination"] = coordinator.state
         if data["estado"] == "completo" and (coordinator.state.get("routing_fallback") or any(s["status"] == "error" for s in coordinator.state["stages"].values())):
+            data["estado"] = "parcial"
+    from arktic_office.reporting.questionnaire import enabled, catalog, VERSION, complete
+    if enabled(snapshot):
+        received = {a["id"]: a for _, report in results for a in report.get("respuestas", [])}
+        if coordinator:
+            received.update({a["id"]: a for a in coordinator.state.get("question_answers", [])})
+        answers = [received.get(q["id"], {**q, "estado": "no_comprobado", "respuesta": "No se recibió una respuesta validada.",
+            "evidencia": [], "herramientas": [], "pendiente": "Completar la revisión de esta pregunta; consultar el estado del agente responsable."}) for q in catalog()]
+        data["cuestionario"] = {"version": VERSION, "respuestas": answers}
+        if not complete(answers):
             data["estado"] = "parcial"
     from arktic_office.reporting.security import CONTROLS
     data["schema_version"] = 3

@@ -120,6 +120,9 @@ def flow_html(flow, snapshot):
 
 def render_html(data, snapshot, model=""):
     """Executive v14 layout over saved evidence; no extra model calls."""
+    if data.get("cuestionario"):
+        from arktic_office.reporting.reading import render_html as reading_html
+        return reading_html(data, snapshot, model)
     v = view(data, snapshot)
     css = (ASSETS / "report-v12.css").read_text(encoding="utf-8") + (ASSETS / "report-v14.css").read_text(encoding="utf-8")
     logo = 'data:image/png;base64,' + base64.b64encode((ASSETS / "arktic-logo.png").read_bytes()).decode()
@@ -158,7 +161,8 @@ def render_html(data, snapshot, model=""):
         if not facts:
             findings += '<p>No se obtuvieron observaciones respaldadas en esta revisión.</p>'
     findings += '</section>'
-    intro = chapter("introduccion", "01", "Lectura inicial", "Resumen ejecutivo y prioridades", "Lo encontrado y sus implicaciones; verificaciones pendientes en anexos.", about + cards + findings)
+    from arktic_office.reporting.questionnaire_view import html as questionnaire_html
+    intro = chapter("introduccion", "01", "Lectura inicial", "Resumen ejecutivo y prioridades", "Lo encontrado y sus implicaciones; verificaciones pendientes en anexos.", about + questionnaire_html(data, snapshot, summary=True) + cards + findings)
     operation = '<div id="flujo-actual" class="panel operation"><div class="eyebrow">Componentes y comunicación</div><h2>Flujo actual de la aplicación</h2>' + flow_html(v["flow"], snapshot) + '</div>'
     known = [r for r in v["operations"] if r["estado"] != "no_evaluado"]
     database = ''
@@ -276,6 +280,8 @@ def annex_html(v):
     coverage += '<p>No se ejecutó la aplicación ni se comprobaron acceso real, credenciales válidas, consumo o restauración. Ausencia de hallazgos no acredita seguridad.</p><h4>Archivos seleccionados</h4><ul>' + ''.join('<li>' + h(f["path"]) + (' · extractos; líneas omitidas' if f.get("partial") else '') + '</li>' for f in snapshot.get("files", [])) + '</ul><h4>Exclusiones</h4><ul>' + ''.join('<li>' + h(f["path"]) + ' · ' + h(f["reason"]) + '</li>' for f in snapshot.get("excluded", [])) + '</ul>'
     coverage += '<p>Las citas se contrastan con la evidencia, no con la verdad de la interpretación. Las aportaciones contradictorias requieren revisión humana.</p>'
     body += detail("cobertura", "Marco de seguridad, cobertura y límites", "Origen, fallos y comprobaciones automáticas", coverage)
+    from arktic_office.reporting.questionnaire_view import html as questionnaire_html, deterministic_html
+    body += questionnaire_html(data, snapshot) + deterministic_html(data)
     return chapter("anexos", "04", "Fuentes y comprobaciones", "Anexos", "Explicaciones completas y comprensibles; terminología y resultado original en un segundo nivel.", body)
 
 def render_markdown(data, snapshot, model=""):
@@ -386,4 +392,5 @@ def render_markdown(data, snapshot, model=""):
     lines += ['- Archivo: ' + text(f["path"]) + (' · extractos; líneas omitidas' if f.get("partial") else '') for f in snapshot.get("files", [])]
     lines += ['- Excluido: ' + text(f["path"] + ' · ' + f["reason"]) for f in snapshot.get("excluded", [])]
     from arktic_office.reporting.compact import compact_markdown
-    return compact_markdown('\n'.join(lines) + '\n', v)
+    from arktic_office.reporting.questionnaire_view import markdown as questionnaire_markdown
+    return compact_markdown('\n'.join(lines) + '\n', v) + questionnaire_markdown(data, snapshot)

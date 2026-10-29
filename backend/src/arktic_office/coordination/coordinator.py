@@ -92,7 +92,7 @@ class Coordinator:
             return {k: redact(v.strip()) for k, v in value.items()}
         tasks = self.call("routing", 'Actúa como orquestador. Define un encargo breve por especialidad. '
                           'Cada especialista elegirá sus fuentes consultando el snapshot y grafo compartidos. '
-                          'No selecciones archivos ni redactes hallazgos ni omitas especialistas. '
+                          'No selecciones archivos ni redactes hallazgos ni omitas especialistas. Si existe un cuestionario obligatorio, conserva todas sus preguntas y el reparto fijado. '
                           'Devuelve SOLO JSON {"security":"objetivo","architecture":"objetivo","inventory":"objetivo"}.',
                           {"context": context, "roles": [{k: c[k] for k in ("id", "focus", "limits")} for c in plan]}, validate)
         self.state["context"] = context
@@ -102,6 +102,9 @@ class Coordinator:
         return [{**c, "task": tasks[c["id"]] if tasks else c["focus"]} for c in plan]
 
     def synthesize(self, results):
+        from arktic_office.reporting.questionnaire import enabled
+        if enabled(self.snapshot):
+            return self.synthesize_questions(results)
         contributions = {}
         for cell, report in results:
             for certainty in ("confirmados", "indicios"):
@@ -151,3 +154,54 @@ class Coordinator:
                          'Devuelve SOLO JSON {"resumen":[{"texto":"hasta 350 caracteres","aportaciones":["id exacto"]}]}. '
                          'Las fuentes completas permanecen en Core y se enlazan mediante los IDs exactos de aportaciones. '
                          'La síntesis acompaña a los originales, no los reemplaza.', brief, validate) or []
+
+    def synthesize_questions(self, results):
+        from arktic_office.reporting.questionnaire import catalog
+        answers = {a["id"]: a for _, report in results for a in report.get("respuestas", [])}
+        if not answers:
+            self.state["stages"]["synthesis"] = {"status": "skipped", "calls": 0, "reason": "no_valid_answers"}
+            self.save()
+            return []
+        # Every original answer, including unknowns, reaches the coordinator.
+        brief = {key: {k: v for k, v in a.items() if k not in {"evidencia", "pregunta", "role"}} for key, a in answers.items()}
+        original = {role: {"hallazgos": [{k: x.get(k) for k in ("observacion", "severidad", "condiciones", "accion", "pendiente")}
+                    for section in ("confirmados", "indicios") for x in report.get(section, [])],
+                    "advertencia": "Las respuestas parciales y desconocidas no autorizan conclusiones afirmativas."} for role, report in results}
+        def validate(value):
+            if not isinstance(value, dict) or set(value) != {"respuestas"} or not isinstance(value["respuestas"], list) or len(value["respuestas"]) != 3:
+                raise AuditError("Síntesis debe responder Q01, Q02 y Q03.")
+            summaries, received = [], set()
+            final = []
+            for item in value["respuestas"]:
+                if not isinstance(item, dict) or set(item) != {"id", "respuesta", "aportaciones"} or item["id"] not in {"Q01", "Q02", "Q03"} or item["id"] in received:
+                    raise AuditError("Pregunta de coordinación inválida o duplicada.")
+                if not isinstance(item["respuesta"], str) or not 1 <= len(item["respuesta"].strip()) <= 700:
+                    raise AuditError("Respuesta de coordinación fuera de límite.")
+                keys = item["aportaciones"]
+                if not isinstance(keys, list) or not 1 <= len(keys) <= len(answers) or any(not isinstance(k, str) or k not in answers for k in keys):
+                    raise AuditError("Síntesis sin respuestas de origen válidas.")
+                received.add(item["id"])
+                refs, tools = [], []
+                for key in keys:
+                    for ref in answers[key]["evidencia"]:
+                        if ref not in refs:
+                            refs.append(ref)
+                    tools.extend(t for t in answers[key]["herramientas"] if t not in tools)
+                question = next(q for q in catalog("coordinator") if q["id"] == item["id"])
+                state = "parcial" if any(answers[k]["estado"] in {"parcial", "no_comprobado"} for k in keys) else "respondida"
+                answer = {**question, "estado": state, "respuesta": redact(item["respuesta"]), "evidencia": refs,
+                    "herramientas": tools, "aportaciones": keys, "pendiente": "Consultar las respuestas de origen y resolver sus límites." if state == "parcial" else ""}
+                final.append(answer)
+                summaries.append({"texto": answer["respuesta"], "pregunta_id": item["id"], "aportaciones": keys,
+                    "certeza": "indicios" if state == "parcial" else "confirmados", "evidencia": refs})
+            self.state["question_answers"] = final
+            return summaries
+        task = ('Responde estas tres preguntas del coordinador: ' + json.dumps(catalog("coordinator"), ensure_ascii=False) +
+            '. Recibes TODAS las respuestas validadas de los especialistas, incluidos no_aplica y no_comprobado, '
+            'y los riesgos con condiciones. Resume conclusiones; distingue lo que resolver antes del despliegue de mejoras posteriores '
+            'con motivo y condiciones, sin autorizar el despliegue ni inventar bloqueantes. '
+            'Enumera carencias y discrepancias reales, sin resolver contradicciones como hechos. '
+            'Mantén incertidumbre; una protección no encontrada no es ausencia demostrada. '
+            'Devuelve SOLO {"respuestas":[{"id":"Q01","respuesta":"hasta 700 caracteres","aportaciones":["Qxx"]}, '
+            '{"id":"Q02","respuesta":"...","aportaciones":["Qxx"]},{"id":"Q03","respuesta":"...","aportaciones":["Qxx"]}]}.')
+        return self.call("synthesis", task, {"respuestas": brief, "riesgos": original}, validate) or []

@@ -24,6 +24,9 @@ services:
     environment:
       AUDIT_PREPARATION_MODE: hybrid
       AUDIT_INDEXER_URL: http://preparator:8090/index
+      AUDIT_LOCAL_INPUTS_ROOT: /local-inputs
+    volumes:
+      - ./artifacts/local-inputs:/local-inputs:ro
     depends_on:
       preparator:
         condition: service_healthy

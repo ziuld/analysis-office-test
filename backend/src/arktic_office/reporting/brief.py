@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from urllib.parse import quote
 
-from arktic_office.preparation.repository import parse_repo
+from arktic_office.preparation.repository import parse_repo, AuditError
 
 UNKNOWN = "No determinado en esta revisión"
 TOPIC_NAMES = {
@@ -23,7 +23,12 @@ def text(value):
 def references(item, snapshot):
     if snapshot.get("simulation"):
         return ", ".join(dict.fromkeys(text(f"{ref['path']}:{ref['line']} (fuente ficticia)") for ref in item.get("evidencia", [])))
-    owner, repo = parse_repo(snapshot["repository"])
+    try:
+        owner, repo = parse_repo(snapshot["repository"])
+    except AuditError:
+        if snapshot.get('source_type') != 'local_git':
+            raise
+        return ", ".join(dict.fromkeys(text(f"{ref['path']}:{ref['line']}") for ref in item.get('evidencia', [])))
     commit = snapshot["commit"]
     labels = []
     for ref in item.get("evidencia", []):

@@ -17,7 +17,8 @@ def validate_evaluation(value):
 
 def useful(report):
     p = report.get("presentacion", {})
-    return bool(report.get("confirmados") or report.get("indicios") or
+    return bool(any(a.get("estado") in {"respondida", "parcial", "no_aplica"} for a in report.get("respuestas", report.get("cuestionario", {}).get("respuestas", []))) or
+                report.get("confirmados") or report.get("indicios") or
                 any(c.get("estado") != "no_evaluado" for c in report.get("controles", [])) or
                 p.get("resumen") or p.get("flujo_actual", {}).get("componentes") or
                 any(r.get("estado") != "no_evaluado" for r in p.get("estado_operativo", [])) or
@@ -27,6 +28,7 @@ def useful(report):
 def notice(data):
     cells = data.get("celulas", [])
     questions = [q if isinstance(q, str) else q["pregunta"] for q in data.get("dudas", [])]
+    questions.extend(a["id"] + ": " + a["pendiente"] for a in data.get("cuestionario", {}).get("respuestas", []) if a["estado"] in {"parcial", "no_comprobado"})
     for cell in cells:
         questions.extend(cell.get("necesita", []))
     questions.extend(r["pendiente"] for r in data.get("presentacion", {}).get("estado_operativo", []) if r.get("estado") == "no_evaluado")

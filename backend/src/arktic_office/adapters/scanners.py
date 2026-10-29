@@ -6,6 +6,7 @@ import re
 import subprocess
 import tempfile
 import time
+import shutil
 from arktic_office.preparation.repository import redact
 from arktic_office.adapters.source_scan import scan_source
 
@@ -28,10 +29,29 @@ def osv_input(path):
 
 
 
-def run(command, output):
+def run(command, output, *, capture=None):
     # No inherited tokens, credentials or repository-controlled scanner settings.
     env = {"PATH": os.environ.get("PATH", ""), "HOME": str(output.parent), "TMPDIR": str(output.parent)}
-    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=90, env=env, cwd=output.parent)
+    started = time.monotonic()
+    try:
+        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=90, env=env, cwd=output.parent)
+    except subprocess.TimeoutExpired as exc:
+        if capture is not None:
+            folder = Path(capture) / command[0]
+            folder.mkdir(parents=True, exist_ok=True)
+            (folder/'stdout.txt').write_bytes(exc.stdout or b'')
+            (folder/'stderr.txt').write_bytes(exc.stderr or b'')
+            (folder/'ejecucion.json').write_text(json.dumps({'command':command,'exit_code':None,'timeout':True}),encoding='utf-8')
+            if output.is_file(): shutil.copyfile(output,folder/'salida-original.json')
+        raise
+    if capture is not None:
+        folder = Path(capture) / command[0]
+        folder.mkdir(parents=True, exist_ok=True)
+        (folder/'stdout.txt').write_bytes(result.stdout)
+        (folder/'stderr.txt').write_bytes(result.stderr)
+        (folder/'ejecucion.json').write_text(json.dumps({'command':command,'exit_code':result.returncode,
+            'seconds':round(time.monotonic()-started,3),'timeout':False},ensure_ascii=False,indent=2),encoding='utf-8')
+        if output.is_file(): shutil.copyfile(output,folder/'salida-original.json')
     if result.returncode not in (0, 1):
         raise ValueError("Scanner failed")
     if not output.is_file() or output.stat().st_size > 8_000_000:
