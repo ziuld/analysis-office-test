@@ -25,6 +25,10 @@ for p in supported:
         detail = _DISPATCH[p.suffix.lower()](p)
         reason = detail.get("skipped")
         error = str(detail.get("error", ""))
+        if any(reason in error for reason in ('while scanning', 'while parsing', "expected '<document start>'")) and any(marker in p.read_text() for marker in ('[VALOR OCULTO]', '[LÍNEA CON POSIBLE CREDENCIAL OCULTA]', '[POSIBLE SECRETO OCULTO POR GITLEAKS]')):
+            unsupported[relative_path] = "yaml_structure_unavailable_after_secret_redaction"
+            failed.discard(relative_path)
+            skipped.discard(relative_path)
         if reason in {"scalar yaml", "data yaml (not a config/manifest)"} or "could not determine a constructor for the tag" in error or "could not determine a constructor for tag" in error:
             unsupported[relative_path] = "unsupported_yaml_dialect_or_data_schema"
             failed.discard(relative_path)

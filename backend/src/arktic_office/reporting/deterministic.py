@@ -37,7 +37,8 @@ def results(snapshot, graph=None, artifact_directory=None):
                 record["result"] = {**record["result"], "original_output_redacted": original}
             if execution is not None:
                 record["result"] = {**record["result"], "execution": execution}
-    return safe({"repository": snapshot["repository"], "commit": snapshot["commit"], "tools": records})
+    return safe({"repository": snapshot["repository"], "commit": snapshot["commit"], "tools": records,
+                 "preparation_cache": snapshot.get("preparation", {}).get("cache", {})})
 
 
 def context(snapshot):

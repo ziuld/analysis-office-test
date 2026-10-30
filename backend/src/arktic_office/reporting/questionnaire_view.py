@@ -58,18 +58,21 @@ def html(data, snapshot, summary=False):
 
 def deterministic_html(data):
     from arktic_office.reporting.view import detail
+    from arktic_office.reporting.tool_narrative import narrative
     saved = data.get("deterministic_results")
     if not saved:
         return ""
-    body = '<section id="resultados-deterministas"><h2>Resultados de todos los análisis deterministas</h2><p>Salidas estructuradas conservadas para este commit. Los posibles secretos se ocultan. No son conclusiones del modelo; una herramienta no evaluada no equivale a una comprobación limpia.</p>'
+    body = '<section id="resultados-deterministas"><h2>Resultados de todos los análisis deterministas</h2><p>Qué revisó cada herramienta, qué encontró y qué queda por comprobar. Las alertas automáticas se distinguen de las vulnerabilidades contrastadas por los agentes.</p>'
     body += '<p>Repositorio: ' + escape(saved["repository"]) + ' · commit ' + escape(saved["commit"]) + '</p>'
+    cache = saved.get('preparation_cache', {})
+    if cache.get('status') == 'reused':
+        body += '<p>Preparación reutilizada para el mismo repositorio y commit. Generada el ' + escape(cache.get('prepared_at', 'fecha no disponible')) + '. Los agentes se han ejecutado de nuevo; los escáneres y Graphify conservan los resultados de esa fecha.</p>'
     for tool in saved["tools"]:
-        result = tool["result"]
-        content = '<p><b>Estado:</b> ' + escape(tool["status"]) + '</p><p>' + escape(tool["detail"]) + '</p>'
-        content += '<p>Hallazgos normalizados: ' + str(len(result.get("findings", []))) + ' · archivos de entrada registrados: ' + str(len(result.get("input_files", result.get("inventory", [])))) + '</p>'
-        content += '<p>Se conserva el resultado completo estructurado: entradas, hallazgos, cobertura, omisiones y diagnósticos disponibles. Graphify incluye nodos y relaciones; su mapa es una ayuda estática.</p>'
-        content += '<pre>' + escape(json.dumps(result, ensure_ascii=False, indent=2)) + '</pre>'
-        body += detail(tool["id"], tool["id"] + " · " + tool["name"], tool["status"], content)
+        state, paragraphs, findings = narrative(tool)
+        content = ''.join('<p>' + escape(p) + '</p>' for p in paragraphs)
+        if findings:
+            content += '<ul>' + ''.join('<li>' + escape(f) + '</li>' for f in findings) + '</ul>'
+        body += detail(tool["id"], tool["id"] + " · " + tool["name"], state, content)
     return body + '</section>'
 
 
@@ -78,16 +81,32 @@ def markdown(data, snapshot):
     lines = []
     answers = data.get("cuestionario", {}).get("respuestas", [])
     if answers:
+        from arktic_office.reporting.questionnaire import favorable_answers
+        strengths = favorable_answers(data)[:5]
+        lines += ['', '## Protecciones y buenas prácticas comprobadas', '']
+        for a in strengths:
+            good = a["aspecto_favorable"]
+            lines += ['- **' + text(good["titulo"]) + '**: ' + text(good["detalle"]) + ' — ' + a["id"] + ' · ' + text(a["pregunta"])]
+        if not strengths:
+            lines += ['Esta revisión no documentó protecciones o buenas prácticas con respaldo suficiente para destacarlas. Esto no significa que la aplicación carezca de ellas.']
         lines += ['', '## Cuestionario de revisión', '']
     for a in answers:
-        lines += ['### ' + a["id"] + ' · ' + text(a["pregunta"]), '', text(a["estado"] + ': ' + a["respuesta"]),
-            '', 'Pendiente: ' + text(a.get("pendiente") or 'No se añadió un pendiente específico.'), '', references(a, snapshot),
+        lines += ['### ' + a["id"] + ' · ' + text(a["pregunta"]), '', text(a["respuesta"]),
+            *(['', 'Queda por comprobar: ' + text(a['pendiente'])] if a.get('pendiente') else []), '', references(a, snapshot),
             '', 'Herramientas: ' + text(', '.join(a.get("herramientas", [])) or 'Sin referencias a herramientas.')]
+        if a.get("aspecto_favorable") and a.get("evidencia") and a["estado"] in {"respondida", "parcial"}:
+            lines += ['', '**Implementación comprobada: ' + text(a["aspecto_favorable"]["titulo"]) + '.** ' + text(a["aspecto_favorable"]["detalle"])]
     saved = data.get("deterministic_results")
     if saved:
-        lines += ['', '## Resultados de todos los análisis deterministas', '', 'Salidas estructuradas con posibles secretos ocultos.']
+        lines += ['', '## Resultados de todos los análisis deterministas', '', 'Resultados explicados, alcance y comprobaciones pendientes.']
+        cache = saved.get('preparation_cache', {})
+        if cache.get('status') == 'reused':
+            lines += ['', 'Preparación reutilizada para el mismo repositorio y commit. Generada el ' + text(cache.get('prepared_at', 'fecha no disponible')) + '. Los agentes se han ejecutado de nuevo; escáneres y Graphify conservan los resultados de esa fecha.']
         for tool in saved["tools"]:
-            lines += ['', '### ' + tool["id"] + ' · ' + text(tool["name"]), '', text(tool["status"] + ': ' + tool["detail"]), '',
-                # Indented code cannot be closed by repository-controlled backticks.
-                '\n'.join('    ' + line for line in json.dumps(tool["result"], ensure_ascii=False, indent=2).splitlines())]
+            from arktic_office.reporting.tool_narrative import narrative
+            state, paragraphs, findings = narrative(tool)
+            lines += ['', '### ' + tool["id"] + ' · ' + text(tool["name"]), '', state]
+            for p in paragraphs:
+                lines += ['', text(p)]
+            lines += ['- ' + text(f) for f in findings]
     return '\n'.join(lines) + '\n' if lines else ""

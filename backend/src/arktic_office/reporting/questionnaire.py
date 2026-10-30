@@ -21,6 +21,11 @@ def instructions(role):
     return ("\nCUESTIONARIO OBLIGATORIO: " + json.dumps(catalog(role), ensure_ascii=False) +
         "\nResponde cada ID exactamente una vez en respuestas. Estados: respondida, parcial, no_aplica, no_comprobado. "
         "Cada respuesta: {id, estado, respuesta, evidencia:[F#:L#], herramientas:[ID Dxx], pendiente}. "
+        "Si has comprobado una protección o buena práctica concreta, explícalo en respuesta y añade opcionalmente "
+        "aspecto_favorable:{titulo,detalle}, con título hasta 110 caracteres y detalle hasta 400. "
+        "Solo con estado respondida/parcial y citas de código/configuración que respalden esa implementación; "
+        "no basta un scanner sin detecciones, una declaración genérica, no_aplica ni no encontrar problemas. "
+        "Conserva el alcance concreto de la protección y sus límites; no afirmes seguridad global ni compenses riesgos. "
         "Respuesta concreta de 1–3 frases (máximo 700 caracteres), pendiente hasta 400. "
         "No_aplica exige justificación y fuentes de la clasificación; no encontrar algo significa no_comprobado, no ausencia. "
         "Respondida y no_aplica requieren fuentes de código/configuración o herramientas realmente entregadas que sustenten la respuesta. "
@@ -61,6 +66,15 @@ def validate_answers(values, role, resolve_refs, tools):
                 raise AuditError("Respuesta pendiente sin indicar cómo completarla.")
             valid[key] = {**expected[key], "estado": item["estado"], "respuesta": redact(item["respuesta"]),
                 "pendiente": redact(item["pendiente"]), "evidencia": citations, "herramientas": tool_ids}
+            if item.get("aspecto_favorable") is not None:
+                favorable = item["aspecto_favorable"]
+                if (item["estado"] not in {"respondida", "parcial"} or not citations
+                        or not isinstance(favorable, dict) or set(favorable) != {"titulo", "detalle"}
+                        or any(not isinstance(favorable.get(f), str) or not 1 <= len(favorable[f].strip()) <= cap
+                               for f, cap in (("titulo", 110), ("detalle", 400)))):
+                    warnings.append(key + ": aspecto favorable sin implementación respaldada; se conserva la respuesta sin destacarlo.")
+                else:
+                    valid[key]["aspecto_favorable"] = {f: redact(v.strip()) for f, v in favorable.items()}
         except (AuditError, KeyError, TypeError) as exc:
             warnings.append("Respuesta de cuestionario rechazada: " + str(exc))
     for key, question in expected.items():
@@ -73,3 +87,11 @@ def validate_answers(values, role, resolve_refs, tools):
 
 def complete(answers):
     return all(a["estado"] in {"respondida", "no_aplica"} for a in answers)
+
+
+def favorable_answers(data):
+    """Only explicit, source-backed strengths; never infer from clean scanners."""
+    items = [a for a in data.get("cuestionario", {}).get("respuestas", [])
+            if a.get("aspecto_favorable") and a.get("evidencia")
+            and a.get("estado") in {"respondida", "parcial"}]
+    return sorted(items, key=lambda a: ({"security": 0, "architecture": 1, "inventory": 2}.get(a.get("role"), 3), a["id"]))

@@ -68,8 +68,10 @@ def run(url, inspect_only=False, job_id=None, *, local_snapshot=None):
             from arktic_office.preparation.evidence import prepare_complete
             from arktic_office.storage.jsonio import write_json
             write_json(output / "preparacion.json", {"mode": "complete", "status": "running"})
+            from arktic_office.preparation.hybrid import indexer_signature
             snapshot, evidence = prepare_complete(url, Path(workspace), scanner=scanner, local_snapshot=local_snapshot,
-                artifact_directory=output/'herramientas')
+                artifact_directory=output/'herramientas', cache_root=reports/'.preparation-cache',
+                indexer_signature=indexer_signature(), refresh=os.environ.get('AUDIT_PREPARATION_REFRESH') == '1')
             write_json(output / "preparacion.json", snapshot["preparation"])
         else:
             snapshot = collect(url, scanner=scanner)

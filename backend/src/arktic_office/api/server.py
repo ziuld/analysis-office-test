@@ -39,14 +39,16 @@ def handler_for(jobs):
                     return self.send(200, jobs.question(parts[1], parts[3]))
                 if len(parts) == 2 and parts[0] == "runs":
                     return self.send(200, jobs.detail(parts[1]))
-                if len(parts) == 3 and parts[0] == "runs" and parts[2] in {"report", "download"}:
-                    path = jobs.directory(parts[1]) / "informe.md"
+                if len(parts) == 3 and parts[0] == "runs" and parts[2] in {"report", "download", "download-html"}:
+                    extension = 'html' if parts[2] == 'download-html' else 'md'
+                    path = jobs.directory(parts[1]) / ('informe.' + extension)
                     if not path.is_file():
                         raise FileNotFoundError()
                     if parts[2] == "report":
                         html = path.with_suffix(".html")
                         return self.send(200, {"text": path.read_text(encoding="utf-8"), "html": html.read_text(encoding="utf-8") if html.is_file() else None})
-                    return self.send(200, path.read_bytes(), "text/markdown; charset=utf-8", "informe-" + parts[1] + ".md")
+                    content_type = 'text/html; charset=utf-8' if extension == 'html' else 'text/markdown; charset=utf-8'
+                    return self.send(200, path.read_bytes(), content_type, 'informe-' + parts[1] + '.' + extension)
                 raise FileNotFoundError()
             except AuditError as exc:
                 self.send(400, {"error": str(exc)})

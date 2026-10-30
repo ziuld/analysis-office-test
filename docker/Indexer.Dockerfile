@@ -5,17 +5,19 @@ COPY --from=uv /uv /usr/local/bin/uv
 RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
+ENV UV_TOOL_DIR=/opt/uv-tools UV_TOOL_BIN_DIR=/usr/local/bin UV_PYTHON_DOWNLOADS=never
+# Official PyPI installation, isolated by uv; SQL is an upstream optional extra.
+RUN uv tool install --python /usr/local/bin/python 'graphifyy[sql]==0.9.97'
+ENV PATH="/opt/uv-tools/graphifyy/bin:$PATH"
 COPY preparation/ ./
 COPY docker/hermes3d-local-demo.patch /app/docker/hermes3d-local-demo.patch
-RUN python runner.py install-source
-WORKDIR /opt/graphify
-RUN uv sync --frozen --no-dev --no-editable
-RUN uv pip install --python .venv/bin/python --no-deps --require-hashes -r /app/requirements-overlay.lock \
-    && uv pip check --python .venv/bin/python
+RUN uv pip check --python /opt/uv-tools/graphifyy/bin/python \
+    && graphify --version \
+    && graphify install --platform hermes --project
 RUN mkdir -p /usr/local/share/licenses/graphify \
-    && cp LICENSE LICENSE-MIT NOTICE /usr/local/share/licenses/graphify/ \
+    && cp -r /opt/uv-tools/graphifyy/lib/python3.12/site-packages/graphifyy-*.dist-info/licenses/. /usr/local/share/licenses/graphify/ \
     && useradd --uid 1000 --create-home preparer
-ENV PATH="/opt/graphify/.venv/bin:$PATH" PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 \
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 \
     GRAPHIFY_BACKEND=none GRAPHIFY_QUERY_LOG_DISABLE=1 PYTHONHASHSEED=0 \
     PYTHONSAFEPATH=1 PYTHONPATH=/app HOME=/tmp/home
 WORKDIR /app

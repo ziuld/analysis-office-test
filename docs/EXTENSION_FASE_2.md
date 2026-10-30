@@ -64,3 +64,29 @@ En cuestionarios con investigación habilitada y textos disponibles, Core rechaz
 
 Validación: 57 pruebas dirigidas correctas y una llamada real mínima a Sol (615 tokens comunicados). La suite general inicial ejecutó 168 pruebas y detectó tres fallos: uno era un límite antiguo fijado en el test de reparto (actualizado para validar el perfil vigente); los otros dos corresponden a compatibilidad del prompt editorial y un texto esperado del HTML antiguo, fuera de este ajuste. No se ha repetido el análisis completo del repositorio ni demostrado todavía una mejora de calidad. Artefactos: artifacts/research-freedom-2026-10-29/.
 
+
+### Protecciones y buenas prácticas comprobadas — 29/10/2026
+
+Las respuestas admiten aspecto_favorable opcional (titulo y detalle), únicamente con estado respondida/parcial y citas válidas de código/configuración. Una valoración favorable inválida se omite sin descartar la respuesta. Los escáneres limpios, no_aplica y la ausencia de hallazgos no generan fortalezas. HTML y Markdown muestran hasta cinco en el resumen, priorizando Seguridad y después Arquitectura e Inventario, y conservan todas en sus preguntas con fuentes y límites. El coordinador recibe estas aportaciones para equilibrar Q01 sin compensar riesgos ni garantizar seguridad global. Si no hay ninguna se explica que no se documentaron protecciones con respaldo suficiente. La plantilla editable refleja el apartado.
+
+La prueba de Web Corporativa 2.0 - IA utiliza develop@4ae82b4097b3b01360bd8c6fb6d779b210f50564: 682 archivos, 58969662 bytes. Se añade MaxSnapshotBytes/--max-bytes configurable (1–256 MB, predeterminado 32 MB) al exportador local. Para esta ejecución el exportador y el core usan 64 MB sin excluir archivos.
+
+
+### Preparación persistente e instalación oficial de Graphify — 29/10/2026
+
+Graphify 0.9.97 se instala desde PyPI con uv tool install graphifyy[sql]==0.9.97 y registra la skill de Hermes dentro de la imagen mediante graphify install --platform hermes --project. No se instala en Windows. Registrar la skill no inicia un análisis semántico por IA; el adaptador actual sigue usando extracción estática. Los modelos consultan el grafo y los textos del snapshot. SQL incorpora el extra oficial; los YAML cuya estructura deja de ser interpretable al ocultar posibles secretos quedan unsupported con motivo específico, nunca processed. Errores reales de extracción/capacidad siguen bloqueando.
+
+La preparación verificada se guarda en reports/.preparation-cache/ y persiste al recrear contenedores. Su identidad incluye repositorio, commit, ruta local, inventario verificado, ejecutables de scanners, reglas, implementación y huella de la instalación de Graphify. Excluye modelos, razonamiento, instrucciones y respuestas. Se conserva el texto ocultado disponible para consultas, los resultados de scanners, el grafo y los artefactos originales; cada nueva ejecución mantiene sus anexos y procedencia. Antes de reutilizar se verifican hashes; errores o cachés alteradas se regeneran. La copia del snapshot sigue verificándose. Solo se guardan preparaciones que finalizaron correctamente.
+
+AUDIT_PREPARATION_REFRESH=1 fuerza regenerar, útil para renovar los avisos OSV aun sin cambiar el código. El informe indica la fecha original cuando reutiliza resultados. Las valoraciones de agentes y sus respuestas nunca se reutilizan automáticamente. No es una aprobación de seguridad ni una actualización continua de vulnerabilidades.
+
+
+### Anexos en lenguaje natural — 29/10/2026
+
+HTML y descarga Markdown presentan únicamente explicaciones de resultados, alertas y cobertura, sin bloques de código ni volcados JSON. Se mantienen los cinco análisis y todas las alertas normalizadas, con paquete/versión/aviso cuando consta y localización sin reproducir código. Los nodos y relaciones se resumen por su alcance; los archivos no indexados conservan su explicación. La descarga por cuestionario utiliza la estructura de lectura y no añade las citas literales de código del formato anterior. Los originales permanecen en los artefactos internos, disponibles para Core y agentes. Las instrucciones comunes piden describir el comportamiento en lugar de copiar expresiones de implementación. Estos cambios de presentación no invalidan la preparación persistente.
+
+
+### Descarga HTML y Markdown — 30/10/2026
+
+La oficina ofrece Leer informe, Descargar Markdown y Descargar HTML. La descarga HTML utiliza el archivo guardado de la revisión seleccionada, con tipo text/html y cabecera de archivo adjunto; no vuelve a generar el informe ni ejecuta agentes. La API conserva la ruta histórica /download para Markdown y añade /download-html. La opción HTML solo aparece cuando existe informe.html, mediante has_html_report. El proxy del frontend admite explícitamente la nueva ruta. Validación dirigida: 18 pruebas correctas de API y almacenamiento.
+

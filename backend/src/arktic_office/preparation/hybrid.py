@@ -14,6 +14,17 @@ from arktic_office.config.models import registry, profile
 LIMITS = dict(registry()["roles"]["preparation"])
 
 
+def indexer_signature():
+    url = os.environ.get('AUDIT_INDEXER_URL', 'http://preparator:8090/index').rsplit('/', 1)[0] + '/health'
+    try:
+        with build_opener(NoRedirect()).open(url, timeout=5) as response:
+            value = json.loads(response.read(16000))
+        fingerprint = value.get('fingerprint')
+        return fingerprint if isinstance(fingerprint, str) and len(fingerprint) == 64 else None
+    except (OSError, ValueError):
+        return None
+
+
 def index_files(files, *, complete=False):
     url = os.environ.get("AUDIT_INDEXER_URL", "http://preparator:8090/index")
     body = json.dumps({"files": files, "complete": complete}, ensure_ascii=False).encode()

@@ -102,7 +102,7 @@ class RunStore:
         return {**job, "commit": snapshot.get("commit",job.get('commit')), "branch": snapshot.get("branch",job.get('branch')), "celulas": cells,
                 "activity": project(path, job, cells),
                 "mensaje": report.get("mensaje"), "necesita": report.get("necesita", []),
-                "has_report": (path / "informe.md").is_file(), "evidence_origin": snapshot.get("evidence_origin"),
+                "has_report": (path / "informe.md").is_file(), "has_html_report": (path / "informe.html").is_file(), "evidence_origin": snapshot.get("evidence_origin"),
                 "report_format": report.get("schema_version", 1), "derived_from": snapshot.get("source_revision"), "simulation": bool(snapshot.get("simulation"))}
 
     def listing(self):

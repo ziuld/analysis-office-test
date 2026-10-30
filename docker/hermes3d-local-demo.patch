@@ -26,7 +26,7 @@ index 1bf6457..3aadafa 100644
    const token = String(studioAccessToken ?? "").trim();
 diff --git a/src/app/api/audit/[...path]/route.ts b/src/app/api/audit/[...path]/route.ts
 new file mode 100644
-index 0000000..ce1f1df
+index 0000000..b0ca1e9
 --- /dev/null
 +++ b/src/app/api/audit/[...path]/route.ts
 @@ -0,0 +1,42 @@
@@ -39,7 +39,7 @@ index 0000000..ce1f1df
 +  const { path } = await context.params;
 +  const valid = path.length === 1 && ["runs", "local-sources"].includes(path[0]) ||
 +    path.length === 2 && path[0] === "runs" && /^[a-zA-Z0-9_-]{8,80}$/.test(path[1]) ||
-+    path.length === 3 && path[0] === "runs" && /^[a-zA-Z0-9_-]{8,80}$/.test(path[1]) && ["report", "download", "questions"].includes(path[2]) ||
++    path.length === 3 && path[0] === "runs" && /^[a-zA-Z0-9_-]{8,80}$/.test(path[1]) && ["report", "download", "download-html", "questions"].includes(path[2]) ||
 +    path.length === 4 && path[0] === "runs" && /^[a-zA-Z0-9_-]{8,80}$/.test(path[1]) && path[2] === "questions" && (/^[0-9a-f-]{36}$/.test(path[3]) || ["coordinator", "security", "architecture", "inventory"].includes(path[3]));
 +  if (!valid || request.method === "POST" && !(path.length === 1 && path[0] === "runs" || path.length === 3 && path[2] === "questions")) {
 +    return NextResponse.json({ error: "Ruta no disponible." }, { status: 404 });
@@ -299,10 +299,10 @@ index 0000000..9441f36
 +}
 diff --git a/src/features/audit/AuditOffice.tsx b/src/features/audit/AuditOffice.tsx
 new file mode 100644
-index 0000000..2f30c0b
+index 0000000..ba8b676
 --- /dev/null
 +++ b/src/features/audit/AuditOffice.tsx
-@@ -0,0 +1,145 @@
+@@ -0,0 +1,151 @@
 +"use client";
 +
 +import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -316,7 +316,7 @@ index 0000000..2f30c0b
 +interface Cell { id: string; nombre: string; estado: string; model: string; reasoning: string; error?: string; mensaje?: string; necesita?: string[]; coverage?: string; reason?: string; missing?: string[] }
 +interface Activity { state: string; text: string; working: boolean; meeting: boolean }
 +interface LocalSource { id: string; name: string; repository: string; branch: string; commit: string; source_path: string }
-+interface Run { activity?: Record<string, Activity>; id: string; repository: string; estado: string; commit?: string; branch?: string; celulas: Cell[]; error?: string; mensaje?: string; necesita?: string[]; has_report: boolean; historical?: boolean; evidence_origin?: string; report_format?: number; derived_from?: string; simulation?: boolean }
++interface Run { activity?: Record<string, Activity>; id: string; repository: string; estado: string; commit?: string; branch?: string; celulas: Cell[]; error?: string; mensaje?: string; necesita?: string[]; has_report: boolean; has_html_report?: boolean; historical?: boolean; evidence_origin?: string; report_format?: number; derived_from?: string; simulation?: boolean }
 +const roles = [{ id: "coordinator", name: "Coordinador", color: "#38bdf8" }, { id: "security", name: "Seguridad", color: "#fbbf24" }, { id: "architecture", name: "Arquitectura", color: "#a78bfa" }, { id: "inventory", name: "Inventario", color: "#34d399" }];
 +const busy = (state?: string) => state === "preparando" || state === "analizando";
 +import { statusLabel as label, avatarStatus } from "./auditStatus";
@@ -440,7 +440,13 @@ index 0000000..2f30c0b
 +          {cell?.mensaje && <span className="mt-2 block text-xs text-amber-200">{cell.mensaje}</span>}
 +          {cell?.necesita?.length ? <span className="mt-2 block text-xs text-slate-300">Para avanzar: {cell.necesita.join(" · ")}</span> : null}
 +        </button>; })}
-+        {current.has_report && <div className="flex gap-2 pt-2"><button onClick={() => void openReport()} className="flex-1 rounded-lg border border-cyan-300/40 px-3 py-3 text-sm text-cyan-200">Leer informe</button><a href={`/api/audit/runs/${current.id}/download`} className="flex-1 rounded-lg bg-emerald-300 px-3 py-3 text-center text-sm font-semibold text-slate-950">Descargar informe</a></div>}
++        {current.has_report && <div className="space-y-2 pt-2">
++          <button onClick={() => void openReport()} className="w-full rounded-lg border border-cyan-300/40 px-3 py-3 text-sm text-cyan-200">Leer informe</button>
++          <div className="grid grid-cols-2 gap-2">
++            <a href={`/api/audit/runs/${current.id}/download`} className="rounded-lg bg-emerald-300 px-2 py-3 text-center text-xs font-semibold text-slate-950">Descargar Markdown</a>
++            {current.has_html_report && <a href={`/api/audit/runs/${current.id}/download-html`} className="rounded-lg bg-emerald-300 px-2 py-3 text-center text-xs font-semibold text-slate-950">Descargar HTML</a>}
++          </div>
++        </div>}
 +      </section>}
 +      {!current && <p className="mt-6 text-sm text-slate-400">El equipo está listo. Introduce un repositorio para comenzar.</p>}
 +    </aside>}

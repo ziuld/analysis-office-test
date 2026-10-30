@@ -202,6 +202,7 @@ class Coordinator:
             'con motivo y condiciones, sin autorizar el despliegue ni inventar bloqueantes. '
             'Enumera carencias y discrepancias reales, sin resolver contradicciones como hechos. '
             'Mantén incertidumbre; una protección no encontrada no es ausencia demostrada. '
+            'Las respuestas pueden incluir aspecto_favorable con implementaciones comprobadas: refleja las más relevantes en Q01 junto a los riesgos, sin compensarlos ni elevar su alcance a una garantía global. '
             'Devuelve SOLO {"respuestas":[{"id":"Q01","respuesta":"hasta 700 caracteres","aportaciones":["Qxx"]}, '
             '{"id":"Q02","respuesta":"...","aportaciones":["Qxx"]},{"id":"Q03","respuesta":"...","aportaciones":["Qxx"]}]}.')
         return self.call("synthesis", task, {"respuestas": brief, "riesgos": original}, validate) or []
