@@ -285,6 +285,9 @@ def annex_html(v):
     return chapter("anexos", "04", "Fuentes y comprobaciones", "Anexos", "Explicaciones completas y comprensibles; terminología y resultado original en un segundo nivel.", body)
 
 def render_markdown(data, snapshot, model=""):
+    if data.get('cuestionario'):
+        from arktic_office.reporting.reading import render_markdown as reading_markdown
+        return reading_markdown(data, snapshot, model)
     v = view(data, snapshot)
     lines = ['# Informe para evaluación humana · Arktic', '', '**FUENTES FICTICIAS · consultar origen de los resultados.**' if snapshot.get("simulation") else 'Lectura estática; la evaluación y la decisión corresponden al arquitecto.', '', text(snapshot.get("evidence_origin", snapshot["repository"])), '', '## 1. Resumen del informe', '', text(v["description"])]
     from arktic_office.core.outcome import notice

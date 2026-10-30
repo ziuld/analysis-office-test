@@ -152,6 +152,22 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(len(self.jobs.listing()), 1)
         self.await_finished(first["id"])
 
+    def test_html_download_matches_saved_report_and_is_an_attachment(self):
+        job = self.jobs.start('https://github.com/acme/app')
+        self.await_finished(job['id'])
+        route = f"/runs/{job['id']}/download-html"
+        self.assertEqual(self.request(route)[0], 404)
+        self.assertFalse(self.jobs.detail(job['id'])['has_html_report'])
+        html = '<!doctype html><html lang="es"><body>Revisión guardada</body></html>'.encode()
+        (self.jobs.directory(job['id']) / 'informe.html').write_bytes(html)
+        self.assertTrue(self.jobs.detail(job['id'])['has_html_report'])
+        status, content, headers = self.request(route)
+        self.assertEqual(status, 200)
+        self.assertEqual(content, html)
+        self.assertEqual(headers['Content-Type'], 'text/html; charset=utf-8')
+        self.assertEqual(headers['Content-Disposition'], f'attachment; filename="informe-{job["id"]}.html"')
+        self.assertEqual(self.request(f"/runs/{job['id']}/download")[1], b'# Informe de prueba\n')
+
     def test_main_failure_is_visible(self):
         job = self.jobs.start("https://github.com/acme/missing")
         done = self.await_finished(job["id"])

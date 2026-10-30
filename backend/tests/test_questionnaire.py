@@ -34,6 +34,41 @@ def answers(role):
 
 
 class QuestionnaireTests(unittest.TestCase):
+    def test_favorable_implementations_need_sources_and_survive_rendering(self):
+        snapshot, _ = fixture()
+        items = answers("security")
+        items[0]["aspecto_favorable"] = {"titulo": "Control de tamaño <seguro>", "detalle": "El flujo revisado limita el tamaño antes del envío."}
+        raw = {"observaciones": [], "respuestas": items}
+        report, _, _ = compose(json.dumps(raw), snapshot, "security")
+        favorable = report["respuestas"][0]
+        self.assertIn("aspecto_favorable", favorable)
+        data = {"cuestionario": {"respuestas": report["respuestas"]}, "confirmados": [], "indicios": [], "controles": []}
+        html = render_html(data, snapshot)
+        from arktic_office.reporting.questionnaire_view import markdown
+        md = markdown(data, snapshot)
+        self.assertIn('id="protecciones-comprobadas"', html)
+        self.assertIn('href="#' + favorable["id"] + '"', html)
+        self.assertIn("Control de tamaño &lt;seguro&gt;", html)
+        self.assertIn("Implementación comprobada:", html)
+        self.assertIn("Protecciones y buenas prácticas comprobadas", md)
+        items[0].update(evidencia=[], herramientas=["D02"])
+        report, _, warnings = compose(json.dumps(raw), snapshot, "security")
+        self.assertNotIn("aspecto_favorable", report["respuestas"][0])
+        self.assertTrue(any("aspecto favorable" in w for w in warnings))
+
+    def test_clean_tools_do_not_create_favorable_summary_and_summary_caps_at_five(self):
+        snapshot, _ = fixture()
+        questions = [{**q, "estado": "respondida", "respuesta": "Respuesta", "evidencia": [], "pendiente": ""} for q in catalog()]
+        data = {"cuestionario": {"respuestas": questions}, "confirmados": [], "indicios": []}
+        html = render_html(data, snapshot)
+        self.assertIn("no documentó protecciones", html)
+        for a in questions[:7]:
+            a.update(evidencia=[{"path": "app.py", "line": 1, "quote": "print('hello')"}], aspecto_favorable={"titulo": a["id"] + " protección", "detalle": "Alcance comprobado."})
+        html = render_html(data, snapshot)
+        summary = html.split('id="protecciones-comprobadas"')[1].split('</section>')[0]
+        self.assertEqual(summary.count('<li>'), 5)
+        self.assertEqual(html.count('class="reading-good"'), 7)
+
     def test_catalog_and_invalid_or_missing_answers_never_disappear(self):
         self.assertEqual([q["id"] for q in catalog()], [f"Q{n:02}" for n in range(1, 41)])
         snapshot, _ = fixture()
@@ -78,10 +113,11 @@ class QuestionnaireTests(unittest.TestCase):
             self.assertIn(q["id"], markdown)
         for tool in snapshot["deterministic_results"]["tools"]:
             self.assertIn('id="' + tool["id"] + '"', html)
-        self.assertIn("entry", html)  # Full graph node, not just a count.
-        self.assertIn("&lt;script&gt;alert(1)&lt;/script&gt;", html)
+        self.assertNotIn('<pre>', html)
+        self.assertNotIn('"nodes"', html)
+        self.assertEqual(data['deterministic_results']['tools'][-1]['result']['nodes'][0]['id'], 'entry')
         self.assertNotIn("<script>alert(1)</script>", html)
-        self.assertIn("no_evaluado", html)
+        self.assertIn("No evaluado", html)
         self.assertIn('id="resumen-ejecutivo"', html)
         self.assertIn('id="analisis-preguntas"', html)
         self.assertIn('id="anexos-deterministas"', html)

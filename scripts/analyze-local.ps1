@@ -1,7 +1,8 @@
 param(
     [Parameter(Mandatory=$true)][string]$Repository,
     [switch]$InspectOnly,
-    [switch]$PrepareOnly
+    [switch]$PrepareOnly,
+    [ValidateRange(1000000,256000000)][long]$MaxSnapshotBytes = 32000000
 )
 $ErrorActionPreference = 'Stop'
 if ($InspectOnly -and $PrepareOnly) { throw 'Usar -InspectOnly o -PrepareOnly, no ambas.' }
@@ -22,8 +23,8 @@ try {
         --mount "type=bind,source=$repoRoot,target=/repository,readonly" `
         --mount "type=bind,source=$PSScriptRoot,target=/scripts,readonly" `
         --mount "type=bind,source=$bundleRoot,target=/bundle" `
-        --entrypoint python arktic-indexer:graphify-0.9.95 `
-        /scripts/export-local.py /repository /bundle --origin $repoRoot --autocrlf $hostAutocrlf --filemode $hostFilemode
+        --entrypoint python arktic-indexer:graphify-0.9.97 `
+        /scripts/export-local.py /repository /bundle --origin $repoRoot --autocrlf $hostAutocrlf --filemode $hostFilemode --max-bytes $MaxSnapshotBytes
     if ($LASTEXITCODE -ne 0) { throw 'No se capturó el repositorio; no se inicia el equipo.' }
     Write-Output "Snapshot conservado: $bundleRoot"
     if ($PrepareOnly) {

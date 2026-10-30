@@ -1,7 +1,7 @@
 # Optional transition mode; never part of CI or combined with a second audit.
 services:
   preparator:
-    image: arktic-indexer:graphify-0.9.95
+    image: arktic-indexer:graphify-0.9.97
     build:
       context: .
       dockerfile: docker/Indexer.Dockerfile

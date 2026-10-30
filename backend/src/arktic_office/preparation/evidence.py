@@ -194,20 +194,33 @@ class Evidence:
         return files
 
 
-def prepare_complete(url, workspace, *, scanner=None, index=index_files, fetch=None, downloader=None, local_snapshot=None, artifact_directory=None):
+def prepare_complete(url, workspace, *, scanner=None, index=index_files, fetch=None, downloader=None, local_snapshot=None, artifact_directory=None, cache_root=None, indexer_signature=None, refresh=False):
     kwargs = {k: v for k, v in {"fetch": fetch, "downloader": downloader}.items() if v is not None}
     if local_snapshot is not None:
         from arktic_office.preparation.local import acquire_local
         acquired = acquire_local(local_snapshot, workspace)
     else:
         acquired = acquire_complete(url, workspace, **kwargs)
-    scanners = scanner(acquired["files"], source_root=workspace / "source") if scanner else []
+    cache, cache_key, cached = None, None, None
+    if cache_root and indexer_signature:
+        from arktic_office.preparation.cache import PreparationCache, identity
+        cache = PreparationCache(cache_root)
+        cache_key = identity(acquired, scanners=scanner is not None, indexer_signature=indexer_signature)
+        if not refresh:
+            cached = cache.load(cache_key, artifact_directory)
+    cache_record = {'status': 'generated' if cache else 'disabled', 'key': cache_key}
+    if cached:
+        payload, cache_record = cached
+        scanners, pool, graph = payload['scanners'], payload['pool'], payload['graph']
+    else:
+        scanners = scanner(acquired["files"], source_root=workspace / "source") if scanner else []
     if any(s["status"] == "error" for s in scanners):
         raise AuditError("Preparación incompleta: un scanner falló; no se envía una muestra al modelo.")
-    pool = [{"path": f["path"], "text": redact(f["text"])} for f in acquired["files"]
-            if f["kind"] == "text"]
-    mask_findings(pool, scanners)
-    graph = index(pool, complete=True)
+    if not cached:
+        pool = [{"path": f["path"], "text": redact(f["text"])} for f in acquired["files"]
+                if f["kind"] == "text"]
+        mask_findings(pool, scanners)
+        graph = index(pool, complete=True)
     if artifact_directory is not None:
         from pathlib import Path
         from arktic_office.storage.jsonio import write_json
@@ -219,6 +232,11 @@ def prepare_complete(url, workspace, *, scanner=None, index=index_files, fetch=N
         raise AuditError("Preparación incompleta: mapa " + str(graph.get("reason", graph.get("status"))) + "; truncado=" + str(graph.get("truncated", False)) + "; archivos con error: " + ", ".join(f["path"] for f in graph.get("file_coverage", []) if f.get("status") == "error")[:1500] + ". No se inicia el análisis.")
     if set(f["path"] for f in graph.get("file_coverage", [])) != set(f["path"] for f in pool):
         raise AuditError("Preparación incompleta: el mapa no contabiliza toda la entrada.")
+    if cache and not cached:
+        cache.save(cache_key, {'scanners': scanners, 'pool': pool, 'graph': graph}, artifact_directory)
+        saved = cache.load(cache_key)
+        if saved:
+            cache_record['prepared_at'] = saved[1]['prepared_at']
     graph["node_count"], graph["edge_count"] = len(graph["nodes"]), len(graph["edges"])
     graph_coverage = {f["path"]: f for f in graph.get("file_coverage", [])}
     for item in acquired["inventory"]:
@@ -233,7 +251,7 @@ def prepare_complete(url, workspace, *, scanner=None, index=index_files, fetch=N
     snapshot["coverage"].update(acquired=[x["path"] for x in acquired["inventory"]],
         scanner_input=[x["path"] for x in acquired["inventory"]] if scanner else [], scanner_executed=bool(scanner),
         graph_input=[f["path"] for f in pool], explorer_reads=[], acquisition_complete=True)
-    snapshot["preparation"] = {"mode": "complete", "status": "complete", "graph": {k: v for k, v in graph.items() if k not in {"nodes", "edges"}},
+    snapshot["preparation"] = {"mode": "complete", "status": "complete", "cache": cache_record, "graph": {k: v for k, v in graph.items() if k not in {"nodes", "edges"}},
         "exploration": {"status": "complete", "closure": "prepared_locally", "iterations": 0, "usage": [], "reads": []},
         "limitations": ["Snapshot íntegro; compatibilidad y cobertura semántica se registran por herramienta."]}
     return snapshot, Evidence(pool, graph)

@@ -11,6 +11,15 @@ MAX_BODY = 64_000_000
 LOCK = threading.Lock()
 
 
+def installation_fingerprint():
+    import hashlib
+    from importlib.metadata import distributions
+    files = [Path(__file__), Path(__file__).with_name('extract_complete.py'), Path(__file__).with_name('indexer.json')]
+    value = {'files': [hashlib.sha256(p.read_bytes()).hexdigest() for p in files],
+             'packages': sorted((d.metadata['Name'], d.version) for d in distributions())}
+    return hashlib.sha256(json.dumps(value, sort_keys=True).encode()).hexdigest()
+
+
 def extract(files, complete=False):
     if not isinstance(files, list) or len(files) > (20000 if complete else 120):
         raise ValueError("Invalid file budget")
@@ -67,7 +76,7 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
     def do_GET(self):
-        self.reply(200 if self.path == "/health" else 404, {"ok": self.path == "/health"})
+        self.reply(200 if self.path == "/health" else 404, {"ok": self.path == "/health", 'fingerprint': installation_fingerprint()})
 
     def reply(self, code, value):
         body = json.dumps(value).encode()

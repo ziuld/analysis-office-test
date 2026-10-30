@@ -1,7 +1,9 @@
 {
   "graphify": {
-    "version": "0.9.95",
-    "commit": "92741d162b2094ffc2fed58cfbd8ee823e9da62c"
+    "version": "0.9.97",
+    "commit": "0a8cd4e1e342235fe53e881fb5d591bf0460071f",
+    "installation": "uv tool install graphifyy[sql]==0.9.97 (official PyPI)",
+    "skill_registration": "graphify install --platform hermes --project"
   },
   "limits": {
     "archive_bytes": 30000000,

@@ -90,6 +90,12 @@
 </details>
 
 
+### Protecciones y buenas prácticas comprobadas
+
+<!-- Mostrar hasta cinco implementaciones favorables relevantes, respaldadas por código/configuración y enlazadas con sus preguntas y fuentes. No inferirlas de scanners limpios o ausencia de hallazgos. Mantener los límites de cada protección; no compensar vulnerabilidades ni declarar seguridad global. Si no hay ninguna, indicar que esta revisión no documentó protecciones con respaldo suficiente, sin afirmar que no existan. -->
+
+- **[Nombre comprensible de la protección].** [Qué se comprobó y en qué flujo, con su alcance concreto.] — [Qxx · pregunta correspondiente]
+
 ### Pendientes de validar
 
 [Lista breve, ejecutiva y respaldada de las partes que no se revisaron y del alcance que no cubrieron las herramientas. No convertir respuestas desconocidas, citas rechazadas o pruebas en vivo pendientes en afirmaciones de que no se leyó código. Omitir todo el apartado si no hay omisiones concretas documentadas.]
@@ -594,7 +600,7 @@
 
 ## 3. Anexos deterministas
 
-[Identificar el repositorio y commit a los que corresponden estos resultados. Conservar las salidas completas disponibles, sus entradas, cobertura, errores y omisiones. Ocultar los valores de posibles secretos. Diferenciar «sin detecciones» de «no evaluado».]
+[Identificar el repositorio y commit a los que corresponden estos resultados. Explicar los resultados de cada herramienta, sus alertas, cobertura, errores y omisiones en lenguaje natural. No insertar código, JSON ni salidas técnicas en el informe; conservar los originales como evidencia interna. Ocultar los valores de posibles secretos. Diferenciar «sin detecciones» de «no evaluado».]
 
 ### D01 · Adquisición e inventario del snapshot
 
@@ -610,14 +616,6 @@
 
 **Límites de interpretación:** [Explicar qué significa esto para el cliente, ej: El inventario confirma la estructura de archivos, pero no valida el contenido ni la seguridad de los mismos por sí solo.]
 
-<details>
-<summary>Ver detalle técnico completo (JSON)</summary>
-
-```text
-[Pegar aquí la salida estructurada completa.]
-```
-
-</details>
 
 ### D02 · Gitleaks
 
@@ -633,14 +631,6 @@
 
 **Límites de interpretación:** [Explicar qué significa para el cliente, ej: La ausencia de alertas no garantiza al 100% que no existan credenciales ofuscadas o de diseño personalizado que las reglas no reconocieran.]
 
-<details>
-<summary>Ver detalle técnico completo (JSON)</summary>
-
-```text
-[Pegar aquí la salida estructurada completa.]
-```
-
-</details>
 
 ### D03 · OSV-Scanner
 
@@ -656,14 +646,6 @@
 
 **Límites de interpretación:** [Explicar qué significa para el cliente, ej: El escaneo evalúa únicamente vulnerabilidades públicas registradas en dependencias de terceros, pero no analiza posibles fallos lógicos en el código propio.]
 
-<details>
-<summary>Ver detalle técnico completo (JSON)</summary>
-
-```text
-[Pegar aquí la salida estructurada completa.]
-```
-
-</details>
 
 ### D04 · Semgrep
 
@@ -679,14 +661,6 @@
 
 **Límites de interpretación:** [Explicar qué significa para el cliente, ej: Las alertas son indicios estáticos que requieren validación manual para descartar falsos positivos o comprobar si existe mitigación en otra capa.]
 
-<details>
-<summary>Ver detalle técnico completo (JSON)</summary>
-
-```text
-[Pegar aquí la salida estructurada completa.]
-```
-
-</details>
 
 ### D05 · Graphify
 
@@ -702,14 +676,6 @@
 
 **Límites de interpretación:** [Explicar qué significa para el cliente, ej: El mapa es una ayuda visual y estática para comprender la complejidad del código, pero no evalúa el comportamiento en tiempo de ejecución.]
 
-<details>
-<summary>Ver detalle técnico completo (JSON)</summary>
-
-```text
-[Pegar aquí la salida estructurada completa.]
-```
-
-</details>
 
 ---
 

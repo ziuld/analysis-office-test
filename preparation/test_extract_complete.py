@@ -32,3 +32,12 @@ class ExtractionCoverageTests(unittest.TestCase):
         result = self.extract({'large.json':' ' * 1_048_577})
         self.assertFalse(result['processing_complete'])
         self.assertEqual(result['file_coverage'][0]['status'],'error')
+
+    def test_sql_extra_and_redacted_yaml_are_accounted_without_claiming_yaml_coverage(self):
+        result = self.extract({'table.sql': 'CREATE TABLE example (id integer);',
+            'docker-compose.yml': 'services:\n  app:\n[LÍNEA CON POSIBLE CREDENCIAL OCULTA]\n    image: example\n'})
+        coverage = {f['path']: f for f in result['file_coverage']}
+        self.assertTrue(result['processing_complete'])
+        self.assertEqual(coverage['table.sql']['status'], 'processed')
+        self.assertEqual(coverage['docker-compose.yml']['status'], 'unsupported')
+        self.assertEqual(coverage['docker-compose.yml']['reason'], 'yaml_structure_unavailable_after_secret_redaction')

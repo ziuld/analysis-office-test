@@ -15,6 +15,30 @@ GROUPS = (
 MAX_EXECUTIVE_RISKS = 10
 
 
+def render_markdown(data, snapshot, model=''):
+    from arktic_office.reporting.brief import text, references
+    from arktic_office.reporting.executive import risks
+    from arktic_office.reporting.questionnaire_view import markdown
+    answers = {a['id']: a for a in data['cuestionario']['respuestas']}
+    title = snapshot.get('project_name') or snapshot['repository'].rstrip('/').split('/')[-1]
+    lines = ['# ' + text(title), '', 'Revisión estática · ' + text(snapshot.get('branch', '')) + ' · ' + text(snapshot['commit']), '', '## Resumen ejecutivo']
+    for key in ('Q07', 'Q05', 'Q01'):
+        a = answers.get(key)
+        if a and a['estado'] != 'no_comprobado':
+            lines += ['', text(a['respuesta']), '', 'Fuentes: ' + references(a, snapshot)]
+    lines += ['', '### Principales riesgos identificados']
+    selected = risks(data)[:MAX_EXECUTIVE_RISKS]
+    if not selected:
+        lines += ['', 'No se han identificado riesgos con evidencia suficiente en el alcance revisado. Esto no descarta problemas en los puntos que quedaron sin comprobar.']
+    for n, item in enumerate(selected, 1):
+        lines += ['', f'#### R{n:02} · ' + text(item.get('titulo') or item['observacion']), '', text(item['observacion'])]
+        for label, field in (('Consecuencia posible', 'importancia'), ('De qué depende', 'condiciones'), ('Qué queda por comprobar', 'pendiente')):
+            if item.get(field):
+                lines += ['', label + ': ' + text(item[field])]
+        lines += ['', 'Fuentes: ' + references(item, snapshot)]
+    return '\n'.join(lines) + '\n' + markdown(data, snapshot)
+
+
 def unreviewed_scope(data, snapshot):
     """Only observable omissions; unknown answers do not prove missing review."""
     items = []
@@ -109,9 +133,21 @@ def render_html(data, snapshot, model=""):
             risk_section += '<p><b>Qué queda por comprobar.</b> ' + h(item["pendiente"]) + '</p>'
         risk_section += proof(item, item["id"]) + '</article>'
     risk_section += '</section>'
+    from arktic_office.reporting.questionnaire import favorable_answers
+    favorable = '<section id="protecciones-comprobadas" class="panel reading-panel reading-strengths"><h3>Protecciones y buenas prácticas comprobadas</h3>'
+    strengths = favorable_answers(data)[:5]
+    if strengths:
+        favorable += '<p>Implementaciones comprobadas en las fuentes revisadas. Su alcance se explica en cada pregunta.</p><ul>'
+        for answer in strengths:
+            good = answer["aspecto_favorable"]
+            favorable += '<li><b>' + h(good["titulo"]) + '.</b> ' + h(good["detalle"]) + f' <a href="#{h(answer["id"])}">' + h(answer["id"] + " · " + answer["pregunta"]) + '</a></li>'
+        favorable += '</ul>'
+    else:
+        favorable += '<p>Esta revisión no documentó protecciones o buenas prácticas con respaldo suficiente para destacarlas. Esto no significa que la aplicación carezca de ellas.</p>'
+    favorable += '</section>'
     omissions = unreviewed_scope(data, snapshot)
     limits = '<section id="pendientes-validar" class="reading-limits"><h3>Pendientes de validar</h3><ul>' + ''.join('<li>' + h(x) + '</li>' for x in omissions) + '</ul></section>' if omissions else ""
-    executive = chapter("resumen-ejecutivo", "01", "Una primera lectura", "Resumen ejecutivo", "La aplicación, los resultados relevantes y los límites de esta revisión.", about + conclusion + risk_section + limits)
+    executive = chapter("resumen-ejecutivo", "01", "Una primera lectura", "Resumen ejecutivo", "La aplicación, los resultados relevantes y los límites de esta revisión.", about + conclusion + risk_section + favorable + limits)
 
     groups = ''
     for group, label, numbers in GROUPS:
@@ -125,6 +161,9 @@ def render_html(data, snapshot, model=""):
             if response in {"El agente no entregó una respuesta válida a esta pregunta.", "No se recibió una respuesta validada."}:
                 response = "Este punto no pudo comprobarse en la revisión."
             content += f'<article id="{key}" class="reading-answer"><span class="question-id">{key}</span><h4>' + h(answer["pregunta"]) + '</h4><p>' + h(response) + '</p>'
+            if answer in favorable_answers(data):
+                good = answer["aspecto_favorable"]
+                content += '<div class="reading-good"><b>Implementación comprobada: ' + h(good["titulo"]) + '.</b> ' + h(good["detalle"]) + '</div>'
             note = ""
             if answer.get("pendiente"):
                 note = "Queda por comprobar: " + answer["pendiente"]
@@ -136,7 +175,7 @@ def render_html(data, snapshot, model=""):
         extra = ''.join(f'<article id="{x["id"]}" class="reading-answer"><h4>' + h(x["id"] + " · " + name(x)) + '</h4><p>' + h(x["observacion"]) + '</p>' + proof(x, x["id"]) + '</article>' for x in ordered[MAX_EXECUTIVE_RISKS:])
         groups += detail("riesgos-adicionales", "Otros riesgos documentados", "Resultados fuera de los diez principales", extra)
     questions = chapter("analisis-preguntas", "02", "La evidencia, por temas", "Análisis por preguntas", "Cada respuesta conserva sus fuentes y explica qué queda por comprobar. Abre un tema para consultar sus preguntas.", groups)
-    annexes = chapter("anexos-deterministas", "03", "Resultados de las herramientas", "Anexos deterministas", "Salidas completas, cobertura y limitaciones de cada análisis automático.", deterministic_html(data))
+    annexes = chapter("anexos-deterministas", "03", "Resultados de las herramientas", "Anexos deterministas", "Resultados explicados, cobertura y limitaciones de cada análisis automático.", deterministic_html(data))
     hero = f'<header class="hero"><div class="hero-art" aria-hidden="true"></div><div class="wrap"><div class="brand-row"><img class="corporate-logo" src="{logo}" alt="Arktic"></div><h1>{h(title)}</h1><p>Una lectura de la aplicación, sus riesgos y la evidencia disponible.</p><div class="meta"><span>{h(display_date(snapshot.get("analyzed_at")))}</span><span>Revisión estática · {h(snapshot.get("branch", ""))}@{h(snapshot["commit"][:12])}</span></div></div></header>'
     nav = '<nav class="nav" aria-label="Secciones del informe"><div class="wrap">' + ''.join(f'<a href="#{key}"><b>{n:02}</b> {label}</a>' for n, (key, label) in enumerate((("resumen-ejecutivo", "Resumen ejecutivo"), ("analisis-preguntas", "Análisis por preguntas"), ("anexos-deterministas", "Anexos deterministas")), 1)) + '</div></nav>'
     script = (assets / 'report-navigation.js').read_text(encoding='utf-8')

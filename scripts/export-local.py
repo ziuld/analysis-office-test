@@ -8,7 +8,9 @@ import subprocess
 from urllib.parse import quote, unquote
 
 
-def export(repository, destination, origin=None, autocrlf=None, filemode=None):
+def export(repository, destination, origin=None, autocrlf=None, filemode=None, max_bytes=32_000_000):
+    if type(max_bytes) is not int or not 1_000_000 <= max_bytes <= 256_000_000:
+        raise ValueError('Capacidad de captura fuera del rango 1–256 MB.')
     repository = Path(repository).resolve()
     command = ['git', '-c', f'safe.directory={repository}', '-c', 'core.fsmonitor=false',
                '--no-optional-locks', '-C', str(repository)]
@@ -58,8 +60,8 @@ def export(repository, destination, origin=None, autocrlf=None, filemode=None):
                 process.stdin.write((oid+'\n').encode()); process.stdin.flush()
                 actual_oid, kind, size = process.stdout.readline().decode().strip().split()
                 size = int(size)
-                if actual_oid != oid or kind != 'blob' or total + size > 32_000_000:
-                    raise ValueError('Objeto inválido o snapshot superior a 32 MB.')
+                if actual_oid != oid or kind != 'blob' or total + size > max_bytes:
+                    raise ValueError('Objeto inválido o snapshot superior a la capacidad configurada: '+str(max_bytes)+' bytes.')
                 raw = process.stdout.read(size)
                 if process.stdout.read(1) != b'\n' or len(raw) != size:
                     raise ValueError('Objeto Git incompleto.')
@@ -94,7 +96,8 @@ if __name__ == '__main__':
     parser.add_argument('repository'); parser.add_argument('destination'); parser.add_argument('--origin')
     parser.add_argument('--autocrlf',choices=['true','false','input'])
     parser.add_argument('--filemode',choices=['true','false'])
+    parser.add_argument('--max-bytes', type=int, default=32_000_000)
     args = parser.parse_args()
-    try: export(args.repository,args.destination,args.origin,args.autocrlf,args.filemode)
+    try: export(args.repository,args.destination,args.origin,args.autocrlf,args.filemode,args.max_bytes)
     except (ValueError,OSError,subprocess.SubprocessError) as exc:
         raise SystemExit('No se pudo capturar el repositorio local: '+str(exc))
