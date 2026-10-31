@@ -1,0 +1,13 @@
+{
+  "model_calls": 0,
+  "method": "reconstructed first prompt from archived snapshot, assignment and persisted questions; not a new analysis",
+  "old_preloaded_answers": 7,
+  "old_shared_bytes_per_call": 67153,
+  "new_discoverable_answers": 20,
+  "new_question_map_bytes_per_call": 3850,
+  "shared_map_reduction_percent": 94.27,
+  "archived_first_prompt_bytes": 114381,
+  "reconstructed_first_prompt_bytes": 30449,
+  "first_prompt_reduction_percent": 73.38,
+  "token_savings_measured": false
+}

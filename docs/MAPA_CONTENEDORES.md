@@ -1,6 +1,6 @@
 # Dónde vive cada cosa
 
-Configuración comprobada el 29/10/2026. Tres contenedores activos: `office`, `audit-api` y `preparator`.
+Configuración actualizada el 30/10/2026. Tres contenedores: `office`, `audit-api` y `preparator`. Coordinación centralizada y ejecución secuencial; sin Redis.
 
 ```mermaid
 flowchart TB
@@ -19,7 +19,7 @@ flowchart TB
       Graph -->|"Grafo, cobertura y diagnósticos"| Core
     end
 
-    Models["Fuera de Docker · proveedor de modelos\nSol · Seguridad, Arquitectura, Inventario y Coordinador"]
+    Models["Fuera de Docker · proveedor de modelos\nModelos configurados · Akira y siete especialistas\nUna sola tarea de modelo activa"]
     External["Fuera de Docker\nOSV / metadatos de dependencias\nGitHub cuando se analiza una URL"]
 
     Browser -->|"HTTP · puerto 3000 del equipo"| Front
@@ -49,11 +49,15 @@ Core dispone de la captura completa, incluidos los archivos binarios para invent
 | Trabajo temporal de Graphify | `/tmp/` de `preparator` | No; devuelve el resultado a Core antes de limpiar |
 | Grafo, resultados deterministas y artefactos de herramientas | `/reports/` de Core, enlazado a `reports/` del equipo | Sí |
 | Preparación reutilizable | `/reports/.preparation-cache/`, enlazado a `reports/.preparation-cache/` del equipo | Sí |
+| Revisiones, hechos, referencias, tareas y métricas | `/reports/.knowledge/office.sqlite`, transacciones gestionadas por Core | Sí |
+| Artefactos comunes y espacios de especialistas | `/reports/.knowledge/artifacts/<identidad>/` y `<ejecución>/agents/<id>/` | Sí |
 | Informe HTML, Markdown, JSON y evidencia revisada | Carpeta propia de cada ejecución dentro de `/reports/` | Sí |
 | Sesión de autenticación | Volumen Docker `hermes-auth`, montado como `/auth` en Core | Sí mientras se conserve el volumen |
 | Estado propio de la interfaz | Volumen Docker `studio`, montado como `/data/hermes` en `office` | Sí mientras se conserve el volumen |
 
-La caché permite volver a ejecutar los agentes con modelos o instrucciones diferentes sin repetir los escáneres ni Graphify. Se invalida si cambian repositorio, commit, inventario o herramientas/configuración relevante. El informe conserva la fecha de la preparación reutilizada. `AUDIT_PREPARATION_REFRESH=1` fuerza su regeneración, por ejemplo para renovar avisos de vulnerabilidades externos.
+La caché permite volver a ejecutar los agentes con modelos o instrucciones diferentes sin repetir los escáneres ni Graphify. Se invalida si cambian repositorio, commit, inventario o herramientas/configuración relevante, incluido el JSON de reglas Semgrep. Las consultas externas OSV tienen una vigencia propia de 24 horas por defecto (`AUDIT_VULNERABILITY_MAX_AGE_SECONDS`). El informe conserva la fecha de la preparación reutilizada. `AUDIT_PREPARATION_REFRESH=1` fuerza su regeneración. No se reutilizan conclusiones de modelos como si fueran una ejecución nueva.
+
+La interfaz recibe el catálogo y el estado desde Core por HTTP. SQLite no se monta en `office`; los modelos consultan contexto seleccionado por Core. Las consultas se encolan y comparten la exclusión de actividad con las revisiones. Los fallos globales detienen nuevas llamadas y los reinicios marcan interrupciones sin reintentar un resultado remoto desconocido.
 
 ## Límites de red efectivos
 

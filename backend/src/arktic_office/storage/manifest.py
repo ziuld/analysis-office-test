@@ -27,6 +27,7 @@ def write_manifest(directory, snapshot, report=None):
         "hermes_agent": HERMES_COMMIT, "repository": snapshot["repository"], "branch": snapshot.get("branch"),
         "commit": snapshot["commit"], "source_type": snapshot.get('source_type','github'),
         "local_source": snapshot.get('local_source'), "analyzed_at": snapshot.get("analyzed_at"), "profiles": snapshot.get("model_profiles", {}),
+        "simulation": bool(snapshot.get('simulation')), "source_revision": snapshot.get('source_revision'), "evidence_origin": snapshot.get('evidence_origin'),
         "request": snapshot.get("request", {}), "resource_sha256": resources, "coverage": snapshot.get("coverage", {}),
         "usage": usage, "status": (report or {}).get("estado", "inspection"),
         "limitations": ["Sin consumo comunicado no se asume cero.", "Fase 1 aceptada; no equivale a una publicación ni demuestra exhaustividad semántica."]})

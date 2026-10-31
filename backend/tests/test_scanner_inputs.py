@@ -38,3 +38,16 @@ class ScannerInputTests(unittest.TestCase):
         def runner(cmd, out):
             return [] if cmd[0] == "gitleaks" else {"results": [], "paths": {"scanned": []}, "errors": []}
         self.assertEqual(scan([{"path": "app.py", "text": "x = 1"}], runner)[2]["status"], "error")
+
+    def test_new_php_and_go_rules_receive_their_source_files(self):
+        def runner(cmd, out):
+            if cmd[0] == 'gitleaks':
+                return []
+            self.assertEqual(cmd[0], 'semgrep')
+            source = out.parent/'sast-source'
+            paths = [str(source/'app.php'), str(source/'main.go')]
+            self.assertTrue(all(Path(p).is_file() for p in paths))
+            return {'results':[], 'paths':{'scanned':paths}, 'errors':[]}
+        result = scan([{'path':'app.php','text':'<?php echo 1;'}, {'path':'main.go','text':'package main'}], runner)[2]
+        self.assertEqual(set(result['input_files']), {'app.php','main.go'})
+        self.assertEqual(result['status'], 'sin_detecciones_en_seleccion')

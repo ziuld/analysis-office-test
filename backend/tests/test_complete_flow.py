@@ -117,14 +117,13 @@ class CompleteFlowTests(unittest.TestCase):
                 role = config["id"]
                 calls.append(role)
                 self.assertIn("Escribe en español directo", prompt)
-                if role == "security":
+                if role == "backend-security":
                     self.assertIn("XSS", prompt)
-                    self.assertIn("seis controles", prompt)
+                    self.assertIn("servidor", prompt)
                 elif role == "inventory":
-                    self.assertIn("Persistencia:", prompt)
-                    self.assertIn("H2", prompt)
+                    self.assertIn("Q04", config['checks'][-1])
                 elif role == "architecture":
-                    self.assertIn("marcar trabajos interrumpidos como error no es reanudarlos", prompt)
+                    self.assertIn("límites de confianza", prompt)
                 if role == "coordinator-routing":
                     self.assertNotIn("source_samples", prompt)
                     return {"report": json.dumps({r: "Review your specialty" for r in ("security", "architecture", "inventory")})}
@@ -133,7 +132,7 @@ class CompleteFlowTests(unittest.TestCase):
                 if budget and calls.count(role) == 1:
                     self.assertEqual(config["files"], [])
                     return {"report": json.dumps({"queries": [{"paths": ["hidden/entry.py"]}]}), "usage": {"total_tokens": 1}}
-                if fail_extra and role == "security":
+                if fail_extra and role == "backend-security":
                     raise AuditError("Controlled analysis failure")
                 if budget == 2 and calls.count(role) == 2:
                     return {"report": json.dumps({"queries": [{"paths": ["auth.py"]}]}), "usage": {"total_tokens": 1}}
@@ -141,18 +140,19 @@ class CompleteFlowTests(unittest.TestCase):
                     return {"report": json.dumps({"schema_version": 3, "confirmados": [], "indicios": [], "dudas": ["No source budget"], "controles": []})}
                 self.assertIn("hidden/entry.py", [f["path"] for f in config["files"]])
                 return fake_invoke(prompt, config)
-            env = {"AUDIT_" + role + "_RESEARCH_ROUNDS": str(budget) for role in ("SECURITY", "ARCHITECTURE", "INVENTORY")}
+            from arktic_office.coordination.team import CELLS
+            env = {"AUDIT_" + c['id'].upper().replace('-', '_') + "_RESEARCH_ROUNDS": str(budget) for c in CELLS}
             with patch.dict(os.environ, env), tempfile.TemporaryDirectory() as temp:
                 report = run_team(value, Path(temp), invoke=invoke, evidence=evidence, emit=lambda *a, **k: None)
                 cells = {c["id"]: c for c in report["celulas"]}
                 self.assertEqual(cells["inventory"]["calls"], 1 + budget)
                 self.assertEqual(cells["inventory"]["execution"], "completed")
-                self.assertEqual(cells["security"]["execution"], "error" if fail_extra else "completed")
+                self.assertEqual(cells["backend-security"]["execution"], "error" if fail_extra else "completed")
                 if budget and not fail_extra:
-                    self.assertEqual(cells["security"]["usage"]["total_tokens"], 50 + budget)
+                    self.assertEqual(cells["backend-security"]["usage"]["total_tokens"], 50 + budget)
                 if fail_extra:
-                    self.assertIsNone(cells["security"]["usage"])
-                    self.assertEqual(cells["security"]["invocations"][0]["usage"]["total_tokens"], 1)
+                    self.assertIsNone(cells["backend-security"]["usage"])
+                    self.assertEqual(cells["backend-security"]["invocations"][0]["usage"]["total_tokens"], 1)
 
     def test_processing_failure_prevents_model_stage(self):
         fetch, downloader = self.fixture()

@@ -48,7 +48,7 @@ class CoordinatorTests(unittest.TestCase):
             return fake_invoke(prompt, config)
         with patch.dict("os.environ", {"AUDIT_COORDINATION_MODE": "ai", "AUDIT_CAPABILITIES": ""}), tempfile.TemporaryDirectory() as temp:
             data = run_team(snapshot(), Path(temp), invoke, emit=lambda *a, **k: None)
-            self.assertEqual(calls, ["coordinator-routing", "security", "architecture", "inventory", "coordinator-synthesis"])
+            self.assertEqual(calls, ["coordinator-routing", *[c["id"] for c in __import__("arktic_office.coordination.team", fromlist=["CELLS"]).CELLS], "coordinator-synthesis"])
             self.assertTrue(all(c["calls"] == 1 and c["archivos"] for c in data["celulas"]))
             self.assertTrue(all(c["estado"] == "completada" for c in data["celulas"]))
             self.assertEqual(data["coordination"]["stages"]["routing"]["fallback"], "deterministic")
@@ -86,9 +86,9 @@ class CoordinatorTests(unittest.TestCase):
                 return fake_invoke(prompt, config)
             with tempfile.TemporaryDirectory() as temp:
                 data = run_team(snapshot(), Path(temp), invoke, emit=lambda *a, **k: None)
-                self.assertEqual(calls, ["coordinator-routing", "security", "architecture", "inventory", "coordinator-synthesis"])
+                self.assertEqual(calls, ["coordinator-routing", *[c["id"] for c in __import__("arktic_office.coordination.team", fromlist=["CELLS"]).CELLS], "coordinator-synthesis"])
                 self.assertEqual(data["estado"], "completo")
-                self.assertEqual(len(data["confirmados"]), 3)
+                self.assertEqual(len(data["confirmados"]), 7)
                 self.assertNotIn("propuesta_azure", data)
                 self.assertEqual(data["sintesis"][0]["evidencia"], data["confirmados"][1]["evidencia"])
                 self.assertIn("Síntesis del coordinador", render_markdown(data, snapshot()))
@@ -105,14 +105,14 @@ class CoordinatorTests(unittest.TestCase):
                 return {"report": '{"security":["invented.py"],"architecture":[],"inventory":[]}'}
             if config["id"] == "coordinator-synthesis":
                 return {"report": '{"resumen":[{"texto":"inventado","aportaciones":["missing"]}]}'}
-            if config["id"] == "security":
+            if config["id"] == "backend-security":
                 raise AuditError("fallo simulado")
             return fake_invoke(prompt, config)
         with patch.dict("os.environ", {"AUDIT_COORDINATION_MODE": "ai", "AUDIT_CAPABILITIES": ""}), tempfile.TemporaryDirectory() as temp:
             data = run_team(snapshot(), Path(temp), invoke, emit=lambda *a, **k: None)
-            self.assertEqual(len(calls), 5)
+            self.assertEqual(len(calls), 9)
             self.assertEqual(data["estado"], "parcial")
-            self.assertEqual(len(data["confirmados"]), 2)
+            self.assertEqual(len(data["confirmados"]), 6)
             self.assertEqual(data["sintesis"], [])
             self.assertEqual(data["coordination"]["stages"]["routing"]["fallback"], "deterministic")
             self.assertTrue((Path(temp) / "celulas/architecture.json").is_file())

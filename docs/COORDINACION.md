@@ -1,5 +1,17 @@
 # Coordinación y recuperación compartida — 0.3.0
 
+## Funcionamiento actual · coordinación centralizada
+
+La implementación vigente sigue exclusivamente [PLAN_COORDINACION_CENTRALIZADA.md](PLAN_COORDINACION_CENTRALIZADA.md). Akira reparte y sintetiza; Inventario, Arquitectura, Datos, Seguridad, Seguridad frontend, Seguridad backend y Devops ejecutan en ese orden. Core publica aportaciones validadas en SQLite y archivos y entrega contexto anterior selectivo, sin conversación adicional entre modelos. Las consultas se encolan; no hay dos tareas de modelo simultáneas.
+
+Se mantienen Q01–Q40 y sus textos. La configuración efectiva aplica hasta tres rondas de consultas por especialista, salvo cuatro para Seguridad backend, más la respuesta final de cada uno. El límite global es de 31 llamadas contando las dos de Akira. La salida reservada máxima conserva el techo anterior; contexto y tiempo también tienen límites globales. No se cambian modelos ni se amplían presupuestos automáticamente. Credenciales, conexión de resultado remoto desconocido o presupuesto agotado detienen nuevas llamadas; un fallo local bloquea solo dependencias necesarias y conserva resultados válidos.
+
+La base vive en `/reports/.knowledge/office.sqlite`, junto al montaje persistente de informes y caché. No se añade Redis. Los resultados comprobados, incluidos los pendientes solicitados, figuran en [RESULTADOS_COORDINACION_2026-10-30.md](RESULTADOS_COORDINACION_2026-10-30.md).
+
+## Histórico de los recorridos anteriores
+
+Las notas siguientes documentan fases y configuraciones anteriores. Sus cifras de agentes, límites y modelos no describen la configuración vigente ni añaden trabajo al plan único.
+
 El recorrido híbrido prepara un snapshot íntegro y mapas/scanners deterministas. El coordinador recibe contexto común acotado y da tres objetivos en una llamada; no selecciona archivos ni omite especialidades. Cada especialista elige fuentes del mismo snapshot/grafo. El índice del prompt puede ser parcial; la búsqueda local dispone del conjunto completo compatible.
 
 ```dotenv
@@ -14,7 +26,7 @@ La skill compartida explica `{"queries":[{"query":"símbolo o texto","paths":["r
 
 Con una ronda por rol, hasta ocho llamadas: orquestación + tres investigaciones + tres análisis + síntesis. Con dos, hasta once; con cero, hasta cinco sin código para los especialistas. No hay reintentos automáticos ni subida de modelo. Los roles trabajan consecutivamente y no se pasan conclusiones entre sí. Las preguntas posteriores son independientes.
 
-Los campos `calls`, `invocations`, `retrievals`, `execution` y `coverage` registran uso y carencias. Las citas se contrastan con lo realmente suministrado; un hallazgo inválido no elimina otros válidos. La síntesis utiliza únicamente aportaciones validadas y conserva certeza, condiciones, acciones y pendientes. Validar citas no prueba corrección semántica. Base funcional aceptada en Fase 1; mejoras propuestas en [Fase 2](PLAN_FASE_2.md).
+Los campos `calls`, `invocations`, `retrievals`, `execution` y `coverage` registran uso y carencias. Las citas se contrastan con lo realmente suministrado; un hallazgo inválido no elimina otros válidos. La síntesis utiliza únicamente aportaciones validadas y conserva certeza, condiciones, acciones y pendientes. Validar citas no prueba corrección semántica. Base funcional aceptada en Fase 1; mejoras pendientes únicamente en el [plan vigente](PLAN_COORDINACION_CENTRALIZADA.md).
 
 Los apartados siguientes describen la configuración común y el reparto legacy sin evidencia compartida.
 
@@ -99,7 +111,7 @@ La prueba final real de bookingApi ejecutó siete llamadas de `gpt-6-luna`/`low`
 
 El foco y checklist de cada uno de los tres especialistas actuales se definen en `resources/profiles/agents.json`; `resources/profiles/agent-common.md` fija las reglas comunes. El constructor compartido `reporting/agent_instructions.py` entrega ese mismo brief antes de elegir fuentes y durante el análisis. No es una skill nueva ni depende de cargar SOUL o personalidades del gateway Hermes. El coordinador recibe las reglas comunes y sus propios límites de orquestación/síntesis. Los esquemas JSON siguen dependiendo de cada etapa.
 
-Inventario identifica motores o archivos y perfiles declarados; Arquitectura explica uso, conexiones y ubicación configurable; Seguridad revisa acceso y exposición. Una dependencia de base de datos no prueba uso, una ruta/URL no prueba el despliegue efectivo y un volumen no acredita backup. La investigación dirige `query` al símbolo/texto y `paths` al archivo, agrupa fuentes y reserva configuración relevante sin cambiar caps. Nuevos roles DevOps/Privacidad siguen como propuesta en el plan de Fase 2.
+Inventario identifica motores o archivos y perfiles declarados; Arquitectura explica uso, conexiones y ubicación configurable; Seguridad revisa acceso y exposición. Una dependencia de base de datos no prueba uso, una ruta/URL no prueba el despliegue efectivo y un volumen no acredita backup. La investigación dirige `query` al símbolo/texto y `paths` al archivo, agrupa fuentes y reserva configuración relevante sin cambiar caps. El reparto futuro de especialidades se define únicamente en el [plan vigente](PLAN_COORDINACION_CENTRALIZADA.md).
 
 ## Infraestructura actual e informe útil — Parte 2
 

@@ -1,214 +1,329 @@
-# Plan de evolución: coordinación centralizada y oficina
+# Plan único de mejoras — Coordinación centralizada
 
-Fecha: 30/10/2026. Estado: propuesta para revisión; no implementa cambios en ejecución ni animación.
+Fecha: 30/10/2026. Estado: implementado con resultados y límites comprobados. La comparación inicial no demostró mejora; la prueba posterior de mapas reduce el consumo, pero no demuestra conservar la profundidad de Arquitectura y Devops. Chromium aplazado por indicación del usuario.
 
-## Decisiones posteriores para el cierre
+Este es el único plan de trabajo de Arktic Office. Sustituye el antiguo plan de fase 3, el prompt externo de agentes reutilizables y las alternativas anteriores de concurrencia. MVP y fases cerradas se conservan exclusivamente como histórico. El cierre publicado `76abf0f` es el punto de referencia para la implementación descrita aquí.
 
-El usuario solicita cerrar y publicar la versión actual antes de cualquier cambio de interfaz o arquitectura. Se preparará un commit y un pull request sin fusionarlo. Los cambios siguientes quedan para otra versión:
+## 1. Objetivo y decisiones
 
-- Ejecución secuencial según dependencias: Inventario publica primero; Arquitectura reutiliza esos hechos; los especialistas siguientes reciben las referencias pertinentes. Este orden facilita la reutilización, pero no garantiza por sí solo un menor consumo.
-- Ante un fallo, detener las tareas que dependan del resultado ausente. Continuar solo con tareas independientes y aportaciones válidas. Los fallos globales de acceso, autenticación del proveedor o presupuesto detienen nuevas llamadas; no se reintenta indefinidamente ni se gasta el presupuesto restante sin propósito.
-- Panel compacto de ejecución, en cuadrícula: nombre de la persona primero y rol debajo; indicador animado solo mientras ejecuta; modelo, tiempo y tokens disponibles; resultado resumido y error breve visible. El clic abre detalles. No presentar un prompt completo en la tarjeta.
-- Cada especialista incorporado tendrá avatar, escritorio y consulta. Akira se sienta al trabajar o responder y se levanta al finalizar o quedar disponible.
-- Corregir asientos y reducir los paseos de ocio aproximadamente a un tercio.
+Mejorar la cobertura y la eficiencia de la investigación, conservando el informe actual que ha funcionado. Las prioridades ejecutivas son vulnerabilidades, seguridad y riesgos de coste al desplegar en Azure. Inventario, arquitectura y datos aportan información que evita repetir investigaciones. Todas las preguntas siguen formando parte del análisis, incluidas las de operación y persistencia.
 
-Estas decisiones sustituyen las recomendaciones anteriores de aplicar cambios visuales antes del cierre y de activar concurrencia en la siguiente implementación. El resto del documento conserva alternativas y detalles de diseño para revisión; sus referencias al paralelismo no representan el alcance aprobado para el siguiente paso.
+- Mantener las **40 preguntas Q01–Q40, sin añadir, suprimir ni reformular ninguna**. Cambiar su reparto por especialidad y compartir sus evidencias.
+- Coordinación centralizada por Akira; ejecución **secuencial**, con una sola tarea de modelo activa cada vez, incluidas las consultas posteriores.
+- Reutilizar hechos y preparación válidos; no enviar todos los informes a todos los modelos.
+- Los especialistas pueden investigar problemas adicionales a sus preguntas. Todos los hallazgos confluyen en una única sección del informe.
+- No añadir un segundo revisor automático, reparación automática de citas ni una batería de aplicaciones vulnerables. Decisión actualizada por el usuario el 31/10/2026: retirar también el filtro determinista de contenido y referencias. Se conserva únicamente la recepción técnica de los datos, los presupuestos, el acceso acotado a archivos y el escape HTML. Akira consolida; no juzga ni reescribe las respuestas de los especialistas.
+- Mantener los tres contenedores, sin Redis, nuevos servicios, cambios de modelos ni ampliaciones de CI/CD en este alcance.
+- Cada nuevo perfil tendrá persona, escritorio, estado y panel de consulta en el frontend.
 
-## 1. Decisión propuesta
+## 2. Qué tomamos del estudio de Google
 
-Conservar el resultado actual y cerrar una versión estable antes de cambiar el sistema de ejecución. Incorporar primero las correcciones de presentación y actividad de la oficina. Desarrollar después la evidencia compartida, el catálogo de especialistas y la ejecución concurrente en una versión posterior.
+[Google Research: Towards a science of scaling agent systems](https://research.google/blog/towards-a-science-of-scaling-agent-systems-when-and-why-agent-systems-work/).
 
-La arquitectura será centralizada: Akira asigna tareas y consolida; Core administra acceso a evidencia, estados, límites y ejecución. Los especialistas publican resultados consultables, sin conversaciones permanentes entre todos.
+El estudio compara agentes únicos y equipos independientes, centralizados, descentralizados e híbridos. Sus resultados señalan que la descomposición y las dependencias del trabajo importan más que aumentar el número de agentes. La coordinación tiene un coste y puede perjudicar tareas con razonamiento secuencial muy conectado.
 
-La recomendación aplica a nuestro proyecto los resultados de Google; el estudio no evaluó este repositorio, no determina nuestro número óptimo de agentes ni garantiza ahorro de tokens.
+Nuestra decisión es una aplicación de esas observaciones: Akira distribuye encargos acotados y conserva una vista común; cada especialista sigue completo el recorrido que está investigando. Elegimos ejecución secuencial para aprovechar los resultados previos y controlar recursos. **Google no demuestra que nuestra secuencia vaya a gastar menos tokens**, ni prescribe esta plantilla o este número de especialistas. El ahorro se comprobará con métricas de nuestro sistema.
 
-Referencia: https://research.google/blog/towards-a-science-of-scaling-agent-systems-when-and-why-agent-systems-work/
+No se desarrollarán ahora ejecución paralela, conversación entre todos los agentes ni una arquitectura híbrida. Consultar evidencia publicada por otro especialista no implica iniciar una conversación con su modelo.
 
-## 2. Qué existe y qué debe cambiar
+## 3. Perfiles, preguntas y orden de trabajo
 
-- Tres contenedores: `office` presenta la interfaz; `audit-api` ejecuta Core/Hermes y los escáneres; `preparator` prepara Graphify.
-- `./reports` está montado como `/reports` en Core y conserva informes, estados y caché de preparación.
-- `./artifacts/local-inputs` está montado como `/local-inputs`, de solo lectura, en Core para las capturas locales. El código extraído utilizado en una ejecución también puede vivir temporalmente en `/tmp` de Core.
-- El frontend consulta la API de Core; no necesita leer directamente una base de conocimiento ni el repositorio.
-- Los especialistas actuales se ejecutan secuencialmente y publican JSON. No existe todavía la base compartida propuesta.
-- `write_json` utiliza un nombre temporal fijo por archivo. No es suficiente lanzar varios trabajadores que actualicen el mismo estado sin coordinar sus escrituras.
-- El frontend, la proyección de actividad y partes de la planificación contienen identificadores fijos de los cuatro personajes actuales.
-- El mapa compacto tiene cuatro escritorios. El crecimiento requiere adaptar el espacio y sus recorridos.
-- La simulación tiene pausas de ocio de 4–10 segundos; la síntesis activa una reunión visual. El dibujo combina posiciones de asiento, orientación y profundidad: estos elementos deben comprobarse juntos para corregir las superposiciones.
+| Orden | Persona y nombre visible | Perfil técnico propuesto | Responsabilidad | Preguntas principales |
+| --- | --- | --- | --- | --- |
+| Apertura y cierre | Akira · Coordinador | coordinator | Delimitar encargos, resolver dependencias y consolidar riesgos, protecciones y discrepancias | Q01–Q03, Q38–Q40 |
+| 1 | Amina · Inventario | inventory | Lenguajes, versiones, tecnologías y servicios externos; publicar hechos reutilizables | Q04–Q06 |
+| 2 | Leif · Arquitectura | architecture | Tipo de aplicación, componentes, entradas, conexiones y límites de confianza | Q07–Q09 |
+| 3 | Priya · Datos | data | Almacenes, caché, conservación, copias y datos personales | Q10–Q14 |
+| 4 | Noor · Seguridad | identity | Identidad, permisos, sesiones, contraseñas y limitación de intentos | Q23–Q27 |
+| 5 | Mei · Seguridad frontend | frontend-security | Cookies, XSS, secretos del navegador y consentimiento | Q28–Q31 |
+| 6 | Arun · Seguridad backend | backend-security | Entradas y operaciones del servidor, secretos, datos salientes y consumo abusivo; contrastar alertas de dependencias aplicables | Q32–Q37 |
+| 7 | Kwame · Devops | devops | Construcción, Docker, CI/CD, conexiones, despliegue, exposición y riesgos de consumo/coste | Q15–Q22 |
 
-La revisión realizada para este plan es de código. El defecto de asiento debe reproducirse visualmente y verificarse después de corregirlo; aquí no se da por resuelto.
+Ocho perfiles habituales contando al coordinador. Arun se denomina **Seguridad backend** y Kwame mantiene **Devops**. No se incorpora un perfil Hacker ni un tester adicional. El nombre Hacker se reserva para un especialista con alcance propio de investigación de vías de ataque: acceso indebido a bases de datos, afectación a usuarios y otras posibles vulnerabilidades explotables. No es otro nombre para Seguridad backend ni implica que se hayan realizado ataques o pruebas activas. Zola no se activa como etapa de validación en este alcance.
 
-## 3. Dónde centralizar la información
+El orden coloca inventario y arquitectura primero. Datos y permisos ayudan a los análisis posteriores; Devops puede aprovechar los recorridos y operaciones costosas encontrados por los demás. Una consulta posterior específica usa únicamente los perfiles necesarios y los resultados vigentes, sin repetir automáticamente toda la secuencia.
 
-Propuesta dentro del montaje persistente que ya existe:
+Akira asigna cada pregunta exactamente una vez como responsabilidad principal. Los demás pueden aportar evidencia, sin generar respuestas competidoras innecesarias. Q38–Q40 se aplican a cada problema: el autor entrega defensas, condiciones, impacto y pendientes; Akira consolida esas aportaciones. No constituyen otra pasada completa de modelos ni una certificación independiente.
+
+Si una comprobación no aplica, se conserva su pregunta y una explicación respaldada. No se activa una llamada para rellenar un tema claramente ajeno a la revisión. La ausencia de backend en este repositorio no demuestra por sí sola ausencia de APIs externas ni de funciones de servidor dentro de un framework frontend.
+
+## 4. Información centralizada y persistente
+
+Se mantiene la topología actual:
+
+| Contenedor | Contenido y responsabilidad |
+| --- | --- |
+| office | Interfaz y animación. Consulta Core por HTTP; no abre directamente la base ni el repositorio |
+| audit-api | Core, Hermes, especialistas, planificación, búsquedas y escritura de la información compartida |
+| preparator | Extracción de Graphify mediante el adaptador instalado |
+
+Ubicación propuesta, aprovechando el montaje persistente existente `./reports` del host a `/reports` en Core:
 
 ```text
-Host: arktic_office/reports/       <-> Core: /reports/
-  .preparation-cache/                  Capturas derivadas, Graphify y escáneres reutilizables
+reports/
+  .preparation-cache/             Preparación compatible reutilizable
   .knowledge/
-    office.sqlite                     Proyectos, revisiones, hechos, tareas, estados y eventos
-    artifacts/<revision-key>/         Resultados grandes y mapas, con referencias y huellas
+    office.sqlite                Revisiones, hechos, referencias, tareas, estados y métricas
+    artifacts/<revision-key>/    Resultados grandes referenciados desde SQLite
   <fecha>/<proyecto>/<run-id>/
-    job.json                          Compatibilidad con el formato actual
-    estado.json                       Proyección exportada; no escritura directa de trabajadores
-    celulas/                          Exportaciones compatibles de los resultados
     agents/<agent-id>/
-      assignment.json                 Encargo, alcance y presupuesto
-      notes.md                        Notas de esta investigación
-      result.json                     Resultado estructurado para Core
-      summary.md                      Resultado legible para consultas
+      assignment.json            Preguntas, alcance y presupuesto del encargo
+      notes.md                   Notas locales de investigación
+      result.json                Respuestas, hallazgos y referencias
+      summary.md                 Resumen consultable de esta aportación
+    estado.json                  Exportación compatible para el historial actual
+    celulas/                     Exportaciones compatibles de resultados
     informe.html
     informe.md
 ```
 
-Estas rutas nuevas son una propuesta, no una descripción del contenido actual. Los datos guardados ahí sobreviven al recrear el contenedor porque están en un montaje del host. Esto no constituye por sí solo una copia de seguridad.
+Core controla las transacciones y las exportaciones. Las notas no se convierten automáticamente en hechos confirmados. Los modelos consultan mediante herramientas delimitadas; no reciben SQL arbitrario ni permisos para sobrescribir el resultado de otro especialista.
 
-SQLite será la fuente de estado y relaciones. Los archivos grandes permanecerán fuera de la base, referenciados desde ella. Core será el propietario de las escrituras y exportaciones, usando transacciones breves; los agentes usarán consultas delimitadas mediante Core. No necesitan ejecutar SQL arbitrario ni modificar carpetas ajenas.
+La base contiene identidad del repositorio, commit, huella de captura, hechos con procedencia, referencias a archivos/líneas, versiones de herramientas y reglas, preguntas, estado, dependencias, hallazgos y métricas. Se separan observaciones, hipótesis, protecciones verificadas e incidencias técnicas. Decisión actualizada el 31/10/2026: no ocultar ni ofuscar el contenido de código, configuración o resultados de herramientas. Conservar los originales; el informe presenta el texto del especialista con autoría, sin segunda revisión automática.
 
-No se añade Redis ni un cuarto contenedor en esta etapa. Se revisaría esa decisión si pasamos a múltiples instancias de Core o trabajadores distribuidos; SQLite requiere un volumen local adecuado y no se presupone válido para escrituras distribuidas sobre cualquier almacenamiento compartido.
+Las capturas locales completas continúan en `artifacts/local-inputs`, montadas como `/local-inputs` de solo lectura. El código de trabajo puede extraerse temporalmente en Core. La recreación de un contenedor no borra los datos del montaje persistente; el montaje no equivale a una copia de seguridad.
 
-### Información compartida
+### Reutilización y búsqueda
 
-- **Proyecto y revisión:** identidad del repositorio, commit, huella de captura y versiones de herramientas.
-- **Evidencia:** archivo, rango de líneas, huella y procedencia. Los fragmentos entregados a modelos conservan las protecciones de redacción de secretos.
-- **Hechos:** observaciones concretas de inventario y arquitectura, con referencias; separados de hipótesis y conclusiones.
-- **Cobertura:** comprobaciones solicitadas, responsable y resultado: revisada, no aplicable con motivo, pendiente o bloqueada.
-- **Hallazgos y protecciones:** condiciones, alcance, evidencia y agentes que los aportaron; las discrepancias se conservan.
-- **Trabajo:** tareas, dependencias, consultas, presupuesto, duración, llamadas y uso de tokens comunicado por el proveedor.
-- **Eventos:** cambios de actividad que alimentan el frontend y permiten detectar trabajo interrumpido.
+1. Consultar resultados deterministas, inventario y hechos disponibles para la revisión actual.
+2. Usar Graphify y los mapas para localizar relaciones relevantes.
+3. Buscar directamente en todo el texto disponible y leer código cuando sea necesario; la falta de parser no bloquea la lectura de un archivo de texto capturado.
+4. Publicar hechos nuevos con referencias; una conclusión anterior orienta la búsqueda, sin sustituir la evidencia original.
 
-Los resultados se vinculan a su revisión. El mismo nombre de proyecto no basta para reutilizarlos. Los derivados deterministas se invalidan por cambios relevantes de código, herramientas o reglas; las conclusiones de modelos también dependen del encargo y la versión de instrucciones. Cambiar un modelo no obliga a regenerar Graphify. La actualización de información externa de vulnerabilidades tiene una política de vigencia independiente del commit.
+Mejorar la búsqueda para consultar contenido aunque existan coincidencias en nombres de archivo, devolver localizaciones precisas y paginar por todas las coincidencias. Utilizar símbolos y relaciones cuando estén disponibles. Ampliar las reglas locales de seguridad según las tecnologías detectadas y conservar cobertura y límites por herramienta.
 
-Compartir un resumen no sustituye la evidencia original. Un especialista puede utilizarlo para localizar un recorrido y consultar después el código necesario para sustentar su conclusión. No se inyectarán todos los informes en todos los prompts.
+Mantener la caché de preparación independiente del modelo. Verificar identidad e integridad antes de reutilizar; cambios de captura, herramientas o reglas relevantes invalidan los derivados afectados. Auditar que se incluyan también los archivos de reglas JSON que se utilicen. La información externa de vulnerabilidades necesita una política de vigencia propia y renovación manual explícita.
 
-## 4. Catálogo y puestos de trabajo
+Las conclusiones de modelos tienen una identidad separada: revisión, encargo, instrucciones y perfil efectivo. Al volver a comparar modelos se reutiliza la preparación, pero se generan nuevas respuestas. No se reutilizan como resultados de la nueva prueba las conclusiones que se pretende comparar.
 
-| ID propuesto | Persona | Especialidad | Activación |
-| --- | --- | --- | --- |
-| coordinator | Akira | Coordinación y consolidación | Cada encargo y consulta que requiera coordinación |
-| inventory | Amina | Inventario de tecnologías y servicios | Publica una base inicial; reutilizable cuando sea válida |
-| architecture | Leif | Arquitectura, entradas y recorridos | Cuando el encargo necesita relacionar componentes y flujos |
-| identity | Noor | Identidad, permisos y sesiones | Operaciones con acceso o datos sensibles; también comprobar ausencia de controles necesarios |
-| frontend-security | Mei | Seguridad del navegador | Componentes y recorridos de navegador incluidos en el alcance |
-| backend-security | Arun | Seguridad del servidor | Backend, funciones, rutas de servidor y acciones de servidor presentes en el alcance |
-| devops | Kwame | Despliegue, infraestructura y coste | Despliegue, configuración y riesgos de consumo; Azure cuando proceda |
-| data | Priya | Protección y persistencia de datos | Tratamiento de datos relevante para el encargo |
-| validation | Zola | Contraste de un hallazgo concreto | Solo bajo encargo explícito; fuera de la ejecución habitual |
-
-Los IDs son propuestos. Se conservará la lectura de informes con el antiguo especialista `security`; no se renombrarán los registros históricos sin una migración definida.
-
-Cada personaje incorporado tendrá escritorio propio, posición estable, avatar, nombre, especialidad, panel y consulta por la API. El mapa contemplará ocho puestos habituales y un noveno reservado para Zola. Su activación visual no implica mantener un proceso o una llamada al modelo permanentemente abiertos.
-
-El catálogo será único para backend y frontend. Las condiciones de activación no se basarán únicamente en nombres de carpetas: por ejemplo, una aplicación denominada frontend puede contener rutas de servidor o llamar a APIs externas. Toda comprobación relevante debe quedar asignada o excluida con motivo.
-
-## 5. Flujo de ejecución
+## 5. Flujo secuencial y comunicación
 
 ```mermaid
 flowchart TD
-  U[Usuario: encargo de análisis] --> A[Akira delimita alcance y presupuesto]
-  A --> P[Core prepara o reutiliza repositorio, escáneres y Graphify]
-  P --> K[(Evidencia compartida)]
-  K --> I[Amina publica inventario inicial]
-  I --> Q[Core habilita tareas según dependencias]
-  Q --> L[Leif: arquitectura]
-  Q --> S[Noor / Mei / Arun: tareas aplicables]
-  Q --> D[Kwame / Priya: tareas aplicables]
-  L --> K
-  S --> K
-  D --> K
-  L --> J[Akira consolida cuando terminan las tareas necesarias]
-  S --> J
-  D --> J
-  J --> R[Informe único: riesgos, protecciones, respuestas y anexos]
+  U[Usuario: análisis o pregunta] --> A[Akira delimita alcance y presupuesto]
+  A --> P[Core verifica o prepara snapshot, escáneres y Graphify]
+  P --> I[Amina: inventario]
+  I --> L[Leif: arquitectura]
+  L --> D[Priya: datos]
+  D --> N[Noor: identidad y acceso]
+  N --> M[Mei: frontend]
+  M --> H[Arun: seguridad backend]
+  H --> V[Kwame / Devops: operación y coste]
+  V --> C[Akira: consolidación]
+  C --> R[Informe HTML y Markdown]
+  K[(Evidencia compartida en Core)] -. Lectura y publicación en cada etapa .-> L
 ```
 
-Las ramas representan trabajo elegible, no la obligación de arrancar todos los agentes simultáneamente. Arquitectura puede publicar avances y desbloquear tareas sin terminar su informe completo.
+Cada etapa lee y publica en la misma base; la flecha de evidencia ilustra esa relación, no una excepción exclusiva para Arquitectura. Las etapas no aplicables se resuelven sin llamada al modelo, conservando las preguntas y su justificación. Las respuestas visibles mantienen su orden temático, aunque el orden de ejecución sea distinto.
 
-Core tendrá una cola con dependencias y comenzará con un máximo configurable de dos especialistas simultáneos. Se ampliará a tres si memoria, procesos y límites del proveedor lo permiten. El Core actual tiene un límite de 1 GB y no se presupone que varias instancias de Hermes quepan sin medición.
+Las consultas pasan por Core y Akira. Primero se busca un hecho ya publicado; si falta, se crea una investigación acotada para el responsable. No se despierta al modelo de otro agente para devolver un dato que Core ya puede recuperar. Si la consulta necesita un especialista posterior, Core evita dependencias circulares y registra el pendiente; el investigador puede leer el código directamente dentro de su alcance.
 
-Cada especialista mantiene dentro de su tarea el recorrido completo que necesita investigar. No fragmentaremos cada paso de una misma comprobación entre agentes diferentes.
+Antes de cerrar una pregunta sensible, seguir el recorrido aplicable: entrada, identidad, permiso, operación y destino de los datos. Registrar qué se comprobó y qué defensa se encontró. No partir cada paso de ese mismo razonamiento entre varios agentes.
 
-### Consultas y terminación
+### Fallos, esperas y presupuesto
 
-1. El especialista solicita un hecho o una referencia a Core.
-2. Core consulta la base común y devuelve solo el material pertinente.
-3. Si hace falta nueva investigación, registra una tarea acotada para el responsable; evita ciclos de dependencia y encargos duplicados.
-4. El especialista termina con resultado, exclusión justificada, bloqueo concreto o error técnico.
-
-Habrá límites globales y por tarea de tiempo, llamadas, tokens disponibles y consultas delegadas. La contabilidad solo puede usar las métricas que entregue el proveedor; se detendrán nuevas llamadas al alcanzar el presupuesto y se documentarán las limitaciones de los límites duros que el proveedor no admita. Un reinicio no relanzará automáticamente una llamada cuyo estado remoto sea desconocido.
-
-No se incorpora una segunda revisión automática, corrección automática de citas ni la batería de casos conocidos descartadas anteriormente. Se mantiene la validación actual de referencias y esquemas.
-
-## 6. Oficina y actividad visible
-
-La fuente de verdad será la actividad real de la tarea, separada del resultado del informe.
-
-| Actividad real | Representación |
+| Situación | Comportamiento |
 | --- | --- |
-| Sin tarea o no convocado | De pie o descansando; paseos ocasionales |
-| Encargo en cola | Esperando, sin aparentar ejecución |
-| Leyendo, consultando o llamando al modelo | Va a su escritorio y se sienta |
-| Esperando a otro especialista, sin trabajo ejecutable | Se levanta; indicador de espera |
-| Completado | Se levanta; conserva el resultado en el panel |
+| Error de captura o falta de integridad | Detener la ejecución antes de consumir modelos |
+| Herramienta de mapa sin soporte para un lenguaje | Registrar el límite y permitir búsqueda/lectura directa; no afirmar ausencia de funcionalidad |
+| Especialista falla | Guardar sus aportaciones válidas y bloquear únicamente tareas que necesiten resultados ausentes; continuar las independientes |
+| Evidencia directa permite continuar | El siguiente especialista investiga su alcance, sin inventar lo que falló |
+| Credenciales del proveedor, acceso global o presupuesto agotados | Detener nuevas llamadas y mostrar el motivo |
+| Referencia no localizable | Conservar íntegros el texto, el estado y la referencia indicados por el especialista; localizar lo posible para presentación, sin descartar la respuesta ni repararla con modelos |
+| Reinicio o conexión perdida | Registrar interrupción/estado desconocido; no repetir automáticamente una llamada cuyo resultado remoto se desconoce |
+
+Establecer presupuesto total por revisión y límites de tiempo, llamadas y contexto por tarea. El reparto no multiplica automáticamente por siete los presupuestos actuales. Registrar tokens comunicados por el proveedor, contexto reenviado y duración real; mostrar «No disponible» si faltan métricas. Los límites de proveedor que no sean duros se documentan; Core puede impedir nuevas llamadas sin prometer interrumpir una generación remota ya iniciada al token exacto.
+
+La falta de un resultado se distingue de «no aplica». La parada identifica tarea, motivo, aportaciones conservadas y condición necesaria para continuar. No hay bucles indefinidos ni reintentos automáticos repetidos.
+
+## 6. Panel compacto y oficina
+
+- Catálogo único de perfiles para backend y frontend. Ocho personas y ocho escritorios estables para los perfiles habituales.
+- Tarjetas en cuadrícula adaptable al ancho: primero nombre de persona, debajo rol; actividad breve, modelo, esfuerzo, duración y tokens disponibles. Mostrar resultado resumido y un error breve visible cuando exista.
+- Indicador de carga solo durante ejecución real. Diferenciar en cola, investigando, esperando, finalizado y error; cobertura y ejecución son conceptos separados.
+- Al pulsar tarjeta o avatar se abren detalles y la consulta. Retirar de la tarjeta las instrucciones completas del rol y los avisos genéricos largos; no ocultar errores relevantes.
+- Las consultas durante una revisión se encolan y no crean una segunda llamada simultánea. Mostrar «En cola» hasta que comiencen.
+
+| Estado real | Comportamiento del personaje |
+| --- | --- |
+| Ejecutando una investigación o respuesta | Va a su escritorio y se sienta |
+| Síntesis final del informe en curso | Participa en la reunión visual: sentado en la sala o en su escritorio si no hay plaza |
+| En cola o esperando una dependencia | Disponible de pie o descansando, sin aparentar ejecución |
+| Finalizado | Se levanta y conserva su resultado consultable; durante la síntesis final permanece en la reunión hasta que el informe esté listo |
 | Bloqueado o error | Deja de aparentar trabajo y muestra el motivo |
-| Nueva pregunta aceptada y en ejecución | Vuelve a su escritorio; se sienta hasta finalizar |
+| Nueva consulta comienza a ejecutarse | Regresa y se sienta hasta terminar |
 
-Akira se sentará al preparar encargos, consolidar o responder una consulta. Mientras los especialistas trabajan, si no tiene una tarea propia activa, estará disponible de pie. La síntesis no convocará automáticamente una reunión ni moverá al resto del equipo. Una reunión visual necesitará un evento explícito.
+Akira se sienta al repartir o responder y participa sentado en la reunión de síntesis. Mientras no tenga tarea propia activa permanece disponible de pie, aunque otros estén trabajando. La animación no inicia llamadas al modelo.
 
-Las consultas al coordinador podrán producir tareas para especialistas dentro del presupuesto autorizado. Si una pregunta llega con un trabajo activo, se registrará en cola y se mostrará como tal: no se fingirá que está ejecutándose. Una desconexión se mostrará como estado desconocido, sin inventar actividad nueva.
+### Reunión final de síntesis
 
-### Asientos y movimiento
+Al comenzar la síntesis o resumen final, Core publica un estado específico de reunión para la revisión activa. El frontend representa una sesión de videoconferencia tipo Teams, vinculada a ese estado real:
 
-- Revisar el anclaje de cada asiento, el destino accesible, la orientación del personaje y el orden de dibujo respecto al mueble.
-- En los sofás, mostrar al personaje sentado mirando al frente, sin ocultarlo detrás del respaldo. En escritorios, orientar al monitor.
-- Reservar asientos para evitar superposiciones. Si todos están ocupados, esperar en un punto libre; no seleccionar un asiento ocupado como alternativa.
-- Reducir aproximadamente a un tercio los desplazamientos de ocio. Primer ajuste: pasar las pausas de 4–10 a 12–30 segundos y comprobar la frecuencia efectiva de los recorridos; ajustar si no cumple el objetivo.
-- Mantener la velocidad de caminar y la prioridad de ir a trabajar. Reducirla a un tercio haría que pasaran más tiempo andando.
-- La animación no genera llamadas al modelo.
+1. Reservar a Akira una plaza en la sala y asignar las demás plazas libres a los especialistas que participaron en esta revisión. La capacidad la determinan los asientos accesibles del mapa; no apilar personajes ni inventar plazas.
+2. Los participantes sin plaza permanecen o regresan a sus propios escritorios y se sientan, como asistentes remotos. Los perfiles no convocados para esa revisión no se incorporan artificialmente.
+3. Añadir una televisión en la sala. Se enciende durante la reunión y muestra una vista de informe compartido en preparación, participantes e iconos de micrófono silenciado. Si ya hay contenido guardado de esta revisión, se puede representar; no mostrar conclusiones aún no generadas ni datos de otra revisión.
+4. Representar la puesta en común con indicadores visuales discretos de revisión o atención al informe. No inventar diálogo, atribuir afirmaciones a los agentes ni reproducir voces. La sesión permanece en silencio, sin acceso al micrófono o la cámara del usuario ni conexión a Microsoft Teams.
+5. Los paneles distinguen «En reunión final» de «Ejecutando análisis». Solo las llamadas reales incrementan actividad de modelo y consumo; sentarse como participante no consume tokens ni activa de nuevo a los especialistas.
+6. Cuando la generación y el guardado del informe terminan y este queda disponible para abrir y descargar, apagar la televisión, liberar las plazas y levantar a todos los participantes, incluidos los de los escritorios. La disponibilidad del informe no espera a que termine una animación ni a que todos alcancen su asiento.
+7. Si la síntesis se interrumpe, se cancela o falla, terminar la reunión y mostrar la incidencia. Un informe parcial válido también finaliza la reunión al quedar guardado, conservando su estado y limitaciones. Una consulta posterior normal sienta únicamente a quien la atienda; no convoca automáticamente a todo el equipo.
 
-### Paneles
+Aplicar el estado a la ejecución activa, incluso si el usuario está leyendo un informe histórico. Al reconectar, recuperar la fase real desde Core. La reunión debe tener prioridad sobre el paseo de ocio y disponer de asignación de asientos estable para evitar cambios continuos de plaza.
 
-Mostrar nombre, actividad, modelo y esfuerzo, duración medida, tokens informados y resultados resumidos. Separar ejecución, cobertura e incidencias de validación. Retirar de la tarjeta principal las instrucciones del rol y los avisos técnicos genéricos; conservar los detalles relevantes desplegables. Los datos históricos ausentes se mostrarán como no disponibles.
+Corregir asientos conjuntamente en mapa, simulación y render: destino accesible, anclaje del cuerpo, orientación y profundidad de dibujo. En sofás, sentarse delante del respaldo y mirando al frente; en escritorios, hacia el monitor. Reservar plazas y evitar que un asiento ocupado sea la alternativa automática.
 
-## 7. Fases y alcance
+Reducir aproximadamente a un tercio los desplazamientos de ocio. Partir de pausas de 12–30 segundos frente a las actuales 4–10 y medir la frecuencia efectiva de recorridos. Mantener la velocidad de caminar para no alargar el tiempo de paseo y permitir que un encargo interrumpa el ocio.
 
-| Fase | Entregable | Tamaño relativo | Dependencias |
-| --- | --- | --- | --- |
-| 0. Punto de control | Revisar cambios actuales, guardar estado estable y métricas de referencia | Pequeño | Ninguna; no cambiar la arquitectura |
-| 1. Oficina actual | Asientos, ocio reducido, coordinación visual y tarjetas limpias; tiempos por agente | Pequeño–medio | Fase 0; mantiene los tres especialistas actuales |
-| 2. Evidencia compartida | SQLite, referencias, tareas, hechos y exportaciones compatibles | Medio–alto | Contratos de datos e invalidación definidos |
-| 3. Planificación concurrente | Cola, dependencias, presupuestos, cancelación y estado consistente | Alto | Fase 2; revisar seguridad de concurrencia de adaptadores y límites de recursos |
-| 4. Especialistas y escritorios | Catálogo, responsabilidades, preguntas, avatares, mapa y paneles | Medio–alto | Fases 2–3; incorporación gradual |
-| 5. Consultas delegadas | Hablar con Akira, reutilizar hechos y encargar investigaciones acotadas | Medio–alto | Fases 3–4 |
-| 6. Comparación y cierre | Comparar consumo, tiempo, cobertura y hallazgos sobre el mismo alcance | Medio | Implementación estable |
+## 7. Informe: conservar preguntas y unificar hallazgos
 
-Los tamaños son relativos, no estimaciones en días. Las fases 2–5 constituyen un cambio de arquitectura, no un ajuste de prompts.
+- Mantener el diseño actual, la visualización directa y ambas descargas.
+- Resumen ejecutivo comprensible: qué es la aplicación, riesgos prioritarios y protecciones importantes comprobadas. Máximo diez riesgos en el resumen, sin rellenar un cupo.
+- Una sección de vulnerabilidades y riesgos recibe los hallazgos de preguntas, escáneres contrastados e investigación adicional. Conservar autoría y evidencia, eliminar duplicados y señalar discrepancias. Los riesgos de coste se distinguen de las vulnerabilidades.
+- Conservar las 40 preguntas en el detalle, incluida la explicación de las no aplicables y los puntos verdaderamente pendientes. No inferir que algo está bien únicamente por ausencia de alertas.
+- Incluir hallazgos adicionales sin inventar nuevos identificadores de pregunta ni reformular las existentes.
+- Conservar los anexos deterministas explicados en lenguaje natural, sin código ni JSON públicos; originales internos accesibles para investigación.
+- Mantener fuera del informe la sección de recomendaciones y los planes de remediación. Q02 conserva su pregunta sobre prioridades antes/después de desplegar.
+- Redacción ejecutiva y comprensible, sin coletillas de IA. Identificadores acompañados de nombre y explicación; no prefijos mecánicos como «Parcial. No…».
+- Los costes monetarios de Azure necesitan parámetros y supuestos verificables; el código puede sustentar riesgos de gasto sin permitir una factura mensual exacta.
 
-## 8. Comprobaciones de aceptación
+## 8. Bloques de implementación
 
-- Los informes existentes siguen abriendo y descargándose en HTML y Markdown.
-- La fase visual no cambia el contenido de los análisis ni dispara nuevas llamadas al modelo.
-- Cada personaje activo dispone de escritorio y puede abrir su panel; se verifican visualmente sofás, escritorio de Akira y recorridos con varios personajes.
-- Akira se sienta por trabajo real, se levanta al terminar y vuelve a sentarse al ejecutar una consulta nueva.
-- No hay reunión ni desplazamientos del equipo por una síntesis ordinaria.
-- Dos tareas simultáneas no pierden eventos, pisan resultados ni comparten presupuesto por error.
-- Un error de especialista no impide guardar las aportaciones válidas del resto.
-- Las referencias no cruzan revisiones del repositorio; los cambios de reglas invalidan los derivados correspondientes.
-- El mismo commit y preparación compatible permiten reutilizar Graphify; no obligan a reutilizar conclusiones de un análisis distinto.
-- Ninguna tarea queda investigándose indefinidamente: se cumplen límites y se identifica qué falta.
-- El informe consolida hallazgos de preguntas e investigaciones adicionales, conserva protecciones comprobadas y mantiene el máximo de diez riesgos en el resumen, sin ocultar otros hallazgos en el detalle.
-- La comparación del resultado nuevo con el actual usa el mismo repositorio y alcance. Se registran tiempo, tokens, duplicaciones y cobertura; una bajada de tokens con pérdida de cobertura no cuenta como mejora.
+| Bloque | Trabajo | Comprobación para cerrar |
+| --- | --- | --- |
+| M1. Contratos y referencia | Fijar las 40 preguntas y su reparto; definir hechos, referencias, tareas y actividad; revisar los dos fallos legados documentados sin cambiar expectativas a ciegas | Ninguna pregunta perdida o cambiada; compatibilidad histórica definida |
+| M2. Búsqueda y herramientas | Corregir búsqueda por contenido, paginación y localización; ampliar reglas; revisar invalidación y vigencia de caché | Lectura directa funciona aunque Graphify no tenga parser; preparación compatible reutilizable |
+| M3. Información común | Añadir SQLite, referencias y espacios por agente; consultas selectivas y exportaciones actuales | Hechos vinculados a revisión; persisten tras recrear Core; historial anterior sigue abriendo |
+| M4. Especialistas secuenciales | Integrar perfiles, preguntas, publicación por etapa, dependencias, presupuestos y paradas | Cada tarea usa aportaciones anteriores pertinentes; fallos no generan llamadas sin utilidad |
+| M5. Interfaz y oficina | Catálogo dinámico, personas/escritorios, cuadrícula, detalle, estados reales, asientos, paseos y reunión final con televisión | Participantes repartidos entre sala y escritorios, pantalla en silencio y cierre al quedar disponible el informe; perfiles visibles y consultables |
+| M6. Comparación y cierre | Validar informe y descargas, matriz de preguntas, consumo, tiempo y cobertura sobre alcance equivalente | Ahorro o coste adicional explicado; sin pérdida silenciosa de cobertura |
 
-Estas comprobaciones verifican el cambio de ejecución e interfaz; no incorporan la batería de aplicaciones vulnerables descartada.
+M1–M4 preceden a activar los nuevos perfiles en producción. La corrección de asientos y ocio puede prepararse de forma independiente dentro de M5. No desplegar una oficina que anuncie agentes todavía no conectados al backend.
 
-## 9. Límites de acceso
+### Estado comprobado de la implementación · 30/10/2026
 
-Las herramientas de los especialistas se limitan por Core: lectura de código capturado, consultas a Graphify, resultados y referencias compartidas. No se concede consola general ni escritura sobre el repositorio original por añadir un escritorio o una especialidad.
+| Bloque | Estado | Resultado comprobado |
+| --- | --- | --- |
+| M1 | Implementado | Catálogo Q01–Q40 comparado por ID y texto con la copia exacta de `76abf0f`; un responsable por pregunta. La copia de referencia conserva la huella indicada al final del plan. Se investigaron las dos expectativas legadas: huellas de prompts/formatos anteriores y diferencias de presentación de cobertura entre HTML y Markdown; no se regeneraron referencias automáticamente. |
+| M2 | Implementado | Búsqueda simultánea por nombres y contenido, localizaciones y páginas de coincidencias; prioridad de definiciones del grafo sin perder las demás coincidencias. Lectura de texto sin parser. Catorce reglas Semgrep validadas; el JSON de reglas participa en la identidad de caché. Vigencia OSV de 24 horas por defecto y renovación manual existente. |
+| M3 | Verificado | SQLite transaccional en `.knowledge/office.sqlite`, identidad por revisión, procedencia, hechos, tareas, estados y eventos; artefactos y espacios por agente. Tras recrear Core se conservan exactamente 8 tareas, 98 hechos y las huellas de los tres informes de la prueba real. Integridad SQLite correcta. Historial anterior y descargas conservados. |
+| M4 | Implementado | Siete especialistas en el orden fijado y Akira. Contexto anterior seleccionado por preguntas pertinentes; límites globales y por tarea, parada global de proveedor, bloqueo de dependencias declaradas y conservación de aportaciones. Consultas en cola y una sola actividad de modelo; recuperación por ID de pregunta guardada sin llamada. |
+| M5 | Implementado y probado en simulación; revisión visual aplazada | Catálogo servido por Core; ocho personas y escritorios, tarjetas compactas, detalle y consulta, estado de reunión, televisión silenciosa, cuatro plazas en sala y resto en escritorios. Simulación de navegación, plazas exclusivas, estabilidad y liberación correcta. Pausas 12–30 segundos: 178 recorridos frente a 456 en 600 segundos sobre el mismo mapa y con velocidad idéntica (61 % menos). Parche del sofá conservado. Chromium queda expresamente pendiente por indicación del usuario. |
+| M6 | Comparación y descargas verificadas; beneficio no demostrado | Mismo commit, inventario y textos Q01–Q40, Sol/medium. La prueba pasa de 19 a 31 llamadas y de 709.084 a 1.189.320 tokens (+67,7 %); preguntas respondidas: 12 → 4, parciales: 23 → 24, no comprobadas: 5 → 12. No se oculta la regresión ni se repite automáticamente el análisis. HTML/Markdown anterior y nuevo coinciden byte a byte con los guardados; 40 anclas de pregunta en el nuevo HTML. Caché compatible comprobada sin repetir Graphify, escáneres ni modelos en la segunda lectura. |
 
-El aislamiento efectivo de red requiere configuración de red o proxy; no se consigue con instrucciones al modelo. El Core actual no tiene una lista de destinos salientes permitidos que lo limite exclusivamente a modelos. Una restricción de salida deberá conservar explícitamente las conexiones necesarias para proveedores y servicios de análisis autorizados, y tratarse como trabajo específico si se exige antes de la siguiente versión.
+Los resultados y las limitaciones de la entrega se recogen en `docs/RESULTADOS_COORDINACION_2026-10-30.md`. Este apartado registra verificaciones; no cambia las decisiones ni añade otro plan.
 
-## 10. Recomendación de cierre
+Pruebas dirigidas sobre contratos, recuperación, fallos, API y animación; revisión visual real del mapa. No relanzar un proyecto completo por cada ajuste de presentación. Comparar el sistema con la referencia actual usando el mismo repositorio, alcance y perfil de modelo; tokens más bajos con preguntas sin investigar no cuentan como mejora. La comparación no incorpora la batería de aplicaciones vulnerables descartada.
 
-Cerrar la versión actual después de la fase 1 y de sus comprobaciones. Guardar primero un punto de control del estado existente, que tiene cambios sin confirmar. No modificar de golpe el sistema estable para introducir todos los especialistas.
+## 9. Límites y criterios de aceptación
 
-La siguiente versión incorporará fases 2–3 y después especialistas gradualmente. Se activarán más agentes cuando aporten cobertura o reutilización medible, no para llenar escritorios. El cambio se declarará más eficiente solo cuando la comparación sostenga esa conclusión.
+- El código analizado sigue siendo de solo lectura y no se ejecuta ni se instalan sus dependencias.
+- Los modelos reciben herramientas gestionadas por Core, sin consola general ni escritura en el repositorio original.
+- Un prompt no impone aislamiento de red. El Core actual no tiene una lista de destinos salientes que lo limite exclusivamente a proveedores de modelos; este plan no promete que ya exista ni añade infraestructura de red como trabajo separado.
+- Cero diferencias en IDs o textos de Q01–Q40; un responsable principal por pregunta; las no aplicables permanecen en el resultado.
+- Sin mezcla de hechos de commits distintos, sin doble contabilización del presupuesto y sin estados de ejecución ficticios.
+- Fallos y bloqueos visibles; resultados válidos conservados; cada parada tiene un motivo verificable.
+- Informes históricos y descargas siguen disponibles. No se reescriben informes antiguos para simular análisis nuevos.
+- El modelo y sus métricas reales aparecen por ejecución. Cada perfil añadido tiene persona, escritorio y consulta.
+- Durante la síntesis final, la sala usa solo sus plazas libres y el resto participa desde su escritorio. Televisión encendida e indicadores de silencio; no se generan llamadas adicionales por animación. Al guardar el informe disponible para ver y descargar, o ante una interrupción, todos se levantan y la pantalla se apaga.
+- Se registran duración total, llamadas, tokens informados, contexto repetido y cobertura por pregunta. No se garantiza ahorro antes de medir.
+
+## 10. Matriz completa de las preguntas conservadas
+
+Los textos siguientes se conservan del catálogo de referencia, incluidos sus matices. El catálogo efectivo `backend/src/arktic_office/resources/profiles/questions.json` ya aplica este reparto; `questions-reference.json` conserva exactamente el archivo de `76abf0f`. La ejecución nueva se identifica como `central-coordination-v1`; los informes históricos no se reescriben.
+
+| ID | Responsable principal propuesto | Pregunta conservada |
+| --- | --- | --- |
+| Q01 | Akira — Coordinación | ¿Cuáles son las conclusiones y los problemas más importantes de los análisis solicitados? |
+| Q02 | Akira — Coordinación | ¿Qué habría que resolver antes de desplegar y qué puede dejarse para después? |
+| Q03 | Akira — Coordinación | ¿Qué puntos quedan sin comprobar o tienen conclusiones contradictorias? |
+| Q04 | Amina — Inventario | ¿Cuál es el lenguaje principal de la aplicación y qué otros lenguajes utiliza? |
+| Q05 | Amina — Inventario | ¿Qué tecnologías y frameworks principales utiliza, qué versiones tienen y para qué sirve cada uno? |
+| Q06 | Amina — Inventario | ¿A qué servicios externos se conecta y para qué utiliza cada uno? Incluye servicios de inteligencia artificial y gateways de acceso a modelos. |
+| Q07 | Leif — Arquitectura | ¿Qué contiene este repositorio: frontend, backend, ambos u otro tipo de aplicación? ¿Para qué sirve cada parte? |
+| Q08 | Leif — Arquitectura | ¿Funciona como una sola aplicación o está dividida en servicios? ¿Cómo se conectan sus partes principales? |
+| Q09 | Leif — Arquitectura | ¿Cómo organiza el código y sus responsabilidades? ¿Sigue alguna arquitectura o mezcla varias? Explica brevemente con ejemplos. |
+| Q10 | Priya — Datos | ¿Qué bases de datos, archivos u otros almacenes utiliza? ¿Dónde están, qué información guardan y cuáles hay que conservar al migrar? |
+| Q11 | Priya — Datos | ¿Utiliza caché? ¿Qué guarda, durante cuánto tiempo y cómo protege los datos sensibles? Contrasta la protección con Seguridad. |
+| Q12 | Priya — Datos | ¿Qué datos se conservan al reiniciar la aplicación y cuáles se pierden? |
+| Q13 | Priya — Datos | ¿Existe un sistema de copias de seguridad? ¿Qué guarda y cómo se recuperan los datos? |
+| Q14 | Priya — Datos | ¿Qué datos personales guarda? ¿Permite consultarlos, corregirlos y eliminarlos? ¿Define cuánto tiempo los conserva? |
+| Q15 | Kwame — Devops | ¿Cómo se construye y se arranca la aplicación? Identifica los comandos y scripts necesarios. |
+| Q16 | Kwame — Devops | ¿Qué necesita para arrancar, como variables de configuración, bases de datos u otros servicios? |
+| Q17 | Kwame — Devops | ¿Está preparada para ejecutarse con Docker o Docker Compose? ¿Qué partes se ejecutan en contenedores? |
+| Q18 | Kwame — Devops | ¿Tiene procesos automáticos de integración y despliegue (CI/CD)? ¿Qué construyen, comprueban o despliegan? |
+| Q19 | Kwame — Devops | ¿Los datos se conservan si se elimina o se vuelve a crear el contenedor? ¿Qué hay que configurar para conservarlos? |
+| Q20 | Kwame — Devops | ¿Qué conexiones externas hay que configurar para que funcione en nuestro entorno? |
+| Q21 | Kwame — Devops | ¿Está preparada para funcionar en local, en una red interna o en Internet? ¿Hay información sobre dónde está desplegada y en qué país? |
+| Q22 | Kwame — Devops | ¿Qué partes pueden consumir más memoria, CPU o disco? ¿Hay límites configurados y qué habría que medir para conocer el consumo real? |
+| Q23 | Noor — Seguridad: identidad y acceso | ¿Tiene un sistema de autenticación? Si existe, sigue el recorrido de una petición y explica cómo comprueba la identidad y si algún acceso sensible queda sin proteger. |
+| Q24 | Noor — Seguridad: identidad y acceso | ¿Comprueba qué puede ver y hacer cada usuario? ¿Podría alguien acceder a datos de otros usuarios o realizar acciones sin permiso? |
+| Q25 | Noor — Seguridad: identidad y acceso | ¿Cómo mantiene la sesión del usuario? ¿Cuándo caduca y cómo se invalida al cerrar sesión? |
+| Q26 | Noor — Seguridad: identidad y acceso | ¿Dónde y cómo guarda las contraseñas de los usuarios y los tokens de sesión? ¿Están protegidos? |
+| Q27 | Noor — Seguridad: identidad y acceso | ¿Limita los intentos de inicio de sesión para evitar que alguien pruebe muchas contraseñas? |
+| Q28 | Mei — Seguridad frontend | ¿El frontend guarda o lee información sensible en las cookies? ¿La expone o la comparte con terceros? |
+| Q29 | Mei — Seguridad frontend | ¿El frontend muestra datos que podrían ejecutar código malicioso en el navegador (XSS)? |
+| Q30 | Mei — Seguridad frontend | ¿Expone claves, contraseñas o API keys privadas en el código o los archivos que recibe el navegador? |
+| Q31 | Mei — Seguridad frontend | ¿Utiliza cookies que necesitan consentimiento? Si las utiliza, ¿permite aceptarlas, rechazarlas y cambiar la elección? ¿Las bloquea hasta obtener permiso? |
+| Q32 | Arun — Seguridad backend | ¿El servidor genera páginas o contenido que podrían ejecutar código malicioso en el navegador (XSS)? |
+| Q33 | Arun — Seguridad backend | ¿Guarda información sensible en las cookies? ¿Cómo las protege para evitar su exposición? |
+| Q34 | Arun — Seguridad backend | ¿Alguien podría manipular los datos que envía para alterar las consultas a la base de datos (inyección SQL)? |
+| Q35 | Arun — Seguridad backend | ¿Hay operaciones que puedan quedarse bloqueadas, repetirse sin límite o agotar los recursos? Incluye lo que ocurre si un servicio externo falla o tarda en responder. ¿Qué controles existen? |
+| Q36 | Arun — Seguridad backend | ¿Dónde guarda las claves y contraseñas que utiliza para conectarse a bases de datos o servicios externos? ¿Hay secretos escritos en el código o incluidos en archivos del repositorio, como los .env? |
+| Q37 | Arun — Seguridad backend | ¿Qué información envía a servicios externos? ¿Incluye datos sensibles y cómo los protege? Incluye la protección de datos sensibles en caché. |
+| Q38 | Akira — Coordinación | Para cada problema señalado: ¿está sustentado por el código o hay alguna protección que lo evita? |
+| Q39 | Akira — Coordinación | Para cada problema señalado: ¿qué condiciones necesita para ocurrir y qué impacto tendría? |
+| Q40 | Akira — Coordinación | Para cada problema señalado: ¿qué se ha comprobado y qué falta para confirmarlo o descartarlo? |
+
+Huella SHA-256 del catálogo de referencia: `e1ae857f1b66b64a615760d42372c14e1d8e4d51d8ff3728793fda14f47bad05`.
+
+
+## Actualización de ejecución — 31/10/2026: originales sin filtro
+
+Decisión expresa del usuario posterior al diagnóstico: eliminar la ocultación y el validador de respuestas. Esta actualización sustituye cualquier instrucción anterior de este documento sobre ocultar contenido o rechazar una conclusión por sus citas. No cambia Q01–Q40, modelos, presupuestos ni ejecución secuencial.
+
+Implementado: entrega de fuentes sin transformación, Gitleaks sin `--redact`, resultados originales conservados, recepción de respuestas sin evaluación de citas/longitud/fundamento y sin descenso automático de su estado. Los originales completos se guardan siempre, incluso si el JSON no puede recibirse. Las referencias originales acompañan a las localizadas. HTML y Markdown incorporan un anexo con las aportaciones originales, separado de la síntesis de Akira. La caché identifica la nueva política para no reutilizar fuentes ocultadas. El acceso a rutas, integridad, límites, cola secuencial y escape de HTML siguen siendo controles técnicos.
+
+Verificación: reproducción offline de las siete respuestas archivadas, sin proveedores: las 34 respuestas especializadas conservan exactamente texto y estado; 8 respondidas, 25 parciales y 1 no comprobada. Los HTML/Markdown de esta reproducción conservan el anexo y las 40 anclas. Se generan en `artifacts/central-coordination`, sin reescribir el análisis histórico. Este ensayo no prueba una mejora nueva de investigación ni restaura contenido ya ocultado en aquella captura. La comparación histórica M6 permanece registrada tal como ocurrió.
+
+Suite final de la nueva política: 196 pruebas, 195 correctas y una omisión preexistente. El diagnóstico del 31/10 recoge el detalle de Arun (5 llamadas frente a 6, +0,31 % de tokens) y distingue ese coste individual del de los tres especialistas de seguridad.
+
+Servicio actualizado y saludable. Comprobación posterior: ocho perfiles disponibles, sin revisiones activas ni reunión abierta y sin incremento de las 31 llamadas históricas. Las cuatro descargas HTML/Markdown de las dos revisiones coinciden con los archivos guardados. Los 103 archivos históricos comprobados permanecen idénticos y SQLite devuelve `integrity_check=ok`. Evidencias: `api-original-policy.json`, `download-original-policy.json`, `original-policy-persistence.json` y `backend-original-policy-release.log`, en `artifacts/central-coordination`. No se hicieron commits ni publicaciones.
+
+
+## Actualización acordada — mapas y consultas locales (31/10/2026)
+
+Se sustituye el envío anticipado de respuestas completas por un mapa determinista de preguntas publicadas en esta revisión: ID, pregunta original, autor y estado, sin respuestas ni citas. Cada especialista puede solicitar hasta cuatro IDs mediante `{"questions":["Q25","Q11"]}` dentro del mecanismo `queries` existente. Core lee SQLite, entrega los textos y estados originales y agrupa las ubicaciones de fuentes contiguas; las citas completas permanecen guardadas. Consultar información publicada no despierta a otro modelo ni habilita SQL arbitrario. Una pregunta aún no publicada devuelve su indisponibilidad; si una consulta agrupada contiene otras disponibles, esas respuestas se conservan.
+
+Los escáneres siguen el mismo principio: mapa inicial con nombre, finalidad, estado y cantidades, sin detecciones ni salidas completas. `{"tool":"D04","index":true}` descubre ubicaciones y tipos; `tool`, `query`, `paths`, `offset` y `limit` permiten solicitar resultados pertinentes y paginados de Gitleaks, OSV y Semgrep. Se retira el envío duplicado de detecciones en el contexto común y en el contrato de salida. Los originales y anexos deterministas se conservan íntegros. La consulta de inventario y cobertura Graphify sigue disponible como D01/D05; las búsquedas de símbolos, relaciones, texto y lecturas directas de código conservan su funcionamiento.
+
+Se usan las mismas rondas, hasta cuatro consultas locales por ronda y los mismos límites/modelos/presupuestos. Consultar mapas o SQLite no crea llamadas de revisión o resumen. El modelo puede consumir una ronda para pedir datos, por lo que no se promete ahorro total ni mejora de cobertura sin una comparación real. Las métricas de cada llamada incorporan tamaños del mapa de preguntas, mapa de herramientas, código retenido e historial solicitado.
+
+Medición offline sobre la revisión archivada de Arun: las siete respuestas antes precargadas ocupaban 67.153 bytes por llamada; el nuevo mapa permite descubrir veinte respuestas previas con 3.850 bytes (-94,27 % frente a aquel bloque). La reconstrucción de la primera petición ocupa 30.449 bytes frente a los 114.381 registrados (-73,38 %). Es una comparación de bytes reconstruidos, no una medición de tokens nuevos. Cero llamadas a proveedores y ningún informe histórico reescrito. Evidencia en `artifacts/central-coordination/lookup-maps-measurement.json`.
+
+Cierre de mapas comprobado: backend actualizado y saludable; 202 pruebas (201 correctas y una omisión previa), API con ocho perfiles y sin tareas activas, cuatro descargas HTML/Markdown idénticas a las guardadas, 103 archivos históricos intactos e integridad SQLite correcta. Sin llamadas reales a modelos, cambios de modelos/presupuestos, commits ni publicaciones. Chromium continúa aplazado. Evidencias finales: `backend-lookup-maps-verified.log`, `recreate-lookup-maps.log`, `lookup-maps-verification.json` y `download-lookup-maps.json`, en `artifacts/central-coordination`.
+
+
+### Prueba real de mapas completada · 31/10/2026
+
+Ejecución `813716cc-477b-4a4b-9795-a231973a4b9f`, mismo commit/inventario/Q01–Q40/Sol-medium y límites globales. Resultado: 30 llamadas, 717.849 tokens (-39,64 % frente al centralizado anterior), 874,675 segundos (-16,21 %) y 2.493.232 bytes de contexto (-40,83 %). Frente al sistema original de tres especialistas, el consumo queda +1,24 %. Se reutilizó la preparación compatible y se preservaron sus originales; no se ejecutó el proyecto objetivo.
+
+M6 queda comprobado con resultado mixto: ahorro de contexto y tokens, sin errores técnicos, pero no se acredita mantener la profundidad de lectura. Publicado: 3 respondidas, 36 parciales y 1 no comprobada. Al comparar originales de las mismas 34 preguntas especializadas, 8 → 3 respondidas y 25 → 30 parciales: cambios en Q07–Q09 y Q15–Q16, sin intervención de un validador. Las 15 preguntas de Seguridad conservan sus estados originales con un 45,30 % menos de tokens en conjunto. Se leyeron 84 archivos frente a 100 y se realizaron 64 consultas de código frente a 79. La lectura pendiente de Arquitectura/Devops sigue siendo un límite real; no se relanza automáticamente la prueba.
+
+Verificado: 34 respuestas originales intactas, 40 preguntas y anclas, seis descargas correctas, 103 archivos históricos sin cambios, ocho tareas y 105 hechos en SQLite con integridad correcta, reunión cerrada y presupuesto respetado. Chromium sigue aplazado. El resultado detallado y los límites de comparación se registran en `docs/RESULTADOS_MAPAS_2026-10-31.md`; es un cierre de resultados, no otro plan.
+
+
+## Cierre estable y propuestas pendientes — 31/10/2026
+
+Por instrucción expresa del usuario se guarda este punto estable mediante commit y push de la rama actual antes de hacer más cambios. No se aplica la unificación de perfiles comentada: permanecen siete especialistas y Akira, con Arquitectura y Datos separados. Estabilidad funcional no significa cobertura semántica completa. Se conservan los resultados favorables y desfavorables de las tres configuraciones en `docs/evidence/agent-comparison-2026-10-31/` y el cierre en `docs/CIERRE_COORDINACION_2026-10-31.md`.
+
+Las siguientes propuestas quedan documentadas, **sin implementar ni activar**. Este apartado pertenece al único plan vigente; no es una autorización para nuevas ejecuciones de modelos.
+
+| Propuesta | Motivo observado | Qué habría que comprobar antes de aceptarla |
+| --- | --- | --- |
+| Comparar tres especialistas con los mapas actuales y sin filtro de respuestas | La versión original tuvo consumo similar al actual y menos llamadas; las herramientas y el tratamiento de respuestas difieren | Misma captura, modelos y preguntas; presupuesto explícito; separar beneficio de las herramientas y del reparto entre agentes |
+| Unificar Arquitectura y Datos en un responsable de Q07–Q14 | Son recorridos conectados: aplicación, servicios, almacenes, caché, conservación y datos personales; la separación puede fragmentar la visión | Mantener exactamente los ocho IDs/textos; un personaje, escritorio, panel y consulta funcional; compatibilidad de historiales; presupuesto dentro del techo vigente, sin aumentar modelo ni gasto global por inercia |
+| Recuperar la lectura pendiente de Arquitectura y Devops | Q07–Q09 y Q15–Q16 quedaron menos concluyentes; Arquitectura cerró con una ronda disponible | Web pública, cliente/contexto tRPC, enrutador y módulos; tareas de Turborepo, paquete web, Dockerfile de migraciones e inyección de variables. Priorizar fuentes necesarias, sin consumir rondas por obligación ni añadir revisor |
+| Afinar la selección y agrupación de consultas locales | SQL y escáneres ahorran contexto, pero ocuparon consultas antes usadas para código | Evitar recuperaciones redundantes y comprobar la lectura de las áreas relevantes, conservando los límites de rondas, consultas y contexto; no volver a precargar informes completos |
+| Aclarar el significado de respondida/parcial en análisis estático | Una respuesta de configuración puede ser útil sin ejecutar producción; los agentes usan criterios de cierre distintos | Instrucciones claras, sin cambiar preguntas, sin reclasificar resultados guardados y sin un validador que reescriba al especialista; evaluar contenido y límites de lectura además de contar etiquetas |
+| Completar Chromium cuando el usuario lo retome | Comprobación visual expresamente aplazada | Oficina, asientos, reunión/TV, paneles y descargas; la animación no debe generar llamadas a modelos |
+
+Se mantienen las decisiones de ejecución secuencial, Core/SQLite/archivos, mapas consultables, respuestas originales, ausencia de ocultación y de un segundo validador, modelos configurados y preservación de Q01–Q40. No se ejecuta ni se instalan dependencias del repositorio analizado, ni se realizan ataques activos. Cualquier ensayo futuro requiere presupuesto definido y conserva sus resultados como una ejecución nueva.

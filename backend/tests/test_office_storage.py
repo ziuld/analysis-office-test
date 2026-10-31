@@ -29,11 +29,14 @@ class OfficeStorageTests(unittest.TestCase):
             self.assertEqual(jobs.history(directory.name, "inventory")["questions"], [])
             self.assertEqual(before, {p: p.read_bytes() for p in directory.rglob("*") if p.is_file()})
             write_json(directory / "coordinacion.json", {"stages": {"synthesis": {"status": "running"}}})
+            write_json(directory / "meeting.json", {"active": True, "participants": ["coordinator", "security"]})
             cells = [{"id": "security", "estado": "analizando"}]
             live = project(directory, {"estado": "analizando"}, cells)
             self.assertTrue(live["coordinator"]["meeting"])
             terminal = project(directory, {"estado": "informacion_insuficiente"}, cells)
             self.assertTrue(all(not a["working"] and not a["meeting"] for a in terminal.values()))
+            self.assertEqual(terminal['data']['state'], 'no_participo')
+            self.assertEqual(terminal['backend-security']['state'], 'no_participo')
 
     def test_new_dated_layout_manifest_and_flat_history_remain_resolvable(self):
         with tempfile.TemporaryDirectory() as temp:

@@ -1,6 +1,6 @@
 # Resultados de Fase 1 — 0.3.0
 
-Fase aceptada y cerrada el 24/10/2026 por el usuario con resultados parciales y límites conocidos. Frontend/backend/paquete 0.3.0; merge manual pendiente, sin publicación. El afinado queda fuera de esta entrega y se propone en [Fase 2](PLAN_FASE_2.md). Los registros de candidatas abiertas que siguen son históricos; los informes 0.2.0 no se reescriben.
+Fase aceptada y cerrada el 24/10/2026 por el usuario con resultados parciales y límites conocidos. Frontend/backend/paquete 0.3.0; merge manual pendiente, sin publicación. El afinado quedó fuera de aquella entrega; el siguiente trabajo se rige por el [plan vigente](PLAN_COORDINACION_CENTRALIZADA.md). Los registros de candidatas abiertas que siguen son históricos; los informes 0.2.0 no se reescriben.
 
 Los nuevos informes híbridos incluyen el inventario íntegro al commit en `evidencia.json`, hashes de blobs y SHA256, cobertura por herramienta y fuentes originales realmente suministradas. `coordinacion.json` conserva decisiones y consultas; `celulas/*.json` distingue ejecución, cobertura, llamadas y advertencias. `manifest.json` conserva consumo y perfiles efectivos. HTML, Markdown y oficina muestran omisiones, carencias y cobertura separada de la ejecución. Los históricos no se reescriben.
 

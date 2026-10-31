@@ -1,0 +1,31 @@
+{
+  "scanner": "Gitleaks 8.30.1",
+  "scanned_scope": "isolated snapshot of all staged files",
+  "findings": 3,
+  "reviewed_non_secret_cache_fingerprints": [
+    {
+      "run": "2697cb5e-b168-41f1-a5bd-714b7ba0d9ff",
+      "field": "preparation_cache.key",
+      "classification": "non-secret SHA-256 preparation-cache identity",
+      "matches_saved_snapshot": true,
+      "cache_manifest_verified": true
+    },
+    {
+      "run": "1df56a5f-6b84-478c-a0af-0a6fec12df1b",
+      "field": "preparation_cache.key",
+      "classification": "non-secret SHA-256 preparation-cache identity",
+      "matches_saved_snapshot": true,
+      "cache_manifest_verified": true
+    },
+    {
+      "run": "813716cc-477b-4a4b-9795-a231973a4b9f",
+      "field": "preparation_cache.key",
+      "classification": "non-secret SHA-256 preparation-cache identity",
+      "matches_saved_snapshot": true,
+      "cache_manifest_verified": true
+    }
+  ],
+  "actual_credentials_identified": 0,
+  "rules_suppressed": false,
+  "archived_rendered_reports_findings": 0
+}

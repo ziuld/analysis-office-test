@@ -142,6 +142,78 @@
           "pattern": "new SqlCommand($A + $B, ...)"
         }
       ]
+    },
+    {
+      "id": "arktic.php-dynamic-execution",
+      "languages": [
+        "php"
+      ],
+      "severity": "WARNING",
+      "message": "Patrón sensible: contrastar origen de entrada, defensas y alcance; no demuestra explotación.",
+      "pattern-either": [
+        {
+          "pattern": "eval(...)"
+        }
+      ]
+    },
+    {
+      "id": "arktic.php-shell",
+      "languages": [
+        "php"
+      ],
+      "severity": "WARNING",
+      "message": "Patrón sensible: contrastar origen de entrada, defensas y alcance; no demuestra explotación.",
+      "pattern-either": [
+        {
+          "pattern": "shell_exec(...)"
+        },
+        {
+          "pattern": "system(...)"
+        },
+        {
+          "pattern": "passthru(...)"
+        }
+      ]
+    },
+    {
+      "id": "arktic.python-sql-concatenation",
+      "languages": [
+        "python"
+      ],
+      "severity": "WARNING",
+      "message": "Patrón sensible: contrastar origen de entrada, defensas y alcance; no demuestra explotación.",
+      "pattern-either": [
+        {
+          "pattern": "$DB.execute($A + $B, ...)"
+        }
+      ]
+    },
+    {
+      "id": "arktic.go-sql-concatenation",
+      "languages": [
+        "go"
+      ],
+      "severity": "WARNING",
+      "message": "Patrón sensible: contrastar origen de entrada, defensas y alcance; no demuestra explotación.",
+      "pattern-either": [
+        {
+          "pattern": "$DB.Query($A + $B, ...)"
+        }
+      ]
+    },
+    {
+      "id": "arktic.js-sql-concatenation",
+      "languages": [
+        "javascript",
+        "typescript"
+      ],
+      "severity": "WARNING",
+      "message": "Patrón sensible: contrastar origen de entrada, defensas y alcance; no demuestra explotación.",
+      "pattern-either": [
+        {
+          "pattern": "$DB.query($A + $B, ...)"
+        }
+      ]
     }
   ]
 }

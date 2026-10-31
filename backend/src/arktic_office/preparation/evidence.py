@@ -1,4 +1,4 @@
-"""Job-scoped redacted evidence. Shared read-only lookup; no model, shell or network."""
+"""Job-scoped original evidence. Shared read-only lookup; no model, shell or network."""
 import re
 from pathlib import PurePosixPath
 from arktic_office.preparation.repository import AuditError, redact, file_role, balanced_files, select, priority, mask_findings
@@ -12,9 +12,15 @@ class Evidence:
         self.graph = graph
 
     def lookup(self, request):
+        if isinstance(request,dict) and 'questions' in request:
+            from arktic_office.preparation.lookups import questions
+            return questions(self,request)
         if isinstance(request, dict) and "list_paths" in request:
+            # A redundant operation name adds no scope, cost or extra lookup.
+            if request.get('query') == 'list_paths':
+                request = {k:v for k,v in request.items() if k != 'query'}
             if set(request) - {"list_paths", "offset"} or request["list_paths"] is not True:
-                raise AuditError("Consulta de inventario inválida.")
+                raise AuditError('Consulta de inventario inválida: usa solo {"list_paths":true,"offset":0}.')
             offset = request.get("offset", 0)
             if type(offset) is not int or offset < 0:
                 raise AuditError("Desplazamiento de inventario inválido.")
@@ -23,31 +29,14 @@ class Evidence:
             return {"fragments": [], "paths": page, "total": len(paths), "offset": offset,
                     "next_offset": offset + len(page) if offset + len(page) < len(paths) else None}
         if isinstance(request, dict) and "tool" in request:
-            if set(request) - {"tool", "offset"} or not isinstance(request["tool"], str):
-                raise AuditError("Consulta determinista inválida.")
-            offset = request.get("offset", 0)
-            if type(offset) is not int or offset < 0:
-                raise AuditError("Desplazamiento determinista inválido.")
-            item = next((t for t in getattr(self, "deterministic", {}).get("tools", []) if t["id"] == request["tool"]), None)
-            if item is None:
-                raise AuditError("Herramienta no disponible en esta revisión.")
-            result = item["result"]
-            key = "inventory" if item["id"] == "D01" else "file_coverage" if item["id"] == "D05" else "findings"
-            values = result.get(key, [])
-            page, used = [], 0
-            for value in values[offset:offset + 20]:
-                size = len(__import__('json').dumps(value, ensure_ascii=False).encode())
-                if used + size > 12000:
-                    break
-                page.append(value)
-                used += size
-            return {"fragments": [], "relations": [], "symbols": [], "tool": item["id"], "status": item["status"],
-                "detail": item["detail"], key: page, "total": len(values), "offset": offset,
-                "next_offset": offset + len(page) if offset + len(page) < len(values) else None,
-                "limitation": "Página de resultados deterministas; el anexo conserva la salida completa normalizada."}
-        if not isinstance(request, dict) or set(request) - {"query", "paths", "start_line"}:
+            from arktic_office.preparation.lookups import tool
+            return tool(self,request)
+        if not isinstance(request, dict) or set(request) - {"query", "paths", "start_line", "offset"}:
             raise AuditError("Consulta de evidencia inválida.")
         query, paths = request.get("query", ""), request.get("paths", [])
+        offset = request.get('offset', 0)
+        if type(offset) is not int or offset < 0:
+            raise AuditError('Desplazamiento de búsqueda inválido.')
         if not isinstance(query, str) or len(query) > 120 or not isinstance(paths, list) or len(paths) > 3:
             raise AuditError("Consulta de evidencia supera el límite.")
         if any(not isinstance(p, str) or len(p) > 500 or not p or PurePosixPath(p).is_absolute()
@@ -67,20 +56,35 @@ class Evidence:
         related = [n.get("source_file") for n in self.graph.get("nodes", []) if n.get("id") in neighbors]
         words = re.findall(r"[A-Za-z_][A-Za-z0-9_]{2,}", query.casefold())[:8]
         matches = sorted(self.files, key=lambda p: (-sum(w in p.casefold() for w in words), p))
-        paths = list(dict.fromkeys(paths + [p for p in related if p in self.files] +
-                                  [p for p in matches if any(w in p.casefold() for w in words)]))[:3]
-        if not paths and query:
-            paths = [p for p, f in self.files.items() if query.casefold() in f["text"].casefold()][:3]
+        explicit_paths = list(paths)
+        candidates = explicit_paths or list(dict.fromkeys([p for p in related if p in self.files] +
+                          [p for p in matches if any(w in p.casefold() for w in words)] +
+                          [p for p in sorted(self.files) if query and query.casefold() in self.files[p]['text'].casefold()]))
+        # Paginate occurrences, not just filenames: content remains searchable even
+        # when a filename or graph symbol happened to match first.
+        locations = []
+        for path in candidates:
+            hits = [i + 1 for i, line in enumerate(self.files[path]['text'].splitlines()) if query and query.casefold() in line.casefold()]
+            definitions = [int(m[1]) for n in self.graph.get('nodes', [])
+                           if query and n.get('source_file') == path and query.casefold() in str(n.get('label', '')).casefold()
+                           and (m := re.match(r'^L(\d+)', str(n.get('source_location', ''))))
+                           and 1 <= int(m[1]) <= len(self.files[path]['text'].splitlines())]
+            hits = list(dict.fromkeys(definitions + hits))
+            if explicit_paths and start_line is not None:
+                hits = [start_line]
+            locations.extend((path, line) for line in (hits or [1]))
+        page = locations[offset:offset + 3]
+        paths = [p for p, _ in page]
         fragments = []
-        for path in paths:
+        for path, location in page:
             lines = self.files[path]["text"].splitlines()
-            hit = next((i for i, line in enumerate(lines) if query and query.casefold() in line.casefold()), 0)
+            hit = location - 1
             # Use the graph's definition location for this file; text hits may be call sites.
             definition = next((int(m.group(1)) - 1 for n in self.graph.get("nodes", [])
                 if query and n.get("source_file") == path and query.casefold() in str(n.get("label", "")).casefold()
                 and (m := re.match(r"^L(\d+)", str(n.get("source_location", ""))))
                 and 1 <= int(m.group(1)) <= len(lines)), None)
-            if definition is not None:
+            if definition is not None and not query:
                 hit = definition
             start = start_line - 1 if start_line is not None else max(0, hit - 8)
             end = min(len(lines), start + 200)
@@ -94,6 +98,8 @@ class Evidence:
             fragments.append({"path": path, "text": text, "partial": start != 0 or end != len(lines),
                               "start": start + 1, "end": end})
         return {"fragments": fragments, "relations": edges, "unavailable_paths": unavailable,
+                "matches": [{'path': p, 'line': line} for p, line in page], 'total': len(locations), 'offset': offset,
+                'next_offset': offset + len(page) if offset + len(page) < len(locations) else None,
                 "symbols": [{k: n.get(k) for k in ("id", "label", "source_file", "source_location")} for n in self.graph.get("nodes", []) if n.get("id") in neighbors][:12],
                 "limitation": "Relaciones estáticas auxiliares; las conclusiones requieren fuentes de texto."}
 

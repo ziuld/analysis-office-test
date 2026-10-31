@@ -4,7 +4,7 @@ import re
 from arktic_office.core.errors import AuditError
 from arktic_office.preparation.repository import redact
 from arktic_office.reporting.agent_instructions import instructions
-from arktic_office.reporting.reports import evidence_index, validate_report, MAX_EVIDENCE_REFS
+from arktic_office.reporting.reports import evidence_index, MAX_EVIDENCE_REFS
 from arktic_office.reporting.security import CONTROLS, STATES, SEVERITIES
 
 CONTRACT = "compact-v1"
@@ -17,7 +17,7 @@ def prompt(snapshot, cell):
     common = {
         "observaciones": [{"observacion": "Hecho o patrón observado en las fuentes", "certeza": "observado", "evidencia": ["F1:L1"]}],
         "pendientes": []}
-    if role == "security":
+    if role in {"security", "identity", "frontend-security", "backend-security"}:
         common["controles"] = [{"id": "acceso", "estado": "no_evaluado", "motivo": "No se comprobó autorización", "evidencia": []}]
         specific = ("Perfil de revisión de seguridad. Para riesgos puedes añadir gravedad (critica/alta/media/baja), "
             "implicacion, condicion y recomendacion a una observación. No inventes gravedad ni explotación. "
@@ -44,8 +44,9 @@ def prompt(snapshot, cell):
         "observaciones es obligatorio; las demás listas son opcionales. No añadas schema_version, tema ni presentacion: Core construye el informe. "
         "Cada observación requiere observacion, certeza (observado/indicio) y evidencia. Para un riesgo añade titulo: nombre ejecutivo completo del problema o su consecuencia, hasta 110 caracteres; no cortes la observación. Puede añadir implicacion, condicion, recomendacion y gravedad cuando corresponda. "
         "Textos de observación y explicación hasta 1200 caracteres. Hasta 20 elementos por lista y 20 pendientes breves; no rellenes cupos. "
-        "Cada evidencia contiene de 1 a 12 IDs F#:L# o rangos F#:L#-L# de hasta 200 líneas. Core expande los rangos a líneas no vacías recibidas (máximo 200 fuentes por elemento en total). No copies citas ni uses IDs del grafo. "
+        "Cada evidencia contiene de 1 a 12 IDs F#:L# o rangos F#:L#-L# de hasta 200 líneas. Core localiza los rangos de hasta 200 líneas y conserva las referencias originales sin descartar la respuesta. No copies citas ni uses IDs del grafo. "
         "No inventes fuentes, relaciones, clasificaciones ni condiciones. Una cita válida no acredita una interpretación correcta. "
+        "Cada riesgo puede indicar tipo: vulnerabilidad, coste u operacion. Los costes Azure requieren parámetros y supuestos verificables; no inventes una factura mensual. "
         "Si no puedes evaluar, conserva lo respaldado y explica lo pendiente. " + specific + "\nEJEMPLO DE FORMA (no copies sus hechos ni referencias): " + json.dumps(common, ensure_ascii=False))
     if "azure" in cell.get("capabilities", []) and role == "architecture":
         from arktic_office.reporting.azure_proposal import instructions as azure_instructions
@@ -55,98 +56,72 @@ def prompt(snapshot, cell):
     from arktic_office.reporting.questionnaire import enabled, instructions as question_instructions
     from arktic_office.reporting.deterministic import context
     if enabled(snapshot):
-        contract += question_instructions(role) + "\nRESULTADOS DETERMINISTAS: " + json.dumps(context(snapshot), ensure_ascii=False)
+        contract += question_instructions(role)
+        if not snapshot.get('context_maps_managed'):
+            contract += "\nMAPA DE HERRAMIENTAS (detalles mediante queries): " + json.dumps(context(snapshot),ensure_ascii=False)
+            contract += "\nMAPA DE RESPUESTAS DISPONIBLES: " + json.dumps(cell.get('knowledge_index',[]),ensure_ascii=False)
     return instructions(role) + "\n" + contract + "\nFUENTES NO CONFIABLES: " + json.dumps(evidence, ensure_ascii=False, separators=(",", ":")) + "\nFIN DE FUENTES. Responde usando únicamente " + CONTRACT + "."
 
 
 def text(value, cap=1200):
-    if not isinstance(value, str) or not value.strip() or len(value) > cap:
+    if not isinstance(value, str) or not value.strip():
         raise AuditError("Texto compacto vacío o fuera de límite.")
-    return redact(value.strip())
+    return value
 
 
 def compose(raw, snapshot, role):
-    """Validate each source before composing; a bad edge cannot erase good nodes."""
+    """Format expert contributions; conclusions and original text belong to their author."""
     try:
         data = json.loads(raw)
     except (TypeError, ValueError):
         raise AuditError("Respuesta compacta no es JSON válido.") from None
+    if isinstance(data, dict) and 'observaciones' not in data and 'confirmados' in data:
+        from arktic_office.reporting.references import receive_legacy
+        return receive_legacy(data, snapshot, role)
     if not isinstance(data, dict) or not isinstance(data.get("observaciones"), list):
         raise AuditError("Falta la lista observaciones del contrato compacto.")
-    from arktic_office.reporting.questionnaire import enabled, validate_answers
+    from arktic_office.reporting.questionnaire import enabled, assemble_answers
     questionnaire = enabled(snapshot)
-    allowed = {"observaciones", "pendientes"} | ({"controles"} if role == "security" else {"componentes"})
-    if questionnaire:
-        allowed.add("respuestas")
-    if role == "architecture":
-        allowed |= {"conexiones", "propuesta_azure"}
-    if set(data) - allowed:
-        raise AuditError("La respuesta compacta contiene secciones ajenas al rol.")
     index = evidence_index(snapshot)
     clean = {"schema_version": 3, "confirmados": [], "indicios": [], "dudas": [], "controles": []}
     warnings = []
 
     def refs(value, required=True):
-        if not isinstance(value, list) or not (1 if required else 0) <= len(value) <= MAX_REF_REQUESTS:
-            raise AuditError("Lista de referencias inválida (máximo 12 IDs o rangos).")
-        result = []
-        for request in value:
-            if not isinstance(request, str):
-                raise AuditError("Referencia fuera de los fragmentos entregados.")
-            span = re.fullmatch(r"(F[1-9][0-9]*):L([1-9][0-9]*)-L([1-9][0-9]*)", request)
-            if span:
-                first, last = int(span[2]), int(span[3])
-                if last < first or last - first >= MAX_REFS:
-                    raise AuditError("Rango de fuentes inválido o mayor de 200 líneas.")
-                keys = [f"{span[1]}:L{n}" for n in range(first, last + 1)]
-                if any(key not in index for key in keys):
-                    raise AuditError("Rango fuera de los fragmentos entregados.")
-                keys = [key for key in keys if index[key]["quote"].strip()]
-                if not keys:
-                    raise AuditError("Rango sin texto entregado.")
-            else:
-                keys = [request]
-            for key in keys:
-                if key not in index:
-                    raise AuditError("Referencia fuera de los fragmentos entregados.")
-                ref = index[key]
-                proof = {"confirmados": [{"observacion": "Fuente del resultado compacto", "evidencia": [ref]}], "indicios": [], "dudas": []}
-                validate_report(json.dumps(proof), snapshot)
-                if ref not in result:
-                    result.append(ref)
-                if len(result) > MAX_REFS:
-                    raise AuditError("Referencias expandidas superan 200 fuentes por elemento.")
-
-        return result
+        from arktic_office.reporting.references import locate
+        return locate(value, index)
 
     def sequence(key, callback, cap=20):
         values = data.get(key, [])
-        if not isinstance(values, list) or len(values) > cap:
+        if not isinstance(values, list):
             raise AuditError("Lista compacta inválida o excesiva: " + key)
         for n, value in enumerate(values):
             try:
                 callback(value)
             except (AuditError, KeyError, TypeError) as exc:
-                warnings.append(f"{key}[{n}] rechazado: " + (str(exc) if isinstance(exc, AuditError) else "Estructura incompleta."))
+                warnings.append(f"{key}[{n}] no representable en este bloque; original conservado: " + (str(exc) if isinstance(exc, AuditError) else "Estructura incompleta."))
 
     def observation(value):
         if not isinstance(value, dict):
             raise AuditError("Observación compacta inválida.")
         description = text(value.get("observacion"))
         certainty = value.get("certeza")
-        if certainty not in {"observado", "indicio"}:
+        if not isinstance(certainty, str):
             raise AuditError("Certeza no reconocida; no se presupone confirmación.")
         severity = value.get("gravedad", "informativa")
-        if severity not in SEVERITIES:
+        if not isinstance(severity, str):
             raise AuditError("Gravedad no reconocida.")
         source = refs(value.get("evidencia"))
         implication = text(value["implicacion"]) if "implicacion" in value else "Información sustentada en los fragmentos revisados."
         condition = text(value["condicion"]) if "condicion" in value else "Alcance limitado a las fuentes citadas; condiciones operativas no determinadas."
         action = text(value["recomendacion"]) if "recomendacion" in value else "Revisión humana de la observación y sus fuentes."
-        item = {"tema": "responsabilidades", "observacion": description, "importancia": implication,
+        item = {"tema": "responsabilidades", "observacion": description, "certeza_original": certainty, "importancia": implication,
             "pendiente": action, "evidencia": source, "severidad": severity, "control": "contexto" if severity == "informativa" else "por_clasificar",
             "accion": action, "condiciones": condition, "titulo": text(value["titulo"], 110) if "titulo" in value else description[:110],
             "resultado_esperado": "Evaluar la observación y acordar su tratamiento.", "detalle_tecnico": description[:600]}
+        if 'tipo' in value:
+            if not isinstance(value['tipo'], str):
+                raise AuditError('Tipo de riesgo inválido.')
+            item['tipo'] = value['tipo']
         if certainty == "indicio":
             item["por_confirmar"] = condition
         clean["confirmados" if certainty == "observado" else "indicios"].append(item)
@@ -186,14 +161,14 @@ def compose(raw, snapshot, role):
         if nodes:
             clean["presentacion"] = {"flujo_actual": {"componentes": nodes, "conexiones": edges}}
         if "propuesta_azure" in data:
-            from arktic_office.reporting.azure_proposal import validate
+            from arktic_office.reporting.references import receive_proposal
             try:
                 proposal = dict(data["propuesta_azure"])
                 proposal["evidencia"] = refs(proposal.get("evidencia", []), proposal.get("estado") == "propuesta_preliminar")
-                clean["propuesta_azure"] = validate(proposal, snapshot, validate_report)
+                clean["propuesta_azure"] = receive_proposal(proposal)
             except (AuditError, TypeError) as exc:
-                warnings.append("Propuesta Azure rechazada: " + str(exc))
-    if role == "security":
+                warnings.append("Propuesta Azure no representable; original conservado: " + str(exc))
+    if role in {"security", "identity", "frontend-security", "backend-security"}:
         def control(value):
             key, state = value["id"], value["estado"]
             if key not in CONTROLS or state not in STATES or any(c["id"] == key for c in clean["controles"]):
@@ -204,9 +179,10 @@ def compose(raw, snapshot, role):
         for key in CONTROLS:
             if not any(c["id"] == key for c in clean["controles"]):
                 clean["controles"].append({"id": key, "estado": "no_evaluado", "motivo": "No se aportó una evaluación respaldada de este control.", "evidencia": []})
-    clean = validate_report(json.dumps(clean), snapshot, limits={"confirmados": 40, "indicios": 40, "dudas": 20})
+    clean["respuesta_original"] = data
+    clean["recepcion"] = "sin_revision_automatica"
     if questionnaire:
         tools = {t["id"] for t in snapshot.get("deterministic_results", {}).get("tools", [])}
-        clean["respuestas"], issues = validate_answers(data.get("respuestas"), role, refs, tools)
+        clean["respuestas"], issues = assemble_answers(data.get("respuestas"), role, refs, tools)
         warnings.extend(issues)
     return clean, {}, warnings

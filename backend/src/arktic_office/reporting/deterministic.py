@@ -9,12 +9,12 @@ def safe(value):
     if isinstance(value, list):
         return [safe(v) for v in value]
     if isinstance(value, dict):
-        return {k: "[VALOR OCULTO]" if k.lower() in {"secret", "match", "password", "token", "api_key", "lines"} else safe(v) for k, v in value.items()}
+        return {k: safe(v) for k, v in value.items()}
     return value
 
 
 def results(snapshot, graph=None, artifact_directory=None):
-    """Keep every normalized scanner result and graph output, never raw secret values."""
+    """Keep scanner and graph outputs unchanged; summaries are a separate presentation."""
     records = [{"id": "D01", "name": "Adquisición e inventario del snapshot", "status": "complete" if snapshot.get("coverage", {}).get("acquisition_complete") else "partial",
         "detail": "Archivos versionados adquiridos; no equivale a revisión semántica completa ni ejecución.",
         "result": {"inventory": snapshot.get("inventory", []), "coverage": snapshot.get("coverage", {}), "excluded": snapshot.get("excluded", [])}}]
@@ -41,16 +41,17 @@ def results(snapshot, graph=None, artifact_directory=None):
                  "preparation_cache": snapshot.get("preparation", {}).get("cache", {})})
 
 
+PURPOSES = {'D01':'Inventario y cobertura de adquisición', 'D02':'Posibles credenciales: Gitleaks',
+            'D03':'Dependencias y avisos de vulnerabilidad: OSV', 'D04':'Patrones de seguridad estáticos: Semgrep',
+            'D05':'Cobertura de Graphify; símbolos y relaciones mediante búsquedas de código'}
+
+
 def context(snapshot):
-    """Full normalized scanner detections plus graph diagnostics; graph queries stay local."""
-    saved = snapshot.get("deterministic_results")
-    if not saved:
-        return []
-    return [{"id": t["id"], "name": t["name"], "status": t["status"], "detail": t["detail"],
-             "findings": t["result"].get("findings", [])[:12],
-             "findings_total": len(t["result"].get("findings", [])),
-             "page_limited": len(t["result"].get("findings", [])) > 12,
-             "input_count": len(t["result"].get("input_files", [])),
-             "node_count": t["result"].get("node_count"), "edge_count": t["result"].get("edge_count"),
-             "more": "Consultar {tool: ID, offset: 0} para páginas; grafo y código mediante queries."}
-            for t in saved["tools"]]
+    """Discovery map only. No findings, source excerpts or raw tool outputs."""
+    saved = snapshot.get('deterministic_results') or {}
+    return [{'id':t['id'], 'name':t['name'], 'status':t['status'],
+             'purpose':PURPOSES.get(t['id'],'Resultado determinista consultable'),
+             'findings_total':len(t['result'].get('findings',[])),
+             'input_count':len(t['result'].get('input_files',[])),
+             'node_count':t['result'].get('node_count'), 'edge_count':t['result'].get('edge_count')}
+            for t in saved.get('tools',[])]

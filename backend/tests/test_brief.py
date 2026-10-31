@@ -88,7 +88,7 @@ class BriefTests(unittest.TestCase):
                 calls.append(config["id"])
                 return fake_invoke(prompt, config)
             output, data = preview("source-test", root, invoke)
-            self.assertEqual(calls, ["security", "architecture", "inventory"])
+            self.assertEqual(calls, [c["id"] for c in __import__("arktic_office.coordination.team", fromlist=["CELLS"]).CELLS])
             self.assertEqual(data["schema_version"], 3)
             self.assertIn("GitHub no se ha releído", (output / "informe.md").read_text())
             for name, content in original.items():

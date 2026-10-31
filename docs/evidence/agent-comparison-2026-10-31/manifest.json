@@ -1,0 +1,60 @@
+{
+  "date": "2026-10-31",
+  "baseline_implementation_commit": "76abf0f9e52fc4e00e7ff3172b4fb08e76e19e98",
+  "analyzed_source_commit": "4ae82b4097b3b01360bd8c6fb6d779b210f50564",
+  "reports_are_exact_unmodified_copies": true,
+  "scope": "Rendered HTML/Markdown and comparative metrics only; source snapshots, raw model outputs, SQLite, caches and credentials remain local",
+  "runs": [
+    {
+      "configuration": "three-specialists",
+      "run_id": "2697cb5e-b168-41f1-a5bd-714b7ba0d9ff",
+      "local_source_directory": "reports/2026-10-30/082611-Web-2520Corporativa-25202-0-2520--2520IA/2697cb5e-b168-41f1-a5bd-714b7ba0d9ff",
+      "outputs": [
+        {
+          "file": "three-specialists/informe.html",
+          "bytes": 1257610,
+          "sha256": "61de902cabc065d3904074e7da01a25b3e8c1779007616cdb4bad54d070152fa"
+        },
+        {
+          "file": "three-specialists/informe.md",
+          "bytes": 246412,
+          "sha256": "400da23038a88882d066bf5a9c40f726ba9ac950db5836a2a8d582e19eda30c8"
+        }
+      ]
+    },
+    {
+      "configuration": "seven-shared-context",
+      "run_id": "1df56a5f-6b84-478c-a0af-0a6fec12df1b",
+      "local_source_directory": "reports/2026-10-30/143532-Web-2520Corporativa-25202-0-2520--2520IA/1df56a5f-6b84-478c-a0af-0a6fec12df1b",
+      "outputs": [
+        {
+          "file": "seven-shared-context/informe.html",
+          "bytes": 1282746,
+          "sha256": "78e7e250e3193f6440463aa3ee1ca1d6e62e80a309b2bd59e474ecf8feb2096b"
+        },
+        {
+          "file": "seven-shared-context/informe.md",
+          "bytes": 373551,
+          "sha256": "9b58b7ae0016710183e3283903de5de6dd8f52b96d11bcd3e534f1ab36b46b1e"
+        }
+      ]
+    },
+    {
+      "configuration": "seven-lookup-maps",
+      "run_id": "813716cc-477b-4a4b-9795-a231973a4b9f",
+      "local_source_directory": "reports/2026-10-31/104858-Web-2520Corporativa-25202-0-2520--2520IA/813716cc-477b-4a4b-9795-a231973a4b9f",
+      "outputs": [
+        {
+          "file": "seven-lookup-maps/informe.html",
+          "bytes": 1454037,
+          "sha256": "92cc646b62af46a408b95972a80b81fa8cfacc928448fe8e13575613463b25d0"
+        },
+        {
+          "file": "seven-lookup-maps/informe.md",
+          "bytes": 591293,
+          "sha256": "d3adfc7724130aeaa552fab57cdd5ddf5f66b110fea3091fc89af2b689be4e5c"
+        }
+      ]
+    }
+  ]
+}

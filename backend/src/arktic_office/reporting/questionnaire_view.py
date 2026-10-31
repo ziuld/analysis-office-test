@@ -23,7 +23,10 @@ def compact_sources(answer, snapshot):
             if last != first:
                 target = target.replace(label, escape(f"{path}:{first}–{last}")).replace(f'#L{first}"', f'#L{first}-L{last}"')
             links.append(target)
-    return "; ".join(links) or "Sin fuente de código aportada; consultar herramientas y límites."
+    original = answer.get('referencias_originales',[])
+    if original:
+        links.append('Referencias del especialista: '+escape('; '.join(str(r) for r in original)))
+    return "; ".join(links) or "Sin referencia indicada por el especialista."
 
 
 def html(data, snapshot, summary=False):
@@ -32,7 +35,10 @@ def html(data, snapshot, summary=False):
     if not answers:
         return ""
     parts = []
-    for role, label in (("coordinator", "Resumen del coordinador"), ("inventory", "Inventario"), ("architecture", "Arquitectura y operación"), ("security", "Seguridad y privacidad")):
+    from arktic_office.coordination.catalog import catalog
+    roster = {p['id']: p['name'] for p in catalog()}
+    roster['security'] = 'Seguridad y privacidad (histórico)'
+    for role, label in roster.items():
         if summary and role != "coordinator":
             continue
         content = ""
@@ -49,7 +55,8 @@ def html(data, snapshot, summary=False):
             if answer.get("aportaciones"):
                 content += '<p>Respuestas de origen: ' + ' · '.join('<a href="#' + escape(q, quote=True) + '">' + escape(q) + '</a>' for q in answer["aportaciones"]) + '</p>'
             content += '</article>'
-        parts.append('<section class="panel"><h3>' + label + '</h3>' + content + '</section>' if summary else detail("cuestionario-" + role, label + " · respuestas por pregunta", "Estados, fuentes y verificaciones pendientes", content))
+        if content:
+            parts.append('<section class="panel"><h3>' + label + '</h3>' + content + '</section>' if summary else detail("cuestionario-" + role, label + " · respuestas por pregunta", "Estados, fuentes y verificaciones pendientes", content))
     if summary:
         return ''.join(parts)
     counts = {state: sum(a["estado"] == state for a in answers) for state in ("respondida", "parcial", "no_aplica", "no_comprobado")}
@@ -109,4 +116,7 @@ def markdown(data, snapshot):
             for p in paragraphs:
                 lines += ['', text(p)]
             lines += ['- ' + text(f) for f in findings]
-    return '\n'.join(lines) + '\n' if lines else ""
+    result = '\n'.join(lines) + '\n' if lines else ""
+    if data.get("recepcion") == "sin_revision_automatica":
+        result = result.replace("Protecciones y buenas prácticas comprobadas", "Protecciones descritas por los especialistas").replace("Implementación comprobada:", "Implementación descrita por el especialista:")
+    return result

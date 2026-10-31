@@ -17,7 +17,7 @@ def make_prompt(snapshot, cell=None):
     if cell:
         from arktic_office.reporting.specialist import prompt
         return prompt(snapshot, cell)
-    # Preserve the historical standalone prompt byte-for-byte.
+    # Historical standalone contract remains renderable; shared editorial text evolves.
     from arktic_office.reporting.editorial import instructions
     evidence = [{"id": f"F{n}", "path": f["path"], "partial": f.get("partial", False), "content": "\n".join(f"L{i} | {line}" for i, line in enumerate(f["text"].splitlines(), 1) if line.strip())} for n, f in enumerate(snapshot["files"], 1)]
     contract = resource_path("profiles", "report-contract.md").read_text(encoding="utf-8")

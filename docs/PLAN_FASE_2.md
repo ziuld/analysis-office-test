@@ -4,7 +4,7 @@
 
 Estado: **cerrada el 28/10/2026 por decisión del usuario, sin alcanzar la calidad de análisis esperada**. Se conservan los avances funcionales F2-01 a F2-06 y su integración comprobada el 25/10/2026. El cierre no constituye aceptación de la calidad del informe. Versión 0.3.0; no implica merge, publicación ni cambios de runtime.
 
-**Plan vigente:** [Fase 3 — Análisis por preguntas y agentes reutilizables](PLAN_FASE_3.md). No retomar automáticamente los experimentos ni tareas de esta fase.
+**Plan vigente:** [Mejoras acordadas — Coordinación centralizada](PLAN_COORDINACION_CENTRALIZADA.md). No retomar automáticamente los experimentos ni tareas de esta fase.
 
 ## Cierre y traspaso — 28/10/2026
 
@@ -16,7 +16,7 @@ El flujo llegó a funcionar, pero entregaba información demasiado general y poc
 - Se preservan los informes, intentos fallidos y cambios técnicos existentes. No se ejecutan más análisis ni se altera código por este cierre documental.
 - El usuario desarrollará los agentes y sus skills en un repositorio externo reutilizable. Arktic recibirá esos mismos agentes y adaptará las herramientas y contratos necesarios para integrarlos.
 
-**Todo lo que sigue es histórico.** Las antiguas instrucciones de continuación, propuestas de roles, recomendaciones y estados pendientes describen esta fase; no son el encargo vigente. El roadmap actual es Fase 3.
+**Todo lo que sigue es histórico.** Las antiguas instrucciones de continuación, propuestas de roles, recomendaciones y estados pendientes describen esta fase; no son el encargo vigente. El único trabajo futuro está en el plan de coordinación centralizada; las referencias a fase 3 que siguen son históricas.
 
 ## Objetivo
 
@@ -78,7 +78,7 @@ Scanners coinciden con el histórico: Gitleaks sin coincidencias, OSV con 273 re
 
 ### Retomar en otro chat — instrucciones históricas, sustituidas
 
-**No continuar esta secuencia.** Para trabajar en Arktic, leer [Fase 3](PLAN_FASE_3.md). Para crear los agentes externos, usar el [prompt de contexto](PROMPT_AGENTES_REUTILIZABLES.md).
+**No continuar esta secuencia histórica.** Leer únicamente el [plan vigente](PLAN_COORDINACION_CENTRALIZADA.md). El antiguo encargo externo de agentes ha quedado sustituido.
 
 1. Leer este punto 3 y la evidencia [última validación funcional](evidence/phase2-luna-validation-2026-10-25.json). El commit funcional es `af7a452`, rama de cierre `codex/fase-2-agentes`; comprobar estado de Git/PR antes de tocar nada. El usuario hace el merge.
 2. No rehacer F2-01 a F2-06 ni optimizar el informe actual. El usuario no quedó satisfecho con su contenido; el cierre acepta esta base funcional, no su calidad final. La fase 2 continúa abierta.

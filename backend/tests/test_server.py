@@ -206,7 +206,7 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(status, 202)
         query = json.loads(body)
         self.assertEqual(self.request("/runs", {"repository": "https://github.com/acme/app"})[0], 409)
-        self.assertEqual(self.request("/runs/finished-job/questions", {"agent": "coordinator", "question": "Otra"})[0], 409)
+        self.assertEqual(self.request("/runs/finished-job/questions", {"agent": "coordinator", "question": "Otra"})[0], 202)
         self.release.set()
         for _ in range(100):
             if self.jobs.question_active is None:

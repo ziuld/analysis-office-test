@@ -1,0 +1,51 @@
+{
+  "run": "813716cc-477b-4a4b-9795-a231973a4b9f",
+  "same_40_anchors": true,
+  "raw_expert_answers_preserved": 34,
+  "technical_errors": [],
+  "sqlite_integrity": "ok",
+  "sqlite_tasks": 8,
+  "sqlite_facts": 105,
+  "historical_files_unchanged": 103,
+  "within_original_budget": true,
+  "meeting_closed": true,
+  "downloads": [
+    {
+      "run": "2697cb5e-b168-41f1-a5bd-714b7ba0d9ff",
+      "format": "md",
+      "bytes": 246412,
+      "matches_saved": true
+    },
+    {
+      "run": "2697cb5e-b168-41f1-a5bd-714b7ba0d9ff",
+      "format": "html",
+      "bytes": 1257610,
+      "matches_saved": true
+    },
+    {
+      "run": "1df56a5f-6b84-478c-a0af-0a6fec12df1b",
+      "format": "md",
+      "bytes": 373551,
+      "matches_saved": true
+    },
+    {
+      "run": "1df56a5f-6b84-478c-a0af-0a6fec12df1b",
+      "format": "html",
+      "bytes": 1282746,
+      "matches_saved": true
+    },
+    {
+      "run": "813716cc-477b-4a4b-9795-a231973a4b9f",
+      "format": "md",
+      "bytes": 591293,
+      "matches_saved": true
+    },
+    {
+      "run": "813716cc-477b-4a4b-9795-a231973a4b9f",
+      "format": "html",
+      "bytes": 1454037,
+      "matches_saved": true
+    }
+  ],
+  "additional_model_calls": 0
+}

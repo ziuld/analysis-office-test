@@ -6,6 +6,10 @@ import sys
 from arktic_office.core.errors import AuditError
 
 
+class ProviderError(AuditError):
+    global_stop = True
+
+
 def normalize_json_report(raw):
     """Remove only a known transport suffix after an otherwise complete JSON object."""
     value = raw.rstrip()
@@ -30,14 +34,14 @@ def invoke_hermes(prompt, config):
         result = subprocess.run([sys.executable, "-m", "arktic_office.adapters.hermes_runtime"], input=prompt, text=True,
                                 capture_output=True, timeout=timeout, check=False, env=env)
     except subprocess.TimeoutExpired:
-        raise AuditError("Hermes superó el tiempo permitido; no se reintentó.") from None
+        raise ProviderError("Hermes superó el tiempo permitido; resultado remoto desconocido; no se reintentó.") from None
     if result.returncode:
         reasons = {"quota_or_rate_limit": "cuota o límite de peticiones", "unsupported_model": "modelo no admitido por el proveedor", "authentication": "sesión no válida", "timeout": "tiempo agotado", "incomplete_response": "respuesta incompleta"}
         try:
             code = json.loads(result.stderr).get("code")
         except (ValueError, AttributeError):
             code = None
-        raise AuditError("Hermes no completó la célula: " + reasons.get(code, "fallo de sesión, modelo o conexión") + ". Sin reintento automático.")
+        raise ProviderError("Hermes no completó la célula: " + reasons.get(code, "fallo de sesión, modelo o conexión") + ". Sin reintento automático.")
     try:
         envelope = json.loads(result.stdout)
         if not isinstance(envelope, dict) or not isinstance(envelope.get("report"), str):

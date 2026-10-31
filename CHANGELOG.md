@@ -1,5 +1,14 @@
 # Cambios por componente
 
+## Checkpoint de rama — coordinación centralizada, 31/10/2026
+
+- Akira y siete especialistas secuenciales; Q01–Q40 conservadas y catálogo compartido con la oficina.
+- Core/SQLite, mapas y consultas selectivas de preguntas/escáneres, presupuestos, parada de proveedor y cola de consultas; originales sin ocultación ni filtro de citas.
+- Panel compacto, reunión/TV silenciosa, asientos y profundidad del sofá conservada, menos paseos.
+- Tres configuraciones comparadas y seis informes renderizados archivados. Los mapas reducen el sobrecoste; la profundidad de Arquitectura/Devops sigue pendiente y no se demuestra superioridad de siete perfiles.
+- Backend 202 pruebas (201 correctas, una omisión), frontend 12 correctas, integración real y seis descargas verificadas. Chromium aplazado.
+- Arquitectura y Datos siguen separados; propuestas guardadas sin implementar. Versiones 0.3.0 y CI conservados; sin merge, tags ni release.
+
 ## Sin publicar — tramo funcional de Fase 2, 25/10/2026
 
 - Agentes auditados, recuperación por símbolo, OSV multitecnología/SBOM y Semgrep local; contrato compacto y síntesis con fuentes resueltas por Core.

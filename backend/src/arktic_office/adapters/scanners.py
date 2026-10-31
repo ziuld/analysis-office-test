@@ -82,14 +82,15 @@ def scan(files, runner=run, *, source_root=None):
         config.write_text("[extend]\nuseDefault = true\n", encoding="utf-8")
         item = {"name": "Gitleaks 8.30.1", "status": "no_evaluado", "findings": [], "detail": "Solo archivos seleccionados; no historial, .env ni archivos excluidos. Posibles secretos requieren validación y rotación si son reales."}
         try:
-            payload = runner(["gitleaks", "dir", str(source), "--config", str(config), "--redact=100", "--ignore-gitleaks-allow", "--no-banner", "--report-format", "json", "--report-path", str(output)], output)
+            payload = runner(["gitleaks", "dir", str(source), "--config", str(config), "--ignore-gitleaks-allow", "--no-banner", "--report-format", "json", "--report-path", str(output)], output)
             if not isinstance(payload, list):
                 raise ValueError()
+            item["original_output"] = payload
             for finding in payload:
                 original = safe.get(finding.get("File")) or safe.get(str(source / finding.get("File", "")))
                 if original and type(finding.get("StartLine")) is int:
                     rule = re.sub(r"[^a-zA-Z0-9_-]", "", str(finding.get("RuleID", "unknown")))[:80]
-                    item["findings"].append({"path": original, "line": finding["StartLine"], "end_line": finding.get("EndLine", finding["StartLine"]), "summary": "Posible secreto · regla " + rule + ". Valor oculto; actividad no comprobada."})
+                    item["findings"].append({"path": original, "line": finding["StartLine"], "end_line": finding.get("EndLine", finding["StartLine"]), "summary": "Posible secreto · regla " + rule + ". Actividad no comprobada."})
             item["status"] = "detecciones_por_validar" if item["findings"] else "sin_detecciones_en_seleccion"
         except (OSError, ValueError, KeyError, TypeError, subprocess.TimeoutExpired):
             item.update(status="error", detail="Gitleaks no completó la comprobación; no se interpreta como ausencia de secretos.")

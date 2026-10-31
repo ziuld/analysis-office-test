@@ -1,5 +1,6 @@
 """Bounded routing, optional local retrieval and synthesis of valid contributions."""
 import json
+import time
 from pathlib import PurePosixPath
 from arktic_office.config.models import profile
 from arktic_office.core.errors import AuditError
@@ -18,8 +19,17 @@ class Coordinator:
 
     def save(self):
         write_json(self.output / "coordinacion.json", self.state)
+        if getattr(self, 'knowledge', None):
+            stages = self.state.get('stages', {})
+            running = any(s.get('status') == 'running' for s in stages.values())
+            state = {'estado':'analizando' if running else 'parcial' if any(s.get('status') == 'error' for s in stages.values()) else 'completada',
+                     'model':self.config['model'], 'reasoning':self.config['reasoning'],
+                     'duration_seconds':sum(s.get('duration_seconds', 0) for s in stages.values())}
+            self.knowledge.export(self.output, {**self.config, 'id':'coordinator', 'focus':'Reparto y síntesis centralizados'}, state,
+                                  {'coordination':self.state, 'respuestas':self.state.get('question_answers', [])})
 
     def call(self, stage, task, data, validate):
+        started = time.monotonic()
         record = {"status": "running", "calls": 0, "usage": None}
         self.state["stages"][stage] = record
         self.save()
@@ -33,6 +43,7 @@ class Coordinator:
             record["calls"] = 1
             envelope = self.invoke(prompt, {**self.config, "id": "coordinator-" + stage})
             record["usage"] = envelope.get("usage")
+            record["respuesta_original"] = envelope["report"]
             if len(envelope["report"].encode()) > limits["response_bytes"]:
                 raise AuditError("Respuesta del coordinador supera el límite.")
             result = validate(json.loads(envelope["report"]))
@@ -42,6 +53,7 @@ class Coordinator:
             record.update(status="error", error="Respuesta o llamada inválida; sin reintento.", fallback="deterministic")
             return None
         finally:
+            record['duration_seconds'] = round(time.monotonic() - started, 3)
             self.save()
 
     def route(self, plan):
@@ -67,7 +79,7 @@ class Coordinator:
                 result[cell["id"]] = paths
             return result
         task = ('Reparte el contexto existente según el foco y presupuesto de cada célula. No pidas archivos nuevos. '
-                'Devuelve SOLO JSON {"security":["ruta"],"architecture":["ruta"],"inventory":["ruta"]}. '
+                'Devuelve SOLO JSON con cada ID de cells como clave y su lista de rutas como valor. '
                 'Conserva archivos para cada célula que tenga una base no vacía; no la dejes sin ejecutar. '
                 'Usa [] solo cuando la base de esa célula esté vacía. Repartir por rutas y roles no confirma hallazgos.')
         assignment = self.call("routing", task, {
@@ -93,7 +105,7 @@ class Coordinator:
         tasks = self.call("routing", 'Actúa como orquestador. Define un encargo breve por especialidad. '
                           'Cada especialista elegirá sus fuentes consultando el snapshot y grafo compartidos. '
                           'No selecciones archivos ni redactes hallazgos ni omitas especialistas. Si existe un cuestionario obligatorio, conserva todas sus preguntas y el reparto fijado. '
-                          'Devuelve SOLO JSON {"security":"objetivo","architecture":"objetivo","inventory":"objetivo"}.',
+                          'Devuelve SOLO un objeto JSON con cada ID de roles como clave y su objetivo como valor.',
                           {"context": context, "roles": [{k: c[k] for k in ("id", "focus", "limits")} for c in plan]}, validate)
         self.state["context"] = context
         if tasks is None:
@@ -131,12 +143,6 @@ class Coordinator:
                     for ref in source["evidencia"]:
                         if ref not in refs:
                             refs.append(ref)
-                # Recheck against original selected text; never accept model-invented citations.
-                from arktic_office.reporting.reports import validate_report
-                validate_report(json.dumps({"confirmados": [{"observacion": item["texto"], "evidencia": refs[:3]}],
-                                           "indicios": [], "dudas": []}), self.snapshot)
-                for ref in refs:
-                    validate_report(json.dumps({"confirmados": [{"observacion": item["texto"], "evidencia": [ref]}], "indicios": [], "dudas": []}), self.snapshot)
                 summaries.append({"texto": redact(item["texto"].strip()), "aportaciones": item["aportaciones"],
                                   "certeza": "indicios" if any(s["certeza"] == "indicios" for s in sources) else "confirmados",
                                   "evidencia": refs,
@@ -168,12 +174,12 @@ class Coordinator:
                     for section in ("confirmados", "indicios") for x in report.get(section, [])],
                     "advertencia": "Las respuestas parciales y desconocidas no autorizan conclusiones afirmativas."} for role, report in results}
         def validate(value):
-            if not isinstance(value, dict) or set(value) != {"respuestas"} or not isinstance(value["respuestas"], list) or len(value["respuestas"]) != 3:
-                raise AuditError("Síntesis debe responder Q01, Q02 y Q03.")
+            if not isinstance(value, dict) or set(value) != {"respuestas"} or not isinstance(value["respuestas"], list) or len(value["respuestas"]) != len(catalog("coordinator")):
+                raise AuditError("Síntesis debe responder todas las preguntas asignadas al coordinador.")
             summaries, received = [], set()
             final = []
             for item in value["respuestas"]:
-                if not isinstance(item, dict) or set(item) != {"id", "respuesta", "aportaciones"} or item["id"] not in {"Q01", "Q02", "Q03"} or item["id"] in received:
+                if not isinstance(item, dict) or set(item) != {"id", "respuesta", "aportaciones"} or item["id"] not in {q["id"] for q in catalog("coordinator")} or item["id"] in received:
                     raise AuditError("Pregunta de coordinación inválida o duplicada.")
                 if not isinstance(item["respuesta"], str) or not 1 <= len(item["respuesta"].strip()) <= 700:
                     raise AuditError("Respuesta de coordinación fuera de límite.")
@@ -196,13 +202,13 @@ class Coordinator:
                     "certeza": "indicios" if state == "parcial" else "confirmados", "evidencia": refs})
             self.state["question_answers"] = final
             return summaries
-        task = ('Responde estas tres preguntas del coordinador: ' + json.dumps(catalog("coordinator"), ensure_ascii=False) +
-            '. Recibes TODAS las respuestas validadas de los especialistas, incluidos no_aplica y no_comprobado, '
+        task = ('Responde todas estas preguntas del coordinador, incluidas Q38–Q40 sobre los problemas entregados: ' + json.dumps(catalog("coordinator"), ensure_ascii=False) +
+            '. Recibes TODAS las respuestas de los especialistas, conservadas sin revisión automática,, incluidos no_aplica y no_comprobado, '
             'y los riesgos con condiciones. Resume conclusiones; distingue lo que resolver antes del despliegue de mejoras posteriores '
             'con motivo y condiciones, sin autorizar el despliegue ni inventar bloqueantes. '
             'Enumera carencias y discrepancias reales, sin resolver contradicciones como hechos. '
             'Mantén incertidumbre; una protección no encontrada no es ausencia demostrada. '
             'Las respuestas pueden incluir aspecto_favorable con implementaciones comprobadas: refleja las más relevantes en Q01 junto a los riesgos, sin compensarlos ni elevar su alcance a una garantía global. '
-            'Devuelve SOLO {"respuestas":[{"id":"Q01","respuesta":"hasta 700 caracteres","aportaciones":["Qxx"]}, '
-            '{"id":"Q02","respuesta":"...","aportaciones":["Qxx"]},{"id":"Q03","respuesta":"...","aportaciones":["Qxx"]}]}.')
+            'Devuelve SOLO JSON con una entrada por cada ID del catálogo del coordinador, incluidas Q38, Q39 y Q40. No añadas preguntas nuevas. '
+            'Contrato: ' + json.dumps({'respuestas': [{'id': q['id'], 'respuesta': 'Texto hasta 700 caracteres', 'aportaciones': ['Qxx']} for q in catalog('coordinator')]}, ensure_ascii=False))
         return self.call("synthesis", task, {"respuestas": brief, "riesgos": original}, validate) or []
