@@ -73,7 +73,7 @@ index 0000000..d651f7e
 +export const GET = proxy;
 +export const POST = proxy;
 diff --git a/src/app/globals.css b/src/app/globals.css
-index f6ff54d..47e8a1a 100644
+index f6ff54d..f25f51f 100644
 --- a/src/app/globals.css
 +++ b/src/app/globals.css
 @@ -50,9 +50,9 @@
@@ -89,6 +89,36 @@ index f6ff54d..47e8a1a 100644
    --shadow-color: oklch(0.19 0.01 255);
    --shadow-opacity: 0.16;
    --shadow-blur: 28px;
+@@ -1359,3 +1359,29 @@ textarea:focus::-webkit-scrollbar {
+     transform: translateY(-1px);
+   }
+ }
++
++/* Compact pixel controls for the audit office; long answers keep readable type. */
++.audit-pixel-button {
++  border-width: 2px;
++  border-radius: 2px;
++  box-shadow: 3px 3px 0 #020617;
++  transition: filter 120ms, transform 120ms;
++}
++.audit-pixel-button:hover:not(:disabled) { filter: brightness(1.12); }
++.audit-pixel-button:active:not(:disabled) {
++  transform: translate(2px, 2px);
++  box-shadow: 1px 1px 0 #020617;
++}
++.audit-pixel-button:focus-visible,
++.audit-agent-card:focus-visible {
++  outline: 2px solid #a5f3fc;
++  outline-offset: 3px;
++}
++.audit-agent-card {
++  border-radius: 2px;
++  box-shadow: inset 3px 0 0 #42bcc633;
++}
++.audit-agent-card:hover { border-color: #67e8f9; }
++@media (prefers-reduced-motion: reduce) {
++  .audit-pixel-button { transition: none; }
++}
 diff --git a/src/app/layout.tsx b/src/app/layout.tsx
 index 1f452a0..526b855 100644
 --- a/src/app/layout.tsx
@@ -186,10 +216,10 @@ index 5278885..03cdfca 100644
  }
 diff --git a/src/features/audit/AgentQuestion.tsx b/src/features/audit/AgentQuestion.tsx
 new file mode 100644
-index 0000000..072a4e6
+index 0000000..ed36f3d
 --- /dev/null
 +++ b/src/features/audit/AgentQuestion.tsx
-@@ -0,0 +1,111 @@
+@@ -0,0 +1,115 @@
 +"use client";
 +import { useEffect, useState } from "react";
 +
@@ -202,9 +232,9 @@ index 0000000..072a4e6
 +}
 +interface Props {
 +  run: { id: string; repository: string; commit?: string; branch?: string; estado: string };
-+  agent: string; name: string; active: Question | null; blocked: boolean;
++  agent: string; name: string; role?: string; active: Question | null; blocked: boolean;
 +  onStarted: (q: Question) => void; onClose: () => void;
-+  details?: { reason?: string; coverage?: string; error?: string; mensaje?: string; necesita?: string[]; missing?: string[] };
++  details?: { reason?: string; coverage?: string; error?: string; mensaje?: string; necesita?: string[]; missing?: string[]; summary?: string; model?: string; reasoning?: string; estado?: string };
 +}
 +
 +// Display-only cache, scoped to this tab and to the selected review/agent.
@@ -224,7 +254,7 @@ index 0000000..072a4e6
 +  try { window.sessionStorage.setItem(key, JSON.stringify(query)); } catch { /* Memory fallback. */ }
 +}
 +
-+export function AgentQuestion({ run, agent, name, active, blocked, details, onStarted, onClose }: Props) {
++export function AgentQuestion({ run, agent, name, role, active, blocked, details, onStarted, onClose }: Props) {
 +  const [query, setQuery] = useState<Question | null>(() => readLastQuestion(run.id, agent));
 +  const [text, setText] = useState(() => query?.question || "");
 +  const [sending, setSending] = useState(false);
@@ -273,22 +303,24 @@ index 0000000..072a4e6
 +  }
 +  const waiting = sending || query?.estado === "respondiendo" || query?.estado === "en_cola";
 +  const certainty: Record<string, string> = { explicacion: "Explicación con fuentes", indicio: "Indicio por confirmar", sin_informacion: "Información insuficiente" };
-+  return <div className="absolute inset-3 top-16 z-40 flex items-center justify-center bg-slate-950/70 p-2">
-+    <section role="dialog" aria-modal="true" aria-label={`Consultar a ${name}`} className="flex max-h-full w-full max-w-2xl flex-col overflow-auto rounded-xl border border-white/20 bg-slate-950 p-5 text-slate-100 shadow-2xl">
-+      <header className="flex items-center justify-between gap-3"><h2 className="text-lg font-semibold">Consultar a {name}</h2><button onClick={onClose} className="rounded border border-white/20 px-3 py-2">Cerrar consulta</button></header>
-+      <p className="mt-3 break-all text-xs text-slate-400">{run.repository}<br />Revisión {run.id} · {run.branch || "main"}@{run.commit?.slice(0, 12)} · {run.estado}</p>
-+      {details && <div className="mt-3 space-y-2 text-sm"><p>{details.reason}</p><p>Cobertura: {details.coverage || "No disponible"}</p><p>{details.mensaje}</p>{details.error && <p role="alert" className="text-rose-300">{details.error}</p>}<p>{[...(details.missing || []), ...(details.necesita || [])].join(" · ")}</p></div>}
-+      <p className="mt-3 text-sm text-slate-300">Pregunta independiente sobre la evidencia guardada. Puedes leer las últimas 10 consultas guardadas de este personaje y revisión; no se envían como historial al modelo. No modifica el informe.</p>
++  return <div className="absolute inset-1 top-16 z-40 flex items-center justify-center bg-slate-950/80 p-2 sm:inset-x-3">
++    <section role="dialog" aria-modal="true" aria-label={name} className="flex max-h-full w-full max-w-5xl flex-col overflow-auto border-2 border-cyan-300/30 bg-slate-950 px-4 pb-5 text-slate-100 shadow-2xl sm:px-7">
++      <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-white/10 bg-slate-950 py-4"><div><h2 className="font-mono text-xl font-bold text-cyan-100">{name}</h2>{role && <p className="mt-1 text-sm text-slate-300">{role}</p>}</div><button onClick={onClose} className="audit-pixel-button border-white/20 px-3 py-2 text-sm">Cerrar consulta</button></header>
++      <details className="mt-4 border border-white/15 bg-slate-900/50 p-3"><summary className="cursor-pointer text-sm text-slate-300">Perfil y detalles de la revisión</summary>
++        <p className="mt-3 break-all text-xs text-slate-400">{run.repository}<br />Revisión {run.id} · {run.branch || "main"}@{run.commit?.slice(0, 12) || "Sin commit"} · {run.estado}</p>
++        {details && <div className="mt-3 space-y-2 text-sm text-slate-300"><p>{details.reason}</p><p>Cobertura: {details.coverage || "No disponible"}</p><p>Modelo: {details.model || "No disponible"} · {details.reasoning || "No disponible"}</p></div>}
++      </details>
++      {details && (details.summary || details.mensaje || details.error || details.missing?.length || details.necesita?.length) && <details className="mt-3 border border-white/15 bg-slate-900/50 p-3"><summary className="cursor-pointer text-sm text-cyan-200">Resultado de la revisión</summary><div className="mt-3 space-y-3 whitespace-pre-wrap break-words text-sm leading-relaxed"><p>{details.summary}</p><p>{details.mensaje}</p>{details.error && <p className="text-rose-300">{details.error}</p>}<p>{[...(details.missing || []), ...(details.necesita || [])].join(" · ")}</p></div></details>}
 +      <form onSubmit={ask} className="mt-4 space-y-3">
 +        <label htmlFor="agent-question" className="block text-sm">Tu pregunta para {name}</label>
-+        <textarea id="agent-question" required maxLength={800} value={text} onChange={e => setText(e.target.value)} rows={3} className="w-full rounded-lg border border-white/20 bg-slate-900 p-3 text-sm" placeholder="¿Qué evidencia respalda esta observación?" />
-+        <div className="flex items-center justify-between gap-3"><span className="text-xs text-slate-400">{text.length}/800 · Pregunta independiente</span><button disabled={waiting || blocked || !text.trim()} className="rounded-lg bg-[#42bcc6] px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-40">{waiting ? "Consultando…" : "Enviar pregunta"}</button></div>
++        <p id="agent-question-help" className="text-xs leading-relaxed text-slate-400">Pregunta independiente sobre la evidencia guardada. Puedes leer las últimas 10 consultas guardadas de este personaje y revisión; no se envían como historial al modelo. No modifica el informe.</p>
++        <textarea id="agent-question" aria-describedby="agent-question-help" required maxLength={800} value={text} onChange={e => setText(e.target.value)} rows={4} className="w-full border border-white/20 bg-slate-900 p-3 text-sm" placeholder="¿Qué evidencia respalda esta observación?" />
++        <div className="flex flex-wrap items-center justify-between gap-3"><span className="text-xs text-slate-400">{text.length}/800 · Pregunta independiente</span><button disabled={waiting || blocked || !text.trim()} className="audit-pixel-button border-cyan-200/50 bg-[#42bcc6] px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-40">{waiting ? "Consultando…" : "Enviar pregunta"}</button></div>
 +      </form>
 +      {blocked && !waiting && <p className="mt-3 text-sm text-amber-200">Espera a que termine la revisión o consulta activa.</p>}
 +      {error && <p role="alert" className="mt-4 text-sm text-rose-300">{error}</p>}
-+      {historyError && <p role="status" className="mt-3 text-xs text-amber-200">{historyError}</p>}
-+      {history.length > 0 && <details className="mt-4 rounded border border-white/15 p-3"><summary className="cursor-pointer text-sm">Últimas consultas guardadas ({history.length})</summary><ul className="mt-2 space-y-2">{history.map(item => <li key={item.id}><button type="button" onClick={() => setQuery(item)} className="text-left text-sm text-cyan-200">{item.question} · {item.estado}</button></li>)}</ul></details>}
 +      {query && <div aria-live="polite" className="mt-5 space-y-3 border-t border-white/10 pt-4">
++        <h3 className="font-mono text-sm font-semibold text-slate-200">Última respuesta</h3>
 +        <p className="text-xs text-slate-400">{query.nombre} · {query.source === "core" ? "Resuelto desde Core · sin llamada al modelo" : `${query.model || "No disponible"} / ${query.reasoning || "No disponible"}`}</p>
 +        <p className="text-sm"><strong>Pregunta:</strong> {query.question}</p>
 +        {query.estado === "en_cola" && <p>En cola · comenzará cuando quede libre la ejecución.</p>}
@@ -298,15 +330,17 @@ index 0000000..072a4e6
 +          {query.evidencia?.map((ref, i) => <div key={i} className="rounded-lg bg-slate-900 p-3 text-xs"><code>{ref.path}:{ref.line}</code><p className="mt-1 break-words text-slate-400">{ref.quote}</p></div>)}
 +          <p className="text-xs text-slate-500">Referencias contrastadas con la evidencia guardada; la interpretación requiere revisión humana.</p></>}
 +      </div>}
++      {historyError && <p role="status" className="mt-4 text-xs text-amber-200">{historyError}</p>}
++      {history.length > 0 && <details className="mt-5 border border-white/15 p-3"><summary className="cursor-pointer text-sm">Últimas consultas guardadas ({history.length})</summary><ul className="mt-3 space-y-3">{history.map(item => <li key={item.id}><details className="border-l-2 border-cyan-300/30 pl-3"><summary className="cursor-pointer break-words text-sm text-cyan-200">{item.question} · {item.estado}</summary><div className="mt-2 space-y-2 whitespace-pre-wrap break-words text-sm leading-relaxed"><p>{item.respuesta || item.error || "Sin respuesta guardada todavía."}</p>{item.evidencia?.map((ref, i) => <div key={i} className="bg-slate-900 p-3 text-xs"><code>{ref.path}:{ref.line}</code><p className="mt-1 text-slate-400">{ref.quote}</p></div>)}</div></details></li>)}</ul></details>}
 +    </section>
 +  </div>;
 +}
 diff --git a/src/features/audit/AuditOffice.tsx b/src/features/audit/AuditOffice.tsx
 new file mode 100644
-index 0000000..1ed5df7
+index 0000000..7a8f177
 --- /dev/null
 +++ b/src/features/audit/AuditOffice.tsx
-@@ -0,0 +1,162 @@
+@@ -0,0 +1,165 @@
 +"use client";
 +
 +import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -321,13 +355,19 @@ index 0000000..1ed5df7
 +interface Activity { state: string; text: string; working: boolean; meeting: boolean }
 +interface LocalSource { id: string; name: string; repository: string; branch: string; commit: string; source_path: string }
 +interface Profile { id: string; person: string; name: string; color: string; model?: string; reasoning?: string }
-+interface Run { coordination?: { profile?: { model: string; reasoning: string }; stages?: Record<string, { duration_seconds?: number; error?: string }>; question_answers?: { id: string; respuesta: string }[] }; meeting?: { active?: boolean; participants?: string[] }; activity?: Record<string, Activity>; id: string; repository: string; estado: string; commit?: string; branch?: string; celulas: Cell[]; error?: string; mensaje?: string; necesita?: string[]; has_report: boolean; has_html_report?: boolean; historical?: boolean; evidence_origin?: string; report_format?: number; derived_from?: string; simulation?: boolean }
++interface Run { coordination?: { profile?: { model: string; reasoning: string }; stages?: Record<string, { duration_seconds?: number; error?: string; usage?: Record<string, number> }>; question_answers?: { id: string; respuesta: string }[] }; meeting?: { active?: boolean; participants?: string[] }; activity?: Record<string, Activity>; id: string; repository: string; estado: string; commit?: string; branch?: string; celulas: Cell[]; error?: string; mensaje?: string; necesita?: string[]; has_report: boolean; has_html_report?: boolean; historical?: boolean; evidence_origin?: string; report_format?: number; derived_from?: string; simulation?: boolean }
++function usedTokens(usage?: Record<string, number>): number | undefined {
++  if (usage?.total_tokens != null) return usage.total_tokens;
++  if (usage?.input_tokens != null && usage?.output_tokens != null) return usage.input_tokens + usage.output_tokens;
++  return undefined;
++}
 +function coordinatorCell(run: Run): Cell | undefined {
 +  const saved = run.coordination;
 +  if (!saved?.profile) return;
 +  const stages = Object.values(saved.stages || {});
 +  return { id: "coordinator", nombre: "Coordinador", estado: run.activity?.coordinator?.state || run.estado, ...saved.profile,
 +    duration_seconds: stages.some(s => s.duration_seconds != null) ? stages.reduce((total, stage) => total + (stage.duration_seconds || 0), 0) : undefined,
++    usage: stages.length > 0 && stages.every(s => usedTokens(s.usage) != null) ? { total_tokens: stages.reduce((total, stage) => total + usedTokens(stage.usage)!, 0) } : undefined,
 +    summary: saved.question_answers?.find(a => a.id === "Q01")?.respuesta,
 +    error: stages.map(s => s.error).filter(Boolean).join(" · ") || undefined };
 +}
@@ -446,27 +486,24 @@ index 0000000..1ed5df7
 +        {current.mensaje && <p role="status" className="rounded-lg border border-amber-300/25 bg-amber-950/40 p-3 text-sm text-amber-100">{current.mensaje}</p>}
 +        {current.evidence_origin && <p className="rounded-lg bg-amber-950 p-3 text-xs text-amber-200">{current.evidence_origin}</p>}
 +        {current.has_report && <p className="text-xs text-cyan-200">{current.simulation ? "Contenido ficticio. Consultas desactivadas; no consume tokens." : "Pulsa un personaje o tarjeta para consultar esta revisión."}</p>}
-+        <div className="grid grid-cols-1 gap-2 min-[500px]:grid-cols-2 min-[1000px]:grid-cols-1">{roles.map(role => { const cell = current.celulas?.find(c => c.id === role.id) || (role.id === "coordinator" ? coordinatorCell(current) : undefined); const status = questionQueue.some(q => q.run_id === current.id && q.agent === role.id) ? "en_cola" : current.activity?.[role.id]?.state || cell?.estado || "pendiente"; return <button key={role.id} onClick={() => consult(role.id)} className={`block w-full rounded-lg border p-3 text-left ${selectedCell === role.id ? "border-cyan-300/70 bg-cyan-950/40" : "border-white/10 bg-slate-900"}`}>
-+          <span className="flex justify-between text-sm"><strong>{role.person}</strong><span>{current.activity?.[role.id]?.meeting ? "En reunión final" : label[status] || status}{current.activity?.[role.id]?.working && <span className="ml-1 inline-block animate-pulse" aria-label="Ejecutando">●</span>}</span></span>
++        <div className="grid grid-cols-1 gap-2 min-[500px]:grid-cols-2 min-[1000px]:grid-cols-1">{roles.map(role => { const cell = current.celulas?.find(c => c.id === role.id) || (role.id === "coordinator" ? coordinatorCell(current) : undefined); const answering = questionActive?.run_id === current.id && questionActive.agent === role.id && questionActive.estado === "respondiendo"; const status = answering ? "respondiendo" : questionQueue.some(q => q.run_id === current.id && q.agent === role.id) ? "en_cola" : current.activity?.[role.id]?.state || cell?.estado || "pendiente"; const working = answering || !!current.activity?.[role.id]?.working || busy(status); const finished = cell && !["pendiente", "en_cola", "preparando", "analizando", "respondiendo"].includes(cell.estado); return <button key={role.id} onClick={() => consult(role.id)} className={`audit-agent-card block w-full border p-3 text-left ${selectedCell === role.id ? "border-cyan-300/70 bg-cyan-950/40" : "border-white/10 bg-slate-900"}`}>
++          <span className="flex items-start justify-between gap-3 text-sm"><strong className="font-mono">{role.person}</strong><span className="flex items-center gap-2 text-right text-xs"><span aria-hidden="true" className={`inline-block h-2 w-2 shrink-0 ${working ? "motion-safe:animate-pulse bg-cyan-300" : status === "error" ? "bg-rose-400" : "bg-orange-400"}`} />{answering ? "Respondiendo" : current.activity?.[role.id]?.meeting ? "En reunión final" : label[status] || status}</span></span>
 +          <span className="block text-xs text-slate-300">{role.name}</span>
-+          <span className="mt-1 block text-xs text-slate-400">{cell ? `${cell.model} · ${cell.reasoning}` : current.historical ? "Modelo: No disponible" : `${role.model || "No disponible"} · ${role.reasoning || "No disponible"}`}</span>
-+          <span className="mt-1 block text-xs text-slate-400" title="Tokens disponibles: reserva de salida restante dentro del límite global de la revisión; no representa la cuota de la cuenta del proveedor.">Duración: {cell?.duration_seconds != null ? `${cell.duration_seconds}s` : "No disponible"} · Tokens disponibles: {cell?.tokens_available ?? "No disponible"}</span>
-+          {cell?.summary && <span className="mt-1 block text-xs text-slate-200">{cell.summary}</span>}
-+          {cell?.error && <span className="mt-2 block text-xs text-rose-300">{cell.error}</span>}
++          {finished && <span className="mt-2 block border-t border-white/10 pt-2 text-xs text-slate-400">Duración: {cell.duration_seconds != null ? `${cell.duration_seconds.toFixed(1)} s` : "No disponible"}<br />Tokens usados: {usedTokens(cell.usage)?.toLocaleString("es-ES") ?? "No disponible"}</span>}
 +        </button>; })}</div>
 +        {current.celulas?.some(c => c.id === "security") && <button onClick={() => consult("security")} className="rounded-lg border border-white/20 px-3 py-2 text-sm">Consultar Seguridad de esta revisión histórica</button>}
 +        {current.has_report && <div className="space-y-2 pt-2">
-+          <button onClick={() => void openReport()} className="w-full rounded-lg border border-cyan-300/40 px-3 py-3 text-sm text-cyan-200">Leer informe</button>
++          <button onClick={() => void openReport()} className="audit-pixel-button w-full border-cyan-300/40 px-3 py-3 text-sm text-cyan-200">Leer informe</button>
 +          <div className="grid grid-cols-2 gap-2">
-+            <a href={`/api/audit/runs/${current.id}/download`} className="rounded-lg bg-emerald-300 px-2 py-3 text-center text-xs font-semibold text-slate-950">Descargar Markdown</a>
-+            {current.has_html_report && <a href={`/api/audit/runs/${current.id}/download-html`} className="rounded-lg bg-emerald-300 px-2 py-3 text-center text-xs font-semibold text-slate-950">Descargar HTML</a>}
++            <a href={`/api/audit/runs/${current.id}/download`} className="audit-pixel-button border-emerald-100/50 bg-emerald-300 px-2 py-3 text-center text-xs font-semibold text-slate-950">Descargar Markdown</a>
++            {current.has_html_report && <a href={`/api/audit/runs/${current.id}/download-html`} className="audit-pixel-button border-emerald-100/50 bg-emerald-300 px-2 py-3 text-center text-xs font-semibold text-slate-950">Descargar HTML</a>}
 +          </div>
 +        </div>}
 +      </section>}
 +      {!current && <p className="mt-6 text-sm text-slate-400">El equipo está listo. Introduce un repositorio para comenzar.</p>}
 +    </aside>}
 +    {report !== null && <div role="dialog" aria-modal="true" aria-label="Informe de revisión" className="absolute inset-4 top-16 z-40 flex flex-col rounded-xl border border-white/20 bg-slate-950 p-5 shadow-2xl"><div className="mb-2 flex justify-end"><button onClick={() => setReport(null)} className="rounded border border-white/20 px-3 py-2">Cerrar informe</button></div>{reportHtml ? <ExecutiveReport html={reportHtml} /> : <div className="overflow-auto break-words text-sm leading-relaxed text-slate-200 [&_h1]:mb-4 [&_h1]:text-2xl [&_h2]:my-5 [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:mt-5 [&_h3]:mb-2 [&_h3]:font-semibold [&_p]:my-3 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:my-2 [&_table]:w-full [&_table]:block [&_table]:overflow-x-auto [&_th]:border [&_th]:border-white/20 [&_th]:p-2 [&_td]:border [&_td]:border-white/20 [&_td]:p-2 [&_a]:text-cyan-300 [&_code]:text-cyan-200"><ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml components={{ a: ({ children, href }) => <a href={href} target="_blank" rel="noopener noreferrer">{children}</a> }}>{report}</ReactMarkdown></div>}</div>}
-+    {chat && <AgentQuestion key={`${chat.run.id}-${chat.agent}`} run={chat.run} agent={chat.agent} name={roles.find(r => r.id === chat.agent)?.person || chat.run.celulas?.find(c => c.id === chat.agent)?.nombre || chat.agent} active={questionActive} blocked={false} details={chat.agent === "coordinator" ? coordinatorCell(chat.run) : chat.run.celulas?.find(c => c.id === chat.agent)} onStarted={setQuestionActive} onClose={() => setChat(null)} />}
++    {chat && <AgentQuestion key={`${chat.run.id}-${chat.agent}`} run={chat.run} agent={chat.agent} name={roles.find(r => r.id === chat.agent)?.person || chat.run.celulas?.find(c => c.id === chat.agent)?.nombre || chat.agent} role={roles.find(r => r.id === chat.agent)?.name} active={questionActive} blocked={false} details={chat.agent === "coordinator" ? coordinatorCell(chat.run) : chat.run.celulas?.find(c => c.id === chat.agent)} onStarted={setQuestionActive} onClose={() => setChat(null)} />}
 +  </div>;
 +}
 diff --git a/src/features/audit/ExecutiveReport.tsx b/src/features/audit/ExecutiveReport.tsx
@@ -826,10 +863,27 @@ index 0000000..376ab0e
 +  };
 +};
 diff --git a/src/features/pixel-office/scene/PixelOfficeScene.ts b/src/features/pixel-office/scene/PixelOfficeScene.ts
-index 4708d1d..5d7ce4d 100644
+index 4708d1d..ab21520 100644
 --- a/src/features/pixel-office/scene/PixelOfficeScene.ts
 +++ b/src/features/pixel-office/scene/PixelOfficeScene.ts
-@@ -72,6 +72,7 @@ type AgentVisual = {
+@@ -13,6 +13,7 @@ import {
+   spriteWidth,
+ } from "@/features/pixel-office/art";
+ import type { PixelSceneBridge } from "@/features/pixel-office/PixelSceneBridge";
++import { createAmbientConversations, type AmbientCue } from "@/features/pixel-office/sim/ambientConversations";
+ import {
+   createPixelSimulation,
+   JANITOR_ID,
+@@ -34,7 +35,7 @@ const TILE = PIXEL_TILE_SIZE;
+
+ const STATUS_DOT_COLOR: Record<string, number> = {
+   working: 0x4ade80,
+-  idle: 0xfbbf24,
++  idle: 0xfb923c,
+   error: 0xef4444,
+ };
+
+@@ -72,6 +73,7 @@ type AgentVisual = {
    lastStatus: string;
    lastName: string;
    seed: string;
@@ -837,7 +891,7 @@ index 4708d1d..5d7ce4d 100644
  };
 
  /** How long a finished speech bubble stays readable, in ms. */
-@@ -81,8 +82,9 @@ export const createPixelOfficeScene = (params: {
+@@ -81,8 +83,9 @@ export const createPixelOfficeScene = (params: {
    PhaserLib: typeof import("phaser");
    bridge: PixelSceneBridge;
    map: PixelOfficeMap;
@@ -848,24 +902,32 @@ index 4708d1d..5d7ce4d 100644
    const worldWidth = map.cols * TILE;
    const worldHeight = map.rows * TILE;
 
-@@ -91,6 +93,7 @@ export const createPixelOfficeScene = (params: {
+@@ -91,6 +94,9 @@ export const createPixelOfficeScene = (params: {
      private visuals = new Map<string, AgentVisual>();
      private frameSetReady = new Set<string>();
      private animClock = 0;
-+    private television: Phaser.GameObjects.Text | null = null;
++    private conversations = createAmbientConversations();
++    private televisionGlow: Phaser.GameObjects.Graphics | null = null;
++    private televisionLight = 0;
      private dragStart: { x: number; y: number; sx: number; sy: number } | null = null;
      private dragDistance = 0;
 
-@@ -104,9 +107,20 @@ export const createPixelOfficeScene = (params: {
+@@ -104,9 +110,26 @@ export const createPixelOfficeScene = (params: {
        this.renderGround();
        this.renderFurniture();
        this.renderZoneLabels();
 +      if (fitToView) {
-+        this.television = this.add.text(19 * TILE, 3 * TILE, "INFORME · pantalla apagada", {
-+          fontFamily: "system-ui, sans-serif", fontSize: "8px", color: "#64748b",
-+          backgroundColor: "#0f172a", padding: { x: 5, y: 6 }, fixedWidth: 6 * TILE,
-+          fixedHeight: 2 * TILE, wordWrap: { width: 6 * TILE - 10 },
-+        }).setDepth(45001).setResolution(3);
++        const x = 26 * TILE - 8, y = 4 * TILE;
++        const tv = this.add.graphics().setDepth(12 * TILE);
++        tv.fillStyle(0x475569).fillRect(x + 3, y + 25, 5, 8);
++        tv.fillStyle(0x0f172a).fillRect(x, y, 5, 3 * TILE);
++        tv.fillStyle(0x64748b).fillRect(x + 3, y + 2, 2, 3 * TILE - 4);
++        tv.fillStyle(0x1e293b).fillRect(x - 2, y + 3, 2, 3 * TILE - 6);
++        this.televisionGlow = this.add.graphics().setDepth(2).setAlpha(0);
++        for (let band = 0; band < 6; band++) {
++          this.televisionGlow.fillStyle(0x93ddff, 0.025 + band * 0.012)
++            .fillRect(x - (6 - band) * 12, y + 8 - band * 2, 12, 3 * TILE - 16 + band * 4);
++        }
 +      }
        this.setupCamera();
        this.setupPointerControls();
@@ -877,20 +939,21 @@ index 4708d1d..5d7ce4d 100644
          this.visuals.clear();
          this.sim = null;
        });
-@@ -116,6 +130,12 @@ export const createPixelOfficeScene = (params: {
+@@ -116,6 +139,13 @@ export const createPixelOfficeScene = (params: {
        if (!this.sim) return;
        this.animClock += delta;
        const state = bridge.getState();
-+      if (this.television) {
-+        const attendees = state.agents.filter(a => a.standup);
-+        this.television.setText(attendees.length ?
-+          `REUNIÓN FINAL · ${attendees.length} participantes\nInforme compartido en preparación\n${attendees.map(a => a.name + " [silenciado]").join(" · ")}` : "INFORME · pantalla apagada");
-+        this.television.setColor(attendees.length ? "#e2e8f0" : "#64748b");
++      if (this.televisionGlow) {
++        const on = state.agents.some(a => a.standup);
++        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
++        const target = on ? 1 : 0;
++        this.televisionLight += (target - this.televisionLight) * Math.min(1, delta / 500);
++        this.televisionGlow.setAlpha(reducedMotion ? target : this.televisionLight);
 +      }
        const poses = this.sim.tick({
          inputs: state.agents,
          nowMs: Date.now(),
-@@ -184,7 +204,8 @@ export const createPixelOfficeScene = (params: {
+@@ -184,7 +214,8 @@ export const createPixelOfficeScene = (params: {
          image.setOrigin(0, 1);
          // Flat decor stays under everything that walks over it.
          const flat = object.kind === "rug" || object.kind === "flower";
@@ -900,7 +963,7 @@ index 4708d1d..5d7ce4d 100644
          if (object.kind === "jukebox" || object.kind === "kanban_board") {
            const stationKind = object.kind === "jukebox" ? "jukebox" : "kanban";
            image.setInteractive({ useHandCursor: true });
-@@ -242,7 +263,7 @@ export const createPixelOfficeScene = (params: {
+@@ -242,7 +273,7 @@ export const createPixelOfficeScene = (params: {
 
      /** Lowest allowed zoom: never smaller than "whole map in view". */
      private minZoom(): number {
@@ -909,7 +972,7 @@ index 4708d1d..5d7ce4d 100644
      }
 
      private setupCamera() {
-@@ -263,12 +284,12 @@ export const createPixelOfficeScene = (params: {
+@@ -263,12 +294,12 @@ export const createPixelOfficeScene = (params: {
        // Gather-style default: start close enough that the pixel art reads at
        // 1:1+ detail, centered on the main pods. Wheel out for the overview.
        const zoom = PhaserLib.Math.Clamp(
@@ -924,7 +987,29 @@ index 4708d1d..5d7ce4d 100644
      }
 
      private setupPointerControls() {
-@@ -380,6 +401,7 @@ export const createPixelOfficeScene = (params: {
+@@ -362,6 +393,12 @@ export const createPixelOfficeScene = (params: {
+       const state = bridge.getState();
+       const inputById = new Map(state.agents.map((agent) => [agent.id, agent]));
+       const seen = new Set<string>();
++      const blocked = new Set(Object.entries(state.bubbleTextByAgentId).filter(([, text]) => text.trim()).map(([id]) => id));
++      for (const [id, visual] of this.visuals) {
++        if (visual.lingerText && this.animClock - visual.bubbleChangedAt < BUBBLE_LINGER_MS) blocked.add(id);
++      }
++      const pauses = Object.fromEntries(Object.values(this.sim?.getState().agents || {}).map(agent => [agent.id, agent.pauseUntil]));
++      const ambient = fitToView ? this.conversations.tick(Date.now(), state.agents, poses, blocked, pauses) : new Map<string, AmbientCue>();
+
+       for (const pose of poses) {
+         seen.add(pose.id);
+@@ -373,13 +410,15 @@ export const createPixelOfficeScene = (params: {
+           visual = this.createVisual(pose.id, input?.name ?? "Janitor");
+           this.visuals.set(pose.id, visual);
+         }
+-        this.updateVisual(visual, pose, input, state.bubbleTextByAgentId[pose.id] ?? "");
++        const cue = ambient.get(pose.id);
++        this.updateVisual(visual, cue?.facing ? { ...pose, facing: cue.facing } : pose, input, state.bubbleTextByAgentId[pose.id] ?? "", cue);
+       }
+
+       for (const [id, visual] of this.visuals) {
          if (seen.has(id)) continue;
          visual.container.destroy();
          visual.overlay.destroy();
@@ -932,7 +1017,7 @@ index 4708d1d..5d7ce4d 100644
          this.visuals.delete(id);
        }
      }
-@@ -445,6 +467,20 @@ export const createPixelOfficeScene = (params: {
+@@ -445,6 +484,20 @@ export const createPixelOfficeScene = (params: {
        ]);
        overlay.setDepth(40_000);
 
@@ -953,7 +1038,7 @@ index 4708d1d..5d7ce4d 100644
        return {
          container,
          sprite,
-@@ -463,6 +499,7 @@ export const createPixelOfficeScene = (params: {
+@@ -463,6 +516,7 @@ export const createPixelOfficeScene = (params: {
          lastStatus: "",
          lastName: name,
          seed: id,
@@ -961,9 +1046,11 @@ index 4708d1d..5d7ce4d 100644
        };
      }
 
-@@ -495,15 +532,30 @@ export const createPixelOfficeScene = (params: {
+@@ -494,16 +548,32 @@ export const createPixelOfficeScene = (params: {
+       pose: PixelAgentPose,
        input: { name: string; status: string; thinking: boolean; awaitingApproval: boolean } | null,
        bubble: string,
++      ambient?: AmbientCue,
      ) {
 -      visual.container.setPosition(pose.x, pose.y + TILE / 2 - 1);
 -      visual.container.setDepth(pose.y + TILE / 2);
@@ -995,8 +1082,46 @@ index 4708d1d..5d7ce4d 100644
 
        // Nameplate pill with the status dot.
        const name = input?.name ?? "Janitor";
+@@ -541,10 +611,16 @@ export const createPixelOfficeScene = (params: {
+       const lingering =
+         visual.lingerText.length > 0 &&
+         this.animClock - visual.bubbleChangedAt < BUBBLE_LINGER_MS;
+-      const showBubble = bubbleTail.length > 0 || lingering;
++      const realBubble = bubbleTail.length > 0 || lingering;
++      const showAmbient = !realBubble && !!ambient?.text;
++      const showBubble = realBubble || showAmbient;
+       visual.bubbleBg.setVisible(showBubble);
+       visual.bubbleText.setVisible(showBubble);
++      const alpha = showAmbient ? window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 1 : ambient!.alpha : 1;
++      visual.bubbleBg.setAlpha(alpha);
++      visual.bubbleText.setAlpha(alpha);
+       if (showBubble) {
++        visual.bubbleText.setText(showAmbient ? ambient!.text : bubbleTail || visual.lingerText);
+         const bw = visual.bubbleText.width + 18;
+         const bh = visual.bubbleText.height + 14;
+         const by = -14;
+@@ -552,9 +628,16 @@ export const createPixelOfficeScene = (params: {
+         visual.bubbleBg.clear();
+         visual.bubbleBg.fillStyle(0xf9fbff, 0.96);
+         visual.bubbleBg.lineStyle(2, 0x2b2b3a, 0.9);
+-        visual.bubbleBg.fillRoundedRect(-bw / 2, by - bh, bw, bh, 7);
+-        visual.bubbleBg.strokeRoundedRect(-bw / 2, by - bh, bw, bh, 7);
+-        visual.bubbleBg.fillTriangle(-6, by, 6, by, 0, by + 7);
++        if (showAmbient) {
++          visual.bubbleBg.fillRect(-bw / 2, by - bh, bw, bh);
++          visual.bubbleBg.strokeRect(-bw / 2, by - bh, bw, bh);
++          visual.bubbleBg.fillRect(-4, by, 8, 4);
++          visual.bubbleBg.fillRect(0, by + 4, 4, 4);
++        } else {
++          visual.bubbleBg.fillRoundedRect(-bw / 2, by - bh, bw, bh, 7);
++          visual.bubbleBg.strokeRoundedRect(-bw / 2, by - bh, bw, bh, 7);
++          visual.bubbleBg.fillTriangle(-6, by, 6, by, 0, by + 7);
++        }
+       }
+
+       // Thinking dots (hidden while a speech bubble is visible).
 diff --git a/src/features/pixel-office/sim/agentSimulation.ts b/src/features/pixel-office/sim/agentSimulation.ts
-index cd4b188..84b936f 100644
+index cd4b188..1f23c15 100644
 --- a/src/features/pixel-office/sim/agentSimulation.ts
 +++ b/src/features/pixel-office/sim/agentSimulation.ts
 @@ -35,9 +35,9 @@ const AGENT_SPEED = 180;
@@ -1023,7 +1148,35 @@ index cd4b188..84b936f 100644
    const navGrid = buildPixelNavGrid(map);
    const stationById = new Map<string, PixelStation>(
      map.stations.map((stationSlot) => [stationSlot.id, stationSlot]),
-@@ -179,7 +181,7 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
+@@ -122,6 +124,10 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
+   );
+   const deskById = new Map(map.desks.map((deskSlot) => [deskSlot.id, deskSlot]));
+   const spawnCenter = tileCenter(map.spawn.tx, map.spawn.ty);
++  // Ambient desk visits use the normal station clock, independently of real work.
++  for (const desk of map.desks) stationById.set(`idle-desk:${desk.id}`, {
++    id: `idle-desk:${desk.id}`, kind: "wander", tx: desk.seatTx, ty: desk.seatTy, facing: desk.facing,
++  });
+
+   const state: {
+     agents: Record<string, InternalAgentState>;
+@@ -158,8 +164,15 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
+
+   /** True when another agent currently targets or sits on the station. */
+   const isStationOccupied = (stationId: string, selfId: string): boolean => {
+-    for (const other of Object.values(state.agents)) {
++    const station = stationById.get(stationId);
++    for (const other of [...Object.values(state.agents), ...(state.janitor ? [state.janitor] : [])]) {
+       if (other.id !== selfId && other.goalStationId === stationId) return true;
++      if (other.id === selfId || !station) continue;
++      const point = tileCenter(station.tx, station.ty);
++      const dx = other.targetX - point.x, dy = other.targetY - point.y;
++      // Reserve physical destinations too: different station IDs can share a tile.
++      if (other.targetTx >= 0 && Math.hypot(dx, dy) < PIXEL_TILE_SIZE * 0.95) return true;
++      if (other.arrived && Math.hypot(other.x - point.x, other.y - point.y) < PIXEL_TILE_SIZE * 0.95) return true;
+     }
+     return false;
+   };
+@@ -179,7 +192,7 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
      const free = candidates.filter(
        (stationSlot) => !isStationOccupied(stationSlot.id, agent.id),
      );
@@ -1032,16 +1185,54 @@ index cd4b188..84b936f 100644
      let best: PixelStation | null = null;
      let bestDistance = Infinity;
      for (const stationSlot of pool) {
-@@ -201,7 +203,7 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
+@@ -194,18 +207,42 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
+
+   /** Random idle station via the agent's seeded RNG, preferring unoccupied. */
+   const pickRandomIdleStation = (agent: InternalAgentState): PixelStation | null => {
+-    const withoutLast = idleStations.filter(
++    const ownDesk = stationById.get(`idle-desk:${agent.deskId}`);
++    const choices = ownDesk ? [...idleStations, ownDesk] : idleStations;
++    const withoutLast = choices.filter(
+       (stationSlot) => stationSlot.id !== agent.lastStationId,
+     );
+-    const candidates = withoutLast.length > 0 ? withoutLast : idleStations;
++    const candidates = withoutLast.length > 0 ? withoutLast : choices;
      const free = candidates.filter(
        (stationSlot) => !isStationOccupied(stationSlot.id, agent.id),
      );
 -    const pool = free.length > 0 ? free : candidates;
+-    if (pool.length === 0) return null;
 +    const pool = free;
-     if (pool.length === 0) return null;
++    if (pool.length === 0) return pickFreeStandingStation(agent);
++    if (ownDesk && pool.includes(ownDesk) && agent.rng() < 0.6) return ownDesk;
      return pool[Math.min(pool.length - 1, Math.floor(agent.rng() * pool.length))];
    };
-@@ -218,6 +220,7 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
+
++  // Overflow waits on reachable floor, never on furniture, a doorway or a desk.
++  const pickFreeStandingStation = (agent: InternalAgentState): PixelStation | null => {
++    const candidates: PixelStation[] = [];
++    for (let ty = 2; ty < map.rows - 2; ty++) for (let tx = 2; tx < map.cols - 2; tx++) {
++      if (navGrid.cells[ty * map.cols + tx]) continue;
++      if (map.ground[ty * map.cols + tx] === "floor_cream") continue;
++      if ([...stationById.values()].some(s => s.tx === tx && s.ty === ty && s.id !== `waiting:${agent.id}`)) continue;
++      if (map.desks.some(d => d.seatTy === ty && Math.abs(d.seatTx - tx) <= 1)) continue;
++      candidates.push({ id: `waiting:${agent.id}`, kind: "wander", tx, ty, facing: agent.facing });
++    }
++    candidates.sort((a, b) => distanceSq(agent, a) - distanceSq(agent, b));
++    for (const candidate of candidates) {
++      stationById.set(candidate.id, candidate);
++      if (isStationOccupied(candidate.id, agent.id)) continue;
++      const center = tileCenter(candidate.tx, candidate.ty);
++      if (astar2D(agent.x, agent.y, center.x, center.y, navGrid).length || Math.hypot(agent.x - center.x, agent.y - center.y) < 0.5) return candidate;
++    }
++    stationById.delete(`waiting:${agent.id}`);
++    return null;
++  };
++
+   /** Records the goal point and repaths only when the target tile changed. */
+   const setTarget = (
+     agent: InternalAgentState,
+@@ -218,6 +255,7 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
      agent.targetX = x;
      agent.targetY = y;
      agent.targetFacing = facing;
@@ -1049,16 +1240,32 @@ index cd4b188..84b936f 100644
      if (targetTx !== agent.targetTx || targetTy !== agent.targetTy) {
        agent.targetTx = targetTx;
        agent.targetTy = targetTy;
-@@ -249,7 +252,7 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
+@@ -231,6 +269,15 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
+
+   /** Parks the agent in place (used for dancing and missing stations). */
+   const holdPosition = (agent: InternalAgentState) => {
++    const others = [...Object.values(state.agents), ...(state.janitor ? [state.janitor] : [])];
++    if (others.some(other => other.id !== agent.id && (other.arrived || other.path.length === 0) && Math.hypot(other.x - agent.x, other.y - agent.y) < PIXEL_TILE_SIZE * 0.95)) {
++      const free = pickFreeStandingStation(agent);
++      if (free) {
++        const point = tileCenter(free.tx, free.ty);
++        setTarget(agent, point.x, point.y, free.facing);
++        return;
++      }
++    }
+     agent.path = [];
+     agent.arrived = true;
+     // Invalidate the target tile so the next real goal always repaths.
+@@ -249,7 +296,7 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
      if (agent.goalStationId && agent.arrived) {
        if (agent.pauseUntil === 0) {
          agent.pauseUntil =
 -          nowMs + IDLE_PAUSE_MIN_MS + agent.rng() * IDLE_PAUSE_RANGE_MS;
-+          nowMs + idlePauseMinMs + agent.rng() * idlePauseRangeMs;
++          nowMs + (idlePauseMinMs + agent.rng() * idlePauseRangeMs) * (agent.goalStationId.startsWith("idle-desk:") ? 3 : 1);
          agent.goalKind = "idle_pause";
        } else if (nowMs >= agent.pauseUntil) {
          agent.lastStationId = agent.goalStationId;
-@@ -273,6 +276,7 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
+@@ -273,6 +320,7 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
      }
    };
 
@@ -1066,7 +1273,7 @@ index cd4b188..84b936f 100644
    const resolveGoal = (
      agent: InternalAgentState,
      input: PixelAgentInput,
-@@ -300,28 +304,34 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
+@@ -300,28 +348,34 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
      }
      agent.holdKind = null;
 
@@ -1116,7 +1323,7 @@ index cd4b188..84b936f 100644
      }
 
      // Priority c: dancing happens in place.
-@@ -332,8 +342,8 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
+@@ -332,8 +386,8 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
        return;
      }
 
@@ -1127,7 +1334,7 @@ index cd4b188..84b936f 100644
        const deskId = state.deskByAgentId[input.id];
        const deskSlot = deskId ? deskById.get(deskId) : undefined;
        if (deskSlot) {
-@@ -343,7 +353,7 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
+@@ -343,7 +397,7 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
            agent.pauseUntil = 0;
          }
          const seat = tileCenter(deskSlot.seatTx, deskSlot.seatTy);
@@ -1136,7 +1343,26 @@ index cd4b188..84b936f 100644
          return;
        }
        // No free desk: fall through to wander behavior.
-@@ -484,6 +494,7 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
+@@ -414,6 +468,7 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
+           ? stationById.get(agent.goalStationId)
+           : undefined;
+         if (!stationSlot) return "standing";
++        if (stationSlot.id.startsWith("idle-desk:")) return "sitting_desk";
+         return stationSlot.kind === "wander" ? "standing" : "station";
+       }
+       default:
+@@ -450,7 +505,9 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
+           janitor.pauseUntil = 0;
+         }
+       }
+-      const stationSlot = wanderStations[janitor.wanderIndex];
++      const preferred = wanderStations[janitor.wanderIndex];
++      const stationSlot = !isStationOccupied(preferred.id, janitor.id) ? preferred : pickNearestStation(janitor, wanderStations) ?? pickFreeStandingStation(janitor);
++      if (!stationSlot) { holdPosition(janitor); return; }
+       janitor.goalKind = "wander";
+       janitor.goalStationId = stationSlot.id;
+       const center = tileCenter(stationSlot.tx, stationSlot.ty);
+@@ -484,6 +541,7 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
    }): PixelAgentPose[] => {
      const stepMs = Math.min(Math.max(dtMs, 0), MAX_STEP_MS);
 
@@ -1144,7 +1370,7 @@ index cd4b188..84b936f 100644
      // Roster sync: drop absent agents and free their desks.
      const inputIds = new Set(inputs.map((input) => input.id));
      for (const id of Object.keys(state.agents)) {
-@@ -505,7 +516,7 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
+@@ -505,7 +563,7 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
 
      // Sticky desk assignment: first free desk in map order, agents by id.
      for (const input of sortedInputs) {
@@ -1222,10 +1448,10 @@ index 0000000..12454fe
 +});
 diff --git a/tests/unit/arkticOfficeMap.test.ts b/tests/unit/arkticOfficeMap.test.ts
 new file mode 100644
-index 0000000..ab314b6
+index 0000000..fb62f67
 --- /dev/null
 +++ b/tests/unit/arkticOfficeMap.test.ts
-@@ -0,0 +1,113 @@
+@@ -0,0 +1,154 @@
 +import { describe, expect, it } from "vitest";
 +import { buildArkticOfficeMap } from "@/features/pixel-office/map/arkticOfficeMap";
 +import { buildPixelNavGrid, tileCenter } from "@/features/pixel-office/map/navGrid";
@@ -1333,9 +1559,50 @@ index 0000000..ab314b6
 +      expect(poses.map(p => [p.x, p.y])).toEqual(parked);
 +      expect(poses.map(p => p.facing)).toEqual(facing);
 +      for (const input of inputs) input.status = finishedStatus;
-+      for (let tick = 1200; tick < 2200; tick++) poses = sim.tick({ inputs, nowMs: tick * 50, dtMs: 50, cleaningActive: false });
-+      expect(poses.map(p => [p.x, p.y])).not.toEqual(parked);
-+      expect(poses.every(p => p.activity !== "sitting_desk")).toBe(true);
++      let leftDesk = false;
++      for (let tick = 1200; tick < 4200; tick++) {
++        poses = sim.tick({ inputs, nowMs: tick * 50, dtMs: 50, cleaningActive: false });
++        if (poses.some((p, i) => p.x !== parked[i][0] || p.y !== parked[i][1])) leftDesk = true;
++      }
++      expect(leftDesk).toBe(true);
++      expect(Object.values(sim.getState().agents).every(a => a.goalKind !== "desk")).toBe(true);
++    }
++  });
++
++  it("holds an ambient desk visit for triple the pause and interrupts it for real work", () => {
++    const map = buildArkticOfficeMap();
++    map.stations = [];
++    const sim = createPixelSimulation(map, { idlePauseMinMs: 1000, idlePauseRangeMs: 0 });
++    const inputs: PixelAgentInput[] = [{ id: "coordinator", name: "Akira", color: "#42bcc6", status: "idle", controlled: true,
++      streaming: false, thinking: false, awaitingApproval: false, dancing: false, hold: null, standup: false }];
++    let nowMs = 0;
++    while (!sim.getState().agents.coordinator?.pauseUntil && nowMs < 20000) {
++      sim.tick({ inputs, nowMs, dtMs: 50, cleaningActive: false });
++      nowMs += 50;
++    }
++    expect(sim.getState().agents.coordinator.pauseUntil).toBe(nowMs - 50 + 3000);
++    expect(sim.getState().agents.coordinator.goalStationId).toMatch(/^idle-desk:/);
++    inputs[0].status = "working";
++    const poses = sim.tick({ inputs, nowMs, dtMs: 50, cleaningActive: false });
++    expect(sim.getState().agents.coordinator.goalKind).toBe("desk");
++    expect(sim.getState().agents.coordinator.pauseUntil).toBe(0);
++    expect(poses[0].activity).toBe("sitting_desk");
++  });
++
++  it("keeps stopped bodies separated through crowded idle, work and meetings including cleaning", () => {
++    const sim = createPixelSimulation(buildArkticOfficeMap());
++    const inputs: PixelAgentInput[] = Array.from({length: 12}, (_, i) => ({ id: `person-${i}`, name: `${i}`, color: "#42bcc6", status: "idle", controlled: true,
++      streaming: false, thinking: false, awaitingApproval: false, dancing: false, hold: null, standup: false }));
++    for (let tick = 0; tick < 3000; tick++) {
++      for (const [i, input] of inputs.entries()) {
++        input.status = tick >= 1000 && tick < 1800 && i < 4 ? "working" : "idle";
++        input.standup = tick >= 1800 && tick < 2400 && i < 8;
++      }
++      const poses = sim.tick({ inputs, nowMs: tick * 100, dtMs: 100, cleaningActive: tick < 2600 });
++      const stopped = poses.filter(p => !p.moving);
++      for (let i = 0; i < stopped.length; i++) for (let j = i + 1; j < stopped.length; j++) {
++        expect(Math.hypot(stopped[i].x - stopped[j].x, stopped[i].y - stopped[j].y), `tick ${tick}: ${stopped[i].id}/${stopped[j].id}`).toBeGreaterThanOrEqual(30);
++      }
 +    }
 +  });
 +});
@@ -1404,4 +1671,152 @@ index 0000000..27753fc
 +    expect(frame.getAttribute("sandbox")).not.toContain("allow-scripts");
 +  });
 +
++});
+diff --git a/src/features/pixel-office/sim/ambientConversations.ts b/src/features/pixel-office/sim/ambientConversations.ts
+new file mode 100644
+--- /dev/null
++++ b/src/features/pixel-office/sim/ambientConversations.ts
+@@ -0,0 +1,75 @@
++import { PIXEL_TILE_SIZE, type PixelAgentInput, type PixelAgentPose, type PixelFacing } from "@/features/pixel-office/types";
++
++type Conversation = { ids: [string, string]; desktop: boolean; startedAt: number; endsAt: number };
++export type AmbientCue = { text: string; alpha: number; facing?: PixelFacing };
++
++/** Visual-only exchanges. Never writes agent status, history or model requests. */
++export function createAmbientConversations(random: () => number = Math.random) {
++  let active: Conversation | null = null;
++  let nextAt: number | null = null;
++  const delay = () => 18000 + random() * 17000;
++  return {
++    tick(nowMs: number, inputs: PixelAgentInput[], poses: PixelAgentPose[], blocked: Set<string>, pauseUntil: Record<string, number> = {}) {
++      const cues = new Map<string, AmbientCue>();
++      const inputById = new Map(inputs.map(input => [input.id, input]));
++      const available = poses.filter(pose => {
++        const input = inputById.get(pose.id);
++        return input?.status === "idle" && !input.standup && !input.hold && !input.dancing && !input.thinking &&
++          !input.streaming && !input.awaitingApproval && !pose.moving && !blocked.has(pose.id) &&
++          ["sitting_desk", "standing", "station"].includes(pose.activity);
++      });
++      const byId = new Map(available.map(pose => [pose.id, pose]));
++      const closeEnough = (a: PixelAgentPose, b: PixelAgentPose) => Math.hypot(a.x - b.x, a.y - b.y) <= PIXEL_TILE_SIZE * 3.5;
++      // A meeting anywhere in the office silences ambient exchanges immediately.
++      const meeting = inputs.some(input => input.standup);
++      if (active) {
++        const a = byId.get(active.ids[0]), b = byId.get(active.ids[1]);
++        if (nowMs >= active.endsAt || meeting || !a || !b ||
++          (a.activity === "sitting_desk") !== active.desktop || (b.activity === "sitting_desk") !== active.desktop ||
++          (!active.desktop && !closeEnough(a, b))) {
++          active = null;
++          nextAt = nowMs + delay();
++        }
++      }
++      if (nextAt === null) nextAt = nowMs + 5000 + random() * 5000;
++      if (!active && !meeting && nowMs >= nextAt) {
++        const pairs: [PixelAgentPose, PixelAgentPose][] = [];
++        for (let i = 0; i < available.length; i++) for (let j = i + 1; j < available.length; j++) {
++          const a = available[i], b = available[j];
++          const desktop = a.activity === "sitting_desk";
++          if (desktop !== (b.activity === "sitting_desk")) continue;
++          if (desktop || closeEnough(a, b)) pairs.push([a, b]);
++        }
++        const duration = (desktop: boolean) => desktop ? 25000 + random() * 20000 : 8000 + random() * 7000;
++        if (pairs.length) {
++          const [a, b] = pairs[Math.min(pairs.length - 1, Math.floor(random() * pairs.length))];
++          const desktop = a.activity === "sitting_desk", endsAt = nowMs + duration(desktop);
++          // Do not start a long chat just before either participant leaves the PC.
++          if (!desktop || [a, b].every(p => (pauseUntil[p.id] ?? Infinity) >= endsAt)) {
++            active = { ids: [a.id, b.id], desktop, startedAt: nowMs, endsAt };
++          }
++        }
++        if (!active) nextAt = nowMs + 2000;
++      }
++      if (active) {
++        const turnMs = active.desktop ? 6000 : 2800;
++        const elapsed = nowMs - active.startedAt;
++        const turn = Math.floor(elapsed / turnMs), phase = elapsed % turnMs;
++        for (const [index, id] of active.ids.entries()) {
++          const pose = byId.get(id)!, other = byId.get(active.ids[1 - index])!;
++          let facing: PixelFacing | undefined;
++          if (!active.desktop) {
++            const dx = other.x - pose.x, dy = other.y - pose.y;
++            facing = Math.abs(dx) > Math.abs(dy) ? dx > 0 ? "right" : "left" : dy > 0 ? "down" : "up";
++          }
++          const visibleMs = active.desktop ? 2200 : 1700;
++          const speaking = index === turn % 2 && phase < visibleMs;
++          const alpha = speaking ? Math.min(1, phase / 200, (visibleMs - phase) / 250) : 0;
++          cues.set(id, { text: speaking ? ["…", "?", "…", "!"][turn % 4] : "", alpha, facing });
++        }
++      }
++      return cues;
++    },
++    getState: () => active,
++  };
++}
+diff --git a/tests/unit/ambientConversations.test.ts b/tests/unit/ambientConversations.test.ts
+new file mode 100644
+--- /dev/null
++++ b/tests/unit/ambientConversations.test.ts
+@@ -0,0 +1,63 @@
++import { describe, expect, it } from "vitest";
++import { createAmbientConversations } from "@/features/pixel-office/sim/ambientConversations";
++import type { PixelAgentInput, PixelAgentPose } from "@/features/pixel-office/types";
++
++const inputs = (): PixelAgentInput[] => ["a", "b"].map(id => ({id, name:id, color:"#fff", status:"idle", controlled:true,
++  streaming:false, thinking:false, awaitingApproval:false, dancing:false, hold:null, standup:false}));
++const poses = (desktop = false): PixelAgentPose[] => ["a", "b"].map((id, i) => ({id, x:100 + i * (desktop ? 300 : 50), y:100,
++  facing:"up", activity:desktop ? "sitting_desk" : "standing", moving:false, stationId:null, deskId:desktop ? id : null}));
++
++describe("ambient conversations", () => {
++  it("uses longer desktop exchanges, alternating bubbles and silent pauses without turning away", () => {
++    const chat = createAmbientConversations(() => 0), people = inputs(), seated = poses(true);
++    chat.tick(0, people, seated, new Set());
++    const first = chat.tick(5000, people, seated, new Set());
++    expect(chat.getState()?.endsAt).toBe(30000);
++    expect(first.get("a")?.text).toBe("…");
++    expect(first.get("b")?.text).toBe("");
++    expect(first.get("a")?.facing).toBeUndefined();
++    expect([...chat.tick(8000, people, seated, new Set()).values()].every(cue => !cue.text)).toBe(true);
++    expect(chat.tick(11000, people, seated, new Set()).get("b")?.text).toBe("?");
++    chat.tick(30000, people, seated, new Set());
++    expect(chat.getState()).toBeNull();
++    expect(people.every(person => person.status === "idle")).toBe(true);
++  });
++
++  it("faces nearby partners during a shorter local exchange and cancels on movement", () => {
++    const chat = createAmbientConversations(() => 0), people = inputs(), standing = poses();
++    chat.tick(0, people, standing, new Set());
++    const cues = chat.tick(5000, people, standing, new Set());
++    expect(chat.getState()?.endsAt).toBe(13000);
++    expect(cues.get("a")?.facing).toBe("right");
++    expect(cues.get("b")?.facing).toBe("left");
++    standing[0].moving = true;
++    expect(chat.tick(5100, people, standing, new Set()).size).toBe(0);
++    expect(chat.getState()).toBeNull();
++  });
++
++  it("gives real work, messages, thinking, holds and meetings immediate priority", () => {
++    for (const interrupt of ["work", "message", "thinking", "hold", "meeting", "removed"] as const) {
++      const chat = createAmbientConversations(() => 0), people = inputs(), seated = poses(true);
++      chat.tick(0, people, seated, new Set());
++      chat.tick(5000, people, seated, new Set());
++      expect(chat.getState()).not.toBeNull();
++      const blocked = new Set<string>();
++      if (interrupt === "work") people[0].status = "working";
++      if (interrupt === "message") blocked.add("a");
++      if (interrupt === "thinking") people[0].thinking = true;
++      if (interrupt === "hold") people[0].hold = "phone_booth";
++      if (interrupt === "meeting") people.push({...people[0], id:"c", standup:true});
++      if (interrupt === "removed") people.shift();
++      expect(chat.tick(5100, people, seated, blocked).size, interrupt).toBe(0);
++      expect(chat.getState()).toBeNull();
++    }
++  });
++
++  it("does not start across distant common areas or just before leaving a desk", () => {
++    const chat = createAmbientConversations(() => 0), people = inputs(), standing = poses();
++    standing[1].x = 800;
++    chat.tick(0, people, standing, new Set());
++    expect(chat.tick(5000, people, standing, new Set()).size).toBe(0);
++    expect(chat.tick(7000, people, poses(true), new Set(), {a:8000, b:8000}).size).toBe(0);
++  });
 +});
