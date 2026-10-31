@@ -1,0 +1,16 @@
+{
+  "backend": {
+    "total": 202,
+    "passed": 201,
+    "skipped": 1,
+    "log_sha256": "945f0b141155f55d050165e9558dd8229fad9d6f7dd25065eb02c3fd773b9e10"
+  },
+  "frontend": {
+    "files": 4,
+    "passed": 12,
+    "log_sha256": "ae9fb9daa68a3c9f70108520566d143ecfe63f445b7190364daf9eb0aaec0466"
+  },
+  "frontend_patch_reverse_check": "passed",
+  "chromium": "deferred by user",
+  "new_model_runs_for_checkpoint": 0
+}

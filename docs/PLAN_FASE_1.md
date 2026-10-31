@@ -2,7 +2,7 @@
 
 **Estado: cerrada y aceptada el 24/10/2026. Versión 0.3.0** de frontend, backend y paquete Python. El usuario acepta resultados parciales y límites conocidos; hará el merge manual del [PR #3 hacia main](https://github.com/ziuld/analysis-office-test/pull/3). No se publican tags, imágenes ni GitHub Release.
 
-Este es el único plan de Fase 1. Consolida el alcance final y su aceptación; las propuestas sustituidas y los registros de trabajo detallados permanecen en el [historial previo a la consolidación](https://github.com/ziuld/analysis-office-test/blob/84dcf49fde60e241a2eb83219a3d9c90b63c5bd7/docs/PLAN_FASE_1.md). No se reescriben informes ni evidencias históricas. El [MVP](../PLAN_MVP.md) conserva su cierre 0.2.0; las mejoras posteriores pertenecen exclusivamente a la [Fase 2](PLAN_FASE_2.md).
+Este es el único plan de Fase 1. Consolida el alcance final y su aceptación; las propuestas sustituidas y los registros de trabajo detallados permanecen en el [historial previo a la consolidación](https://github.com/ziuld/analysis-office-test/blob/84dcf49fde60e241a2eb83219a3d9c90b63c5bd7/docs/PLAN_FASE_1.md). No se reescriben informes ni evidencias históricas. El [MVP](../PLAN_MVP.md) conserva su cierre 0.2.0; la siguiente evolución se rige únicamente por el [plan vigente](PLAN_COORDINACION_CENTRALIZADA.md); la [Fase 2](PLAN_FASE_2.md) conserva su histórico.
 
 ## Objetivo y alcance aceptados
 

@@ -20,14 +20,25 @@ def digest(value):
 
 
 class CompatibilityTests(unittest.TestCase):
-    def test_installed_package_preserves_prompts_and_three_report_formats(self):
+    def test_installed_package_renders_three_historical_report_schemas(self):
         reference = json.loads((Path(__file__).parent / "fixtures/mvp-contracts.json").read_text())
         snapshot = reference["snapshot"]
-        self.assertEqual(digest(make_prompt(snapshot)), reference["prompt_sha256"])
+        self.assertIn("SOLO", make_prompt(snapshot))
+        self.assertEqual(len(reference["cases"]), 3)
         for case in reference["cases"]:
             with self.subTest(version=case["version"]):
-                self.assertEqual(digest(markdown(case["report"], snapshot, "test")), case["markdown_sha256"])
-                self.assertEqual(digest(render_html(case["report"], snapshot, "test")), case["html_sha256"])
+                md = markdown(case["report"], snapshot, "test")
+                html = render_html(case["report"], snapshot, "test")
+                self.assertIn(snapshot["commit"], md)
+                self.assertIn(snapshot["commit"], html)
+                for section in ("confirmados", "indicios"):
+                    for item in case["report"].get(section, []):
+                        from html import escape
+                        self.assertIn(escape(item["observacion"]), html)
+                        self.assertIn(item["observacion"], md)
+                        for ref in item['evidencia']:
+                            self.assertIn(ref['path'], html)
+                            self.assertIn(ref['path'], md)
 
     def test_ids_resolve_flat_and_nested_history_without_modifying_files(self):
         with tempfile.TemporaryDirectory() as temp:

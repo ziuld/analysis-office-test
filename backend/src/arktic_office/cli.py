@@ -119,6 +119,7 @@ def run(url, inspect_only=False, job_id=None, *, local_snapshot=None):
             from arktic_office.reporting.executive import render_html
             (output / "informe.html").write_text(render_html(data, snapshot, model), encoding="utf-8")
         print(f"Informe listo: {output}/informe.md")
+        write_json(output / 'meeting.json', {'active': False, 'run_id': output.name, 'phase': 'report_available'})
         if data["estado"] != "completo" and any(c["estado"] == "error" for c in data.get("celulas", [])):
             raise AuditError("Se guardó un informe " + data["estado"] + "; revisar las células pendientes. No equivale a una revisión completa del equipo.")
 

@@ -12,7 +12,7 @@ No se incluye una licencia elegida para nuestro código propio. El aviso de terc
 
 Repositorio: [ziuld/analysis-office-test](https://github.com/ziuld/analysis-office-test). El commit inicial del MVP ya está en `main`; las siguientes entregas se preparan en ramas `codex/` y se proponen mediante PR.
 
-Antes del commit, revisar `git diff --cached` y ejecutar `git ls-files .env reports artifacts vendor`: no debe listar archivos. `.gitignore` no retira archivos que ya estuvieran versionados. No copiar `.env`, sesiones OAuth, evidencias ni informes al repositorio.
+Antes del commit, revisar `git diff --cached` y ejecutar `git ls-files .env reports artifacts vendor`: no debe listar archivos. `.gitignore` no retira archivos que ya estuvieran versionados. No copiar `.env`, sesiones OAuth, capturas de código, resultados crudos, SQLite ni cachés al repositorio. Excepción autorizada por el usuario el 31/10/2026: seis informes renderizados HTML/Markdown y sus métricas comparativas, sin alterar los originales, en `docs/evidence/agent-comparison-2026-10-31/`. Revisar su contenido antes del push y conservar el manifiesto de huellas. Los directorios `reports/` y `artifacts/` siguen excluidos.
 
 ## Versiones independientes de la aplicación
 

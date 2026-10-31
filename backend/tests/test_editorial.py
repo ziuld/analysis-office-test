@@ -73,7 +73,7 @@ class EditorialTests(unittest.TestCase):
         self.assertEqual(edge["estado"], "inferida")
 
 
-    def test_new_generation_requires_risk_wording_but_old_records_still_validate(self):
+    def test_expert_risk_is_not_discarded_for_editorial_wording(self):
         import tempfile
         from arktic_office.coordination.team import run_team
         from test_team import snapshot as team_snapshot, fake_invoke
@@ -81,16 +81,18 @@ class EditorialTests(unittest.TestCase):
         prepare_response(json.dumps(legacy), snapshot)
         def invoke(prompt, config):
             envelope = fake_invoke(prompt, config)
-            if config['id'] == 'security':
+            if config['id'] == 'backend-security':
                 data = json.loads(envelope['report'])
                 data['confirmados'][0].update(severidad='media', control='operacion')
                 envelope['report'] = json.dumps(data)
             return envelope
         with tempfile.TemporaryDirectory() as temp:
             result = run_team(team_snapshot(), Path(temp), invoke=invoke, emit=lambda *a, **k: None)
-        self.assertEqual(result['celulas'][0]['estado'], 'error')
-        self.assertIn('título comprensible', result['celulas'][0]['error'])
-        self.assertEqual(result['estado'], 'parcial')
+        backend = next(c for c in result['celulas'] if c['id'] == 'backend-security')
+        self.assertEqual(backend['estado'], 'completada')
+        self.assertNotIn('error', backend)
+        self.assertTrue(any(x.get('severidad') == 'media' and 'backend-security' in x['celulas'] for x in result['confirmados']))
+        self.assertEqual(result['estado'], 'completo')
 
     def test_specialists_receive_one_compact_contract_and_their_role_brief(self):
         snapshot, _ = fixture()

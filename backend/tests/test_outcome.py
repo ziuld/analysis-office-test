@@ -29,7 +29,7 @@ class OutcomeTests(unittest.TestCase):
             calls.append(config["id"])
             return {"report": json.dumps(insufficient())}
         data = self.run_cells(invoke)
-        self.assertEqual(calls, ["security", "architecture", "inventory"])
+        self.assertEqual(calls, [c["id"] for c in __import__("arktic_office.coordination.team", fromlist=["CELLS"]).CELLS])
         self.assertEqual(data["estado"], INSUFFICIENT)
         self.assertTrue(all(c["estado"] == INSUFFICIENT and "error" not in c for c in data["celulas"]))
         self.assertIn("controlador", data["celulas"][0]["mensaje"])
@@ -70,7 +70,7 @@ class OutcomeTests(unittest.TestCase):
         self.assertEqual(data["estado"], "sin_resultados")
         self.assertTrue(all(c["estado"] == "error" for c in data["celulas"]))
 
-    def test_invalid_diagram_preserves_core_and_valid_editorial_blocks(self):
+    def test_expert_diagram_is_preserved_without_editorial_rejection(self):
         def invoke(prompt, config):
             envelope = fake_invoke(prompt, config)
             if config["id"] == "architecture":
@@ -82,11 +82,11 @@ class OutcomeTests(unittest.TestCase):
             return envelope
         data = self.run_cells(invoke)
         cell = data["celulas"][1]
-        self.assertEqual(cell["estado"], "parcial")
+        self.assertEqual(cell["estado"], "completada")
         self.assertNotIn("error", cell)
-        self.assertTrue(cell["advertencias"])
+        self.assertFalse(cell.get("advertencias"))
         self.assertIn("decision", data["presentacion"])
-        self.assertNotIn("flujo_actual", data["presentacion"])
+        self.assertEqual(data["presentacion"]["flujo_actual"]["componentes"][0]["id"], "invalid-id")
         self.assertTrue(any("architecture" in x["celulas"] for x in data["confirmados"]))
 
     def test_sufficiency_does_not_bypass_citation_validation(self):
@@ -128,7 +128,8 @@ class OutcomeTests(unittest.TestCase):
         self.assertTrue(set(parser.targets) <= set(parser.ids))
         self.assertNotIn("azure", parser.ids)
         self.assertNotIn("continuidad", parser.ids)
-        self.assertNotIn("### Inventario", md)
+        self.assertNotIn("### Inventario", md.split("## Aportaciones originales de los especialistas")[0])
+        self.assertIn("## Aportaciones originales de los especialistas", md)
         self.assertNotIn("### Riesgos", md)
 
     def test_sparse_report_keeps_real_risk_sources_and_no_broken_navigation(self):

@@ -37,7 +37,7 @@ class SelectionTests(unittest.TestCase):
         plans = {x["id"]: {f["path"] for f in x["files"]} for x in plan_cells(snapshot)}
         self.assertTrue({"server.php", "config/database.php", "composer.json", "app/Http/routes.php"} <= plans["architecture"])
         self.assertIn("composer.json", plans["inventory"])
-        self.assertTrue({"composer.json", "app/Http/routes.php", "app/Http/Controllers/Admin/AdminController.php"} <= plans["security"])
+        self.assertTrue({"composer.json", "app/Http/routes.php", "app/Http/Controllers/Admin/AdminController.php"} <= plans["backend-security"])
         self.assertTrue(all(plans.values()))
         for paths in plans.values():
             self.assertTrue({"composer.json", "package.json"} <= paths)
@@ -63,9 +63,14 @@ class SelectionTests(unittest.TestCase):
         controls = [{"id": key, "estado": "no_evaluado", "motivo": "Falta revisar la lógica de negocio.", "evidencia": []} for key in CONTROLS]
         data = {"schema_version": 3, "estado": "parcial", "confirmados": [], "indicios": [], "dudas": [], "controles": controls, "celulas": []}
         for value in (render_html(data, snapshot), render_markdown(data, snapshot)):
-            self.assertIn("Evaluación pendiente en:", value)
+            self.assertTrue("Dominios pendientes:" in value or "Evaluación pendiente en:" in value)
+            for name in CONTROLS.values():
+                self.assertIn(name, value)
             self.assertIn("No hay información validada suficiente", value)
-            self.assertNotIn("Falta revisar la lógica de negocio.", value)
+            if value.startswith('<!doctype'):
+                self.assertNotIn("Falta revisar la lógica de negocio.", value)
+            else:
+                self.assertIn("Falta revisar la lógica de negocio.", value)
 
 
 if __name__ == "__main__":

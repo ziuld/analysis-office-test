@@ -34,7 +34,7 @@ def answers(role):
 
 
 class QuestionnaireTests(unittest.TestCase):
-    def test_favorable_implementations_need_sources_and_survive_rendering(self):
+    def test_expert_favorable_implementations_survive_without_automatic_review(self):
         snapshot, _ = fixture()
         items = answers("security")
         items[0]["aspecto_favorable"] = {"titulo": "Control de tamaño <seguro>", "detalle": "El flujo revisado limita el tamaño antes del envío."}
@@ -53,8 +53,8 @@ class QuestionnaireTests(unittest.TestCase):
         self.assertIn("Protecciones y buenas prácticas comprobadas", md)
         items[0].update(evidencia=[], herramientas=["D02"])
         report, _, warnings = compose(json.dumps(raw), snapshot, "security")
-        self.assertNotIn("aspecto_favorable", report["respuestas"][0])
-        self.assertTrue(any("aspecto favorable" in w for w in warnings))
+        self.assertEqual(report["respuestas"][0]["aspecto_favorable"], items[0]["aspecto_favorable"])
+        self.assertFalse(warnings)
 
     def test_clean_tools_do_not_create_favorable_summary_and_summary_caps_at_five(self):
         snapshot, _ = fixture()
@@ -69,7 +69,7 @@ class QuestionnaireTests(unittest.TestCase):
         self.assertEqual(summary.count('<li>'), 5)
         self.assertEqual(html.count('class="reading-good"'), 7)
 
-    def test_catalog_and_invalid_or_missing_answers_never_disappear(self):
+    def test_catalog_and_expert_states_survive_unlocated_references(self):
         self.assertEqual([q["id"] for q in catalog()], [f"Q{n:02}" for n in range(1, 41)])
         snapshot, _ = fixture()
         value = {"observaciones": [], "respuestas": answers("inventory")}
@@ -77,9 +77,10 @@ class QuestionnaireTests(unittest.TestCase):
         value["respuestas"][1].update(estado="no_aplica", evidencia=[], herramientas=[])
         value["respuestas"][2]["herramientas"] = ["D99"]
         report, _, warnings = compose(json.dumps(value), snapshot, "inventory")
-        self.assertEqual(len(report["respuestas"]), 4)
-        self.assertTrue(all(a["estado"] == "no_comprobado" for a in report["respuestas"][:3]))
-        self.assertTrue(warnings)
+        self.assertEqual(len(report["respuestas"]), 3)
+        self.assertEqual([a["estado"] for a in report["respuestas"]], [a["estado"] for a in value["respuestas"]])
+        self.assertEqual(report["respuestas"][0]["referencias_originales"], ["F1:L99"])
+        self.assertFalse(warnings)
         self.assertIn("CUESTIONARIO OBLIGATORIO", prompt(snapshot, {"id": "inventory", "capabilities": []}))
 
     def test_full_flow_hands_all_answers_to_coordinator_and_renders_all_outputs(self):
@@ -96,8 +97,14 @@ class QuestionnaireTests(unittest.TestCase):
                         self.assertIn(q["id"], message)
                 result = {"respuestas": [{"id": q["id"], "respuesta": "Conclusión limitada a lo revisado; quedan comprobaciones pendientes.", "aportaciones": ["Q04", "Q23"]} for q in catalog("coordinator")]}
             elif calls[role] == 1:
+                self.assertNotIn('Hay una instrucción Python en la fuente entregada.', message)
                 result = {"queries": [{"tool": "D02"}, {"query": "main"}, {"paths": ["app.py"]}]}
+                if role != 'inventory':
+                    result['queries'].append({'questions':['Q04']})
             else:
+                if role != 'inventory':
+                    self.assertIn('"author": "inventory"', message)
+                    self.assertIn('Hay una instrucción Python en la fuente entregada.', message)
                 result = {"observaciones": [], "respuestas": answers(role)}
             return {"report": json.dumps(result), "usage": {"api_calls": 1}}
         with tempfile.TemporaryDirectory() as folder, patch.dict(os.environ, {"AUDIT_COORDINATION_MODE": "ai"}):
@@ -109,7 +116,7 @@ class QuestionnaireTests(unittest.TestCase):
         html = render_html(data, snapshot)
         markdown = render_markdown(data, snapshot)
         for q in catalog():
-            self.assertIn(q["id"], html)
+            self.assertIn('id="' + q["id"] + '"', html)
             self.assertIn(q["id"], markdown)
         for tool in snapshot["deterministic_results"]["tools"]:
             self.assertIn('id="' + tool["id"] + '"', html)
@@ -131,7 +138,7 @@ class QuestionnaireTests(unittest.TestCase):
         self.assertEqual(len(data["cuestionario"]["respuestas"]), 40)
         self.assertTrue(all(a["estado"] == "no_comprobado" for a in data["cuestionario"]["respuestas"]))
 
-    def test_tool_paging_and_masking_preserve_limits(self):
+    def test_tool_paging_preserves_limits_and_original_values(self):
         snapshot, evidence = fixture()
         evidence.deterministic["tools"][1]["result"]["findings"] *= 45
         first = evidence.lookup({"tool": "D02"})
@@ -141,7 +148,7 @@ class QuestionnaireTests(unittest.TestCase):
         self.assertIn("error", evidence.respond({"tool": "D99"}))
         self.assertIn("error", evidence.respond({"tool": "D02", "offset": -1}))
         from arktic_office.reporting.deterministic import safe
-        self.assertEqual(safe({"Secret": "real-value"})["Secret"], "[VALOR OCULTO]")
+        self.assertEqual(safe({"Secret": "real-value"})["Secret"], "real-value")
 
     def test_summary_citations_are_grouped_and_historical_markdown_is_unchanged(self):
         from arktic_office.reporting.questionnaire_view import compact_sources, markdown

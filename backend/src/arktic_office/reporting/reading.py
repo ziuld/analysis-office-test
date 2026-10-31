@@ -15,6 +15,13 @@ GROUPS = (
 MAX_EXECUTIVE_RISKS = 10
 
 
+def authors(item):
+    from arktic_office.coordination.catalog import catalog
+    names = {p['id']: p['person'] + ' · ' + p['name'] for p in catalog()}
+    names['security'] = 'Seguridad (histórico)'
+    return ', '.join(names.get(a, a) for a in item.get('celulas', [])) or 'Autor no registrado en el resultado guardado.'
+
+
 def render_markdown(data, snapshot, model=''):
     from arktic_office.reporting.brief import text, references
     from arktic_office.reporting.executive import risks
@@ -32,11 +39,15 @@ def render_markdown(data, snapshot, model=''):
         lines += ['', 'No se han identificado riesgos con evidencia suficiente en el alcance revisado. Esto no descarta problemas en los puntos que quedaron sin comprobar.']
     for n, item in enumerate(selected, 1):
         lines += ['', f'#### R{n:02} · ' + text(item.get('titulo') or item['observacion']), '', text(item['observacion'])]
+        if item.get('tipo'):
+            lines += ['', 'Tipo de riesgo: ' + {'coste':'Coste', 'vulnerabilidad':'Vulnerabilidad', 'operacion':'Operación'}[item['tipo']]]
+        lines += ['', 'Autoría: ' + text(authors(item))]
         for label, field in (('Consecuencia posible', 'importancia'), ('De qué depende', 'condiciones'), ('Qué queda por comprobar', 'pendiente')):
             if item.get(field):
                 lines += ['', label + ': ' + text(item[field])]
         lines += ['', 'Fuentes: ' + references(item, snapshot)]
-    return '\n'.join(lines) + '\n' + markdown(data, snapshot)
+    from arktic_office.reporting.originals import markdown as original_markdown
+    return '\n'.join(lines) + '\n' + markdown(data, snapshot) + original_markdown(data)
 
 
 def unreviewed_scope(data, snapshot):
@@ -106,16 +117,18 @@ def render_html(data, snapshot, model=""):
     conclusion = '<section class="panel reading-panel"><h3>Hallazgos clave y riesgos</h3>'
     conclusion += paragraph("Q01") or '<p>No se recibió una síntesis respaldada. Los resultados disponibles y sus límites se conservan en el análisis detallado.</p>'
     selected = ordered[:MAX_EXECUTIVE_RISKS]
-    security = [x for x in selected if "security" in x.get("celulas", []) or any(isinstance(a, dict) and a.get("celula") == "security" for a in x.get("aportaciones", []))]
-    other = [x for x in selected if x not in security]
-    for label, values in (("Hallazgos de seguridad", security), ("Otros riesgos identificados", other)):
+    security_roles = {'security', 'identity', 'frontend-security', 'backend-security'}
+    costs = [x for x in selected if x.get('tipo') == 'coste']
+    security = [x for x in selected if x not in costs and (x.get('tipo') == 'vulnerabilidad' or security_roles.intersection(x.get('celulas', [])))]
+    other = [x for x in selected if x not in security and x not in costs]
+    for label, values in (("Hallazgos de seguridad", security), ("Riesgos de coste", costs), ("Otros riesgos identificados", other)):
         if not values and label != "Hallazgos de seguridad":
             continue
         conclusion += '<h4>' + label + '</h4>'
         if values:
             conclusion += '<ul class="risk-overview">' + ''.join('<li>' + marker(x) + f'<a href="#{x["id"]}">{x["id"]} · {h(name(x))}</a></li>' for x in values) + '</ul>'
         else:
-            conclusion += '<p>No se documentaron hallazgos de seguridad validados. Las detecciones de los escáneres pueden consultarse en los anexos.</p>'
+            conclusion += '<p>No se documentaron hallazgos de seguridad comunicados por los especialistas. Las detecciones de los escáneres pueden consultarse en los anexos.</p>'
     conclusion += proof(answers.get("Q01", {"evidencia": []}), "conclusiones-resumen") + '</section>'
     legend = '<p class="severity-legend" aria-label="Colores de gravedad">' + ' '.join(marker({"severidad": key}) + '<span>' + label + '</span>' for key, label in (("critica", "Crítica"), ("alta", "Alta"), ("media", "Media"), ("baja", "Baja"))) + '</p>'
     risk_section = '<section id="riesgos-principales" class="section"><h3>Principales riesgos identificados</h3>' + legend
@@ -123,8 +136,12 @@ def render_html(data, snapshot, model=""):
         risk_section += '<div class="panel"><p>No se han identificado riesgos con evidencia suficiente en el alcance revisado. Esto no descarta problemas en los puntos que quedaron sin comprobar.</p></div>'
     for item in selected:
         certainty = "Observado en código" if item["certeza"] == "confirmados" else "Indicio pendiente de comprobar"
+        certainty = h(item.get("certeza_original",certainty))
         risk_section += f'<article id="{item["id"]}" class="panel reading-risk {h(item["severidad"])}"><div class="risk-meta">' + marker(item) + '<span class="risk-certainty">' + certainty + '</span></div>'
         risk_section += '<h4>' + h(item["id"] + " · " + name(item)) + '</h4><p>' + h(item["observacion"]) + '</p>'
+        risk_section += '<p class="mini">Autoría: ' + h(authors(item)) + '</p>'
+        if item.get('tipo'):
+            risk_section += '<p>Tipo de riesgo: ' + h({'coste':'Coste', 'vulnerabilidad':'Vulnerabilidad', 'operacion':'Operación'}.get(item['tipo'],item['tipo'])) + '</p>'
         if item.get("importancia"):
             risk_section += '<p><b>Consecuencia posible.</b> ' + h(item["importancia"]) + '</p>'
         if item.get("condiciones"):
@@ -134,6 +151,7 @@ def render_html(data, snapshot, model=""):
         risk_section += proof(item, item["id"]) + '</article>'
     risk_section += '</section>'
     from arktic_office.reporting.questionnaire import favorable_answers
+    original_policy = data.get("recepcion") == "sin_revision_automatica"
     favorable = '<section id="protecciones-comprobadas" class="panel reading-panel reading-strengths"><h3>Protecciones y buenas prácticas comprobadas</h3>'
     strengths = favorable_answers(data)[:5]
     if strengths:
@@ -144,6 +162,8 @@ def render_html(data, snapshot, model=""):
         favorable += '</ul>'
     else:
         favorable += '<p>Esta revisión no documentó protecciones o buenas prácticas con respaldo suficiente para destacarlas. Esto no significa que la aplicación carezca de ellas.</p>'
+    if original_policy:
+        favorable = favorable.replace("Protecciones y buenas prácticas comprobadas", "Protecciones descritas por los especialistas").replace("Implementaciones comprobadas en las fuentes revisadas.", "Aportaciones originales de los especialistas, sin segunda revisión automática.")
     favorable += '</section>'
     omissions = unreviewed_scope(data, snapshot)
     limits = '<section id="pendientes-validar" class="reading-limits"><h3>Pendientes de validar</h3><ul>' + ''.join('<li>' + h(x) + '</li>' for x in omissions) + '</ul></section>' if omissions else ""
@@ -181,4 +201,5 @@ def render_html(data, snapshot, model=""):
     script = (assets / 'report-navigation.js').read_text(encoding='utf-8')
     banner = '<div class="demo"><div class="wrap">' + ('FUENTES FICTICIAS · ' if snapshot.get("simulation") else '') + 'Resultados vinculados al commit revisado. Las conclusiones respetan el alcance de la evidencia disponible.</div></div>'
     footer = '<footer><div class="corporate-footer"><span>ARKTIC OFFICE / TECNOLOGÍA Y CIBERSEGURIDAD</span><img class="footer-logo" src="' + logo + '" alt="Arktic"></div><p>Fuentes, respuestas originales y resultados de herramientas conservados para su revisión.</p></footer>'
-    return '<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' + h(title) + ' · Informe Arktic</title><style>' + css + '</style></head><body class="reading-report">' + banner + hero + nav + '<main class="wrap">' + executive + questions + annexes + footer + '</main><script id="arktic-report-navigation">' + script + '</script></body></html>'
+    from arktic_office.reporting.originals import html as original_html
+    return '<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' + h(title) + ' · Informe Arktic</title><style>' + css + '</style></head><body class="reading-report">' + banner + hero + nav + '<main class="wrap">' + executive + questions + annexes + original_html(data) + footer + '</main><script id="arktic-report-navigation">' + script + '</script></body></html>'

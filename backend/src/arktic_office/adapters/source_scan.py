@@ -5,7 +5,7 @@ import subprocess
 import time
 from arktic_office.resources.paths import resource_path
 
-EXTENSIONS = {".py", ".js", ".jsx", ".ts", ".tsx", ".java", ".cs"}
+EXTENSIONS = {".py", ".js", ".jsx", ".ts", ".tsx", ".java", ".cs", ".php", ".go"}
 
 def scan_source(safe, root, runner):
     started = time.monotonic()
@@ -21,7 +21,7 @@ def scan_source(safe, root, runner):
     # Override default exclusions; never honor target .semgrepignore/config.
     (source / ".semgrepignore").write_text("", encoding="utf-8")
     item = {"name": "Semgrep 1.182.1", "status": "no_evaluado", "findings": [], "input_files": inputs,
-            "detail": "Reglas locales acotadas para Python, JavaScript/TypeScript, Java y C#. Sin análisis exhaustivo ni explotación probada."}
+            "detail": "Reglas locales acotadas para Python, JavaScript/TypeScript, Java, C#, PHP y Go. Sin análisis exhaustivo ni explotación probada."}
     if inputs:
         try:
             output = root / "semgrep.json"

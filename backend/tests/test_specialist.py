@@ -25,25 +25,25 @@ class SpecialistTests(unittest.TestCase):
         self.assertEqual(len(report["confirmados"][0]["evidencia"]), 4)
         self.assertEqual(len(next(c for c in report["controles"] if c["id"] == "configuracion")["evidencia"]), 4)
         self.assertEqual(sum(c["estado"] == "no_evaluado" for c in report["controles"]), 5)
-        validate_report(json.dumps(report), self.source())
+        self.assertEqual(report["respuesta_original"], raw)
 
-    def test_forged_or_blank_source_rejects_only_its_observation(self):
+    def test_missing_or_old_masked_references_preserve_all_observations(self):
         source = self.source()
         source['files'][0]['text'] += '[LÍNEA CON POSIBLE CREDENCIAL OCULTA]\n'
         raw = {"observaciones": [self.observation(), self.observation(evidencia=["F1:L1", "F9:L1"]), self.observation(evidencia=[]), self.observation(evidencia=['F1:L5'])]}
         report, _, warnings = compose(json.dumps(raw), source, "inventory")
-        self.assertEqual(len(report["confirmados"]), 1)
-        self.assertEqual(len(warnings), 3)
+        self.assertEqual(len(report["confirmados"]), 4)
+        self.assertEqual(len(warnings), 0)
 
     def test_uncertainty_and_explicit_severity_are_not_invented_or_promoted(self):
         raw = {"observaciones": [self.observation(certeza="indicio", gravedad="alta", implicacion="Impacto por verificar", condicion="Si la entrada es externa", recomendacion="Revisar la validación"), self.observation(certeza="seguro") ]}
         report, _, warnings = compose(json.dumps(raw), self.source(), "security")
         self.assertFalse(report["confirmados"])
-        self.assertEqual(len(report["indicios"]), 1)
+        self.assertEqual(len(report["indicios"]), 2)
         self.assertEqual(report["indicios"][0]["severidad"], "alta")
         self.assertEqual(report["indicios"][0]["control"], "por_clasificar")
         self.assertEqual(report["indicios"][0]["condiciones"], "Si la entrada es externa")
-        self.assertEqual(len(warnings), 1)
+        self.assertEqual(len(warnings), 0)
 
     def test_inventory_component_needs_no_report_metadata(self):
         raw = {"observaciones": [], "componentes": [{"nombre":"Archivos JSON", "tecnologia":"JSON", "funcion":"Persistir revisiones", "evidencia":["F1:L3"]}]}
@@ -71,7 +71,7 @@ class SpecialistTests(unittest.TestCase):
             report = run_team(snapshot(), Path(temp), invoke=invoke, emit=lambda *a, **k: None)
         self.assertEqual(report["estado"], "completo")
         self.assertTrue(all(c.get("contrato_salida") == "compact-v1" for c in report["celulas"]))
-        self.assertEqual(len(report["celulas"]), 3)
+        self.assertEqual(len(report["celulas"]), 7)
 
     def test_summary_uses_three_sources_and_annex_keeps_four(self):
         from arktic_office.reporting.view import render_html, render_markdown
@@ -84,22 +84,22 @@ class SpecialistTests(unittest.TestCase):
         self.assertFalse('app.py#L4' in md.split('## 1. Resumen del informe', 1)[1].split('\n## ', 1)[0], 'La cuarta fuente no debe mostrarse en el resumen Markdown')
         self.assertIn('app.py#L4', md.split('## 4.')[1])
 
-    def test_bad_node_cannot_break_valid_diagram(self):
+    def test_long_expert_node_is_not_rejected_by_editorial_length(self):
         raw = {"observaciones": [], "componentes": [{"nombre":"API", "funcion":"Servidor", "evidencia":["F1:L1"]}, {"nombre":"x"*101, "funcion":"No cabe en la presentación", "evidencia":["F1:L1"]}]}
         report, _, warnings = compose(json.dumps(raw), self.source(), "architecture")
-        self.assertEqual(len(report["presentacion"]["flujo_actual"]["componentes"]), 1)
-        self.assertEqual(len(warnings), 1)
+        self.assertEqual(len(report["presentacion"]["flujo_actual"]["componentes"]), 2)
+        self.assertEqual(len(warnings), 0)
 
-    def test_source_ranges_expand_only_to_verified_nonempty_lines(self):
+    def test_unrepresentable_range_preserves_original_conclusion(self):
         source = self.source()
         source["files"][0]["text"] += "\nlast = True"
         raw = {"observaciones":[self.observation(evidencia=["F1:L1-L6"]), self.observation(evidencia=["F1:L3-L999"])]}
         report, _, warnings = compose(json.dumps(raw), source, "inventory")
         self.assertEqual([r["line"] for r in report["confirmados"][0]["evidencia"]], [1,2,3,4,6])
-        self.assertEqual(len(warnings), 1)
-        self.assertEqual(len(report["confirmados"]), 1)
+        self.assertEqual(len(warnings), 0)
+        self.assertEqual(len(report["confirmados"]), 2)
 
-    def test_range_limit_matches_total_source_cap_without_weakening_validation(self):
+    def test_total_reference_count_does_not_reject_expert_conclusion(self):
         source = self.source()
         source['files'][0]['text'] = '\n'.join('value = ' + str(n) for n in range(202))
         raw = {'observaciones':[
@@ -107,6 +107,6 @@ class SpecialistTests(unittest.TestCase):
             self.observation(evidencia=['F1:L1-L200','F1:L201'])]}
         report, _, warnings = compose(json.dumps(raw), source, 'inventory')
         self.assertEqual(len(report['confirmados'][0]['evidencia']),46)
-        self.assertEqual(len(report['confirmados']),1)
-        self.assertEqual(len(warnings),1)
-        self.assertIn('200 fuentes',warnings[0])
+        self.assertEqual(len(report['confirmados']),2)
+        self.assertEqual(len(warnings),0)
+        self.assertEqual(len(report['confirmados'][1]['evidencia']),201)

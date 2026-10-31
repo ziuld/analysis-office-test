@@ -115,13 +115,13 @@ class AzureProposalTests(unittest.TestCase):
             return envelope
         with tempfile.TemporaryDirectory() as temp:
             data = run_team(snapshot(), Path(temp), invoke, emit=lambda *a, **k: None)
-        self.assertEqual(calls, ["security", "architecture", "inventory"])
-        self.assertEqual(data["estado"], "parcial")
+        self.assertEqual(calls, [c["id"] for c in __import__("arktic_office.coordination.team", fromlist=["CELLS"]).CELLS])
+        self.assertEqual(data["estado"], "completo")
         self.assertNotIn("propuesta_azure", data)
-        self.assertEqual(data["celulas"][1]["estado"], "parcial")
+        self.assertEqual(data["celulas"][1]["estado"], "completada")
         self.assertTrue(any("architecture" in x["celulas"] for x in data["confirmados"]))
 
-    def test_invalid_azure_keeps_valid_core_without_retry(self):
+    def test_unlocated_azure_reference_preserves_original_without_retry(self):
         calls = []
         def invoke(prompt, config):
             calls.append(config["id"])
@@ -135,15 +135,16 @@ class AzureProposalTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             data = run_team(snapshot(), Path(temp), invoke, emit=lambda *a, **k: None)
             saved = json.loads((Path(temp) / "celulas/architecture.json").read_text())
-        self.assertEqual(calls, ["security", "architecture", "inventory"])
-        self.assertEqual(data["estado"], "parcial")
-        self.assertEqual(saved["estado"], "parcial")
+        self.assertEqual(calls, [c["id"] for c in __import__("arktic_office.coordination.team", fromlist=["CELLS"]).CELLS])
+        self.assertEqual(data["estado"], "completo")
+        self.assertEqual(saved["estado"], "completada")
         self.assertIn("resultado", saved)
-        self.assertNotIn("propuesta_azure", saved["resultado"])
-        self.assertIn("No se reintentó", saved["mensaje"])
+        self.assertIn("propuesta_azure", saved["resultado"])
+        self.assertEqual(saved["resultado"]["respuesta_original"]["propuesta_azure"]["evidencia"], ["F99:L1"])
+        self.assertFalse(saved.get("advertencias"))
         self.assertNotIn("error", saved)
 
-    def test_bad_core_is_not_rescued_by_omitting_azure(self):
+    def test_unlocated_expert_source_does_not_discard_its_conclusion(self):
         def invoke(prompt, config):
             envelope = fake_invoke(prompt, config)
             if config["id"] == "architecture":
@@ -154,8 +155,8 @@ class AzureProposalTests(unittest.TestCase):
             return envelope
         with tempfile.TemporaryDirectory() as temp:
             data = run_team(snapshot(), Path(temp), invoke, emit=lambda *a, **k: None)
-        self.assertEqual(data["celulas"][1]["estado"], "error")
-        self.assertFalse(any("architecture" in x["celulas"] for x in data["confirmados"]))
+        self.assertEqual(data["celulas"][1]["estado"], "completada")
+        self.assertTrue(any("architecture" in x["celulas"] for x in data["confirmados"]))
 
 
 if __name__ == "__main__":

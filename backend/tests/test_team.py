@@ -32,7 +32,7 @@ def fake_invoke(prompt, config):
     data = report(observation(config["name"] + " observó el archivo.", file["path"], 1, file["text"].splitlines()[0]))
     data["schema_version"] = 3
     from arktic_office.reporting.security import CONTROLS
-    data["controles"] = [{"id": key, "estado": "no_evaluado", "motivo": "Sin contexto", "evidencia": []} for key in CONTROLS] if config["id"] == "security" else []
+    data["controles"] = [{"id": key, "estado": "no_evaluado", "motivo": "Sin contexto", "evidencia": []} for key in CONTROLS] if config["id"] == "backend-security" else []
     data["confirmados"][0].update(severidad="informativa", control="contexto", accion="Revisar entorno", condiciones="Solo codigo")
     data["confirmados"][0].update(tema="arranque", importancia="Permite identificar el arranque declarado.", pendiente="Comprobar el entorno real.")
     if config["id"] == "architecture":
@@ -84,10 +84,10 @@ class TeamTests(unittest.TestCase):
             self.assertLessEqual(cell["bytes"], limits["bytes"])
         inventory = next(c for c in plan if c["id"] == "inventory")
         self.assertNotIn("auth.py", [f["path"] for f in inventory["files"]])
-        security = next(c for c in plan if c["id"] == "security")
+        security = next(c for c in plan if c["id"] == "backend-security")
         self.assertEqual(security["files"][0]["path"], "auth.py")
 
-    def test_three_cells_produce_a_single_complete_report(self):
+    def test_seven_cells_produce_a_single_complete_report(self):
         calls = []
         def invoke(prompt, config):
             calls.append(config["id"])
@@ -97,9 +97,9 @@ class TeamTests(unittest.TestCase):
             data = run_team(snapshot(), path, invoke=invoke, emit=lambda *a, **k: None)
             self.assertEqual(calls, [c["id"] for c in CELLS])
             self.assertEqual(data["estado"], "completo")
-            self.assertEqual(len(data["confirmados"]), 3)
+            self.assertEqual(len(data["confirmados"]), 7)
             self.assertEqual(json.loads((path / "estado.json").read_text())["estado"], "completo")
-            self.assertEqual(len(list((path / "celulas").glob("*.json"))), 3)
+            self.assertEqual(len(list((path / "celulas").glob("*.json"))), 7)
 
     def test_cell_failure_preserves_other_results_without_retry(self):
         calls = []
@@ -110,21 +110,21 @@ class TeamTests(unittest.TestCase):
             return fake_invoke(prompt, config)
         with tempfile.TemporaryDirectory() as temp:
             data = run_team(snapshot(), Path(temp), invoke=invoke, emit=lambda *a, **k: None)
-        self.assertEqual(calls, ["security", "architecture", "inventory"])
+        self.assertEqual(calls, [c["id"] for c in __import__("arktic_office.coordination.team", fromlist=["CELLS"]).CELLS])
         self.assertEqual(data["estado"], "parcial")
-        self.assertEqual(len(data["confirmados"]), 2)
+        self.assertEqual(len(data["confirmados"]), 6)
         self.assertEqual(data["celulas"][1]["estado"], "error")
 
-    def test_cell_cannot_cite_unseen_global_file(self):
+    def test_expert_citation_is_attributed_without_discarding_its_answer(self):
         def invoke(prompt, config):
             if config["id"] == "inventory":
                 return {"report": json.dumps(report(observation("Inventado", "auth.py", 1, "require_login = True")))}
             return fake_invoke(prompt, config)
         with tempfile.TemporaryDirectory() as temp:
             data = run_team(snapshot(), Path(temp), invoke=invoke, emit=lambda *a, **k: None)
-        self.assertEqual(data["estado"], "parcial")
-        self.assertEqual(data["celulas"][2]["estado"], "error")
-        self.assertFalse(any(x["observacion"] == "Inventado" for x in data["confirmados"]))
+        self.assertEqual(data["estado"], "completo")
+        self.assertEqual(next(c for c in data["celulas"] if c["id"] == "inventory")["estado"], "completada")
+        self.assertTrue(any(x["observacion"] == "Inventado" for x in data["confirmados"]))
 
     def test_empty_inventory_skips_model_and_marks_partial(self):
         value = snapshot()
@@ -137,7 +137,7 @@ class TeamTests(unittest.TestCase):
             data = run_team(value, Path(temp), invoke=invoke, emit=lambda *a, **k: None)
         self.assertNotIn("inventory", calls)
         self.assertEqual(data["estado"], "parcial")
-        self.assertEqual(data["celulas"][2]["estado"], "informacion_insuficiente")
+        self.assertEqual(next(c for c in data["celulas"] if c["id"] == "inventory")["estado"], "informacion_insuficiente")
 
     def test_duplicates_keep_origins_and_uncertainty_is_not_promoted(self):
         first = report(observation("Declara Node."))

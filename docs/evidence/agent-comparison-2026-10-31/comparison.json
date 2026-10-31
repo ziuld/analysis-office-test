@@ -1,0 +1,518 @@
+{
+  "same_commit": "4ae82b4097b3b01360bd8c6fb6d779b210f50564",
+  "same_inventory": true,
+  "same_models_and_runtime": true,
+  "same_40_questions": true,
+  "runs": [
+    {
+      "id": "2697cb5e-b168-41f1-a5bd-714b7ba0d9ff",
+      "state": "parcial",
+      "runtime": {
+        "provider": "openai-codex",
+        "model": "gpt-6.1-sol",
+        "reasoning": "medium",
+        "max_output_tokens": 8000
+      },
+      "calls": 19,
+      "usage": {
+        "input_tokens": 692377,
+        "output_tokens": 16707,
+        "total_tokens": 709084
+      },
+      "duration_seconds": 708.818,
+      "duration_source": "file timestamp; approximate",
+      "published_states": {
+        "parcial": 23,
+        "respondida": 12,
+        "no_comprobado": 5
+      },
+      "archived_raw_expert_states": {
+        "respondida": 12,
+        "parcial": 24,
+        "no_comprobado": 1
+      },
+      "archived_raw_expert_count": 37,
+      "risks": {
+        "confirmados": 1,
+        "indicios": 0
+      },
+      "unique_paths_read": 94,
+      "lookups": {
+        "path_index": 2,
+        "code": 53,
+        "with_graph_symbols_or_relations": 40
+      },
+      "agents": [
+        {
+          "id": "architecture",
+          "estado": "parcial",
+          "calls": 5,
+          "usage": {
+            "input_tokens": 167492,
+            "output_tokens": 5478,
+            "reasoning_tokens": 184,
+            "api_calls": 5,
+            "total_tokens": 172970
+          },
+          "duration_seconds": null,
+          "bytes": 103583,
+          "error": null
+        },
+        {
+          "id": "inventory",
+          "estado": "parcial",
+          "calls": 6,
+          "usage": {
+            "input_tokens": 239230,
+            "output_tokens": 3934,
+            "reasoning_tokens": 308,
+            "api_calls": 6,
+            "total_tokens": 243164
+          },
+          "duration_seconds": null,
+          "bytes": 115004,
+          "error": null
+        },
+        {
+          "id": "security",
+          "estado": "parcial",
+          "calls": 6,
+          "usage": {
+            "input_tokens": 267451,
+            "output_tokens": 6328,
+            "reasoning_tokens": 322,
+            "api_calls": 6,
+            "total_tokens": 273779
+          },
+          "duration_seconds": null,
+          "bytes": 130170,
+          "error": null
+        }
+      ],
+      "prompt_bytes": null,
+      "repeated_line_bytes": null,
+      "limits": null,
+      "stop_reason": null,
+      "preparation_cache": {
+        "status": "reused",
+        "key": "567c1b9c34d9d8f74d9be03289d3ac296af800372f318107c5165c31b8991733",
+        "prepared_at": "2026-10-29T15:59:40.985040+00:00"
+      },
+      "scanners": [
+        {
+          "name": "Gitleaks 8.30.1",
+          "status": "detecciones_por_validar",
+          "findings": 2
+        },
+        {
+          "name": "OSV-Scanner 2.7.0",
+          "status": "detecciones_por_validar",
+          "findings": 87
+        },
+        {
+          "name": "Semgrep 1.182.1",
+          "status": "detecciones_por_validar",
+          "findings": 1
+        }
+      ]
+    },
+    {
+      "id": "1df56a5f-6b84-478c-a0af-0a6fec12df1b",
+      "state": "parcial",
+      "runtime": {
+        "provider": "openai-codex",
+        "model": "gpt-6.1-sol",
+        "reasoning": "medium",
+        "max_output_tokens": 8000
+      },
+      "calls": 31,
+      "usage": {
+        "input_tokens": 1165061,
+        "output_tokens": 24259,
+        "total_tokens": 1189320
+      },
+      "duration_seconds": 1043.915,
+      "duration_source": "monotonic ledger",
+      "published_states": {
+        "parcial": 24,
+        "no_comprobado": 12,
+        "respondida": 4
+      },
+      "archived_raw_expert_states": {
+        "respondida": 8,
+        "parcial": 25,
+        "no_comprobado": 1
+      },
+      "archived_raw_expert_count": 34,
+      "risks": {
+        "confirmados": 1,
+        "indicios": 0
+      },
+      "unique_paths_read": 100,
+      "lookups": {
+        "path_index": 6,
+        "errors": 2,
+        "code": 79,
+        "with_graph_symbols_or_relations": 61,
+        "tools": 1
+      },
+      "agents": [
+        {
+          "id": "architecture",
+          "estado": "parcial",
+          "calls": 4,
+          "usage": {
+            "input_tokens": 91698,
+            "reasoning_tokens": 22,
+            "api_calls": 4,
+            "total_tokens": 94842,
+            "output_tokens": 3144
+          },
+          "duration_seconds": 135.627,
+          "bytes": 47332,
+          "error": null
+        },
+        {
+          "id": "backend-security",
+          "estado": "parcial",
+          "calls": 5,
+          "usage": {
+            "input_tokens": 270832,
+            "reasoning_tokens": 190,
+            "api_calls": 5,
+            "total_tokens": 274622,
+            "output_tokens": 3790
+          },
+          "duration_seconds": 173.516,
+          "bytes": 90235,
+          "error": null
+        },
+        {
+          "id": "data",
+          "estado": "parcial",
+          "calls": 4,
+          "usage": {
+            "input_tokens": 145263,
+            "reasoning_tokens": 84,
+            "api_calls": 4,
+            "total_tokens": 148275,
+            "output_tokens": 3012
+          },
+          "duration_seconds": 119.463,
+          "bytes": 81404,
+          "error": null
+        },
+        {
+          "id": "devops",
+          "estado": "parcial",
+          "calls": 4,
+          "usage": {
+            "input_tokens": 211289,
+            "reasoning_tokens": 224,
+            "api_calls": 4,
+            "total_tokens": 214834,
+            "output_tokens": 3545
+          },
+          "duration_seconds": 152.065,
+          "bytes": 66807,
+          "error": null
+        },
+        {
+          "id": "frontend-security",
+          "estado": "parcial",
+          "calls": 4,
+          "usage": {
+            "input_tokens": 138436,
+            "reasoning_tokens": 118,
+            "api_calls": 4,
+            "total_tokens": 140724,
+            "output_tokens": 2288
+          },
+          "duration_seconds": 118.756,
+          "bytes": 72233,
+          "error": null
+        },
+        {
+          "id": "identity",
+          "estado": "parcial",
+          "calls": 4,
+          "usage": {
+            "input_tokens": 180806,
+            "reasoning_tokens": 276,
+            "api_calls": 4,
+            "total_tokens": 184054,
+            "output_tokens": 3248
+          },
+          "duration_seconds": 137.986,
+          "bytes": 68221,
+          "error": null
+        },
+        {
+          "id": "inventory",
+          "estado": "parcial",
+          "calls": 4,
+          "usage": {
+            "input_tokens": 105287,
+            "reasoning_tokens": 298,
+            "api_calls": 4,
+            "total_tokens": 108741,
+            "output_tokens": 3454
+          },
+          "duration_seconds": 123.251,
+          "bytes": 48956,
+          "error": null
+        }
+      ],
+      "prompt_bytes": 4213464,
+      "repeated_line_bytes": 1946976,
+      "limits": {
+        "calls": 31,
+        "output_tokens": 244000,
+        "seconds": 7440,
+        "context_bytes": 8000000
+      },
+      "stop_reason": null,
+      "preparation_cache": {
+        "status": "generated",
+        "key": "f2e830e26a4b84723fa63d19dc5cf327183a53c03b4f6f061239098b1e6266a7",
+        "prepared_at": "2026-10-30T14:36:40.420132+00:00"
+      },
+      "scanners": [
+        {
+          "name": "Gitleaks 8.30.1",
+          "status": "detecciones_por_validar",
+          "findings": 2
+        },
+        {
+          "name": "OSV-Scanner 2.7.0",
+          "status": "detecciones_por_validar",
+          "findings": 87
+        },
+        {
+          "name": "Semgrep 1.182.1",
+          "status": "detecciones_por_validar",
+          "findings": 1
+        }
+      ]
+    },
+    {
+      "id": "813716cc-477b-4a4b-9795-a231973a4b9f",
+      "state": "parcial",
+      "runtime": {
+        "provider": "openai-codex",
+        "model": "gpt-6.1-sol",
+        "reasoning": "medium",
+        "max_output_tokens": 8000
+      },
+      "calls": 30,
+      "usage": {
+        "input_tokens": 693252,
+        "output_tokens": 24597,
+        "total_tokens": 717849
+      },
+      "duration_seconds": 874.675,
+      "duration_source": "monotonic ledger",
+      "published_states": {
+        "parcial": 36,
+        "respondida": 3,
+        "no_comprobado": 1
+      },
+      "archived_raw_expert_states": {
+        "parcial": 30,
+        "respondida": 3,
+        "no_comprobado": 1
+      },
+      "archived_raw_expert_count": 34,
+      "risks": {
+        "confirmados": 2,
+        "indicios": 2
+      },
+      "unique_paths_read": 84,
+      "lookups": {
+        "tools": 11,
+        "code": 64,
+        "with_graph_symbols_or_relations": 50,
+        "questions": 5,
+        "path_index": 4
+      },
+      "agents": [
+        {
+          "id": "architecture",
+          "estado": "completada",
+          "calls": 3,
+          "usage": {
+            "api_calls": 3,
+            "output_tokens": 2470,
+            "total_tokens": 52841,
+            "reasoning_tokens": 159,
+            "input_tokens": 50371
+          },
+          "duration_seconds": 80.514,
+          "bytes": 22801,
+          "error": null
+        },
+        {
+          "id": "backend-security",
+          "estado": "completada",
+          "calls": 5,
+          "usage": {
+            "api_calls": 5,
+            "output_tokens": 5141,
+            "total_tokens": 155990,
+            "reasoning_tokens": 308,
+            "input_tokens": 150849
+          },
+          "duration_seconds": 176.868,
+          "bytes": 78270,
+          "error": null
+        },
+        {
+          "id": "data",
+          "estado": "completada",
+          "calls": 4,
+          "usage": {
+            "api_calls": 4,
+            "output_tokens": 2992,
+            "total_tokens": 95527,
+            "reasoning_tokens": 202,
+            "input_tokens": 92535
+          },
+          "duration_seconds": 92.242,
+          "bytes": 68989,
+          "error": null
+        },
+        {
+          "id": "devops",
+          "estado": "completada",
+          "calls": 4,
+          "usage": {
+            "api_calls": 4,
+            "output_tokens": 2849,
+            "total_tokens": 123918,
+            "reasoning_tokens": 114,
+            "input_tokens": 121069
+          },
+          "duration_seconds": 111.173,
+          "bytes": 84884,
+          "error": null
+        },
+        {
+          "id": "frontend-security",
+          "estado": "completada",
+          "calls": 4,
+          "usage": {
+            "api_calls": 4,
+            "output_tokens": 2416,
+            "total_tokens": 90784,
+            "reasoning_tokens": 388,
+            "input_tokens": 88368
+          },
+          "duration_seconds": 101.238,
+          "bytes": 74183,
+          "error": null
+        },
+        {
+          "id": "identity",
+          "estado": "completada",
+          "calls": 4,
+          "usage": {
+            "api_calls": 4,
+            "output_tokens": 3237,
+            "total_tokens": 81086,
+            "reasoning_tokens": 405,
+            "input_tokens": 77849
+          },
+          "duration_seconds": 125.527,
+          "bytes": 44526,
+          "error": null
+        },
+        {
+          "id": "inventory",
+          "estado": "completada",
+          "calls": 4,
+          "usage": {
+            "api_calls": 4,
+            "output_tokens": 3789,
+            "total_tokens": 92515,
+            "reasoning_tokens": 277,
+            "input_tokens": 88726
+          },
+          "duration_seconds": 111.03,
+          "bytes": 52265,
+          "error": null
+        }
+      ],
+      "prompt_bytes": 2493232,
+      "repeated_line_bytes": 680406,
+      "limits": {
+        "calls": 31,
+        "output_tokens": 244000,
+        "seconds": 7440,
+        "context_bytes": 8000000
+      },
+      "stop_reason": null,
+      "preparation_cache": {
+        "status": "reused",
+        "key": "80e937b68e2dcc8b047c177ea1d360fef82deac7c24f9c5f102fddec47c0c302",
+        "prepared_at": "2026-10-31T10:47:51.136084+00:00"
+      },
+      "scanners": [
+        {
+          "name": "Gitleaks 8.30.1",
+          "status": "detecciones_por_validar",
+          "findings": 2
+        },
+        {
+          "name": "OSV-Scanner 2.7.0",
+          "status": "detecciones_por_validar",
+          "findings": 89
+        },
+        {
+          "name": "Semgrep 1.182.1",
+          "status": "detecciones_por_validar",
+          "findings": 1
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "One run per configuration, not a statistical benchmark.",
+    "Latest configuration also removes masking and the answer rejection filter; declared states are not independent validation.",
+    "Scanner outputs and preparation dates are recorded separately. Raw expert counters only cover preserved original outputs."
+  ],
+  "same_limits_since_previous_centralized_run": true,
+  "security_group": {
+    "before_tokens": 599400,
+    "after_tokens": 327860,
+    "change_percent": -45.3,
+    "original_question_states_unchanged": true,
+    "questions": 15
+  },
+  "declared_state_changes": [
+    {
+      "id": "Q07",
+      "before": "respondida",
+      "after": "parcial"
+    },
+    {
+      "id": "Q08",
+      "before": "respondida",
+      "after": "parcial"
+    },
+    {
+      "id": "Q09",
+      "before": "respondida",
+      "after": "parcial"
+    },
+    {
+      "id": "Q15",
+      "before": "respondida",
+      "after": "parcial"
+    },
+    {
+      "id": "Q16",
+      "before": "respondida",
+      "after": "parcial"
+    }
+  ]
+}

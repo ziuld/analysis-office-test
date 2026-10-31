@@ -23,7 +23,7 @@
       "seconds": 240,
       "output_tokens": 8000,
       "calls": 1,
-      "research_rounds": 8
+      "research_rounds": 3
     },
     "inventory": {
       "files": 200,
@@ -31,7 +31,7 @@
       "seconds": 240,
       "output_tokens": 8000,
       "calls": 1,
-      "research_rounds": 6
+      "research_rounds": 3
     },
     "coordinator": {
       "prompt_bytes": 192000,
@@ -54,6 +54,46 @@
       "seconds": 240,
       "output_tokens": 4500,
       "calls": 1
+    },
+    "data": {
+      "files": 200,
+      "bytes": 600000,
+      "seconds": 240,
+      "output_tokens": 8000,
+      "calls": 1,
+      "research_rounds": 3
+    },
+    "identity": {
+      "files": 200,
+      "bytes": 600000,
+      "seconds": 240,
+      "output_tokens": 8000,
+      "calls": 1,
+      "research_rounds": 3
+    },
+    "frontend-security": {
+      "files": 200,
+      "bytes": 600000,
+      "seconds": 240,
+      "output_tokens": 8000,
+      "calls": 1,
+      "research_rounds": 3
+    },
+    "backend-security": {
+      "files": 200,
+      "bytes": 600000,
+      "seconds": 240,
+      "output_tokens": 8000,
+      "calls": 1,
+      "research_rounds": 4
+    },
+    "devops": {
+      "files": 200,
+      "bytes": 600000,
+      "seconds": 240,
+      "output_tokens": 8000,
+      "calls": 1,
+      "research_rounds": 3
     }
   }
 }

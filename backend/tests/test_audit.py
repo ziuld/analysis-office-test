@@ -95,11 +95,11 @@ class RepositoryTests(unittest.TestCase):
         self.assertLessEqual(result["bytes_read"], 120000)
         self.assertEqual(len(downloads), 10)
 
-    def test_redaction_preserves_line_numbers(self):
+    def test_original_content_preserves_credentials_and_line_numbers(self):
         text = 'first\npassword = "do-not-leak"\npostgres://user:pass@db/name\nlast'
         cleaned = redact(text)
-        self.assertNotIn("do-not-leak", cleaned)
-        self.assertNotIn("user:pass", cleaned)
+        self.assertEqual(cleaned, text)
+        self.assertIn("user:pass", cleaned)
         self.assertEqual(len(cleaned.splitlines()), 4)
         self.assertEqual(cleaned.splitlines()[3], "last")
 

@@ -15,6 +15,7 @@ class JobState(StrEnum):
 
 
 class QuestionState(StrEnum):
+    QUEUED = "en_cola"
     ANSWERING = "respondiendo"
     COMPLETE = "completada"
     ERROR = "error"

@@ -33,7 +33,7 @@ class SecurityTests(unittest.TestCase):
     def test_profile_actually_enters_security_prompt(self):
         from arktic_office.coordination.team import CELLS
         s, _ = fixture()
-        self.assertIn("Perfil de revisión de seguridad", make_prompt(s, CELLS[0]))
+        self.assertIn("Perfil de revisión de seguridad", make_prompt(s, next(c for c in CELLS if c["id"] == "backend-security")))
         self.assertNotIn("Perfil de revisión de seguridad", make_prompt(s, CELLS[2]))
 
     def test_risks_are_not_truncated_at_old_two_item_limit(self):
@@ -116,14 +116,16 @@ class SecurityTests(unittest.TestCase):
         self.assertIn("Java 8", md.split("### Inventario")[1])
         self.assertIn("Java 1.8", md.split("### Inventario")[1])
 
-    def test_scanner_drops_secret_fields_and_raw_errors(self):
+    def test_scanner_preserves_original_payload_and_sanitizes_process_errors(self):
         secret = "never-show-this-value"
         def runner(cmd, out):
             if cmd[0] == "gitleaks":
+                self.assertFalse(any(arg.startswith("--redact") for arg in cmd))
                 return [{"File": str(out.parent / "source/config.py"), "StartLine": 1, "RuleID": "generic-api-key", "Secret": secret, "Match": secret}]
             raise ValueError(secret)
         result = scan([{"path": "config.py", "text": secret}, {"path": "requirements.txt", "text": "flask==0.1"}], runner)
-        self.assertNotIn(secret, json.dumps(result))
+        self.assertEqual(result[0]["original_output"][0]["Secret"], secret)
+        self.assertNotIn(secret, json.dumps(result[1]))
         self.assertEqual(result[0]["status"], "detecciones_por_validar")
         self.assertEqual(result[1]["status"], "error")
 

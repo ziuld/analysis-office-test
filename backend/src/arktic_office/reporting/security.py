@@ -40,6 +40,10 @@ def validate_v3(data, snapshot, limits, validate_legacy):
             if not isinstance(item, dict):
                 raise AuditError("Hallazgo inválido.")
             extra = {key: item.pop(key, None) for key in ("severidad", "control", "accion", "condiciones")}
+            if 'tipo' in item:
+                extra['tipo'] = item.pop('tipo')
+                if extra['tipo'] not in {'vulnerabilidad', 'coste', 'operacion'}:
+                    raise AuditError('Tipo de riesgo inválido.')
             for key, cap in (("titulo", 110), ("resultado_esperado", 300), ("detalle_tecnico", 600)):
                 if key in item:
                     from arktic_office.reporting.presentation import string

@@ -4,12 +4,13 @@ from arktic_office.resources.paths import resource_path
 from arktic_office.core.errors import AuditError
 from arktic_office.preparation.repository import redact
 
-VERSION = "phase2-extension-v1"
+VERSION = "central-coordination-v1"
 STATES = {"respondida", "parcial", "no_aplica", "no_comprobado"}
 
 
 def catalog(role=None):
-    items = json.loads(resource_path("profiles", "questions.json").read_text(encoding="utf-8"))
+    source = 'questions-reference.json' if role == 'security' else 'questions.json'
+    items = json.loads(resource_path("profiles", source).read_text(encoding="utf-8"))
     return [q for q in items if role is None or q["role"] == role]
 
 
@@ -31,58 +32,47 @@ def instructions(role):
         "Respondida y no_aplica requieren fuentes de código/configuración o herramientas realmente entregadas que sustenten la respuesta. "
         "Una herramienta limpia no demuestra seguridad ni responde por sí sola preguntas sobre controles. "
         "Para cada riesgo indica en la observación sus protecciones, condiciones, impacto y verificación pendiente. "
-        "Usa solo líneas no vacías entregadas, nunca líneas con valores OCULTOS. "
+        "Cita las fuentes utilizadas. Core conserva tu respuesta y tu estado; las referencias solo se localizan para mostrarlas. "
         "Primero considera las herramientas deterministas; si no bastan, consulta el mapa y lee código del snapshot. "
         "El presupuesto es acotado: comunica lo no resuelto sin inventar ni omitir preguntas. "
         "El encargo del coordinador no puede eliminar estas preguntas. Mantén observaciones/controles/componentes de tu rol; "
         "prioriza responder el cuestionario, evita repetir en observaciones los hechos sin riesgo.")
 
 
-def validate_answers(values, role, resolve_refs, tools):
+def assemble_answers(values, role, resolve_refs, tools):
+    """Attach fixed question metadata without grading or rewriting expert answers."""
     expected = {q["id"]: q for q in catalog(role)}
-    valid, warnings = {}, []
-    if not isinstance(values, list) or len(values) > len(expected):
+    received, notes = {}, []
+    if not isinstance(values, list):
         values = []
-        warnings.append("Cuestionario ausente o fuera de límite.")
-    seen = set()
+        notes.append("No se recibió una lista de respuestas; el original se conserva.")
     for item in values:
-        try:
-            if not isinstance(item, dict) or item.get("id") not in expected or item["id"] in seen:
-                raise AuditError("Pregunta ajena al rol o duplicada.")
-            key = item["id"]
-            seen.add(key)
-            if item.get("estado") not in STATES:
-                raise AuditError("Estado de respuesta inválido.")
-            for field, cap in (("respuesta", 700), ("pendiente", 400)):
-                if not isinstance(item.get(field), str) or len(item[field]) > cap or field == "respuesta" and not item[field].strip():
-                    raise AuditError("Texto de respuesta inválido.")
-            citations = resolve_refs(item.get("evidencia", []), False)
-            tool_ids = item.get("herramientas", [])
-            if not isinstance(tool_ids, list) or len(tool_ids) > len(tools) or any(not isinstance(t, str) or t not in tools for t in tool_ids):
-                raise AuditError("Herramienta no entregada al agente.")
-            if item["estado"] in {"respondida", "no_aplica"} and not (citations or tool_ids):
-                raise AuditError("Respuesta afirmativa o no aplicable sin respaldo.")
-            if item["estado"] in {"parcial", "no_comprobado"} and not item["pendiente"].strip():
-                raise AuditError("Respuesta pendiente sin indicar cómo completarla.")
-            valid[key] = {**expected[key], "estado": item["estado"], "respuesta": redact(item["respuesta"]),
-                "pendiente": redact(item["pendiente"]), "evidencia": citations, "herramientas": tool_ids}
-            if item.get("aspecto_favorable") is not None:
-                favorable = item["aspecto_favorable"]
-                if (item["estado"] not in {"respondida", "parcial"} or not citations
-                        or not isinstance(favorable, dict) or set(favorable) != {"titulo", "detalle"}
-                        or any(not isinstance(favorable.get(f), str) or not 1 <= len(favorable[f].strip()) <= cap
-                               for f, cap in (("titulo", 110), ("detalle", 400)))):
-                    warnings.append(key + ": aspecto favorable sin implementación respaldada; se conserva la respuesta sin destacarlo.")
-                else:
-                    valid[key]["aspecto_favorable"] = {f: redact(v.strip()) for f, v in favorable.items()}
-        except (AuditError, KeyError, TypeError) as exc:
-            warnings.append("Respuesta de cuestionario rechazada: " + str(exc))
+        if not isinstance(item, dict) or item.get('id') not in expected:
+            notes.append('Aportación sin pregunta asignada; se conserva en la respuesta original.')
+            continue
+        key = item['id']
+        if key in received:
+            notes.append(key + ': varias aportaciones; se conservan completas en la respuesta original.')
+            continue
+        if not isinstance(item.get('respuesta'), str) or not isinstance(item.get('estado'), str):
+            notes.append(key + ': faltan campos de texto para representarla; el original se conserva.')
+            continue
+        original_refs = item.get('evidencia', [])
+        answer = {**item, **expected[key], 'evidencia': resolve_refs(original_refs, False),
+                  'referencias_originales': original_refs, 'pendiente': item.get('pendiente', ''),
+                  'herramientas': item.get('herramientas', [])}
+        if not isinstance(answer['pendiente'], str):
+            answer['pendiente'] = ''
+        if not isinstance(answer['herramientas'], list):
+            answer['herramientas'] = []
+        received[key] = answer
     for key, question in expected.items():
-        if key not in valid:
-            warnings.append(key + ": no se recibió una respuesta válida.")
-            valid[key] = {**question, "estado": "no_comprobado", "respuesta": "El agente no entregó una respuesta válida a esta pregunta.",
-                "pendiente": "Revisar las fuentes pertinentes y completar esta respuesta.", "evidencia": [], "herramientas": []}
-    return [valid[key] for key in expected], warnings
+        if key not in received:
+            received[key] = {**question, 'estado':'no_comprobado',
+                'respuesta':'El especialista no entregó una respuesta representable para esta pregunta.',
+                'pendiente':'Consultar su respuesta original y los campos técnicos que faltan.',
+                'evidencia':[], 'herramientas':[]}
+    return [received[key] for key in expected], notes
 
 
 def complete(answers):
@@ -92,6 +82,6 @@ def complete(answers):
 def favorable_answers(data):
     """Only explicit, source-backed strengths; never infer from clean scanners."""
     items = [a for a in data.get("cuestionario", {}).get("respuestas", [])
-            if a.get("aspecto_favorable") and a.get("evidencia")
+            if isinstance(a.get("aspecto_favorable"),dict) and all(isinstance(a["aspecto_favorable"].get(k),str) for k in ("titulo","detalle"))
             and a.get("estado") in {"respondida", "parcial"}]
     return sorted(items, key=lambda a: ({"security": 0, "architecture": 1, "inventory": 2}.get(a.get("role"), 3), a["id"]))

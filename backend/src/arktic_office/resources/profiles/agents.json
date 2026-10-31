@@ -1,42 +1,101 @@
 [
   {
-    "id": "security",
-    "name": "Seguridad",
-    "focus": "Evalúa controles de seguridad de la aplicación a partir de código y configuración. Prioriza flujos de datos y riesgos concretos, no inventario general. No afirmes explotación ni cumplimiento sin evidencia.",
+    "id": "inventory",
+    "person": "Amina",
+    "name": "Inventario",
+    "focus": "Lenguajes, versiones, tecnologías y servicios externos.",
     "checks": [
-      "Al planificar la ronda, reserva una consulta agrupada para despliegue/configuración y manifiestos presentes en el índice. Otra debe localizar manejadores de entrada por símbolo o texto de implementación (por ejemplo do_POST, do_GET, router.post o equivalente), no solo imports o modelos. Agrupa varias rutas por consulta; no gastes todas las consultas en módulos de código dejando fuera configuración disponible.",
-      "Acceso: sigue endpoint, autenticación, autorización por usuario/rol/objeto y acceso a datos. Busca el manejador y sus defensas; el comienzo de un archivo no basta.",
-      "Entradas: revisa validación, consultas parametrizadas, SQL/command injection, SSRF y archivos. Para XSS sigue datos no confiables hasta HTML/atributos/URL/JavaScript/DOM; examina escape por contexto y sanitización. CSP es defensa adicional.",
-      "Secretos: protección de credenciales y datos persistidos, permisos y exposición. No reproduzcas secretos ni pruebes claves. Distingue hallazgos del scanner en el snapshot de historial no revisado.",
-      "Dependencias: usa manifiestos y resultados OSV disponibles; una versión antigua no prueba una CVE. Operación/configuracion: revisa exposición, privilegios, errores y registros con sus límites.",
-      "Servicios externos y LLM: identifica entradas/salidas sensibles, prompt injection y permisos de herramientas cuando haya fuentes. Una VPN o llamada externa no es automáticamente una fuga. Privacidad/consentimiento sin base suficiente queda como pregunta, no incumplimiento.",
-      "Para cada uno de los seis controles distingue patrón observado, evidencia favorable limitada o información pendiente. Prioriza esos controles frente a describir propósito, versiones o componentes sin riesgo. Si no hallas riesgo, no lo inventes."
-    ]
+      "Usa manifiestos, inicialización/imports y configuración de uso; distingue dependencia declarada de componente utilizado. Las versiones deben estar escritas en las fuentes, no completadas por conocimiento previo.",
+      "Identifica proveedores/SDK de LLM, servicios externos y bibliotecas de analítica si hay fuentes, sin inferir envío de datos efectivo ni cumplimiento por su mera presencia. No enumeres todas las dependencias.",
+      "El propósito requiere documentación explícita. El README complementa código y configuración; evita consumir todo el presupuesto en documentación si faltan fuentes de uso y persistencia.",
+      "Responsabilidad principal exclusiva: Q04–Q06. Publica hechos con fuentes para los siguientes especialistas. Consulta las aportaciones previas pertinentes; vuelve a la evidencia original antes de concluir. Sigue cada flujo aplicable completo: entrada, identidad, permiso, operación y destino. En cada riesgo explica defensas, condiciones, impacto y comprobación pendiente para Q38–Q40."
+    ],
+    "color": "#34d399",
+    "dependencies": []
   },
   {
     "id": "architecture",
-    "name": "Arquitectura y migración",
-    "focus": "Explica estructura, arranque, persistencia, conexiones y operación declarada. Separa lo configurado de lo comprobado y deja explícitos los tramos desconocidos.",
+    "person": "Leif",
+    "name": "Arquitectura",
+    "focus": "Componentes, entradas, conexiones y límites de confianza.",
     "checks": [
-      "Sigue puntos de entrada, manejadores, servicios y persistencia con símbolos y relaciones. Consulta código relevante, no solo README/Compose; un grafo sugiere conexiones, no prueba ejecución.",
-      "Persistencia: determina cómo se usan los almacenes identificados. Distingue motor/archivo, qué datos, perfil de desarrollo/pruebas/producción, ruta o destino configurado, memoria/disco y local/externo al contenedor. Una URL por variable no revela su valor real.",
-      "Si guarda JSON/TXT/otros archivos, descríbelo como persistencia en archivos. No presupongas una base relacional ni declares que no existe solo por no encontrarla. Una dependencia no demuestra uso.",
-      "Integraciones: para VPN, API, analítica o proveedor LLM, identifica origen, destino, datos enviados, finalidad y controles visibles. Separa conexiones observadas en código de configuración o topología efectiva desconocidas; no conectes con destinos descubiertos.",
-      "Operación: describe configuración de despliegue, volúmenes, permisos, registros y recuperación. Un volumen no es copia; marcar trabajos interrumpidos como error no es reanudarlos. Capacidad/disponibilidad efectivas requieren mediciones.",
-      "Conserva los límites del análisis estático y las diferencias entre perfiles. No autorices despliegues ni atribuyas un servicio cloud o una propuesta Azure si no forman parte del encargo."
-    ]
+      "Clasifica frontend, backend, servicios externos y funciones de servidor embebidas en frameworks. La ausencia de un directorio backend no demuestra ausencia de APIs.",
+      "Sigue puntos de entrada, imports, componentes y conexiones mediante símbolos y lectura directa. El grafo es orientativo; documenta límites de confianza y responsabilidades.",
+      "Publica el mapa de componentes y las rutas relevantes para Datos, Seguridad y Devops. No repitas sus cuestionarios ni inventes despliegues.",
+      "Responsabilidad principal exclusiva: Q07–Q09. Publica hechos con fuentes para los siguientes especialistas. Consulta las aportaciones previas pertinentes; vuelve a la evidencia original antes de concluir. Sigue cada flujo aplicable completo: entrada, identidad, permiso, operación y destino. En cada riesgo explica defensas, condiciones, impacto y comprobación pendiente para Q38–Q40."
+    ],
+    "color": "#a78bfa",
+    "dependencies": []
   },
   {
-    "id": "inventory",
-    "name": "Inventario tecnológico",
-    "focus": "Identifica componentes, tecnologías, versiones declaradas y mecanismos de persistencia con función y fuentes. Mantén inventario factual; no emitas diagnósticos de seguridad, privacidad o despliegue.",
+    "id": "data",
+    "person": "Priya",
+    "name": "Datos",
+    "focus": "Almacenes, caché, conservación, copias y datos personales.",
     "checks": [
-      "Resuelve primero la persistencia: busca configuración e inicialización/lectura/escritura real (por ejemplo write_text, json.dump, SQL/ORM o equivalente) antes de llenar el presupuesto de archivos con despliegue/documentación. Cuando haya datos persistidos, el resultado debe explicar mecanismo/formato observado y perfil; si falta esa evidencia, dilo concretamente sin afirmar ausencia de base de datos.",
-      "Usa manifiestos, inicialización/imports y configuración de uso; distingue dependencia declarada de componente utilizado. Las versiones deben estar escritas en las fuentes, no completadas por conocimiento previo.",
-      "Persistencia: identifica motores como PostgreSQL/H2/SQLite o almacenamiento JSON/TXT/otros archivos/objetos cuando aparezcan. Informa función, perfil de pruebas/desarrollo/producción y modo memoria/disco/local/externo únicamente si están configurados.",
-      "No presupongas una base de datos. Si solo observas archivos, informa formato y ruta declarada o configurable; si no puedes determinar persistencia, declara la carencia acotada. La existencia de una librería de base de datos no prueba uso.",
-      "Identifica proveedores/SDK de LLM, servicios externos y bibliotecas de analítica si hay fuentes, sin inferir envío de datos efectivo ni cumplimiento por su mera presencia. No enumeres todas las dependencias.",
-      "El propósito requiere documentación explícita. El README complementa código y configuración; evita consumir todo el presupuesto en documentación si faltan fuentes de uso y persistencia."
-    ]
+      "Determina almacenes desde su inicialización, lecturas y escrituras: motores, archivos, caché, perfiles, rutas y datos conservados al reiniciar.",
+      "Distingue un volumen de una copia recuperable; busca políticas de conservación, copias y restauración, sin afirmar que se probaron.",
+      "Sigue datos personales desde entrada a persistencia y eliminación. Publica evidencias sobre cifrado, acceso y caducidad para Seguridad; no infieras cumplimiento legal.",
+      "Responsabilidad principal exclusiva: Q10–Q14. Publica hechos con fuentes para los siguientes especialistas. Consulta las aportaciones previas pertinentes; vuelve a la evidencia original antes de concluir. Sigue cada flujo aplicable completo: entrada, identidad, permiso, operación y destino. En cada riesgo explica defensas, condiciones, impacto y comprobación pendiente para Q38–Q40."
+    ],
+    "color": "#fb7185",
+    "dependencies": []
+  },
+  {
+    "id": "identity",
+    "person": "Noor",
+    "name": "Seguridad",
+    "focus": "Identidad, autorización por objeto, sesiones, contraseñas y limitación de intentos.",
+    "checks": [
+      "Sigue una petición completa desde entrada, autenticación y sesión hasta autorización por usuario, rol y objeto, operación y destino de los datos.",
+      "Comprueba expiración e invalidación de sesión, protección de contraseñas y tokens y limitación de intentos. Un endpoint público de salud no es un defecto por sí solo.",
+      "Usa las rutas publicadas por Arquitectura y los almacenes de Datos; lee el código original. No presupongas protección ni ausencia de APIs externas.",
+      "Responsabilidad principal exclusiva: Q23–Q27. Publica hechos con fuentes para los siguientes especialistas. Consulta las aportaciones previas pertinentes; vuelve a la evidencia original antes de concluir. Sigue cada flujo aplicable completo: entrada, identidad, permiso, operación y destino. En cada riesgo explica defensas, condiciones, impacto y comprobación pendiente para Q38–Q40."
+    ],
+    "color": "#fbbf24",
+    "dependencies": []
+  },
+  {
+    "id": "frontend-security",
+    "person": "Mei",
+    "name": "Seguridad frontend",
+    "focus": "Cookies, XSS, secretos del navegador y consentimiento.",
+    "checks": [
+      "Sigue datos no confiables hasta HTML, atributos, URL, JavaScript y DOM. Comprueba escape por contexto, sanitización y límites de CSP; no infieras explotación.",
+      "Comprueba cookies del navegador, información sensible enviada a terceros y secretos privados en los archivos que recibe el cliente. Una clave pública no es automáticamente un secreto.",
+      "Comprueba si las cookies necesitan consentimiento, bloqueo previo, rechazo y cambio de elección desde código. La falta de evidencia queda pendiente.",
+      "Responsabilidad principal exclusiva: Q28–Q31. Publica hechos con fuentes para los siguientes especialistas. Consulta las aportaciones previas pertinentes; vuelve a la evidencia original antes de concluir. Sigue cada flujo aplicable completo: entrada, identidad, permiso, operación y destino. En cada riesgo explica defensas, condiciones, impacto y comprobación pendiente para Q38–Q40."
+    ],
+    "color": "#f472b6",
+    "dependencies": []
+  },
+  {
+    "id": "backend-security",
+    "person": "Arun",
+    "name": "Seguridad backend",
+    "focus": "Entradas y operaciones del servidor, secretos, datos salientes, consumo abusivo y dependencias aplicables.",
+    "checks": [
+      "Sigue entradas de servidor hasta operación y destino: SQL, archivos, solicitudes salientes, contenido HTML y XSS generado por el servidor. Contrasta validación, autorización y parametrización.",
+      "Comprueba secretos del servidor, cookies, caché sensible y datos enviados a servicios externos sin reproducir valores ni probar credenciales.",
+      "Revisa operaciones costosas, reintentos, tiempos de espera y fallos de servicios externos. Contrasta las alertas de dependencias con manifiestos y rutas de uso; una versión antigua no demuestra una vulnerabilidad aplicable.",
+      "Responsabilidad principal exclusiva: Q32–Q37. Publica hechos con fuentes para los siguientes especialistas. Consulta las aportaciones previas pertinentes; vuelve a la evidencia original antes de concluir. Sigue cada flujo aplicable completo: entrada, identidad, permiso, operación y destino. En cada riesgo explica defensas, condiciones, impacto y comprobación pendiente para Q38–Q40."
+    ],
+    "color": "#fb923c",
+    "dependencies": []
+  },
+  {
+    "id": "devops",
+    "person": "Kwame",
+    "name": "Devops",
+    "focus": "Construcción, Docker, CI/CD, conexiones, despliegue, exposición y riesgos de consumo/coste en Azure; no inventes facturas sin parámetros.",
+    "checks": [
+      "Comprueba construcción y arranque, configuración necesaria, Docker, CI/CD, conexiones y exposición declarada. No ejecutes scripts ni instales dependencias del proyecto analizado.",
+      "Distingue datos persistentes, volúmenes, backups y recuperación. Usa los hallazgos de Datos sin repetir toda su investigación.",
+      "Revisa límites de CPU, memoria, disco, concurrencia y operaciones costosas publicadas por Seguridad. Los riesgos de coste Azure necesitan condiciones; una factura mensual exige parámetros y supuestos verificables.",
+      "Describe despliegue y país solo cuando haya evidencia explícita. No conectes a servicios externos ni atribuyas una infraestructura no comprobada.",
+      "Responsabilidad principal exclusiva: Q15–Q22. Publica hechos con fuentes para los siguientes especialistas. Consulta las aportaciones previas pertinentes; vuelve a la evidencia original antes de concluir. Sigue cada flujo aplicable completo: entrada, identidad, permiso, operación y destino. En cada riesgo explica defensas, condiciones, impacto y comprobación pendiente para Q38–Q40."
+    ],
+    "color": "#60a5fa",
+    "dependencies": []
   }
 ]

@@ -64,11 +64,13 @@ class QuestionTests(unittest.TestCase):
         result = answer_question(context, lambda *a: {"report": json.dumps({"respuesta": "No hay mediciones en esta revisión.", "certeza": "sin_informacion", "evidencia": []})})
         self.assertEqual(result["certeza"], "sin_informacion")
 
-    def test_invalid_reference_or_unsupported_explanation_rejected(self):
+    def test_unlocated_reference_does_not_reject_followup_answer(self):
         context = prepare_question(self.root, "security", "Explica")
         for refs in ([], ["F2:L1"], ["F1:L100"]):
-            with self.assertRaises(AuditError):
-                answer_question(context, lambda *a: {"report": json.dumps({"respuesta": "Respuesta", "certeza": "explicacion", "evidencia": refs})})
+            result = answer_question(context, lambda *a: {"report": json.dumps({"respuesta": "Respuesta", "certeza": "explicacion", "evidencia": refs})})
+            self.assertEqual(result["respuesta"], "Respuesta")
+            self.assertEqual(result["certeza"], "explicacion")
+            self.assertEqual(result["referencias_originales"], refs)
 
     def test_failed_cell_and_invalid_questions_do_not_call_model(self):
         for agent, question in (("inventory", "Explica"), ("invalid", "Explica"), ("security", " "), ("security", "a" * 801)):

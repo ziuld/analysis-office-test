@@ -25,8 +25,8 @@ def identity(acquired, *, scanners, indexer_signature):
         base = Path(executables['semgrep']).resolve().parent.parent
         installation['semgrep_metadata'] = [hashlib.sha256(p.read_bytes()).hexdigest()
             for p in sorted(base.glob('lib/python*/site-packages/semgrep-*.dist-info/METADATA'))]
-    rules = list(resource_path().rglob('*.yml')) + list(resource_path().rglob('*.yaml'))
-    return digest({'schema': 1, 'repository': acquired['repository'], 'commit': acquired['commit'],
+    rules = list(resource_path().rglob('*.yml')) + list(resource_path().rglob('*.yaml')) + [resource_path('profiles', 'semgrep-rules.json')]
+    return digest({'schema': 1, 'content_policy': 'original-unmasked-v1', 'repository': acquired['repository'], 'commit': acquired['commit'],
         'local_path': acquired.get('local_source', {}).get('source_path'),
         'files': [{k: f.get(k) for k in ('path', 'mode', 'git_blob', 'sha256', 'bytes')} for f in acquired['inventory']],
         'scanners_enabled': scanners, 'indexer': indexer_signature,
@@ -52,6 +52,11 @@ class PreparationCache:
             manifest = json.loads(manifest_path.read_text())
             payload = json.loads(payload_path.read_text())
             if manifest['key'] != key or digest(payload) != manifest['payload_sha256']:
+                return None
+            from arktic_office.config.models import integer
+            max_age = integer('AUDIT_VULNERABILITY_MAX_AGE_SECONDS', 86400, 60, 604800)
+            external = any('osv' in s.get('name', '').lower() for s in payload.get('scanners', []))
+            if external and (datetime.now(timezone.utc) - datetime.fromisoformat(manifest['prepared_at'])).total_seconds() > max_age:
                 return None
             for relative, checksum in manifest['artifacts'].items():
                 path = Path(relative)

@@ -28,13 +28,18 @@ def handler_for(jobs):
                 parts = self.path.split("?")[0].strip("/").split("/")
                 if parts == ["health"]:
                     return self.send(200, {"ok": True, "version": os.environ.get("ARKTIC_BACKEND_VERSION", "development")})
+                if parts == ["profiles"]:
+                    from arktic_office.coordination.catalog import catalog
+                    return self.send(200, {"profiles": catalog()})
                 if parts == ["runs"]:
-                    return self.send(200, {"runs": jobs.listing(), "question_active": jobs.question_active})
+                    return self.send(200, {"runs": jobs.listing(), "question_active": jobs.question_active,
+                                           "question_queue": [q for _, q in jobs.question_queue]})
                 if parts == ['local-sources']:
                     from arktic_office.preparation.local_sources import local_sources
                     return self.send(200, {'sources':local_sources()})
                 if len(parts) == 4 and parts[0] == "runs" and parts[2] == "questions":
-                    if parts[3] in {"coordinator", "security", "architecture", "inventory"}:
+                    from arktic_office.coordination.questions import AGENTS
+                    if parts[3] in AGENTS:
                         return self.send(200, jobs.history(parts[1], parts[3]))
                     return self.send(200, jobs.question(parts[1], parts[3]))
                 if len(parts) == 2 and parts[0] == "runs":

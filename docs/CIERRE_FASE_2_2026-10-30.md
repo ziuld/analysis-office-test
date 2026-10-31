@@ -46,6 +46,6 @@ El panel pasará a tarjetas compactas: nombre de persona, rol debajo, actividad 
 
 Akira estará sentado cuando trabaje y disponible de pie al terminar; una consulta nueva lo devolverá al escritorio al ejecutarse. Se corregirá la posición de los asientos y se reducirán los paseos de ocio aproximadamente a un tercio.
 
-El plan de evidencia compartida y especialistas está en `PLAN_COORDINACION_CENTRALIZADA.md`; su apartado inicial de decisiones posteriores prevalece sobre las alternativas de concurrencia del documento original.
+El único plan futuro está en [PLAN_COORDINACION_CENTRALIZADA.md](PLAN_COORDINACION_CENTRALIZADA.md), consolidado con las decisiones posteriores del usuario. Las notas de este cierre conservan su valor histórico; no añaden tareas independientes.
 
 La publicación se entrega como pull request abierto para revisión del usuario, sin fusionarlo.

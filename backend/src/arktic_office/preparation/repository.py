@@ -162,17 +162,8 @@ def exclusion(item):
 
 
 def redact(text):
-    """Conservative heuristic; not a complete secret scanner. Preserve line numbers."""
-    text = re.sub(r"-----BEGIN [^-]*PRIVATE KEY-----.*?-----END [^-]*PRIVATE KEY-----",
-                  lambda m: "\n".join("[VALOR OCULTO]" for _ in m[0].split("\n")), text, flags=re.S)
-    text = re.sub(r"(?:sk-[A-Za-z0-9_-]{16,}|gh[pousr]_[A-Za-z0-9_]{16,}|github_pat_[A-Za-z0-9_]{16,})", "[VALOR OCULTO]", text)
-    text = re.sub(r"(://)[^\s/:@]+:[^\s/@]+@", r"\1[VALOR OCULTO]@", text)
-    lines = []
-    for line in text.splitlines():
-        if re.search(r"(?i)(password|passwd|secret|api[_-]?key|access[_-]?token|authorization)\s*[\"']?\s*[:=]", line):
-            line = "[LÍNEA CON POSIBLE CREDENCIAL OCULTA]"
-        lines.append(line)
-    return "\n".join(lines)
+    """Compatibility name: analysis content is preserved exactly, by user decision."""
+    return text
 
 
 def excerpt(content, budget=MAX_FILE_BYTES):
@@ -295,15 +286,8 @@ def select(snapshot, scanner=None) -> EvidenceSnapshot:
 
 
 def mask_findings(files, scanner_results):
-    for tool in scanner_results:
-        if tool["name"].startswith("Gitleaks"):
-            for finding in tool.get("findings", []):
-                for file in files:
-                    if file["path"] == finding["path"]:
-                        lines = file["text"].splitlines()
-                        for n in range(max(1, finding["line"]), min(len(lines), finding.get("end_line", finding["line"])) + 1):
-                            lines[n - 1] = "[POSIBLE SECRETO OCULTO POR GITLEAKS]"
-                        file["text"] = "\n".join(lines)
+    """Scanner findings never replace or obscure the captured source."""
+    return None
 
 
 def collect(url, fetch=github, scanner=None) -> EvidenceSnapshot:

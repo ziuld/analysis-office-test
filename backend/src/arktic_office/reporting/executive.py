@@ -9,7 +9,7 @@ STATUS = {"hallazgo": "Hallazgo identificado", "evidencia_favorable_limitada": "
 
 def risks(data):
     items = [{**x, "certeza": section} for section in ("confirmados", "indicios") for x in data.get(section, []) if x.get("severidad", "informativa") != "informativa"]
-    return sorted(items, key=lambda x: (SEVERITIES.index(x["severidad"]), x["certeza"] != "confirmados"))
+    return sorted(items, key=lambda x: ((SEVERITIES.index(x["severidad"]) if x["severidad"] in SEVERITIES else len(SEVERITIES)), x["certeza"] != "confirmados"))
 
 
 def components(data):

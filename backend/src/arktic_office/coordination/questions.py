@@ -5,7 +5,7 @@ from arktic_office.preparation.repository import AuditError, redact
 from arktic_office.coordination.team import CELLS, cell_config, invoke_hermes
 from arktic_office.config.models import profile
 
-AGENTS = {"coordinator": "Coordinador", **{c["id"]: c["name"] for c in CELLS}}
+AGENTS = {"security": "Seguridad (histórico)", "coordinator": "Coordinador", **{c["id"]: c["name"] for c in CELLS}}
 
 
 def load(path):
@@ -45,8 +45,8 @@ def prepare_question(directory, agent, question):
         cell = load(directory / "celulas" / (agent + ".json"))
         if cell.get("estado") not in {"completada", "parcial"} or "resultado" not in cell:
             raise AuditError("Esta célula no tiene un resultado válido en la revisión seleccionada; consulta al coordinador sobre la cobertura parcial.")
-        config = cell_config(next(c for c in CELLS if c["id"] == agent))
-        result = cell["resultado"]
+        config = cell_config(next((c for c in CELLS if c["id"] == agent), {"id": "security"}))
+        result = {k:v for k,v in cell["resultado"].items() if k != "respuesta_original"}
         if agent == "security":
             result = {**result, "scanners": report.get("scanners", [])}
         files = [f for f in snapshot["files"] if f["path"] in cell["archivos"]]
@@ -96,26 +96,20 @@ CONTEXTO (JSON):
                      "commit": context["commit"], "pregunta": context["question"],
                      "resultado": context["result"], "archivos": context["evidence"]}, ensure_ascii=False, separators=(",", ":"))
     envelope = invoke(prompt, context["config"])
+    context["respuesta_original"] = envelope["report"]
     try:
         data = json.loads(envelope["report"])
         if not isinstance(data, dict) or set(data) != {"respuesta", "certeza", "evidencia"}:
             raise ValueError()
-        if not isinstance(data["respuesta"], str) or not 1 <= len(data["respuesta"].strip()) <= 1800:
+        if not isinstance(data["respuesta"], str) or not data["respuesta"].strip():
             raise ValueError()
         if data["certeza"] not in {"explicacion", "indicio", "sin_informacion"}:
             raise ValueError()
-        refs = data["evidencia"]
-        if not isinstance(refs, list) or len(refs) > 3 or (not refs and data["certeza"] != "sin_informacion"):
+        if not isinstance(data['evidencia'], list):
             raise ValueError()
-        resolved = []
-        for ref in refs:
-            if not isinstance(ref, str) or ref not in context["index"]:
-                raise ValueError()
-            source = context["index"][ref]
-            if not source["quote"].strip() or "OCULT" in source["quote"]:
-                raise ValueError()
-            resolved.append(source)
+        from arktic_office.reporting.references import locate
+        resolved = locate(data['evidencia'], context['index'])
     except (ValueError, TypeError, KeyError):
-        raise AuditError("La respuesta no tiene formato o fuentes válidas; no se publica. Sin reintento automático.") from None
-    return {"respuesta": redact(data["respuesta"].strip()), "certeza": data["certeza"],
-            "evidencia": resolved, "usage": envelope.get("usage")}
+        raise AuditError("La respuesta no tiene formato técnico representable; se conserva el original. Sin reintento automático.") from None
+    return {"respuesta": data["respuesta"], "certeza": data["certeza"],
+            "evidencia": resolved, "referencias_originales": data["evidencia"], "respuesta_original": data, "usage": envelope.get("usage")}

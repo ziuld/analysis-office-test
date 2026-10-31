@@ -4,11 +4,25 @@ from datetime import datetime, timezone
 from arktic_office.storage.jsonio import read_json
 from arktic_office.core.contracts import ACTIVE_STATES
 import re
+from functools import lru_cache
 
 from arktic_office.core.errors import AuditError
 
 SAFE_ID = re.compile(r"[a-zA-Z0-9_-]{8,80}\Z")
 MARKERS = ("job.json", "evidencia.json", "informe.json")
+
+
+@lru_cache(maxsize=256)
+def cached_json(path, stamp, size):
+    return read_json(Path(path), {})
+
+
+def immutable_json(path):
+    try:
+        stat = path.stat()
+        return cached_json(str(path), stat.st_mtime_ns, stat.st_size)
+    except OSError:
+        return {}
 
 
 class RunStore:
@@ -84,12 +98,18 @@ class RunStore:
     def detail(self, run_id):
         return self.record(self.resolve(run_id))
 
-    def record(self, path):
+    def record(self, path, *, brief=False):
         job_id = path.name
         job = read_json(path / "job.json")
-        snapshot = read_json(path / "evidencia.json", {})
+        # Polling must not parse all captured source text every two seconds.
+        manifest = immutable_json(path / 'manifest.json') if brief else {}
+        snapshot = manifest or immutable_json(path / "evidencia.json")
+        compatibility_fields = {'simulation', 'source_revision', 'evidence_origin'}
+        if manifest and not compatibility_fields <= set(manifest):
+            original = immutable_json(path / 'evidencia.json')
+            snapshot = {**manifest, **{k: original.get(k) for k in compatibility_fields}}
         team = read_json(path / "estado.json", {})
-        report = read_json(path / "informe.json", {})
+        report = immutable_json(path / "informe.json")
         if job is None:
             if not snapshot or not report:
                 raise FileNotFoundError()
@@ -98,18 +118,22 @@ class RunStore:
         if job["estado"] in ACTIVE_STATES and not snapshot:
             job = {**job, "estado": "preparando"}
         cells = team.get("celulas", report.get("celulas", []))
+        coordination = read_json(path / 'coordinacion.json', {})
         from arktic_office.execution.activity import project
         return {**job, "commit": snapshot.get("commit",job.get('commit')), "branch": snapshot.get("branch",job.get('branch')), "celulas": cells,
+                "meeting": read_json(path / 'meeting.json', {}) if job['estado'] in ACTIVE_STATES else {'active': False},
+                "metrics": read_json(path / 'metrics.json', {}),
+                "coordination": coordination,
                 "activity": project(path, job, cells),
                 "mensaje": report.get("mensaje"), "necesita": report.get("necesita", []),
                 "has_report": (path / "informe.md").is_file(), "has_html_report": (path / "informe.html").is_file(), "evidence_origin": snapshot.get("evidence_origin"),
-                "report_format": report.get("schema_version", 1), "derived_from": snapshot.get("source_revision"), "simulation": bool(snapshot.get("simulation"))}
+                "report_format": report.get("schema_version", 1), "derived_from": snapshot.get("source_revision"), "simulation": bool(snapshot.get("simulation", report.get('simulation', False)))}
 
     def listing(self):
         items = []
         for path in self.directories():
             try:
-                items.append(self.record(path))
+                items.append(self.record(path, brief=True))
             except (FileNotFoundError, KeyError):
                 continue
         return sorted(items, key=lambda x: x.get("created", ""), reverse=True)[:30]

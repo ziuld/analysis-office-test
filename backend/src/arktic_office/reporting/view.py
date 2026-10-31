@@ -1,4 +1,5 @@
 """Executive v14 layout over validated records; no semantic rewriting or model calls."""
+from arktic_office.reporting.originals import html as original_html, markdown as original_markdown
 import base64
 import json
 import re
@@ -91,7 +92,7 @@ def summary_findings(data):
 
 
 def badges(item, snapshot):
-    label, css, _ = GRAVITY[item["severidad"]]
+    label, css, _ = GRAVITY.get(item["severidad"], (item["severidad"], "neutral", 0))
     certainty = "Observado en fuentes ficticias" if snapshot.get("simulation") and item["certeza"] == "confirmados" else "Observado en archivos" if item["certeza"] == "confirmados" else "Indicio por confirmar"
     return f'<span class="tag {css}">Gravedad {h(label.lower())}</span><span class="tag {"neutral" if item["certeza"] == "confirmados" else "pending"}">{certainty}</span>'
 
@@ -185,7 +186,7 @@ def render_html(data, snapshot, model=""):
     footer = f'<footer><div class="corporate-footer"><span>ARKTIC OFFICE / TECNOLOGÍA Y CIBERSEGURIDAD</span><img class="footer-logo" src="{logo}" alt="Arktic"></div><p>La evaluación y la decisión corresponden al arquitecto. Las fuentes y los resultados originales se conservan.</p></footer>'
     script = (ASSETS / "report-navigation.js").read_text(encoding="utf-8")
     from arktic_office.reporting.compact import compact_html
-    return compact_html('<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' + h(title) + ' · Informe Arktic</title><style>' + css + '</style></head><body>' + banner + hero + nav + '<main class="wrap">' + intro + current + target + annex_html(v) + footer + '</main><script id="arktic-report-navigation">' + script + '</script></body></html>', v)
+    return compact_html('<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' + h(title) + ' · Informe Arktic</title><style>' + css + '</style></head><body>' + banner + hero + nav + '<main class="wrap">' + intro + current + target + annex_html(v) + original_html(data) + footer + '</main><script id="arktic-report-navigation">' + script + '</script></body></html>', v)
 
 def azure_html(v):
     p = v["azure"]
@@ -193,7 +194,7 @@ def azure_html(v):
     if not p:
         return body + '<p>No disponible en esta revisión. Los informes anteriores conservan su alcance; revisar el estado de Arquitectura.</p></section>'
     from arktic_office.reporting.azure_proposal import TARGETS
-    body += paragraph("Objetivo propuesto:", p["resumen"]) + paragraph("Opción principal:", TARGETS[p["destino"]]) + paragraph("Por qué encaja:", p["justificacion"])
+    body += paragraph("Objetivo propuesto:", p["resumen"]) + paragraph("Opción principal:", TARGETS.get(p["destino"],p["destino"])) + paragraph("Por qué encaja:", p["justificacion"])
     services = p.get("servicios", [])
     body += '<figure class="infra-diagram"><div class="infra-boundary-label">Esquema lógico propuesto · no representa infraestructura desplegada</div><div class="proposal-lanes">'
     for category, label in {**CATEGORIES, "sin_categoria": "Función no estructurada"}.items():
@@ -311,7 +312,7 @@ def render_markdown(data, snapshot, model=""):
         lines.append('Conexiones no estructuradas en este resultado; no se completa el flujo por deducción.')
     lines += ['', '### Riesgos', '', '| Riesgo | Gravedad | Certeza |', '|---|---|---|']
     for x in v["entries"]:
-        lines.append(f'| [{x["id"]} · {text(x.get("titulo", x["observacion"]))}](#{x["id"].lower()}) | {GRAVITY[x["severidad"]][0]} | {"Observado" if x["certeza"] == "confirmados" else "Indicio por confirmar"} |')
+        lines.append(f'| [{x["id"]} · {text(x.get("titulo", x["observacion"]))}](#{x["id"].lower()}) | {GRAVITY.get(x["severidad"], (x["severidad"], "neutral", 0))[0]} | {"Observado" if x["certeza"] == "confirmados" else "Indicio por confirmar"} |')
     if not v["entries"]:
         lines += ['', 'No se aportaron riesgos clasificables; esto no acredita seguridad.']
     lines += ['', 'Recuento de observados: ' + ' · '.join(f'{GRAVITY[s][0]}: **{sum(x["severidad"] == s for x in v["observed"])}**' for s in SEVERITIES[:-1]), '', f'{len(v["pending"])} indicios de riesgo por confirmar.']
@@ -334,7 +335,7 @@ def render_markdown(data, snapshot, model=""):
     p = v["azure"]
     if p:
         from arktic_office.reporting.azure_proposal import TARGETS
-        lines += ['Recomendación preliminar; compatibilidad y despliegue no validados.', '', '**Opción principal:** ' + TARGETS[p["destino"]], '', text(p["resumen"]), '', '**Justificación:** ' + text(p["justificacion"]), '', 'Base técnica: ' + references(p, snapshot), '', '| Servicio | Función propuesta | Categoría |', '|---|---|---|']
+        lines += ['Recomendación preliminar; compatibilidad y despliegue no validados.', '', '**Opción principal:** ' + TARGETS.get(p["destino"],p["destino"]), '', text(p["resumen"]), '', '**Justificación:** ' + text(p["justificacion"]), '', 'Base técnica: ' + references(p, snapshot), '', '| Servicio | Función propuesta | Categoría |', '|---|---|---|']
         for s in p["servicios"]:
             lines.append(f'| {text(s["servicio"])} | {text(s["uso"])} | {CATEGORIES.get(s.get("categoria"), "Sin categoría estructurada")} |')
         for edge in p.get("conexiones", []):
@@ -354,7 +355,7 @@ def render_markdown(data, snapshot, model=""):
         c = x["componente"]
         lines.append(f'| {text(c["nombre"])} | {text(c["tecnologia"])} | {text(c["funcion"])} | {x["certeza"]} · {references(x, snapshot)} |')
     for x in v["entries"]:
-        lines += ['', '### ' + x["id"], '', '**' + text(x.get("titulo", x["observacion"])) + '**', '', f'Gravedad: {GRAVITY[x["severidad"]][0]} · Certeza: {x["certeza"]}']
+        lines += ['', '### ' + x["id"], '', '**' + text(x.get("titulo", x["observacion"])) + '**', '', f'Gravedad: {GRAVITY.get(x["severidad"], (x["severidad"], "neutral", 0))[0]} · Certeza: {x["certeza"]}']
         for label, field in (("Qué encontramos", "observacion"), ("Qué podría pasar", "importancia"), ("De qué depende", "condiciones"), ("Qué cambiar", "accion"), ("Cómo comprobarlo", "pendiente")):
             lines += ['', '**' + label + ':** ' + text(x[field])]
         if x.get("por_confirmar"):
@@ -396,4 +397,4 @@ def render_markdown(data, snapshot, model=""):
     lines += ['- Excluido: ' + text(f["path"] + ' · ' + f["reason"]) for f in snapshot.get("excluded", [])]
     from arktic_office.reporting.compact import compact_markdown
     from arktic_office.reporting.questionnaire_view import markdown as questionnaire_markdown
-    return compact_markdown('\n'.join(lines) + '\n', v) + questionnaire_markdown(data, snapshot)
+    return compact_markdown('\n'.join(lines) + '\n', v) + questionnaire_markdown(data, snapshot) + original_markdown(data)
