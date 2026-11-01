@@ -73,7 +73,7 @@ index 0000000..d651f7e
 +export const GET = proxy;
 +export const POST = proxy;
 diff --git a/src/app/globals.css b/src/app/globals.css
-index f6ff54d..f25f51f 100644
+index f6ff54d..90d4607 100644
 --- a/src/app/globals.css
 +++ b/src/app/globals.css
 @@ -50,9 +50,9 @@
@@ -89,13 +89,18 @@ index f6ff54d..f25f51f 100644
    --shadow-color: oklch(0.19 0.01 255);
    --shadow-opacity: 0.16;
    --shadow-blur: 28px;
-@@ -1359,3 +1359,29 @@ textarea:focus::-webkit-scrollbar {
+@@ -1359,3 +1359,52 @@ textarea:focus::-webkit-scrollbar {
      transform: translateY(-1px);
    }
  }
 +
 +/* Compact pixel controls for the audit office; long answers keep readable type. */
 +.audit-pixel-button {
++  display: inline-flex;
++  align-items: center;
++  justify-content: center;
++  gap: 8px;
++  min-height: 40px;
 +  border-width: 2px;
 +  border-radius: 2px;
 +  box-shadow: 3px 3px 0 #020617;
@@ -116,8 +121,26 @@ index f6ff54d..f25f51f 100644
 +  box-shadow: inset 3px 0 0 #42bcc633;
 +}
 +.audit-agent-card:hover { border-color: #67e8f9; }
++.audit-pixel-icon { flex: 0 0 16px; image-rendering: pixelated; }
++.audit-pixel-panel { border-radius: 2px; box-shadow: 4px 4px 0 #020617, inset 0 2px 0 #67e8f91a; }
++.audit-pixel-button:disabled { cursor: not-allowed; }
++.audit-office :is(input, select, textarea) {
++  border-radius: 2px;
++  border-width: 2px;
++  min-height: 44px;
++  max-width: 100%;
++}
++.audit-office :is(input, select, textarea, summary):focus-visible {
++  outline: 2px solid #a5f3fc;
++  outline-offset: 3px;
++}
++.audit-office summary { min-height: 28px; }
++.audit-office summary::marker { color: #67e8f9; }
++.audit-office [role="dialog"] { scroll-padding-top: 100px; }
++.audit-office :is(code, pre) { overflow-wrap: anywhere; }
 +@media (prefers-reduced-motion: reduce) {
 +  .audit-pixel-button { transition: none; }
++  .audit-office *, .audit-office *::before, .audit-office *::after { animation: none !important; scroll-behavior: auto !important; }
 +}
 diff --git a/src/app/layout.tsx b/src/app/layout.tsx
 index 1f452a0..526b855 100644
@@ -216,12 +239,14 @@ index 5278885..03cdfca 100644
  }
 diff --git a/src/features/audit/AgentQuestion.tsx b/src/features/audit/AgentQuestion.tsx
 new file mode 100644
-index 0000000..ed36f3d
+index 0000000..d5aa57d
 --- /dev/null
 +++ b/src/features/audit/AgentQuestion.tsx
-@@ -0,0 +1,115 @@
+@@ -0,0 +1,119 @@
 +"use client";
 +import { useEffect, useState } from "react";
++import { PixelIcon } from "./PixelIcon";
++import { useAuditDialog } from "./useAuditDialog";
 +
 +export interface Question {
 +  id: string; run_id: string; agent: string; nombre: string; question: string;
@@ -255,6 +280,7 @@ index 0000000..ed36f3d
 +}
 +
 +export function AgentQuestion({ run, agent, name, role, active, blocked, details, onStarted, onClose }: Props) {
++  const dialog = useAuditDialog<HTMLElement>(true, onClose);
 +  const [query, setQuery] = useState<Question | null>(() => readLastQuestion(run.id, agent));
 +  const [text, setText] = useState(() => query?.question || "");
 +  const [sending, setSending] = useState(false);
@@ -274,12 +300,13 @@ index 0000000..ed36f3d
 +  useEffect(() => {
 +    if (active?.run_id === run.id && active.agent === agent) setQuery(q => q?.id === active.id ? q : active);
 +  }, [active, run.id, agent]);
++  const queryId = query?.id, queryState = query?.estado;
 +  useEffect(() => {
-+    if (!query || !["en_cola", "respondiendo"].includes(query.estado)) return;
++    if (!queryId || !queryState || !["en_cola", "respondiendo"].includes(queryState)) return;
 +    let stopped = false;
 +    const refresh = async () => {
 +      try {
-+        const response = await fetch(`/api/audit/runs/${run.id}/questions/${query.id}`, { cache: "no-store" });
++        const response = await fetch(`/api/audit/runs/${run.id}/questions/${queryId}`, { cache: "no-store" });
 +        const data = await response.json();
 +        if (!response.ok) throw new Error();
 +        if (!stopped) { setQuery(data); setError(""); }
@@ -287,7 +314,7 @@ index 0000000..ed36f3d
 +    };
 +    void refresh(); const timer = window.setInterval(() => void refresh(), 2000);
 +    return () => { stopped = true; window.clearInterval(timer); };
-+  }, [query?.id, query?.estado, run.id]);
++  }, [queryId, queryState, run.id]);
 +
 +  async function ask(event: React.FormEvent) {
 +    event.preventDefault(); setSending(true); setError("");
@@ -304,8 +331,8 @@ index 0000000..ed36f3d
 +  const waiting = sending || query?.estado === "respondiendo" || query?.estado === "en_cola";
 +  const certainty: Record<string, string> = { explicacion: "Explicación con fuentes", indicio: "Indicio por confirmar", sin_informacion: "Información insuficiente" };
 +  return <div className="absolute inset-1 top-16 z-40 flex items-center justify-center bg-slate-950/80 p-2 sm:inset-x-3">
-+    <section role="dialog" aria-modal="true" aria-label={name} className="flex max-h-full w-full max-w-5xl flex-col overflow-auto border-2 border-cyan-300/30 bg-slate-950 px-4 pb-5 text-slate-100 shadow-2xl sm:px-7">
-+      <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-white/10 bg-slate-950 py-4"><div><h2 className="font-mono text-xl font-bold text-cyan-100">{name}</h2>{role && <p className="mt-1 text-sm text-slate-300">{role}</p>}</div><button onClick={onClose} className="audit-pixel-button border-white/20 px-3 py-2 text-sm">Cerrar consulta</button></header>
++    <section ref={dialog} tabIndex={-1} role="dialog" aria-modal="true" aria-label={name} className="audit-pixel-panel flex max-h-full w-full max-w-5xl flex-col overflow-auto border-2 border-cyan-300/30 bg-slate-950 px-4 pb-5 text-slate-100 shadow-2xl sm:px-7">
++      <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-white/10 bg-slate-950 py-4"><div><h2 className="font-mono text-xl font-bold text-cyan-100">{name}</h2>{role && <p className="mt-1 text-sm text-slate-300">{role}</p>}</div><button onClick={onClose} className="audit-pixel-button border-white/20 px-3 py-2 text-sm"><PixelIcon kind="close" />Cerrar consulta</button></header>
 +      <details className="mt-4 border border-white/15 bg-slate-900/50 p-3"><summary className="cursor-pointer text-sm text-slate-300">Perfil y detalles de la revisión</summary>
 +        <p className="mt-3 break-all text-xs text-slate-400">{run.repository}<br />Revisión {run.id} · {run.branch || "main"}@{run.commit?.slice(0, 12) || "Sin commit"} · {run.estado}</p>
 +        {details && <div className="mt-3 space-y-2 text-sm text-slate-300"><p>{details.reason}</p><p>Cobertura: {details.coverage || "No disponible"}</p><p>Modelo: {details.model || "No disponible"} · {details.reasoning || "No disponible"}</p></div>}
@@ -315,7 +342,7 @@ index 0000000..ed36f3d
 +        <label htmlFor="agent-question" className="block text-sm">Tu pregunta para {name}</label>
 +        <p id="agent-question-help" className="text-xs leading-relaxed text-slate-400">Pregunta independiente sobre la evidencia guardada. Puedes leer las últimas 10 consultas guardadas de este personaje y revisión; no se envían como historial al modelo. No modifica el informe.</p>
 +        <textarea id="agent-question" aria-describedby="agent-question-help" required maxLength={800} value={text} onChange={e => setText(e.target.value)} rows={4} className="w-full border border-white/20 bg-slate-900 p-3 text-sm" placeholder="¿Qué evidencia respalda esta observación?" />
-+        <div className="flex flex-wrap items-center justify-between gap-3"><span className="text-xs text-slate-400">{text.length}/800 · Pregunta independiente</span><button disabled={waiting || blocked || !text.trim()} className="audit-pixel-button border-cyan-200/50 bg-[#42bcc6] px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-40">{waiting ? "Consultando…" : "Enviar pregunta"}</button></div>
++        <div className="flex flex-wrap items-center justify-between gap-3"><span className="text-xs text-slate-400">{text.length}/800 · Pregunta independiente</span><button disabled={waiting || blocked || !text.trim()} className="audit-pixel-button border-cyan-200/50 bg-[#42bcc6] px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-40"><PixelIcon kind="send" />{waiting ? "Consultando…" : "Enviar pregunta"}</button></div>
 +      </form>
 +      {blocked && !waiting && <p className="mt-3 text-sm text-amber-200">Espera a que termine la revisión o consulta activa.</p>}
 +      {error && <p role="alert" className="mt-4 text-sm text-rose-300">{error}</p>}
@@ -337,10 +364,10 @@ index 0000000..ed36f3d
 +}
 diff --git a/src/features/audit/AuditOffice.tsx b/src/features/audit/AuditOffice.tsx
 new file mode 100644
-index 0000000..7a8f177
+index 0000000..3655014
 --- /dev/null
 +++ b/src/features/audit/AuditOffice.tsx
-@@ -0,0 +1,165 @@
+@@ -0,0 +1,168 @@
 +"use client";
 +
 +import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -350,6 +377,8 @@ index 0000000..7a8f177
 +import type { OfficeAgent } from "@/features/retro-office/core/types";
 +import { AgentQuestion, type Question } from "./AgentQuestion";
 +import { ExecutiveReport } from "./ExecutiveReport";
++import { PixelIcon } from "./PixelIcon";
++import { useAuditDialog } from "./useAuditDialog";
 +
 +interface Cell { duration_seconds?: number; tokens_available?: number; summary?: string; usage?: Record<string, number>; id: string; nombre: string; estado: string; model: string; reasoning: string; error?: string; mensaje?: string; necesita?: string[]; coverage?: string; reason?: string; missing?: string[] }
 +interface Activity { state: string; text: string; working: boolean; meeting: boolean }
@@ -396,6 +425,7 @@ index 0000000..7a8f177
 +  const [panel, setPanel] = useState(true);
 +  const [report, setReport] = useState<string | null>(null);
 +  const [reportHtml, setReportHtml] = useState<string | null>(null);
++  const reportDialog = useAuditDialog<HTMLDivElement>(report !== null, () => setReport(null));
 +  const [selectedCell, setSelectedCell] = useState("coordinator");
 +  const [chat, setChat] = useState<{ run: Run; agent: string } | null>(null);
 +  const [questionActive, setQuestionActive] = useState<Question | null>(null);
@@ -449,7 +479,7 @@ index 0000000..7a8f177
 +    else setError("Selecciona una revisión terminada con informe para consultar al equipo.");
 +  }
 +
-+  return <div className="relative h-full w-full bg-slate-950 text-slate-100">
++  return <div className="audit-office relative h-full w-full bg-slate-950 text-slate-100">
 +    <div className={`absolute inset-x-0 top-14 ${panel ? "bottom-1/2 min-[1000px]:bottom-0 min-[1000px]:right-[380px]" : "bottom-0"}`}>
 +      <PixelOffice2D agents={agents} renderMode="2d" onRenderModeChange={() => {}} readOnly compact
 +        onAgentChatSelect={consult} selectedAgentId={chat?.agent || selectedCell} statusTextByAgentId={activityText}
@@ -461,9 +491,9 @@ index 0000000..7a8f177
 +    </div>
 +    <header className="absolute inset-x-0 top-0 z-30 flex h-14 items-center justify-between border-b border-white/10 bg-slate-950 px-5">
 +      <div className="flex items-center gap-3"><strong className="text-lg font-black tracking-tight">ARKTIC<span className="text-[#42bcc6]">.</span></strong><span className="hidden border-l border-white/20 pl-3 text-xs text-slate-300 sm:block">Oficina de análisis</span><span className="text-xs text-slate-400" aria-label="Versión de la oficina">v{process.env.NEXT_PUBLIC_OFFICE_VERSION || "development"}</span></div>
-+      <button className="rounded-lg bg-[#42bcc6] px-4 py-2 text-sm font-semibold text-slate-950" onClick={() => setPanel(!panel)}>{panel ? "Ver oficina" : "Abrir revisión"}</button>
++      <button aria-expanded={panel} aria-controls="audit-review-panel" className="audit-pixel-button border-cyan-200/50 bg-[#42bcc6] px-4 py-2 text-sm font-semibold text-slate-950" onClick={() => setPanel(!panel)}><PixelIcon kind="panel" />{panel ? "Ver oficina" : "Abrir revisión"}</button>
 +    </header>
-+    {panel && <aside aria-label="Panel de revisión" className="absolute bottom-3 left-3 right-3 top-1/2 z-30 overflow-auto rounded-xl border border-white/15 bg-slate-950/95 p-5 shadow-2xl min-[1000px]:left-auto min-[1000px]:top-16 min-[1000px]:w-[356px]">
++    {panel && <aside id="audit-review-panel" aria-label="Panel de revisión" className="audit-pixel-panel absolute bottom-3 left-3 right-3 top-1/2 z-30 overflow-auto border border-white/15 bg-slate-950/95 p-5 shadow-2xl min-[1000px]:left-auto min-[1000px]:top-16 min-[1000px]:w-[356px]">
 +      <h1 className="text-xl font-semibold">Revisión de repositorio</h1>
 +      <p className="mt-1 text-sm text-slate-400">Lectura estática ligada a un commit. En repositorios locales se revisa la rama activa al preparar la captura. El arquitecto evalúa el resultado.</p>
 +      <form onSubmit={start} className="mt-5 space-y-3">
@@ -475,7 +505,7 @@ index 0000000..7a8f177
 +          {localSources.length === 0 && <p className="text-xs text-amber-200">No hay capturas locales preparadas en este equipo.</p>}
 +          {localSources.find(s => s.id === localSourceId) && <p className="break-all text-xs text-slate-400">{localSources.find(s => s.id === localSourceId)?.source_path}<br />Rama: {localSources.find(s => s.id === localSourceId)?.branch} · Commit: {localSources.find(s => s.id === localSourceId)?.commit}</p>}
 +        </>}
-+        <button disabled={!connected || submitting || !!active || !!questionActive || sourceKind === "local" && !localSourceId} className="w-full rounded-lg bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 disabled:opacity-40">{submitting ? "Iniciando…" : active ? "Revisión en curso" : questionActive ? "Consulta en curso" : "Iniciar revisión"}</button>
++        <button disabled={!connected || submitting || !!active || !!questionActive || sourceKind === "local" && !localSourceId} className="audit-pixel-button w-full border-cyan-100/50 bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 disabled:opacity-40"><PixelIcon kind="play" />{submitting ? "Iniciando…" : active ? "Revisión en curso" : questionActive ? "Consulta en curso" : "Iniciar revisión"}</button>
 +      </form>
 +      {(error || networkError) && <p role="alert" className="mt-4 rounded-lg border border-rose-400/30 bg-rose-950 p-3 text-sm text-rose-200">{error || networkError}</p>}
 +      {runs.length > 0 && <div className="mt-5"><label htmlFor="runs" className="text-xs text-slate-400">Revisiones guardadas</label><select id="runs" value={current?.id || ""} onChange={e => { setSelected(e.target.value); setReport(null); }} className="mt-1 w-full rounded-lg border border-white/20 bg-slate-900 p-2 text-xs">{runs.map(r => <option key={r.id} value={r.id}>{r.simulation ? "SIMULACIÓN · " : r.report_format === 3 ? "Seguridad · " : r.report_format === 2 ? "Formato 2 · " : ""}{r.derived_from ? "Evidencia guardada · " : r.historical ? "Histórico · " : ""}{r.repository.split("/").slice(-2).join("/")} · {label[r.estado] || r.estado} · {r.id.slice(0, 10)}</option>)}</select></div>}
@@ -491,37 +521,40 @@ index 0000000..7a8f177
 +          <span className="block text-xs text-slate-300">{role.name}</span>
 +          {finished && <span className="mt-2 block border-t border-white/10 pt-2 text-xs text-slate-400">Duración: {cell.duration_seconds != null ? `${cell.duration_seconds.toFixed(1)} s` : "No disponible"}<br />Tokens usados: {usedTokens(cell.usage)?.toLocaleString("es-ES") ?? "No disponible"}</span>}
 +        </button>; })}</div>
-+        {current.celulas?.some(c => c.id === "security") && <button onClick={() => consult("security")} className="rounded-lg border border-white/20 px-3 py-2 text-sm">Consultar Seguridad de esta revisión histórica</button>}
++        {current.celulas?.some(c => c.id === "security") && <button onClick={() => consult("security")} className="audit-pixel-button border-white/20 px-3 py-2 text-sm">Consultar Seguridad de esta revisión histórica</button>}
 +        {current.has_report && <div className="space-y-2 pt-2">
-+          <button onClick={() => void openReport()} className="audit-pixel-button w-full border-cyan-300/40 px-3 py-3 text-sm text-cyan-200">Leer informe</button>
++          <button onClick={() => void openReport()} className="audit-pixel-button w-full border-cyan-300/40 px-3 py-3 text-sm text-cyan-200"><PixelIcon kind="book" />Leer informe</button>
 +          <div className="grid grid-cols-2 gap-2">
-+            <a href={`/api/audit/runs/${current.id}/download`} className="audit-pixel-button border-emerald-100/50 bg-emerald-300 px-2 py-3 text-center text-xs font-semibold text-slate-950">Descargar Markdown</a>
-+            {current.has_html_report && <a href={`/api/audit/runs/${current.id}/download-html`} className="audit-pixel-button border-emerald-100/50 bg-emerald-300 px-2 py-3 text-center text-xs font-semibold text-slate-950">Descargar HTML</a>}
++            <a href={`/api/audit/runs/${current.id}/download`} className="audit-pixel-button border-emerald-100/50 bg-emerald-300 px-2 py-3 text-center text-xs font-semibold text-slate-950"><PixelIcon kind="download" />Descargar Markdown</a>
++            {current.has_html_report && <a href={`/api/audit/runs/${current.id}/download-html`} className="audit-pixel-button border-emerald-100/50 bg-emerald-300 px-2 py-3 text-center text-xs font-semibold text-slate-950"><PixelIcon kind="download" />Descargar HTML</a>}
 +          </div>
 +        </div>}
 +      </section>}
 +      {!current && <p className="mt-6 text-sm text-slate-400">El equipo está listo. Introduce un repositorio para comenzar.</p>}
 +    </aside>}
-+    {report !== null && <div role="dialog" aria-modal="true" aria-label="Informe de revisión" className="absolute inset-4 top-16 z-40 flex flex-col rounded-xl border border-white/20 bg-slate-950 p-5 shadow-2xl"><div className="mb-2 flex justify-end"><button onClick={() => setReport(null)} className="rounded border border-white/20 px-3 py-2">Cerrar informe</button></div>{reportHtml ? <ExecutiveReport html={reportHtml} /> : <div className="overflow-auto break-words text-sm leading-relaxed text-slate-200 [&_h1]:mb-4 [&_h1]:text-2xl [&_h2]:my-5 [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:mt-5 [&_h3]:mb-2 [&_h3]:font-semibold [&_p]:my-3 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:my-2 [&_table]:w-full [&_table]:block [&_table]:overflow-x-auto [&_th]:border [&_th]:border-white/20 [&_th]:p-2 [&_td]:border [&_td]:border-white/20 [&_td]:p-2 [&_a]:text-cyan-300 [&_code]:text-cyan-200"><ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml components={{ a: ({ children, href }) => <a href={href} target="_blank" rel="noopener noreferrer">{children}</a> }}>{report}</ReactMarkdown></div>}</div>}
++    {report !== null && <div ref={reportDialog} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Informe de revisión" className="audit-pixel-panel absolute inset-2 top-16 z-40 flex flex-col border border-white/20 bg-slate-950 p-5 shadow-2xl"><div className="mb-2 flex justify-end"><button onClick={() => setReport(null)} className="audit-pixel-button border-white/20 px-3 py-2"><PixelIcon kind="close" />Cerrar informe</button></div>{reportHtml ? <ExecutiveReport html={reportHtml} onClose={() => setReport(null)} /> : <div className="overflow-auto break-words text-sm leading-relaxed text-slate-200 [&_h1]:mb-4 [&_h1]:text-2xl [&_h2]:my-5 [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:mt-5 [&_h3]:mb-2 [&_h3]:font-semibold [&_p]:my-3 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:my-2 [&_table]:w-full [&_table]:block [&_table]:overflow-x-auto [&_th]:border [&_th]:border-white/20 [&_th]:p-2 [&_td]:border [&_td]:border-white/20 [&_td]:p-2 [&_a]:text-cyan-300 [&_code]:text-cyan-200"><ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml components={{ a: ({ children, href }) => <a href={href} target="_blank" rel="noopener noreferrer">{children}</a> }}>{report}</ReactMarkdown></div>}</div>}
 +    {chat && <AgentQuestion key={`${chat.run.id}-${chat.agent}`} run={chat.run} agent={chat.agent} name={roles.find(r => r.id === chat.agent)?.person || chat.run.celulas?.find(c => c.id === chat.agent)?.nombre || chat.agent} role={roles.find(r => r.id === chat.agent)?.name} active={questionActive} blocked={false} details={chat.agent === "coordinator" ? coordinatorCell(chat.run) : chat.run.celulas?.find(c => c.id === chat.agent)} onStarted={setQuestionActive} onClose={() => setChat(null)} />}
 +  </div>;
 +}
 diff --git a/src/features/audit/ExecutiveReport.tsx b/src/features/audit/ExecutiveReport.tsx
 new file mode 100644
-index 0000000..a092ac7
+index 0000000..cb70711
 --- /dev/null
 +++ b/src/features/audit/ExecutiveReport.tsx
-@@ -0,0 +1,33 @@
+@@ -0,0 +1,36 @@
 +"use client";
 +
 +import React, { useRef } from "react";
 +
-+export function ExecutiveReport({ html }: { html: string }) {
++export function ExecutiveReport({ html, onClose }: { html: string; onClose?: () => void }) {
 +  const frame = useRef<HTMLIFrameElement>(null);
 +  const source = html.replace(/<script id="arktic-report-navigation">[\s\S]*?<\/script>/g, "");
 +  function bindNavigation() {
 +    const doc = frame.current?.contentDocument;
 +    if (!doc) return;
++    doc.addEventListener("keydown", event => {
++      if (event.key === "Escape" && onClose) { event.preventDefault(); onClose(); }
++    });
 +    // The iframe cannot run scripts. This trusted parent handles internal anchors only.
 +    doc.addEventListener("click", event => {
 +      const anchor = (event.target as Element)?.closest?.('a[href^="#"]');
@@ -608,7 +641,7 @@ index 7d9371e..061f069 100644
      setOfficeRenderMode(resolveInitialOfficeRenderMode());
    }, []);
 diff --git a/src/features/pixel-office/PixelOffice2D.tsx b/src/features/pixel-office/PixelOffice2D.tsx
-index 7d2a060..1446a2e 100644
+index 7d2a060..c3e81bd 100644
 --- a/src/features/pixel-office/PixelOffice2D.tsx
 +++ b/src/features/pixel-office/PixelOffice2D.tsx
 @@ -17,6 +17,7 @@ import {
@@ -690,7 +723,7 @@ index 7d2a060..1446a2e 100644
        setContextMenu({ agentId, x: clientX, y: clientY });
      };
      bridge.callbacks.onStationInteract = (kind) => {
-@@ -155,7 +176,7 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
+@@ -155,10 +176,11 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
        if (kind === "jukebox") onJukeboxInteract?.();
        if (kind === "kanban") onKanbanInteract?.();
      };
@@ -699,7 +732,11 @@ index 7d2a060..1446a2e 100644
 
    useEffect(() => {
      let canceled = false;
-@@ -166,11 +187,11 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
++    let resizeObserver: ResizeObserver | null = null;
+     const setup = async () => {
+       if (!rootRef.current) return;
+       const PhaserLib = await import("phaser");
+@@ -166,11 +188,11 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
          "@/features/pixel-office/scene/PixelOfficeScene"
        );
        if (canceled || !rootRef.current) return;
@@ -713,7 +750,23 @@ index 7d2a060..1446a2e 100644
          scene: [scene],
          render: {
            antialias: false,
-@@ -190,7 +211,7 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
+@@ -183,14 +205,23 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
+         },
+       });
+       gameRef.current = game;
++      // Opening the review panel changes the parent without a window resize.
++      resizeObserver = new ResizeObserver(entries => {
++        const rect = entries[0]?.contentRect;
++        if (!rect || canceled) return;
++        const width = Math.max(1, Math.round(rect.width)), height = Math.max(1, Math.round(rect.height));
++        if (width !== game.scale.width || height !== game.scale.height) game.scale.setParentSize(width, height);
++      });
++      resizeObserver.observe(rootRef.current);
+     };
+     void setup();
+     return () => {
+       canceled = true;
++      resizeObserver?.disconnect();
        gameRef.current?.destroy(true);
        gameRef.current = null;
      };
@@ -722,7 +775,7 @@ index 7d2a060..1446a2e 100644
 
    const contextAgent = contextMenu
      ? (agents.find((agent) => agent.id === contextMenu.agentId) ?? null)
-@@ -206,16 +227,16 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
+@@ -206,16 +237,16 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
 
        {/* Office title — top left. */}
        <div className="absolute top-3 left-3 z-20 flex items-center gap-2 select-none">
@@ -745,7 +798,7 @@ index 7d2a060..1446a2e 100644
            {errorCount > 0 ? (
              <>
                <span className="text-white/25">·</span>
-@@ -247,17 +268,17 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
+@@ -247,17 +278,17 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
            }`}
            title={`Runtime: ${activeAdapterType} (${gatewayStatus})`}
          >
@@ -767,7 +820,7 @@ index 7d2a060..1446a2e 100644
            onClick={() => setSettingsOpen(true)}
            title="Studio settings"
            className={`flex h-7 w-7 items-center justify-center rounded-md border transition-all backdrop-blur-sm ${
-@@ -267,13 +288,13 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
+@@ -267,13 +298,13 @@ export function PixelOffice2D(props: PixelOffice2DProps) {
            }`}
          >
            <Settings2 size={12} />
@@ -776,7 +829,8 @@ index 7d2a060..1446a2e 100644
        </div>
 
        {/* Controls hint — bottom center (event console and chat own the corners). */}
-       <div className="absolute bottom-3 left-1/2 z-10 -translate-x-1/2 pointer-events-none select-none">
+-      <div className="absolute bottom-3 left-1/2 z-10 -translate-x-1/2 pointer-events-none select-none">
++      <div className={`${compact ? "hidden sm:block" : ""} absolute bottom-3 left-1/2 z-10 -translate-x-1/2 pointer-events-none select-none`}>
          <div className="rounded-full bg-black/50 px-3 py-1 text-[10px] font-mono text-white/55 backdrop-blur-sm">
 -          drag to pan · scroll to zoom · click an agent to chat
 +          {readOnly ? "Arrastra para mover · rueda para ampliar · pulsa un agente para consultar" : "drag to pan · scroll to zoom · click an agent to chat"}
@@ -863,18 +917,19 @@ index 0000000..376ab0e
 +  };
 +};
 diff --git a/src/features/pixel-office/scene/PixelOfficeScene.ts b/src/features/pixel-office/scene/PixelOfficeScene.ts
-index 4708d1d..ab21520 100644
+index 4708d1d..b44e37b 100644
 --- a/src/features/pixel-office/scene/PixelOfficeScene.ts
 +++ b/src/features/pixel-office/scene/PixelOfficeScene.ts
-@@ -13,6 +13,7 @@ import {
+@@ -13,6 +13,8 @@ import {
    spriteWidth,
  } from "@/features/pixel-office/art";
  import type { PixelSceneBridge } from "@/features/pixel-office/PixelSceneBridge";
 +import { createAmbientConversations, type AmbientCue } from "@/features/pixel-office/sim/ambientConversations";
++import { layoutOfficeOverlays, type OverlayRect } from "./overlayLayout";
  import {
    createPixelSimulation,
    JANITOR_ID,
-@@ -34,7 +35,7 @@ const TILE = PIXEL_TILE_SIZE;
+@@ -34,7 +36,7 @@ const TILE = PIXEL_TILE_SIZE;
 
  const STATUS_DOT_COLOR: Record<string, number> = {
    working: 0x4ade80,
@@ -883,15 +938,16 @@ index 4708d1d..ab21520 100644
    error: 0xef4444,
  };
 
-@@ -72,6 +73,7 @@ type AgentVisual = {
+@@ -72,6 +74,8 @@ type AgentVisual = {
    lastStatus: string;
    lastName: string;
    seed: string;
 +  hitTarget: HTMLButtonElement | null;
++  leader: Phaser.GameObjects.Graphics;
  };
 
  /** How long a finished speech bubble stays readable, in ms. */
-@@ -81,8 +83,9 @@ export const createPixelOfficeScene = (params: {
+@@ -81,8 +85,9 @@ export const createPixelOfficeScene = (params: {
    PhaserLib: typeof import("phaser");
    bridge: PixelSceneBridge;
    map: PixelOfficeMap;
@@ -902,17 +958,18 @@ index 4708d1d..ab21520 100644
    const worldWidth = map.cols * TILE;
    const worldHeight = map.rows * TILE;
 
-@@ -91,6 +94,9 @@ export const createPixelOfficeScene = (params: {
+@@ -91,6 +96,10 @@ export const createPixelOfficeScene = (params: {
      private visuals = new Map<string, AgentVisual>();
      private frameSetReady = new Set<string>();
      private animClock = 0;
 +    private conversations = createAmbientConversations();
 +    private televisionGlow: Phaser.GameObjects.Graphics | null = null;
 +    private televisionLight = 0;
++    private zoneLabelBounds: OverlayRect[] = [];
      private dragStart: { x: number; y: number; sx: number; sy: number } | null = null;
      private dragDistance = 0;
 
-@@ -104,9 +110,26 @@ export const createPixelOfficeScene = (params: {
+@@ -104,9 +113,27 @@ export const createPixelOfficeScene = (params: {
        this.renderGround();
        this.renderFurniture();
        this.renderZoneLabels();
@@ -935,11 +992,12 @@ index 4708d1d..ab21520 100644
 +      if (fitToView) this.scale.on(PhaserLib.Scale.Events.RESIZE, this.setupCamera, this);
        this.events.once(PhaserLib.Scenes.Events.SHUTDOWN, () => {
 +        for (const visual of this.visuals.values()) visual.hitTarget?.remove();
++        this.zoneLabelBounds = [];
 +        this.scale.off(PhaserLib.Scale.Events.RESIZE, this.setupCamera, this);
          this.visuals.clear();
          this.sim = null;
        });
-@@ -116,6 +139,13 @@ export const createPixelOfficeScene = (params: {
+@@ -116,6 +143,13 @@ export const createPixelOfficeScene = (params: {
        if (!this.sim) return;
        this.animClock += delta;
        const state = bridge.getState();
@@ -953,7 +1011,7 @@ index 4708d1d..ab21520 100644
        const poses = this.sim.tick({
          inputs: state.agents,
          nowMs: Date.now(),
-@@ -184,7 +214,8 @@ export const createPixelOfficeScene = (params: {
+@@ -184,7 +218,8 @@ export const createPixelOfficeScene = (params: {
          image.setOrigin(0, 1);
          // Flat decor stays under everything that walks over it.
          const flat = object.kind === "rug" || object.kind === "flower";
@@ -963,7 +1021,27 @@ index 4708d1d..ab21520 100644
          if (object.kind === "jukebox" || object.kind === "kanban_board") {
            const stationKind = object.kind === "jukebox" ? "jukebox" : "kanban";
            image.setInteractive({ useHandCursor: true });
-@@ -242,7 +273,7 @@ export const createPixelOfficeScene = (params: {
+@@ -203,7 +238,9 @@ export const createPixelOfficeScene = (params: {
+       for (const zoneEntry of map.zones) {
+         if (!zoneEntry.label) continue;
+         const centerX = (zoneEntry.tx + zoneEntry.tw / 2) * TILE;
+-        const topY = zoneEntry.ty * TILE + 44;
++        const topY = fitToView
++          ? zoneEntry.kind === "meeting" ? (zoneEntry.ty + zoneEntry.th - 1) * TILE + 4 : zoneEntry.ty * TILE + 10
++          : zoneEntry.ty * TILE + 44;
+         const text = this.add.text(0, 0, zoneEntry.label, {
+           fontFamily: "system-ui, sans-serif",
+           fontSize: "16px",
+@@ -225,6 +262,8 @@ export const createPixelOfficeScene = (params: {
+         const container = this.add.container(centerX, topY, [bg, text]);
+         container.setDepth(45_000);
+         container.setAlpha(0.95);
++        if (fitToView) this.zoneLabelBounds.push({ x: centerX - text.width / 2 - paddingX, y: topY - text.height / 2 - paddingY,
++          width: text.width + paddingX * 2, height: text.height + paddingY * 2 });
+       }
+     }
+
+@@ -242,7 +281,7 @@ export const createPixelOfficeScene = (params: {
 
      /** Lowest allowed zoom: never smaller than "whole map in view". */
      private minZoom(): number {
@@ -972,7 +1050,7 @@ index 4708d1d..ab21520 100644
      }
 
      private setupCamera() {
-@@ -263,12 +294,12 @@ export const createPixelOfficeScene = (params: {
+@@ -263,12 +302,12 @@ export const createPixelOfficeScene = (params: {
        // Gather-style default: start close enough that the pixel art reads at
        // 1:1+ detail, centered on the main pods. Wheel out for the overview.
        const zoom = PhaserLib.Math.Clamp(
@@ -987,7 +1065,7 @@ index 4708d1d..ab21520 100644
      }
 
      private setupPointerControls() {
-@@ -362,6 +393,12 @@ export const createPixelOfficeScene = (params: {
+@@ -362,6 +401,12 @@ export const createPixelOfficeScene = (params: {
        const state = bridge.getState();
        const inputById = new Map(state.agents.map((agent) => [agent.id, agent]));
        const seen = new Set<string>();
@@ -1000,7 +1078,7 @@ index 4708d1d..ab21520 100644
 
        for (const pose of poses) {
          seen.add(pose.id);
-@@ -373,13 +410,15 @@ export const createPixelOfficeScene = (params: {
+@@ -373,15 +418,52 @@ export const createPixelOfficeScene = (params: {
            visual = this.createVisual(pose.id, input?.name ?? "Janitor");
            this.visuals.set(pose.id, visual);
          }
@@ -1013,14 +1091,53 @@ index 4708d1d..ab21520 100644
          if (seen.has(id)) continue;
          visual.container.destroy();
          visual.overlay.destroy();
++        visual.leader.destroy();
 +        visual.hitTarget?.remove();
          this.visuals.delete(id);
        }
++      if (fitToView) this.arrangeOverlays(poses);
++    }
++
++    private arrangeOverlays(poses: PixelAgentPose[]) {
++      const scale = Math.min(1.35, Math.max(1, 0.7 / this.cameras.main.zoom));
++      const items = poses.map(pose => {
++        const visual = this.visuals.get(pose.id)!;
++        visual.overlay.setScale(scale);
++        let width = visual.nameText.width + 26;
++        let top = -10;
++        if (visual.bubbleText.visible) {
++          width = Math.max(width, visual.bubbleText.width + 18);
++          top = Math.min(top, -visual.bubbleText.height - 28);
++        }
++        if (visual.thinkText.visible) { width = Math.max(width, 76); top = Math.min(top, -visual.thinkText.height - 14); }
++        if (visual.badgeText.visible) { width = Math.max(width, 76); top = Math.min(top, -visual.badgeText.height - 14); }
++        return { id: pose.id, x: visual.overlay.x - width * scale / 2, y: visual.overlay.y + top * scale,
++          width: width * scale, height: (10 - top) * scale };
++      });
++      const bodies = poses.map(pose => {
++        const visual = this.visuals.get(pose.id)!;
++        return { x: visual.container.x - 12, y: visual.container.y - CHARACTER_HEIGHT, width: 24, height: CHARACTER_HEIGHT };
++      });
++      const placed = layoutOfficeOverlays(items, [...this.zoneLabelBounds, ...bodies], { x: TILE, y: TILE, width: worldWidth - TILE * 2, height: worldHeight - TILE * 2 });
++      for (const item of items) {
++        const visual = this.visuals.get(item.id)!, rect = placed.get(item.id)!;
++        const dx = rect.x - item.x, dy = rect.y - item.y;
++        visual.leader.clear();
++        if (Math.hypot(dx, dy) > 6) {
++          visual.leader.lineStyle(1, 0x475569, 0.8);
++          visual.leader.lineBetween(visual.overlay.x, visual.overlay.y + 12 * scale, visual.overlay.x + dx, visual.overlay.y + dy + 10 * scale);
++        }
++        visual.overlay.setPosition(visual.overlay.x + dx, visual.overlay.y + dy);
++      }
      }
-@@ -445,6 +484,20 @@ export const createPixelOfficeScene = (params: {
+
+     private createVisual(id: string, name: string): AgentVisual {
+@@ -444,6 +526,21 @@ export const createPixelOfficeScene = (params: {
+         badgeText,
        ]);
        overlay.setDepth(40_000);
-
++      const leader = this.add.graphics().setDepth(39_999);
++
 +      // Native hit targets make compact-office characters clickable with
 +      // mouse, keyboard and DOM browser clients, without React frame updates.
 +      const hitTarget = fitToView && id !== JANITOR_ID ? document.createElement("button") : null;
@@ -1034,19 +1151,19 @@ index 4708d1d..ab21520 100644
 +        hitTarget.addEventListener("click", () => bridge.callbacks.onAgentClick?.(id));
 +        this.game.canvas.parentElement?.appendChild(hitTarget);
 +      }
-+
+
        return {
          container,
-         sprite,
-@@ -463,6 +516,7 @@ export const createPixelOfficeScene = (params: {
+@@ -463,6 +560,8 @@ export const createPixelOfficeScene = (params: {
          lastStatus: "",
          lastName: name,
          seed: id,
 +        hitTarget,
++        leader,
        };
      }
 
-@@ -494,16 +548,32 @@ export const createPixelOfficeScene = (params: {
+@@ -494,16 +593,32 @@ export const createPixelOfficeScene = (params: {
        pose: PixelAgentPose,
        input: { name: string; status: string; thinking: boolean; awaitingApproval: boolean } | null,
        bubble: string,
@@ -1082,7 +1199,22 @@ index 4708d1d..ab21520 100644
 
        // Nameplate pill with the status dot.
        const name = input?.name ?? "Janitor";
-@@ -541,10 +611,16 @@ export const createPixelOfficeScene = (params: {
+@@ -517,11 +632,12 @@ export const createPixelOfficeScene = (params: {
+       const plateHeight = 20;
+       visual.nameBg.clear();
+       visual.nameBg.fillStyle(0x11131c, 0.82);
+-      visual.nameBg.fillRoundedRect(-plateWidth / 2, -plateHeight / 2, plateWidth, plateHeight, 8);
++      if (fitToView) visual.nameBg.fillRect(-plateWidth / 2, -plateHeight / 2, plateWidth, plateHeight);
++      else visual.nameBg.fillRoundedRect(-plateWidth / 2, -plateHeight / 2, plateWidth, plateHeight, 8);
+       visual.nameText.setPosition(5, 0);
+       visual.statusDot.setPosition(-plateWidth / 2 + 9, 0);
+       visual.statusDot.setFillStyle(STATUS_DOT_COLOR[status] ?? 0x9ca3af);
+-      if (status === "working") {
++      if (status === "working" && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+         visual.statusDot.setAlpha(0.6 + 0.4 * Math.abs(Math.sin(this.animClock / 400)));
+       } else {
+         visual.statusDot.setAlpha(1);
+@@ -541,10 +657,16 @@ export const createPixelOfficeScene = (params: {
        const lingering =
          visual.lingerText.length > 0 &&
          this.animClock - visual.bubbleChangedAt < BUBBLE_LINGER_MS;
@@ -1100,7 +1232,7 @@ index 4708d1d..ab21520 100644
          const bw = visual.bubbleText.width + 18;
          const bh = visual.bubbleText.height + 14;
          const by = -14;
-@@ -552,9 +628,16 @@ export const createPixelOfficeScene = (params: {
+@@ -552,9 +674,16 @@ export const createPixelOfficeScene = (params: {
          visual.bubbleBg.clear();
          visual.bubbleBg.fillStyle(0xf9fbff, 0.96);
          visual.bubbleBg.lineStyle(2, 0x2b2b3a, 0.9);
@@ -1121,7 +1253,7 @@ index 4708d1d..ab21520 100644
 
        // Thinking dots (hidden while a speech bubble is visible).
 diff --git a/src/features/pixel-office/sim/agentSimulation.ts b/src/features/pixel-office/sim/agentSimulation.ts
-index cd4b188..1f23c15 100644
+index cd4b188..5e2c9d5 100644
 --- a/src/features/pixel-office/sim/agentSimulation.ts
 +++ b/src/features/pixel-office/sim/agentSimulation.ts
 @@ -35,9 +35,9 @@ const AGENT_SPEED = 180;
@@ -1265,15 +1397,17 @@ index cd4b188..1f23c15 100644
          agent.goalKind = "idle_pause";
        } else if (nowMs >= agent.pauseUntil) {
          agent.lastStationId = agent.goalStationId;
-@@ -273,6 +320,7 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
+@@ -273,6 +320,9 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
      }
    };
 
 +  let currentMeetingIds = new Set<string>();
++  // Null means a participant keeps attending at its desk until this meeting ends.
++  const meetingSeats = new Map<string, string | null>();
    const resolveGoal = (
      agent: InternalAgentState,
      input: PixelAgentInput,
-@@ -300,28 +348,34 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
+@@ -300,28 +350,31 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
      }
      agent.holdKind = null;
 
@@ -1292,11 +1426,8 @@ index cd4b188..1f23c15 100644
 -      if (stationSlot) {
 -        const center = tileCenter(stationSlot.tx, stationSlot.ty);
 -        setTarget(agent, center.x, center.y, stationSlot.facing);
-+      const attendees = Object.values(state.agents).filter(a => currentMeetingIds.has(a.id))
-+        .sort((a, b) => a.id === "coordinator" ? -1 : b.id === "coordinator" ? 1 : a.id.localeCompare(b.id));
-+      const index = attendees.findIndex(a => a.id === input.id);
-+      const seats = stationsByKind.get("meeting_seat") ?? [];
-+      const roomSeat = seats[index];
++      const seatId = meetingSeats.get(input.id);
++      const roomSeat = seatId ? stationById.get(seatId) : undefined;
 +      agent.goalKind = "meeting";
 +      agent.pauseUntil = 0;
 +      agent.goalStationId = roomSeat?.id ?? null;
@@ -1323,7 +1454,7 @@ index cd4b188..1f23c15 100644
      }
 
      // Priority c: dancing happens in place.
-@@ -332,8 +386,8 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
+@@ -332,8 +385,8 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
        return;
      }
 
@@ -1334,7 +1465,7 @@ index cd4b188..1f23c15 100644
        const deskId = state.deskByAgentId[input.id];
        const deskSlot = deskId ? deskById.get(deskId) : undefined;
        if (deskSlot) {
-@@ -343,7 +397,7 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
+@@ -343,7 +396,7 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
            agent.pauseUntil = 0;
          }
          const seat = tileCenter(deskSlot.seatTx, deskSlot.seatTy);
@@ -1343,7 +1474,7 @@ index cd4b188..1f23c15 100644
          return;
        }
        // No free desk: fall through to wander behavior.
-@@ -414,6 +468,7 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
+@@ -414,6 +467,7 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
            ? stationById.get(agent.goalStationId)
            : undefined;
          if (!stationSlot) return "standing";
@@ -1351,7 +1482,7 @@ index cd4b188..1f23c15 100644
          return stationSlot.kind === "wander" ? "standing" : "station";
        }
        default:
-@@ -450,7 +505,9 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
+@@ -450,7 +504,9 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
            janitor.pauseUntil = 0;
          }
        }
@@ -1362,7 +1493,7 @@ index cd4b188..1f23c15 100644
        janitor.goalKind = "wander";
        janitor.goalStationId = stationSlot.id;
        const center = tileCenter(stationSlot.tx, stationSlot.ty);
-@@ -484,6 +541,7 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
+@@ -484,12 +540,14 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
    }): PixelAgentPose[] => {
      const stepMs = Math.min(Math.max(dtMs, 0), MAX_STEP_MS);
 
@@ -1370,8 +1501,27 @@ index cd4b188..1f23c15 100644
      // Roster sync: drop absent agents and free their desks.
      const inputIds = new Set(inputs.map((input) => input.id));
      for (const id of Object.keys(state.agents)) {
-@@ -505,7 +563,7 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
+       if (!inputIds.has(id)) {
+         delete state.agents[id];
+         delete state.deskByAgentId[id];
++        stationById.delete(`waiting:${id}`);
+       }
+     }
 
+@@ -503,9 +561,19 @@ export const createPixelSimulation = (map: PixelOfficeMap): PixelSimulation => {
+       }
+     }
+
++    // Preserve incumbents, including remote participants, when the roster changes.
++    for (const id of meetingSeats.keys()) if (!currentMeetingIds.has(id)) meetingSeats.delete(id);
++    const newcomers = sortedInputs.filter(input => input.standup && !meetingSeats.has(input.id))
++      .sort((a, b) => a.id === "coordinator" ? -1 : b.id === "coordinator" ? 1 : a.id.localeCompare(b.id));
++    for (const input of newcomers) {
++      const used = new Set(meetingSeats.values());
++      const free = (stationsByKind.get("meeting_seat") ?? []).find(seat => !used.has(seat.id));
++      meetingSeats.set(input.id, free?.id ?? null);
++    }
++
      // Sticky desk assignment: first free desk in map order, agents by id.
      for (const input of sortedInputs) {
 -      if (input.status !== "working" && input.status !== "error") continue;
@@ -1448,10 +1598,10 @@ index 0000000..12454fe
 +});
 diff --git a/tests/unit/arkticOfficeMap.test.ts b/tests/unit/arkticOfficeMap.test.ts
 new file mode 100644
-index 0000000..fb62f67
+index 0000000..d3fadba
 --- /dev/null
 +++ b/tests/unit/arkticOfficeMap.test.ts
-@@ -0,0 +1,154 @@
+@@ -0,0 +1,180 @@
 +import { describe, expect, it } from "vitest";
 +import { buildArkticOfficeMap } from "@/features/pixel-office/map/arkticOfficeMap";
 +import { buildPixelNavGrid, tileCenter } from "@/features/pixel-office/map/navGrid";
@@ -1460,6 +1610,32 @@ index 0000000..fb62f67
 +import { astar2D } from "@/lib/office/pathfinding";
 +
 +describe("compact Arktic office", () => {
++  it("keeps incumbent meeting seats through arrivals, departures and a fresh meeting", () => {
++    const sim = createPixelSimulation(buildArkticOfficeMap());
++    const make = (id: string): PixelAgentInput => ({id, name:id, color:"#42bcc6", status:"idle", controlled:true,
++      streaming:false, thinking:false, awaitingApproval:false, dancing:false, hold:null, standup:true});
++    let people = ["a", "b", "c", "d", "e", "f", "g"].map(make);
++    let nowMs = 0;
++    const settle = () => {
++      for (let step = 0; step < 600; step++) sim.tick({inputs:people,nowMs:nowMs += 100,dtMs:100,cleaningActive:false});
++      return Object.fromEntries(Object.values(sim.getState().agents).map(a => [a.id,a.goalStationId]));
++    };
++    const before = settle();
++    expect(before.a).toBe("review-1");
++    expect(before.e).toBeNull();
++    people = people.filter(p => p.id !== "b");
++    people.push(make("coordinator"));
++    const after = settle();
++    for (const person of people.filter(p => p.id !== "coordinator")) expect(after[person.id]).toBe(before[person.id]);
++    expect(after.coordinator).toBe(before.b);
++    expect(after.e).toBeNull();
++    const seated = Object.values(sim.getState().agents).filter(a => a.goalStationId?.startsWith("review-"));
++    expect(new Set(seated.map(a => a.goalStationId)).size).toBe(4);
++    people.forEach(p => {p.standup = false;});
++    settle();
++    people.forEach(p => {p.standup = true;});
++    expect(settle().coordinator).toBe("review-1");
++  });
 +  it("measures fewer idle trips on the same map with unchanged walking speed", () => {
 +    const map = buildArkticOfficeMap();
 +    const measure = (oldTiming: boolean) => {
@@ -1672,6 +1848,88 @@ index 0000000..27753fc
 +  });
 +
 +});
+diff --git a/src/features/audit/PixelIcon.tsx b/src/features/audit/PixelIcon.tsx
+new file mode 100644
+--- /dev/null
++++ b/src/features/audit/PixelIcon.tsx
+@@ -0,0 +1,11 @@
++const shapes = {
++  play: "M4 2h2v2h2v2h2v1h2v2h-2v1H8v2H6v2H4z",
++  panel: "M1 2h14v12H1zm2 2v8h6V4zm8 0v8h2V4z",
++  close: "M2 2h3v3h2v2h2V5h2V2h3v3h-3v2H9v2h2v2h3v3h-3v-3H9V9H7v2H5v3H2v-3h3V9h2V7H5V5H2z",
++  book: "M1 2h6v1h2V2h6v11H9v1H7v-1H1zm2 2v7h4V4zm6 0v7h4V4z",
++  download: "M6 1h4v6h3v2h-2v2H9v2H7v-2H5V9H3V7h3zM1 12h2v2h10v-2h2v4H1z",
++  send: "M1 1h2v1h3v1h3v2h3v1h3v4h-3v1H9v2H6v1H3v1H1V9h7V7H1z",
++};
++export function PixelIcon({ kind }: { kind: keyof typeof shapes }) {
++  return <svg aria-hidden="true" focusable="false" viewBox="0 0 16 16" width="16" height="16" className="audit-pixel-icon" shapeRendering="crispEdges"><path fill="currentColor" fillRule="evenodd" d={shapes[kind]} /></svg>;
++}
+diff --git a/src/features/audit/useAuditDialog.ts b/src/features/audit/useAuditDialog.ts
+new file mode 100644
+--- /dev/null
++++ b/src/features/audit/useAuditDialog.ts
+@@ -0,0 +1,29 @@
++import { useEffect, useRef } from "react";
++
++export function useAuditDialog<T extends HTMLElement>(open: boolean, onClose: () => void) {
++  const ref = useRef<T>(null);
++  const close = useRef(onClose);
++  useEffect(() => { close.current = onClose; }, [onClose]);
++  useEffect(() => {
++    const dialog = ref.current;
++    if (!open || !dialog) return;
++    const previous = document.activeElement as HTMLElement | null;
++    const controls = () => Array.from(dialog.querySelectorAll<HTMLElement>("button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), summary, iframe, [tabindex='0']"))
++      .filter(element => element.getClientRects().length > 0);
++    (controls()[0] || dialog).focus();
++    const handleKey = (event: KeyboardEvent) => {
++      if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); close.current(); }
++      if (event.key !== "Tab") return;
++      const items = controls(), first = items[0], last = items[items.length - 1];
++      if (!first) { event.preventDefault(); dialog.focus(); return; }
++      if (!dialog.contains(document.activeElement) || event.shiftKey && document.activeElement === first || !event.shiftKey && document.activeElement === last) {
++        event.preventDefault(); (event.shiftKey ? last : first).focus();
++      }
++    };
++    document.addEventListener("keydown", handleKey);
++    const keepFocus = () => { if (!dialog.contains(document.activeElement)) (controls()[0] || dialog).focus(); };
++    document.addEventListener("focusin", keepFocus);
++    return () => { document.removeEventListener("keydown", handleKey); document.removeEventListener("focusin", keepFocus); if (previous?.isConnected) previous.focus(); };
++  }, [open]);
++  return ref;
++}
+diff --git a/src/features/pixel-office/scene/overlayLayout.ts b/src/features/pixel-office/scene/overlayLayout.ts
+new file mode 100644
+--- /dev/null
++++ b/src/features/pixel-office/scene/overlayLayout.ts
+@@ -0,0 +1,27 @@
++export type OverlayRect = { x: number; y: number; width: number; height: number };
++export type OverlayItem = OverlayRect & { id: string };
++const offsets = Array.from({ length: 25 * 25 }, (_, i) => ({ x: (i % 25 - 12) * 12, y: (Math.floor(i / 25) - 12) * 12 }))
++  .sort((a, b) => (a.x * a.x + a.y * a.y * (a.y > 0 ? 3 : 1)) - (b.x * b.x + b.y * b.y * (b.y > 0 ? 3 : 1)) || a.y - b.y || a.x - b.x);
++export const overlaysOverlap = (a: OverlayRect, b: OverlayRect, gap = 4) =>
++  a.x < b.x + b.width + gap && a.x + a.width + gap > b.x && a.y < b.y + b.height + gap && a.y + a.height + gap > b.y;
++
++/** Deterministic placement near each body; bubbles and names move as one unit. */
++export function layoutOfficeOverlays(items: OverlayItem[], obstacles: OverlayRect[], bounds: OverlayRect) {
++  const placed = new Map<string, OverlayRect>();
++  const occupied = [...obstacles];
++  for (const item of [...items].sort((a, b) => a.id.localeCompare(b.id))) {
++    let best = { x: item.x, y: item.y, width: item.width, height: item.height };
++    let bestCost = Infinity;
++    for (const offset of offsets) {
++      const candidate = { ...best, x: Math.max(bounds.x, Math.min(item.x + offset.x, bounds.x + bounds.width - item.width)),
++        y: Math.max(bounds.y, Math.min(item.y + offset.y, bounds.y + bounds.height - item.height)) };
++      const collisions = occupied.filter(rect => overlaysOverlap(candidate, rect)).length;
++      const cost = collisions * 1e6 + offset.x * offset.x + offset.y * offset.y;
++      if (cost < bestCost) { best = candidate; bestCost = cost; }
++      if (collisions === 0) break;
++    }
++    placed.set(item.id, best);
++    occupied.push(best);
++  }
++  return placed;
++}
 diff --git a/src/features/pixel-office/sim/ambientConversations.ts b/src/features/pixel-office/sim/ambientConversations.ts
 new file mode 100644
 --- /dev/null
@@ -1818,5 +2076,43 @@ new file mode 100644
 +    chat.tick(0, people, standing, new Set());
 +    expect(chat.tick(5000, people, standing, new Set()).size).toBe(0);
 +    expect(chat.tick(7000, people, poses(true), new Set(), {a:8000, b:8000}).size).toBe(0);
++  });
++});
+diff --git a/tests/unit/overlayLayout.test.ts b/tests/unit/overlayLayout.test.ts
+new file mode 100644
+--- /dev/null
++++ b/tests/unit/overlayLayout.test.ts
+@@ -0,0 +1,33 @@
++import { describe, expect, it } from "vitest";
++import { layoutOfficeOverlays, overlaysOverlap } from "@/features/pixel-office/scene/overlayLayout";
++
++describe("office overlay placement", () => {
++  it("separates crowded names and bubbles while avoiding bodies and room labels", () => {
++    const items = Array.from({length:8}, (_, i) => ({id:`agent-${i}`,x:200 + i % 2 * 12,y:200,width:i < 2 ? 120 : 74,height:i < 2 ? 62 : 20}));
++    const obstacles = [{x:175,y:150,width:120,height:24},{x:210,y:225,width:24,height:50}];
++    const bounds = {x:0,y:0,width:600,height:500};
++    const result = layoutOfficeOverlays(items, obstacles, bounds);
++    const rects = [...result.values()];
++    for (let i = 0; i < rects.length; i++) {
++      expect(obstacles.some(obstacle => overlaysOverlap(rects[i], obstacle))).toBe(false);
++      for (let j = i + 1; j < rects.length; j++) expect(overlaysOverlap(rects[i], rects[j])).toBe(false);
++      expect(rects[i].x).toBeGreaterThanOrEqual(0);
++      expect(rects[i].y).toBeGreaterThanOrEqual(0);
++      expect(rects[i].x + rects[i].width).toBeLessThanOrEqual(bounds.width);
++    }
++    expect([...layoutOfficeOverlays([...items].reverse(), obstacles, bounds)]).toEqual([...result]);
++  });
++
++  it("keeps isolated labels in place and clamps near map edges at different sizes", () => {
++    for (const scale of [0.7, 1, 1.35]) {
++      const bounds = {x:0,y:0,width:400,height:300};
++      const result = layoutOfficeOverlays([{id:"near",x:100,y:100,width:80 * scale,height:20 * scale},
++        {id:"edge",x:390,y:-10,width:80 * scale,height:20 * scale}], [], bounds);
++      expect(result.get("near")?.x).toBe(100);
++      expect(result.get("near")?.y).toBe(100);
++      const edge = result.get("edge")!;
++      expect(edge.x + edge.width).toBeLessThanOrEqual(400);
++      expect(edge.y).toBeGreaterThanOrEqual(0);
++    }
 +  });
 +});
