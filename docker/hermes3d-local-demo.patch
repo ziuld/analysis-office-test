@@ -839,10 +839,10 @@ index 7d2a060..c3e81bd 100644
 
 diff --git a/src/features/pixel-office/map/arkticOfficeMap.ts b/src/features/pixel-office/map/arkticOfficeMap.ts
 new file mode 100644
-index 0000000..376ab0e
+index 0000000..e2b9af8
 --- /dev/null
 +++ b/src/features/pixel-office/map/arkticOfficeMap.ts
-@@ -0,0 +1,73 @@
+@@ -0,0 +1,79 @@
 +// Compact consulting office. Grow this map when a real team needs more seats.
 +// Reuses the upstream furniture, navigation and character simulation.
 +import type { PixelGroundTile, PixelMapObject, PixelObjectKind, PixelOfficeMap } from "@/features/pixel-office/types";
@@ -856,8 +856,8 @@ index 0000000..376ab0e
 +  };
 +  rect("floor_cream", 2, 2, 24, 18);
 +  rect("floor_white", 2, 2, 15, 16);
-+  rect("floor_wood", 18, 2, 8, 9);
-+  rect("kitchen_tile", 18, 12, 8, 6);
++  rect("floor_white", 18, 2, 8, 9);
++  rect("floor_wood", 18, 12, 8, 6);
 +  rect("wall", 1, 1, 26, 1);
 +  rect("wall", 1, 20, 26, 1);
 +  rect("wall", 1, 2, 1, 18);
@@ -868,7 +868,7 @@ index 0000000..376ab0e
 +  rect("floor_cream", 17, 8, 1, 2);
 +  rect("floor_cream", 17, 15, 1, 2);
 +  rect("path", 8, 20, 3, 1);
-+  for (const x of [4, 5, 10, 11, 20, 21, 23, 24]) rect("wall_window", x, 1, 1, 1);
++  for (const x of [9, 10, 13, 14, 20, 21, 23, 24]) rect("wall_window", x, 1, 1, 1);
 +
 +  const objects: PixelMapObject[] = [];
 +  const put = (kind: PixelObjectKind, tx: number, ty: number, blocking?: boolean) =>
@@ -878,7 +878,7 @@ index 0000000..376ab0e
 +    put("chair", x, y + 1, false);
 +    return { id: `arktic-desk-${i + 1}`, deskTx: x, deskTy: y, seatTx: x, seatTy: y + 1, facing: "up" as const };
 +  });
-+  put("plant_tall", 2, 2);
++  put("plant_tall", 15, 2);
 +  put("plant", 15, 16);
 +  put("bookshelf", 3, 16);
 +  put("whiteboard", 20, 3);
@@ -888,17 +888,21 @@ index 0000000..376ab0e
 +  put("kitchen_counter", 19, 13);
 +  put("coffee_machine", 22, 13);
 +  put("fridge", 24, 13);
-+  put("sofa_h", 20, 17);
-+  put("coffee_table", 23, 17);
++  put("vending_machine", 25, 13);
++  put("desk", 20, 16);
++  put("chair", 20, 15, false);
++  put("chair", 21, 17, false);
++  put("sofa_h", 14, 18);
++  put("coffee_table", 16, 18);
 +  put("plant_tall", 2, 19);
 +  put("plant", 25, 19);
 +
 +  return {
 +    cols, rows, ground, objects, desks,
 +    zones: [
-+      { id: "analysis", kind: "team_pod", label: "Análisis de código", tx: 2, ty: 2, tw: 15, th: 16 },
-+      { id: "review", kind: "meeting", label: "Revisión", tx: 18, ty: 2, tw: 8, th: 9 },
-+      { id: "coffee", kind: "kitchen", label: "Café", tx: 18, ty: 12, tw: 8, th: 6 },
++      { id: "analysis", kind: "team_pod", label: "Tecnología", tx: 2, ty: 2, tw: 15, th: 16 },
++      { id: "review", kind: "meeting", label: "Reuniones", tx: 18, ty: 2, tw: 8, th: 9 },
++      { id: "coffee", kind: "kitchen", label: "Cocina y comedor", tx: 18, ty: 12, tw: 8, th: 6 },
 +    ],
 +    stations: [
 +      { id: "review-1", kind: "meeting_seat", tx: 20, ty: 5, facing: "down" },
@@ -907,9 +911,11 @@ index 0000000..376ab0e
 +      { id: "review-4", kind: "meeting_seat", tx: 22, ty: 8, facing: "up" },
 +      { id: "coffee-1", kind: "coffee", tx: 22, ty: 14, facing: "up" },
 +      { id: "coffee-2", kind: "coffee", tx: 24, ty: 14, facing: "up" },
-+      { id: "lounge-1", kind: "lounge_seat", tx: 20, ty: 17, facing: "down" },
-+      { id: "lounge-2", kind: "lounge_seat", tx: 21, ty: 17, facing: "down" },
-+      { id: "library-1", kind: "library", tx: 4, ty: 17, facing: "up" },
++      { id: "lounge-1", kind: "lounge_seat", tx: 14, ty: 18, facing: "down" },
++      { id: "lounge-2", kind: "lounge_seat", tx: 15, ty: 18, facing: "down" },
++      { id: "dining-1", kind: "lounge_seat", tx: 20, ty: 15, facing: "down" },
++      { id: "dining-2", kind: "lounge_seat", tx: 21, ty: 17, facing: "up" },
++      { id: "storage-1", kind: "wander", tx: 4, ty: 17, facing: "up" },
 +      { id: "hall-1", kind: "wander", tx: 10, ty: 18, facing: "up" },
 +      { id: "hall-2", kind: "wander", tx: 14, ty: 10, facing: "left" },
 +    ],
@@ -917,19 +923,20 @@ index 0000000..376ab0e
 +  };
 +};
 diff --git a/src/features/pixel-office/scene/PixelOfficeScene.ts b/src/features/pixel-office/scene/PixelOfficeScene.ts
-index 4708d1d..b44e37b 100644
+index 4708d1d..a0801bb 100644
 --- a/src/features/pixel-office/scene/PixelOfficeScene.ts
 +++ b/src/features/pixel-office/scene/PixelOfficeScene.ts
-@@ -13,6 +13,8 @@ import {
+@@ -13,6 +13,9 @@ import {
    spriteWidth,
  } from "@/features/pixel-office/art";
  import type { PixelSceneBridge } from "@/features/pixel-office/PixelSceneBridge";
 +import { createAmbientConversations, type AmbientCue } from "@/features/pixel-office/sim/ambientConversations";
 +import { layoutOfficeOverlays, type OverlayRect } from "./overlayLayout";
++import { styleArkticSprites } from "@/features/pixel-office/art/arkticStyle";
  import {
    createPixelSimulation,
    JANITOR_ID,
-@@ -34,7 +36,7 @@ const TILE = PIXEL_TILE_SIZE;
+@@ -34,7 +37,7 @@ const TILE = PIXEL_TILE_SIZE;
 
  const STATUS_DOT_COLOR: Record<string, number> = {
    working: 0x4ade80,
@@ -938,7 +945,7 @@ index 4708d1d..b44e37b 100644
    error: 0xef4444,
  };
 
-@@ -72,6 +74,8 @@ type AgentVisual = {
+@@ -72,6 +75,8 @@ type AgentVisual = {
    lastStatus: string;
    lastName: string;
    seed: string;
@@ -947,7 +954,7 @@ index 4708d1d..b44e37b 100644
  };
 
  /** How long a finished speech bubble stays readable, in ms. */
-@@ -81,8 +85,9 @@ export const createPixelOfficeScene = (params: {
+@@ -81,8 +86,9 @@ export const createPixelOfficeScene = (params: {
    PhaserLib: typeof import("phaser");
    bridge: PixelSceneBridge;
    map: PixelOfficeMap;
@@ -958,7 +965,7 @@ index 4708d1d..b44e37b 100644
    const worldWidth = map.cols * TILE;
    const worldHeight = map.rows * TILE;
 
-@@ -91,6 +96,10 @@ export const createPixelOfficeScene = (params: {
+@@ -91,6 +97,10 @@ export const createPixelOfficeScene = (params: {
      private visuals = new Map<string, AgentVisual>();
      private frameSetReady = new Set<string>();
      private animClock = 0;
@@ -969,9 +976,16 @@ index 4708d1d..b44e37b 100644
      private dragStart: { x: number; y: number; sx: number; sy: number } | null = null;
      private dragDistance = 0;
 
-@@ -104,9 +113,27 @@ export const createPixelOfficeScene = (params: {
+@@ -100,13 +110,33 @@ export const createPixelOfficeScene = (params: {
+
+     create() {
+       this.sim = createPixelSimulation(map);
+-      this.registerSprites([...buildGroundTileSprites(), ...buildFurnitureSprites()]);
++      const sprites = [...buildGroundTileSprites(), ...buildFurnitureSprites()];
++      this.registerSprites(fitToView ? styleArkticSprites(sprites) : sprites);
        this.renderGround();
        this.renderFurniture();
++      if (fitToView) this.renderArkticDetails();
        this.renderZoneLabels();
 +      if (fitToView) {
 +        const x = 26 * TILE - 8, y = 4 * TILE;
@@ -997,7 +1011,7 @@ index 4708d1d..b44e37b 100644
          this.visuals.clear();
          this.sim = null;
        });
-@@ -116,6 +143,13 @@ export const createPixelOfficeScene = (params: {
+@@ -116,6 +146,13 @@ export const createPixelOfficeScene = (params: {
        if (!this.sim) return;
        this.animClock += delta;
        const state = bridge.getState();
@@ -1011,7 +1025,7 @@ index 4708d1d..b44e37b 100644
        const poses = this.sim.tick({
          inputs: state.agents,
          nowMs: Date.now(),
-@@ -184,7 +218,8 @@ export const createPixelOfficeScene = (params: {
+@@ -184,7 +221,8 @@ export const createPixelOfficeScene = (params: {
          image.setOrigin(0, 1);
          // Flat decor stays under everything that walks over it.
          const flat = object.kind === "rug" || object.kind === "flower";
@@ -1021,7 +1035,7 @@ index 4708d1d..b44e37b 100644
          if (object.kind === "jukebox" || object.kind === "kanban_board") {
            const stationKind = object.kind === "jukebox" ? "jukebox" : "kanban";
            image.setInteractive({ useHandCursor: true });
-@@ -203,7 +238,9 @@ export const createPixelOfficeScene = (params: {
+@@ -203,7 +241,9 @@ export const createPixelOfficeScene = (params: {
        for (const zoneEntry of map.zones) {
          if (!zoneEntry.label) continue;
          const centerX = (zoneEntry.tx + zoneEntry.tw / 2) * TILE;
@@ -1032,16 +1046,31 @@ index 4708d1d..b44e37b 100644
          const text = this.add.text(0, 0, zoneEntry.label, {
            fontFamily: "system-ui, sans-serif",
            fontSize: "16px",
-@@ -225,6 +262,8 @@ export const createPixelOfficeScene = (params: {
+@@ -225,6 +265,23 @@ export const createPixelOfficeScene = (params: {
          const container = this.add.container(centerX, topY, [bg, text]);
          container.setDepth(45_000);
          container.setAlpha(0.95);
 +        if (fitToView) this.zoneLabelBounds.push({ x: centerX - text.width / 2 - paddingX, y: topY - text.height / 2 - paddingY,
 +          width: text.width + paddingX * 2, height: text.height + paddingY * 2 });
++      }
++    }
++
++    private renderArkticDetails() {
++      const x = 2 * TILE + 8, y = TILE + 6;
++      const glow = this.add.graphics().setDepth(2 * TILE);
++      glow.fillStyle(0xe7b36e, 0.22).fillRect(x - 3, y - 3, 166, 48);
++      this.add.image(x, y, "arktic_brand_panel").setOrigin(0, 0).setDepth(3 * TILE);
++      this.zoneLabelBounds.push({x:x-3,y:y-3,width:166,height:48});
++      // A short timber screen over the existing partition keeps navigation intact.
++      const divider = this.add.graphics().setDepth(8 * TILE);
++      divider.fillStyle(0x586d6c).fillRect(17 * TILE + 5, 3 * TILE, 22, 4 * TILE);
++      for (let column = 0; column < 3; column++) {
++        divider.fillStyle(0xb99b72).fillRect(17 * TILE + 6 + column * 7, 3 * TILE, 5, 4 * TILE);
++        divider.fillStyle(0xd4ba92).fillRect(17 * TILE + 6 + column * 7, 3 * TILE, 1, 4 * TILE);
        }
      }
 
-@@ -242,7 +281,7 @@ export const createPixelOfficeScene = (params: {
+@@ -242,7 +299,7 @@ export const createPixelOfficeScene = (params: {
 
      /** Lowest allowed zoom: never smaller than "whole map in view". */
      private minZoom(): number {
@@ -1050,7 +1079,7 @@ index 4708d1d..b44e37b 100644
      }
 
      private setupCamera() {
-@@ -263,12 +302,12 @@ export const createPixelOfficeScene = (params: {
+@@ -263,12 +320,12 @@ export const createPixelOfficeScene = (params: {
        // Gather-style default: start close enough that the pixel art reads at
        // 1:1+ detail, centered on the main pods. Wheel out for the overview.
        const zoom = PhaserLib.Math.Clamp(
@@ -1065,7 +1094,7 @@ index 4708d1d..b44e37b 100644
      }
 
      private setupPointerControls() {
-@@ -362,6 +401,12 @@ export const createPixelOfficeScene = (params: {
+@@ -362,6 +419,12 @@ export const createPixelOfficeScene = (params: {
        const state = bridge.getState();
        const inputById = new Map(state.agents.map((agent) => [agent.id, agent]));
        const seen = new Set<string>();
@@ -1078,7 +1107,7 @@ index 4708d1d..b44e37b 100644
 
        for (const pose of poses) {
          seen.add(pose.id);
-@@ -373,15 +418,52 @@ export const createPixelOfficeScene = (params: {
+@@ -373,15 +436,52 @@ export const createPixelOfficeScene = (params: {
            visual = this.createVisual(pose.id, input?.name ?? "Janitor");
            this.visuals.set(pose.id, visual);
          }
@@ -1132,7 +1161,7 @@ index 4708d1d..b44e37b 100644
      }
 
      private createVisual(id: string, name: string): AgentVisual {
-@@ -444,6 +526,21 @@ export const createPixelOfficeScene = (params: {
+@@ -444,6 +544,21 @@ export const createPixelOfficeScene = (params: {
          badgeText,
        ]);
        overlay.setDepth(40_000);
@@ -1154,7 +1183,7 @@ index 4708d1d..b44e37b 100644
 
        return {
          container,
-@@ -463,6 +560,8 @@ export const createPixelOfficeScene = (params: {
+@@ -463,6 +578,8 @@ export const createPixelOfficeScene = (params: {
          lastStatus: "",
          lastName: name,
          seed: id,
@@ -1163,7 +1192,7 @@ index 4708d1d..b44e37b 100644
        };
      }
 
-@@ -494,16 +593,32 @@ export const createPixelOfficeScene = (params: {
+@@ -494,16 +611,32 @@ export const createPixelOfficeScene = (params: {
        pose: PixelAgentPose,
        input: { name: string; status: string; thinking: boolean; awaitingApproval: boolean } | null,
        bubble: string,
@@ -1199,7 +1228,7 @@ index 4708d1d..b44e37b 100644
 
        // Nameplate pill with the status dot.
        const name = input?.name ?? "Janitor";
-@@ -517,11 +632,12 @@ export const createPixelOfficeScene = (params: {
+@@ -517,11 +650,12 @@ export const createPixelOfficeScene = (params: {
        const plateHeight = 20;
        visual.nameBg.clear();
        visual.nameBg.fillStyle(0x11131c, 0.82);
@@ -1214,7 +1243,7 @@ index 4708d1d..b44e37b 100644
          visual.statusDot.setAlpha(0.6 + 0.4 * Math.abs(Math.sin(this.animClock / 400)));
        } else {
          visual.statusDot.setAlpha(1);
-@@ -541,10 +657,16 @@ export const createPixelOfficeScene = (params: {
+@@ -541,10 +675,16 @@ export const createPixelOfficeScene = (params: {
        const lingering =
          visual.lingerText.length > 0 &&
          this.animClock - visual.bubbleChangedAt < BUBBLE_LINGER_MS;
@@ -1232,7 +1261,7 @@ index 4708d1d..b44e37b 100644
          const bw = visual.bubbleText.width + 18;
          const bh = visual.bubbleText.height + 14;
          const by = -14;
-@@ -552,9 +674,16 @@ export const createPixelOfficeScene = (params: {
+@@ -552,9 +692,16 @@ export const createPixelOfficeScene = (params: {
          visual.bubbleBg.clear();
          visual.bubbleBg.fillStyle(0xf9fbff, 0.96);
          visual.bubbleBg.lineStyle(2, 0x2b2b3a, 0.9);
@@ -1898,6 +1927,116 @@ new file mode 100644
 +  }, [open]);
 +  return ref;
 +}
+diff --git a/src/features/pixel-office/art/arkticStyle.ts b/src/features/pixel-office/art/arkticStyle.ts
+new file mode 100644
+--- /dev/null
++++ b/src/features/pixel-office/art/arkticStyle.ts
+@@ -0,0 +1,105 @@
++import type { PixelSprite } from "../types";
++import { fillRect, gridRows, makeGrid, setPx } from "./grid";
++import { makeSprite } from "./sprite";
++
++// Photo-inspired materials, scoped to the compact Arktic map.
++export const ARKTIC_MATERIALS = {
++  carpet: "#384e67", carpetThread: "#40566e", circulation: "#799eaa", circulationThread: "#82a6af",
++  oak: "#d8c3a2", oakShade: "#b9a17d", oakLight: "#e8d9c0", white: "#f4f4ef", turquoise: "#42bcc6",
++};
++
++function carpet(key: string, base: string, thread: string, alternate = false): PixelSprite {
++  const grid = makeGrid(32, 32, "b");
++  for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) {
++    if (((x % 8) * 3 + (y % 8) * 5 + (alternate ? 2 : 0)) % 13 < 3) setPx(grid, x, y, "t");
++  }
++  return makeSprite(key, { b: base, t: thread }, gridRows(grid));
++}
++
++function cabinet(): PixelSprite {
++  const grid = makeGrid(64, 44);
++  fillRect(grid, 3, 40, 58, 3, "s");
++  fillRect(grid, 1, 9, 62, 30, "o");
++  fillRect(grid, 2, 10, 58, 27, "w");
++  fillRect(grid, 2, 7, 59, 5, "l");
++  fillRect(grid, 60, 10, 3, 29, "d");
++  for (let x = 6; x < 60; x += 9) fillRect(grid, x, 13, 1, 21, "l");
++  fillRect(grid, 31, 12, 1, 25, "d");
++  fillRect(grid, 27, 21, 2, 7, "h");
++  fillRect(grid, 35, 21, 2, 7, "h");
++  fillRect(grid, 5, 38, 5, 3, "h");
++  fillRect(grid, 53, 38, 5, 3, "h");
++  return makeSprite("furn_bookshelf", {w:ARKTIC_MATERIALS.oak,l:ARKTIC_MATERIALS.oakLight,d:ARKTIC_MATERIALS.oakShade,o:"#75817d",h:"#f4f4ef",s:"#00000026"}, gridRows(grid));
++}
++
++function diningTable(): PixelSprite {
++  const grid = makeGrid(64, 36);
++  fillRect(grid, 3, 33, 58, 3, "s");
++  fillRect(grid, 5, 21, 5, 13, "e");
++  fillRect(grid, 54, 21, 5, 13, "e");
++  fillRect(grid, 1, 1, 62, 24, "o");
++  fillRect(grid, 2, 2, 60, 20, "w");
++  fillRect(grid, 2, 22, 60, 2, "e");
++  // Two plates and a turquoise mug keep this distinct from a computer desk.
++  for (const x of [11, 41]) {
++    fillRect(grid, x, 6, 12, 10, "p");
++    fillRect(grid, x + 2, 8, 8, 6, "w");
++  }
++  fillRect(grid, 29, 7, 6, 7, "t");
++  fillRect(grid, 35, 8, 2, 4, "t");
++  fillRect(grid, 30, 7, 4, 2, "c");
++  return makeSprite("furn_desk", {w:"#f6f6f0",e:"#dce2dc",o:"#7e8d89",p:"#d8e2e0",t:ARKTIC_MATERIALS.turquoise,c:"#64766a",s:"#00000026"}, gridRows(grid));
++}
++
++function brandPanel(): PixelSprite {
++  const grid = makeGrid(160, 42, "b");
++  for (let x = 0; x < 160; x += 8) { fillRect(grid, x, 0, 6, 42, "w"); fillRect(grid, x, 0, 1, 42, "l"); }
++  const glyphs = [
++    ["01110","11011","11011","11111","11011","11011","11011"],
++    ["11110","11011","11011","11110","11100","11010","11011"],
++    ["11011","11011","11110","11100","11110","11011","11011"],
++    ["11111","11111","00100","00100","00100","00100","00100"],
++    ["11111","11111","00100","00100","00100","11111","11111"],
++    ["01111","11000","11000","11000","11000","11000","01111"],
++  ];
++  for (const halo of [true, false]) glyphs.forEach((rows, i) => rows.forEach((row, y) => [...row].forEach((bit, x) => {
++    if (bit === "1") fillRect(grid, 20 + i * 19 + x * 3 - (halo ? 1 : 0), 10 + y * 3 - (halo ? 1 : 0), halo ? 5 : 3, halo ? 5 : 3, halo ? "a" : "f");
++  })));
++  fillRect(grid, 136, 25, 7, 7, "t");
++  return makeSprite("arktic_brand_panel", {b:"#43565a",w:"#b99768",l:"#c9aa7c",a:"#e6a451",f:"#f7f7ef",t:ARKTIC_MATERIALS.turquoise}, gridRows(grid));
++}
++
++export function styleArkticSprites(sprites: PixelSprite[]): PixelSprite[] {
++  return [...sprites.map(sprite => {
++    if (sprite.key === "tile_floor_white" || sprite.key === "tile_carpet_blue") return carpet(sprite.key, ARKTIC_MATERIALS.carpet, ARKTIC_MATERIALS.carpetThread);
++    if (sprite.key.startsWith("tile_floor_cream")) return carpet(sprite.key, ARKTIC_MATERIALS.circulation, ARKTIC_MATERIALS.circulationThread, sprite.key.endsWith("_alt"));
++    if (sprite.key === "furn_bookshelf") return cabinet();
++    if (sprite.key === "furn_desk") return diningTable();
++    let colors: Record<string, string> = {};
++    if (sprite.key.startsWith("tile_wall")) colors = {
++      e:"#e6e6df",t:"#d6d9d3",n:"#f7f7f0",f:"#efefe8",s:"#dcded7",h:"#f5f5ed",b:"#aeb8b2",d:"#7c8d8a",
++      r:"#f3f4ef",p:"#b2cbd0",y:"#bfd3d5",z:"#d6e4e4",i:"#9cacae",
++    };
++    if (sprite.key.startsWith("tile_floor_wood")) {
++      const replacements: Record<string,string> = {"#ecd9c3":"#d8c7ad","#e9d4bc":"#d2bea0","#f0dfcb":"#e0d1b8","#dfc9ae":"#c5b090","#e5d1b8":"#cfb99b"};
++      colors = Object.fromEntries(Object.entries(sprite.palette).map(([key, color]) => [key,replacements[color] || color]));
++    }
++    if (sprite.key.startsWith("furn_")) colors = {
++      w:ARKTIC_MATERIALS.oak,W:ARKTIC_MATERIALS.oakShade,k:ARKTIC_MATERIALS.oakLight,
++      d:ARKTIC_MATERIALS.white,D:"#dce1dd","2":"#c8baa0","3":"#a4977e",
++    };
++    if (sprite.key === "furn_desk_monitor") colors.d = ARKTIC_MATERIALS.oak;
++    if (sprite.key === "furn_chair") Object.assign(colors, {o:"#6b797e",i:"#acb7bc",I:"#c5cdd0",j:"#edf1ef",v:"#e6ebe7",V:"#8f9d9e"});
++    if (sprite.key.startsWith("furn_sofa")) Object.assign(colors, {e:"#6a8493",f:"#93aeb7",E:"#506b7b"});
++    if (sprite.key === "furn_kitchen_counter") Object.assign(colors, {"4":"#edf0e9","5":"#cbd3cd",C:"#e1e6df",F:"#b7c3ba"});
++    if (sprite.key === "furn_vending_machine") Object.assign(colors, {b:"#8fa44a",B:"#596e3a",L:"#b8e96c",s:"#c4cbc8",S:"#899590"});
++    const rows = [...sprite.rows];
++    if (sprite.key === "tile_wall_window") {
++      colors.v = "#95afb5";
++      for (const y of [17,19,21,23]) for (const x of [...Array.from({length:10},(_,i)=>i+5),...Array.from({length:10},(_,i)=>i+17)]) {
++        rows[y] = rows[y].slice(0,x) + "v" + rows[y].slice(x+1);
++      }
++    }
++    return {...sprite, rows, palette:{...sprite.palette,...colors}};
++  }), brandPanel()];
++}
 diff --git a/src/features/pixel-office/scene/overlayLayout.ts b/src/features/pixel-office/scene/overlayLayout.ts
 new file mode 100644
 --- /dev/null
@@ -2076,6 +2215,36 @@ new file mode 100644
 +    chat.tick(0, people, standing, new Set());
 +    expect(chat.tick(5000, people, standing, new Set()).size).toBe(0);
 +    expect(chat.tick(7000, people, poses(true), new Set(), {a:8000, b:8000}).size).toBe(0);
++  });
++});
+diff --git a/tests/unit/arkticStyle.test.ts b/tests/unit/arkticStyle.test.ts
+new file mode 100644
+--- /dev/null
++++ b/tests/unit/arkticStyle.test.ts
+@@ -0,0 +1,25 @@
++import { describe, expect, it } from "vitest";
++import { buildFurnitureSprites, buildGroundTileSprites, spriteWidth } from "@/features/pixel-office/art";
++import { styleArkticSprites } from "@/features/pixel-office/art/arkticStyle";
++import { buildArkticOfficeMap } from "@/features/pixel-office/map/arkticOfficeMap";
++import { OBJECT_FOOTPRINT, PIXEL_TILE_SIZE } from "@/features/pixel-office/types";
++
++describe("photo-inspired Arktic materials", () => {
++  it("preserves the source artwork and supplies valid sprites for the decorated map", () => {
++    const original = [...buildGroundTileSprites(), ...buildFurnitureSprites()];
++    const snapshot = JSON.stringify(original);
++    const styled = styleArkticSprites(original);
++    expect(JSON.stringify(original)).toBe(snapshot);
++    const byKey = new Map(styled.map(sprite => [sprite.key,sprite]));
++    expect(byKey.size).toBe(styled.length);
++    for (const object of buildArkticOfficeMap().objects) {
++      const sprite = byKey.get(`furn_${object.kind}`)!;
++      expect(sprite).toBeDefined();
++      expect(spriteWidth(sprite)).toBe(OBJECT_FOOTPRINT[object.kind][0] * PIXEL_TILE_SIZE);
++    }
++    for (const sprite of styled) for (const row of sprite.rows) for (const pixel of row) {
++      if (pixel !== "." && pixel !== " ") expect(sprite.palette[pixel],`${sprite.key}/${pixel}`).toMatch(/^#[0-9a-f]{6}([0-9a-f]{2})?$/i);
++    }
++    expect(byKey.has("arktic_brand_panel")).toBe(true);
 +  });
 +});
 diff --git a/tests/unit/overlayLayout.test.ts b/tests/unit/overlayLayout.test.ts
