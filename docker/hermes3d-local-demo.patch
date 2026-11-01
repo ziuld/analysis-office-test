@@ -839,10 +839,10 @@ index 7d2a060..c3e81bd 100644
 
 diff --git a/src/features/pixel-office/map/arkticOfficeMap.ts b/src/features/pixel-office/map/arkticOfficeMap.ts
 new file mode 100644
-index 0000000..e2b9af8
+index 0000000..5626e5a
 --- /dev/null
 +++ b/src/features/pixel-office/map/arkticOfficeMap.ts
-@@ -0,0 +1,79 @@
+@@ -0,0 +1,81 @@
 +// Compact consulting office. Grow this map when a real team needs more seats.
 +// Reuses the upstream furniture, navigation and character simulation.
 +import type { PixelGroundTile, PixelMapObject, PixelObjectKind, PixelOfficeMap } from "@/features/pixel-office/types";
@@ -889,9 +889,9 @@ index 0000000..e2b9af8
 +  put("coffee_machine", 22, 13);
 +  put("fridge", 24, 13);
 +  put("vending_machine", 25, 13);
-+  put("desk", 20, 16);
-+  put("chair", 20, 15, false);
-+  put("chair", 21, 17, false);
++  put("desk", 19, 16);
++  put("desk", 21, 16);
++  for (const [x, y] of [[19, 15], [22, 15], [19, 17], [22, 17]]) put("chair", x, y, false);
 +  put("sofa_h", 14, 18);
 +  put("coffee_table", 16, 18);
 +  put("plant_tall", 2, 19);
@@ -902,7 +902,7 @@ index 0000000..e2b9af8
 +    zones: [
 +      { id: "analysis", kind: "team_pod", label: "Tecnología", tx: 2, ty: 2, tw: 15, th: 16 },
 +      { id: "review", kind: "meeting", label: "Reuniones", tx: 18, ty: 2, tw: 8, th: 9 },
-+      { id: "coffee", kind: "kitchen", label: "Cocina y comedor", tx: 18, ty: 12, tw: 8, th: 6 },
++      { id: "coffee", kind: "kitchen", label: "Comedor", tx: 18, ty: 12, tw: 8, th: 6 },
 +    ],
 +    stations: [
 +      { id: "review-1", kind: "meeting_seat", tx: 20, ty: 5, facing: "down" },
@@ -913,8 +913,10 @@ index 0000000..e2b9af8
 +      { id: "coffee-2", kind: "coffee", tx: 24, ty: 14, facing: "up" },
 +      { id: "lounge-1", kind: "lounge_seat", tx: 14, ty: 18, facing: "down" },
 +      { id: "lounge-2", kind: "lounge_seat", tx: 15, ty: 18, facing: "down" },
-+      { id: "dining-1", kind: "lounge_seat", tx: 20, ty: 15, facing: "down" },
-+      { id: "dining-2", kind: "lounge_seat", tx: 21, ty: 17, facing: "up" },
++      { id: "dining-1", kind: "lounge_seat", tx: 19, ty: 15, facing: "down" },
++      { id: "dining-2", kind: "lounge_seat", tx: 19, ty: 17, facing: "up" },
++      { id: "dining-3", kind: "lounge_seat", tx: 22, ty: 15, facing: "down" },
++      { id: "dining-4", kind: "lounge_seat", tx: 22, ty: 17, facing: "up" },
 +      { id: "storage-1", kind: "wander", tx: 4, ty: 17, facing: "up" },
 +      { id: "hall-1", kind: "wander", tx: 10, ty: 18, facing: "up" },
 +      { id: "hall-2", kind: "wander", tx: 14, ty: 10, facing: "left" },
@@ -923,7 +925,7 @@ index 0000000..e2b9af8
 +  };
 +};
 diff --git a/src/features/pixel-office/scene/PixelOfficeScene.ts b/src/features/pixel-office/scene/PixelOfficeScene.ts
-index 4708d1d..a0801bb 100644
+index 4708d1d..3f93b85 100644
 --- a/src/features/pixel-office/scene/PixelOfficeScene.ts
 +++ b/src/features/pixel-office/scene/PixelOfficeScene.ts
 @@ -13,6 +13,9 @@ import {
@@ -1025,28 +1027,39 @@ index 4708d1d..a0801bb 100644
        const poses = this.sim.tick({
          inputs: state.agents,
          nowMs: Date.now(),
-@@ -184,7 +221,8 @@ export const createPixelOfficeScene = (params: {
+@@ -176,7 +213,9 @@ export const createPixelOfficeScene = (params: {
+
+     private renderFurniture() {
+       for (const object of map.objects) {
+-        const key = `furn_${object.kind}`;
++        const chairFacing = object.kind === "chair" ? map.stations.find(station => station.tx === object.tx && station.ty === object.ty)?.facing : undefined;
++        const frontChair = fitToView && object.kind === "chair" && chairFacing === "down";
++        const key = frontChair ? "furn_chair_front" : `furn_${object.kind}`;
+         if (!this.textures.exists(key)) continue;
+         const [, fh] = OBJECT_FOOTPRINT[object.kind];
+         const bottomY = (object.ty + fh) * TILE;
+@@ -184,7 +223,8 @@ export const createPixelOfficeScene = (params: {
          image.setOrigin(0, 1);
          // Flat decor stays under everything that walks over it.
          const flat = object.kind === "rug" || object.kind === "flower";
 -        image.setDepth(flat ? 1 : bottomY);
 +        if (fitToView && object.kind === "chair" && map.desks.some(d => d.seatTx === object.tx && d.seatTy === object.ty)) image.x += TILE / 2;
-+        image.setDepth(flat ? 1 : bottomY + (fitToView && object.kind === "chair" ? 1 : 0));
++        image.setDepth(flat ? 1 : bottomY + (fitToView && object.kind === "chair" ? frontChair ? -2 : 3 : 0));
          if (object.kind === "jukebox" || object.kind === "kanban_board") {
            const stationKind = object.kind === "jukebox" ? "jukebox" : "kanban";
            image.setInteractive({ useHandCursor: true });
-@@ -203,7 +241,9 @@ export const createPixelOfficeScene = (params: {
+@@ -203,7 +243,9 @@ export const createPixelOfficeScene = (params: {
        for (const zoneEntry of map.zones) {
          if (!zoneEntry.label) continue;
          const centerX = (zoneEntry.tx + zoneEntry.tw / 2) * TILE;
 -        const topY = zoneEntry.ty * TILE + 44;
 +        const topY = fitToView
-+          ? zoneEntry.kind === "meeting" ? (zoneEntry.ty + zoneEntry.th - 1) * TILE + 4 : zoneEntry.ty * TILE + 10
++          ? zoneEntry.kind === "meeting" ? (zoneEntry.ty + zoneEntry.th - 1) * TILE + 4 : zoneEntry.ty * TILE + (zoneEntry.kind === "kitchen" ? 0 : 10)
 +          : zoneEntry.ty * TILE + 44;
          const text = this.add.text(0, 0, zoneEntry.label, {
            fontFamily: "system-ui, sans-serif",
            fontSize: "16px",
-@@ -225,6 +265,23 @@ export const createPixelOfficeScene = (params: {
+@@ -225,6 +267,23 @@ export const createPixelOfficeScene = (params: {
          const container = this.add.container(centerX, topY, [bg, text]);
          container.setDepth(45_000);
          container.setAlpha(0.95);
@@ -1070,7 +1083,7 @@ index 4708d1d..a0801bb 100644
        }
      }
 
-@@ -242,7 +299,7 @@ export const createPixelOfficeScene = (params: {
+@@ -242,7 +301,7 @@ export const createPixelOfficeScene = (params: {
 
      /** Lowest allowed zoom: never smaller than "whole map in view". */
      private minZoom(): number {
@@ -1079,7 +1092,7 @@ index 4708d1d..a0801bb 100644
      }
 
      private setupCamera() {
-@@ -263,12 +320,12 @@ export const createPixelOfficeScene = (params: {
+@@ -263,12 +322,12 @@ export const createPixelOfficeScene = (params: {
        // Gather-style default: start close enough that the pixel art reads at
        // 1:1+ detail, centered on the main pods. Wheel out for the overview.
        const zoom = PhaserLib.Math.Clamp(
@@ -1094,7 +1107,7 @@ index 4708d1d..a0801bb 100644
      }
 
      private setupPointerControls() {
-@@ -362,6 +419,12 @@ export const createPixelOfficeScene = (params: {
+@@ -362,6 +421,12 @@ export const createPixelOfficeScene = (params: {
        const state = bridge.getState();
        const inputById = new Map(state.agents.map((agent) => [agent.id, agent]));
        const seen = new Set<string>();
@@ -1107,13 +1120,16 @@ index 4708d1d..a0801bb 100644
 
        for (const pose of poses) {
          seen.add(pose.id);
-@@ -373,15 +436,52 @@ export const createPixelOfficeScene = (params: {
+@@ -373,15 +438,55 @@ export const createPixelOfficeScene = (params: {
            visual = this.createVisual(pose.id, input?.name ?? "Janitor");
            this.visuals.set(pose.id, visual);
          }
 -        this.updateVisual(visual, pose, input, state.bubbleTextByAgentId[pose.id] ?? "");
 +        const cue = ambient.get(pose.id);
-+        this.updateVisual(visual, cue?.facing ? { ...pose, facing: cue.facing } : pose, input, state.bubbleTextByAgentId[pose.id] ?? "", cue);
++        const seatedAtStation = pose.activity === "station" && map.stations.some(station =>
++          station.id === pose.stationId && SEATED_STATION_KINDS.has(station.kind));
++        // Seated conversations keep the body aligned with its chair.
++        this.updateVisual(visual, cue?.facing && !seatedAtStation ? { ...pose, facing: cue.facing } : pose, input, state.bubbleTextByAgentId[pose.id] ?? "", cue);
        }
 
        for (const [id, visual] of this.visuals) {
@@ -1161,7 +1177,7 @@ index 4708d1d..a0801bb 100644
      }
 
      private createVisual(id: string, name: string): AgentVisual {
-@@ -444,6 +544,21 @@ export const createPixelOfficeScene = (params: {
+@@ -444,6 +549,21 @@ export const createPixelOfficeScene = (params: {
          badgeText,
        ]);
        overlay.setDepth(40_000);
@@ -1183,7 +1199,7 @@ index 4708d1d..a0801bb 100644
 
        return {
          container,
-@@ -463,6 +578,8 @@ export const createPixelOfficeScene = (params: {
+@@ -463,6 +583,8 @@ export const createPixelOfficeScene = (params: {
          lastStatus: "",
          lastName: name,
          seed: id,
@@ -1192,7 +1208,7 @@ index 4708d1d..a0801bb 100644
        };
      }
 
-@@ -494,16 +611,32 @@ export const createPixelOfficeScene = (params: {
+@@ -494,16 +616,32 @@ export const createPixelOfficeScene = (params: {
        pose: PixelAgentPose,
        input: { name: string; status: string; thinking: boolean; awaitingApproval: boolean } | null,
        bubble: string,
@@ -1208,7 +1224,7 @@ index 4708d1d..a0801bb 100644
 +      const onLoungeSeat = pose.activity === "station" && map.stations.some(
 +        station => station.id === pose.stationId && station.kind === "lounge_seat",
 +      );
-+      visual.container.setDepth(pose.y + TILE / 2 + (onLoungeSeat ? 1 : 0));
++      visual.container.setDepth(pose.y + TILE / 2 + (onLoungeSeat ? 2 : 0));
 +      if (visual.hitTarget) {
 +        const camera = this.cameras.main;
 +        const x = (visual.container.x - camera.worldView.x) * camera.zoom;
@@ -1228,7 +1244,7 @@ index 4708d1d..a0801bb 100644
 
        // Nameplate pill with the status dot.
        const name = input?.name ?? "Janitor";
-@@ -517,11 +650,12 @@ export const createPixelOfficeScene = (params: {
+@@ -517,11 +655,12 @@ export const createPixelOfficeScene = (params: {
        const plateHeight = 20;
        visual.nameBg.clear();
        visual.nameBg.fillStyle(0x11131c, 0.82);
@@ -1243,7 +1259,7 @@ index 4708d1d..a0801bb 100644
          visual.statusDot.setAlpha(0.6 + 0.4 * Math.abs(Math.sin(this.animClock / 400)));
        } else {
          visual.statusDot.setAlpha(1);
-@@ -541,10 +675,16 @@ export const createPixelOfficeScene = (params: {
+@@ -541,10 +680,16 @@ export const createPixelOfficeScene = (params: {
        const lingering =
          visual.lingerText.length > 0 &&
          this.animClock - visual.bubbleChangedAt < BUBBLE_LINGER_MS;
@@ -1261,7 +1277,7 @@ index 4708d1d..a0801bb 100644
          const bw = visual.bubbleText.width + 18;
          const bh = visual.bubbleText.height + 14;
          const by = -14;
-@@ -552,9 +692,16 @@ export const createPixelOfficeScene = (params: {
+@@ -552,9 +697,16 @@ export const createPixelOfficeScene = (params: {
          visual.bubbleBg.clear();
          visual.bubbleBg.fillStyle(0xf9fbff, 0.96);
          visual.bubbleBg.lineStyle(2, 0x2b2b3a, 0.9);
@@ -1627,10 +1643,10 @@ index 0000000..12454fe
 +});
 diff --git a/tests/unit/arkticOfficeMap.test.ts b/tests/unit/arkticOfficeMap.test.ts
 new file mode 100644
-index 0000000..d3fadba
+index 0000000..0819d54
 --- /dev/null
 +++ b/tests/unit/arkticOfficeMap.test.ts
-@@ -0,0 +1,180 @@
+@@ -0,0 +1,194 @@
 +import { describe, expect, it } from "vitest";
 +import { buildArkticOfficeMap } from "@/features/pixel-office/map/arkticOfficeMap";
 +import { buildPixelNavGrid, tileCenter } from "@/features/pixel-office/map/navGrid";
@@ -1639,6 +1655,20 @@ index 0000000..d3fadba
 +import { astar2D } from "@/lib/office/pathfinding";
 +
 +describe("compact Arktic office", () => {
++  it("seats four different diners around the joined tables without blocking access", () => {
++    const map = buildArkticOfficeMap();
++    map.stations = map.stations.filter(station => station.id.startsWith("dining-"));
++    map.desks = [];
++    expect(map.stations).toHaveLength(4);
++    const sim = createPixelSimulation(map);
++    const inputs: PixelAgentInput[] = ["a", "b", "c", "d"].map(id => ({id,name:id,color:"#42bcc6",status:"idle",controlled:true,
++      streaming:false,thinking:false,awaitingApproval:false,dancing:false,hold:null,standup:false}));
++    let poses = sim.tick({inputs,nowMs:0,dtMs:50,cleaningActive:false});
++    for (let tick=1; tick<160; tick++) poses=sim.tick({inputs,nowMs:tick*50,dtMs:50,cleaningActive:false});
++    expect(poses.every(pose => pose.activity === "station" && !pose.moving)).toBe(true);
++    expect(new Set(poses.map(pose => pose.stationId)).size).toBe(4);
++    for (const pose of poses) expect(pose.facing).toBe(map.stations.find(station => station.id===pose.stationId)?.facing);
++  });
 +  it("keeps incumbent meeting seats through arrivals, departures and a fresh meeting", () => {
 +    const sim = createPixelSimulation(buildArkticOfficeMap());
 +    const make = (id: string): PixelAgentInput => ({id, name:id, color:"#42bcc6", status:"idle", controlled:true,
@@ -1809,7 +1839,7 @@ index 0000000..d3fadba
 +        expect(Math.hypot(stopped[i].x - stopped[j].x, stopped[i].y - stopped[j].y), `tick ${tick}: ${stopped[i].id}/${stopped[j].id}`).toBeGreaterThanOrEqual(30);
 +      }
 +    }
-+  });
++  }, 15000);
 +});
 diff --git a/tests/unit/auditStatus.test.ts b/tests/unit/auditStatus.test.ts
 new file mode 100644
@@ -1931,7 +1961,7 @@ diff --git a/src/features/pixel-office/art/arkticStyle.ts b/src/features/pixel-o
 new file mode 100644
 --- /dev/null
 +++ b/src/features/pixel-office/art/arkticStyle.ts
-@@ -0,0 +1,105 @@
+@@ -0,0 +1,122 @@
 +import type { PixelSprite } from "../types";
 +import { fillRect, gridRows, makeGrid, setPx } from "./grid";
 +import { makeSprite } from "./sprite";
@@ -1985,6 +2015,23 @@ new file mode 100644
 +  return makeSprite("furn_desk", {w:"#f6f6f0",e:"#dce2dc",o:"#7e8d89",p:"#d8e2e0",t:ARKTIC_MATERIALS.turquoise,c:"#64766a",s:"#00000026"}, gridRows(grid));
 +}
 +
++function frontChair(): PixelSprite {
++  const grid = makeGrid(32, 32);
++  fillRect(grid, 5, 29, 22, 2, "s");
++  fillRect(grid, 14, 20, 4, 9, "g");
++  fillRect(grid, 5, 27, 22, 2, "g");
++  fillRect(grid, 4, 28, 3, 3, "o");
++  fillRect(grid, 25, 28, 3, 3, "o");
++  fillRect(grid, 5, 0, 22, 17, "w");
++  fillRect(grid, 7, 2, 18, 13, "m");
++  for (let y = 4; y < 14; y += 3) fillRect(grid, 8, y, 16, 1, "l");
++  fillRect(grid, 3, 15, 26, 7, "w");
++  fillRect(grid, 5, 15, 22, 5, "m");
++  fillRect(grid, 1, 11, 3, 10, "w");
++  fillRect(grid, 28, 11, 3, 10, "w");
++  return makeSprite("furn_chair_front", {w:"#e9eeea",m:"#b8c6c9",l:"#ccd5d6",g:"#9aa9aa",o:"#6b797e",s:"#00000026"}, gridRows(grid));
++}
++
 +function brandPanel(): PixelSprite {
 +  const grid = makeGrid(160, 42, "b");
 +  for (let x = 0; x < 160; x += 8) { fillRect(grid, x, 0, 6, 42, "w"); fillRect(grid, x, 0, 1, 42, "l"); }
@@ -2035,7 +2082,7 @@ new file mode 100644
 +      }
 +    }
 +    return {...sprite, rows, palette:{...sprite.palette,...colors}};
-+  }), brandPanel()];
++  }), brandPanel(), frontChair()];
 +}
 diff --git a/src/features/pixel-office/scene/overlayLayout.ts b/src/features/pixel-office/scene/overlayLayout.ts
 new file mode 100644
