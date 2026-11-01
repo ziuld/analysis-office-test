@@ -1,4 +1,4 @@
-# Mejoras del front — dos ejecuciones
+# Mejoras del front — seguimiento y cierre
 
 ## Primera ejecución terminada
 
@@ -32,9 +32,22 @@ Validación: cuatro pruebas existentes de consultas/estados pasan; ESLint sin er
 - 21 pruebas de simulación y conversaciones pasan; ESLint sin errores en los archivos modificados.
 - Build y TypeScript correctos; oficina local actualizada y saludable. Comprobación visual observó una burbuja de puntos de Noor y la respuesta con signo de Kwame desde sus escritorios; comprobada también vista móvil. Cero errores de página y cero peticiones POST. Evidencia en artifacts/office-conversations-2026-10-31/. Nuevos archivos incluidos en el parche reproducible y aplicación inversa verificada.
 
-## Pendiente después del tercer bloque
+## Pendientes al cierre del tercer bloque (resueltos en el bloque final)
 
 - Mejorar separación visual de etiquetas y nombres en sofá y zonas concurridas. Conservar el asiento de reunión al cambiar el conjunto de participantes (la asignación actual es estable mientras el conjunto no cambie).
 - Terminar coherencia visual pixel del resto del panel, controles y burbujas; evitar etiquetas superpuestas y respetar movimiento reducido.
 
-El usuario autorizó el tercer bloque con un 13% de cuota restante. Parar después de verificar las conversaciones, antes de los retoques pendientes.
+## Bloques 4, 5 y 6 implementados juntos — 2026-11-01
+
+- Distribución determinista de nombres y burbujas como una unidad para evitar solapamientos entre etiquetas, cuerpos y rótulos de salas. Desplazamientos cercanos con línea de referencia al personaje; el objetivo de clic sigue en el cuerpo.
+- Rótulos de las zonas reposicionados: pizarra de reuniones y máquina de café sin el rótulo encima. Nombres con marco pixel y adaptación al zoom.
+- Asientos de reunión persistentes ante entradas y salidas. Los participantes remotos conservan su escritorio; las nuevas incorporaciones toman un puesto libre. Reservas liberadas al terminar, sin arrastrarlas a la reunión siguiente.
+- Botones, campos, selectores y paneles con acabado pixel coherente. Iconos SVG pixel para panel, inicio, informe, descargas, envío y cierre; tipografía de lectura cómoda en respuestas e informes.
+- Foco contenido en los diálogos, cierre con Escape (también desde el iframe del informe) y devolución del foco al control de origen. Foco visible y respeto de movimiento reducido.
+- Observación del tamaño del contenedor para reajustar el lienzo cuando se abre/cierra el panel, además del cambio de ventana. Ayuda de ratón oculta en móvil para no tapar el mapa.
+- 30 pruebas pasan: simulación, conversaciones, ocupación, cambios de participantes, etiquetas, consultas, caché e informe. ESLint de los nueve archivos modificados sin errores ni avisos.
+- Fuentes y pruebas nuevas conservadas en docker/hermes3d-local-demo.patch; aplicación inversa verificada. Evidencias y comprobación de navegador en artifacts/office-final-2026-11-01/.
+
+La implementación del plan está completa. La validación de inicio de revisión y envío de consultas usa respuestas interceptadas únicamente en el navegador; no modifica revisiones reales ni ejecuta modelos. Las descargas reales guardadas se comprueban en lectura.
+
+Validación final completada: build de producción y TypeScript correctos, oficina local saludable, flujo de revisión → consulta → última respuesta → historial → informe → descargas comprobado en navegador. También navegación del informe, Escape desde el iframe, retorno del foco, cambios de participantes, zoom, móvil y movimiento reducido. Tamaño del lienzo comprobado frente al contenedor al abrir el panel en móvil. Cero errores de página, cero llamadas a modelos y ambas descargas reales guardadas disponibles. No quedan bloques pendientes de este plan.
