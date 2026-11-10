@@ -1,0 +1,21 @@
+{
+  "id": "identity",
+  "person": "Noor",
+  "name": "Seguridad",
+  "focus": "Identidad, autorización por objeto, sesiones, contraseñas y limitación de intentos.",
+  "checks": [
+    "Sigue una petición completa desde entrada, autenticación y sesión hasta autorización por usuario, rol y objeto, operación y destino de los datos.",
+    "Comprueba expiración e invalidación de sesión, protección de contraseñas y tokens y limitación de intentos. Un endpoint público de salud no es un defecto por sí solo.",
+    "Usa las rutas publicadas por Arquitectura y los almacenes de Datos; lee el código original. No presupongas protección ni ausencia de APIs externas.",
+    "Responsabilidad principal exclusiva: Q23–Q27. Publica hechos con fuentes para los siguientes especialistas. Consulta las aportaciones previas pertinentes; vuelve a la evidencia original antes de concluir. Sigue cada flujo aplicable completo: entrada, identidad, permiso, operación y destino. En cada riesgo explica defensas, condiciones, impacto y comprobación pendiente para Q38–Q40."
+  ],
+  "color": "#fbbf24",
+  "dependencies": [],
+  "questions": [
+    "Q23",
+    "Q24",
+    "Q25",
+    "Q26",
+    "Q27"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "max_files": 5,
+  "max_bytes": 4400,
+  "max_file_bytes": 1150,
+  "groups": [
+    {"id": "browser-safety", "take": 1, "patterns": ["**/sanitize-html.[jt]s", "**/sanitize.[jt]s", "**/sanitizer.[jt]s", "**/web/next.config.*", "**/frontend/vite.config.*"]},
+    {"id": "headers", "take": 1, "patterns": ["**/web/next.config.*", "**/frontend/next.config.*", "**/web/middleware.[jt]s", "**/frontend/middleware.[jt]s", "next.config.*", "vite.config.*", "nginx.conf"], "anchor": "(?i)headers\\s*\\(|content-security-policy|set-cookie"},
+    {"id": "browser-flows", "take": 2, "patterns": ["**/cookie-consent.[jt]sx", "**/CookieConsent.[jt]sx", "**/consent.[jt]s", "**/cookies.[jt]s", "**/web/**/middleware.[jt]s", "**/web/**/backend-proxy.[jt]s", "**/web/**/api/**/route.[jt]s", "**/frontend/**/api-client.[jt]s"]},
+    {"id": "frontend-docs", "take": 1, "patterns": ["apps/web/README*", "frontend/README*", "README*"], "anchor": "(?i)^#{1,4}.*(?:frontend|web|cookies|seguridad)"}
+  ]
+}

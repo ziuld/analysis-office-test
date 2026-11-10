@@ -4,6 +4,8 @@ Fecha: 30/10/2026. Estado: implementado con resultados y límites comprobados. L
 
 Este es el único plan de trabajo de Arktic Office. Sustituye el antiguo plan de fase 3, el prompt externo de agentes reutilizables y las alternativas anteriores de concurrencia. MVP y fases cerradas se conservan exclusivamente como histórico. El cierre publicado `76abf0f` es el punto de referencia para la implementación descrita aquí.
 
+Siguiente etapa planificada el 10/11/2026: perfiles independientes, preparación inicial e Iris · Full Stack con selección desde la oficina (sección 11).
+
 ## 1. Objetivo y decisiones
 
 Mejorar la cobertura y la eficiencia de la investigación, conservando el informe actual que ha funcionado. Las prioridades ejecutivas son vulnerabilidades, seguridad y riesgos de coste al desplegar en Azure. Inventario, arquitectura y datos aportan información que evita repetir investigaciones. Todas las preguntas siguen formando parte del análisis, incluidas las de operación y persistencia.
@@ -327,3 +329,66 @@ Las siguientes propuestas quedan documentadas, **sin implementar ni activar**. E
 | Completar Chromium cuando el usuario lo retome | Comprobación visual expresamente aplazada | Oficina, asientos, reunión/TV, paneles y descargas; la animación no debe generar llamadas a modelos |
 
 Se mantienen las decisiones de ejecución secuencial, Core/SQLite/archivos, mapas consultables, respuestas originales, ausencia de ocultación y de un segundo validador, modelos configurados y preservación de Q01–Q40. No se ejecuta ni se instalan dependencias del repositorio analizado, ni se realizan ataques activos. Cualquier ensayo futuro requiere presupuesto definido y conserva sus resultados como una ejecución nueva.
+
+## 11. Perfiles independientes y revisión Full Stack · 10/11/2026
+
+Estado **fase 1 ejecutada y verificada en una corrida completa**. Los siete especialistas están separados y la selección inicial se probó de extremo a extremo. **Iris · Full Stack** y la elección en la oficina forman la fase 2. El equipo es la opción predeterminada y el usuario elige el modo de cada revisión.
+
+### Fase 1. Perfiles independientes y preparación inicial
+
+| Paso | Entrega | Aceptación |
+| --- | --- | --- |
+| 1 | Dar a cada especialista una carpeta en `resources/profiles/agents/<id>/` con `agent.json` (identidad, responsabilidad, IDs de preguntas, instrucciones y dependencias explícitas) e `initial-sources.json` (patrones y prioridades). Migrar primero a Kwame y retirar su entrada duplicada del perfil conjunto. El catálogo canónico conserva el texto de Q01–Q40 y el registro de perfiles activos conserva el orden. | Core valida IDs y preguntas, y conserva la carga de los perfiles aún pendientes de migrar. En la prueba de retirada, las preguntas huérfanas conservan su ID y se muestran como no comprobadas con motivo «sin responsable». Se comprueban altas, bajas, dependencias e informes previos. |
+| 2 | Incorporar un único selector local de fuentes en Core. Antes de la primera llamada lee la lista del perfil y busca en el inventario del snapshot. Resuelve coincidencias por pila tecnológica, deduplica rutas, prioriza los fragmentos y aplica un límite de archivos y bytes. El agente recibe los fragmentos seleccionados y las rutas útiles que quedaron pendientes. | Preparación con cero llamadas al modelo. Selección reproducible, con coincidencias ausentes o truncadas registradas. Los fragmentos cuentan en el presupuesto de contexto y las rondas posteriores reutilizan la lectura. Las consultas directas y Graphify siguen disponibles para la investigación del agente. |
+| 3 | Probar la nueva preparación solo con Kwame, conservando la instrucción que ya le pide seguir scripts, migraciones y validaciones de arranque. Su lista empieza por README de raíz y de módulos relevantes, manifiestos y configuración de tareas para JavaScript, Java y Python, scripts, contenedores, CI/CD, ejemplos de variables y código de arranque. | Misma captura de Web Corporativa 2.0 (`4ae82b4`), GPT-6.1 Sol / medio y hasta cuatro llamadas. Comparar con los 107.470 tokens de la última prueba aislada y revisar evidencia nueva en Q15 y Q16, profundidad, tiempo y archivos leídos. Se acepta más tiempo con consumo igual o menor y mejor respaldo. |
+| 4 | Migrar el resto por decisión del usuario, con límites iniciales más pequeños y una sola corrida completa al final. Amina prioriza dependencias y versiones; Leif, puntos de entrada, módulos y conexiones; Priya, esquemas, almacenamiento y migraciones; Noor, identidad y permisos; Mei, rutas de navegador y controles frontend; Arun, entradas, validación y operaciones sensibles del backend. | Una lista por perfil. Las asignaciones, el orden, las dependencias y el comportamiento del equipo se comprueban con la suite local antes de activar el segundo modo. |
+
+Cada perfil puede pedir el README de la raíz y de los módulos que le interesen. Core entrega los apartados relevantes dentro del mismo límite. El especialista contrasta las afirmaciones con código y configuración y señala las discrepancias. Para variables sensibles se buscan ejemplos y puntos de uso o validación.
+
+#### Resultado del piloto de Kwame · 10/11/2026
+
+El anexo aprobado se guardó por separado en `8e80ce7`. Se movió Kwame a su carpeta propia y se integró el selector común. En la comprobación previa, Core entregó 11 archivos y 10.489 bytes de fuentes con cero llamadas al modelo. Incluyó `turbo.json`, los manifiestos de las tres aplicaciones, el README y el tramo del Dockerfile con el comando de migración. Suite de backend en Linux con 203 pruebas correctas y una omitida. El paquete instalable contiene la definición y la lista de Kwame.
+
+Se ejecutó un solo piloto real con la captura `4ae82b4`, GPT-6.1 Sol / medio y las mismas cuatro llamadas. El consumo pasó de 107.470 a 137.368 tokens (+27,82 %), el tiempo de 123,877 a 169,423 segundos y los archivos leídos de 22 a 26. El contexto enviado pasó de 374.939 a 458.664 bytes.
+
+- Q15 pasó de parcial a respondida. La respuesta cita la configuración de Turborepo y el script de despliegue que espera las migraciones antes de actualizar las aplicaciones. Quedó pendiente leer la implementación de la carga inicial y del alta del administrador.
+- Q16 siguió parcial. La respuesta contrastó el código de correo y OneDrive para explicar que sus variables se comprueban al usar esas funciones. Quedaron pendientes partes de la inyección de secretos y de la configuración requerida por aplicación.
+- Q18 pasó a respondida y Q19 a parcial. El total del perfil quedó en tres respondidas y cinco parciales.
+
+El piloto ganó evidencia y superó el umbral de consumo. El usuario autorizó migrar los demás perfiles con listas iniciales más pequeñas y reservar la ejecución real del equipo para el final. Los resultados detallados se guardaron localmente en la caché de la prueba, fuera del repositorio de Arktic Office.
+
+
+#### Separación de los siete perfiles · 10/11/2026
+
+Cada especialista tiene su carpeta con `agent.json` e `initial-sources.json`. El registro común conserva los IDs y el orden del equipo. El catálogo de 40 preguntas y los perfiles de ejecución conservan sus IDs. Para reutilizar un especialista en otra instalación se copia su carpeta y se registra su ID en la instalación receptora, que aporta el buscador compartido, el catálogo y la configuración de ejecución.
+
+Las seis listas nuevas tienen un máximo de cinco archivos y 4.400 bytes de fragmentos por perfil. La comprobación local sobre la misma captura seleccionó entre cuatro y cinco archivos por perfil y entre 3.495 y 4.385 bytes. Kwame conserva los límites de su piloto. Se verificó que el paquete instalable incluye las siete carpetas con las asignaciones correctas. La suite local terminó con 204 pruebas correctas y una omitida. La corrida con modelos se reserva para el final y será una revisión completa. Allí se medirán el consumo del equipo, el contexto enviado por ronda y el respaldo de las respuestas.
+
+
+#### Corrida completa de los perfiles independientes · 10/11/2026
+
+Ejecución `2b105836-e626-42db-9742-6ff55491a2b1`, referencia `813716cc-477b-4a4b-9795-a231973a4b9f`. Mismo commit `4ae82b4`, inventario, Q01–Q40, GPT-6.1 Sol / medio y presupuesto global. Se verificaron los blobs de la captura local y se reutilizaron los resultados históricos de Graphify y los escáneres para comparar el flujo de análisis. La vigencia de las alertas externas se limita a la captura original.
+
+| Métrica | Referencia | Perfiles independientes |
+| --- | ---: | ---: |
+| Llamadas | 30 | 27 |
+| Tokens totales | 717.849 | 640.181 |
+| Segundos de coordinación y análisis | 874.675 | 864.549 |
+| Bytes enviados | 2.493.232 | 2.224.657 |
+| Archivos leídos | 84 | 95 |
+| Respondidas / parciales / no comprobadas / no aplica | 3 / 36 / 1 / 0 | 5 / 33 / 2 / 0 |
+
+Variación de tokens -10.82 %. La revisión técnica terminó con los siete especialistas y las dos etapas de Akira. Se verificaron las 40 anclas, la publicación en API, las descargas HTML y Markdown, la integridad de SQLite y el cierre de la reunión. Las etiquetas de cobertura proceden de los agentes. Una corrida por configuración permite comparar esta muestra. El informe y la comparación permanecen en el registro local de la prueba.
+
+Q04 y Q07–Q09 pasaron a respondidas. Kwame terminó en una llamada y dejó sin leer los Dockerfiles de las aplicaciones y el pipeline. Q17 y Q19 pasaron a parciales, Q18 pasó a no comprobada y Q15–Q16 siguieron parciales. La reducción global de consumo coincide con tres llamadas menos de DevOps y no demuestra por sí sola que se mantenga su profundidad. El cierre técnico y el balance de cobertura se registran por separado.
+
+### Fase 2. Reclutar a Iris y seleccionar el modo en la oficina
+
+| Paso | Entrega | Aceptación |
+| --- | --- | --- |
+| 5 | Dar de alta a **Iris · Full Stack** (`full-stack-code-analyst`) como personaje con escritorio, estado y panel de consulta. Su carpeta sigue el formato de la fase 1. Usar el Full Stack de AI Workspace como referencia para investigar por evidencia, reutilizar lecturas y escribir con claridad. | Iris recibe los IDs y textos del catálogo de Arktic Office para las 40 preguntas. Conserva el informe actual, con resumen ejecutivo, detalle técnico y cobertura. Investiga por bloques con un presupuesto total y usa una lectura para varias preguntas cuando procede. |
+| 6 | Añadir el interruptor **Usar Full Stack** al formulario **Iniciar revisión**. Enviar `full_stack` como booleano para repositorios locales y de GitHub. Guardar la elección por revisión y mostrarla en estado, historial e informe. | `false` ejecuta el flujo actual con el equipo; `true` ejecuta a Iris como única analista. Las solicitudes e historiales sin el campo se interpretan como equipo. El valor queda fijado al iniciar. El flujo de oficina, consultas y descargas conserva el mismo recorrido en ambos modos. |
+| 7 | Hacer que Core construya el plan según el booleano elegido. Akira mantiene el papel de orquestación y cierre. En modo Full Stack entrega un único encargo a Iris y Core publica sus aportaciones con sus estados, fuentes y autoría. Ajustar la composición del informe para impedir que el cierre sobrescriba sus respuestas, incluidas Q01–Q03 y Q38–Q40. | En modo equipo se ejecutan los perfiles activos en orden y el cierre habitual. En modo Full Stack se registra solo a Iris como analista. Si llega a un límite o falla, se conservan los resultados parciales y el modo elegido. El frontend y su parche reproducible se validan junto con la API. |
+| 8 | Comparar los dos modos con el mismo commit, catálogo, herramientas, modelo y techo global. Registrar también los límites por perfil y el contexto enviado. | Verificar las 40 preguntas y sus autores, contrastar respuestas clave de seguridad, arquitectura, datos y operación, y comparar tokens, llamadas y tiempo. La conclusión debe distinguir cobertura, calidad de evidencia y eficiencia. |
+
+Las dos fases comparten la captura local de solo lectura, el buscador, el presupuesto, la persistencia y el formato del informe. El cambio de carpetas es una separación de recursos empaquetados. Los límites y los presupuestos concretos de las nuevas pruebas de modelo se fijan antes de ejecutarlas.

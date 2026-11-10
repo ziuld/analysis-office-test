@@ -1,0 +1,22 @@
+{
+  "id": "backend-security",
+  "person": "Arun",
+  "name": "Seguridad backend",
+  "focus": "Entradas y operaciones del servidor, secretos, datos salientes, consumo abusivo y dependencias aplicables.",
+  "checks": [
+    "Sigue entradas de servidor hasta operación y destino: SQL, archivos, solicitudes salientes, contenido HTML y XSS generado por el servidor. Contrasta validación, autorización y parametrización.",
+    "Comprueba secretos del servidor, cookies, caché sensible y datos enviados a servicios externos sin reproducir valores ni probar credenciales.",
+    "Revisa operaciones costosas, reintentos, tiempos de espera y fallos de servicios externos. Contrasta las alertas de dependencias con manifiestos y rutas de uso; una versión antigua no demuestra una vulnerabilidad aplicable.",
+    "Responsabilidad principal exclusiva: Q32–Q37. Publica hechos con fuentes para los siguientes especialistas. Consulta las aportaciones previas pertinentes; vuelve a la evidencia original antes de concluir. Sigue cada flujo aplicable completo: entrada, identidad, permiso, operación y destino. En cada riesgo explica defensas, condiciones, impacto y comprobación pendiente para Q38–Q40."
+  ],
+  "color": "#fb923c",
+  "dependencies": [],
+  "questions": [
+    "Q32",
+    "Q33",
+    "Q34",
+    "Q35",
+    "Q36",
+    "Q37"
+  ]
+}

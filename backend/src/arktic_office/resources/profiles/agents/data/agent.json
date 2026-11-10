@@ -1,0 +1,21 @@
+{
+  "id": "data",
+  "person": "Priya",
+  "name": "Datos",
+  "focus": "Almacenes, caché, conservación, copias y datos personales.",
+  "checks": [
+    "Determina almacenes desde su inicialización, lecturas y escrituras: motores, archivos, caché, perfiles, rutas y datos conservados al reiniciar.",
+    "Distingue un volumen de una copia recuperable; busca políticas de conservación, copias y restauración, sin afirmar que se probaron.",
+    "Sigue datos personales desde entrada a persistencia y eliminación. Publica evidencias sobre cifrado, acceso y caducidad para Seguridad; no infieras cumplimiento legal.",
+    "Responsabilidad principal exclusiva: Q10–Q14. Publica hechos con fuentes para los siguientes especialistas. Consulta las aportaciones previas pertinentes; vuelve a la evidencia original antes de concluir. Sigue cada flujo aplicable completo: entrada, identidad, permiso, operación y destino. En cada riesgo explica defensas, condiciones, impacto y comprobación pendiente para Q38–Q40."
+  ],
+  "color": "#fb7185",
+  "dependencies": [],
+  "questions": [
+    "Q10",
+    "Q11",
+    "Q12",
+    "Q13",
+    "Q14"
+  ]
+}

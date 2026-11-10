@@ -130,7 +130,13 @@ class CompleteFlowTests(unittest.TestCase):
                 if role == "coordinator-synthesis":
                     return {"report": json.dumps({"resumen": [{"texto": "Architecture observation", "aportaciones": ["architecture:confirmados:0"]}]})}
                 if budget and calls.count(role) == 1:
-                    self.assertEqual(config["files"], [])
+                    initial_paths = {
+                        "inventory": ["package.json"], "architecture": ["server.js"],
+                        "identity": ["auth.py"], "backend-security": ["server.js"],
+                        "devops": ["package.json", "Dockerfile"],
+                    }
+                    expected_paths = initial_paths.get(role, [])
+                    self.assertEqual([f["path"] for f in config["files"]], expected_paths)
                     return {"report": json.dumps({"queries": [{"paths": ["hidden/entry.py"]}]}), "usage": {"total_tokens": 1}}
                 if fail_extra and role == "backend-security":
                     raise AuditError("Controlled analysis failure")

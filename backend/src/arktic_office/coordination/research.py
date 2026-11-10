@@ -2,6 +2,7 @@
 import json
 import time
 from collections import Counter
+from arktic_office.coordination.initial_sources import select as select_initial_sources
 from arktic_office.core.errors import AuditError
 from arktic_office.reporting.reports import make_prompt
 from arktic_office.reporting.agent_instructions import instructions as role_instructions
@@ -32,7 +33,14 @@ def research(snapshot, config, state, evidence, invoke, output, cells):
     context = common_context(snapshot, evidence)
     context['question_map'] = config.get('knowledge_index', [])
     state.update(retrievals=[], invocations=[], research_rounds=rounds)
-    config["files"] = []
+    config["files"], initial = select_initial_sources(config["id"], evidence, config["limits"])
+    if initial is not None:
+        state["initial_sources"] = initial
+        context["initial_sources_pending"] = initial["pending_paths"]
+        if config["files"]:
+            evidence.retain(snapshot, config["files"])
+            state["archivos"] = [file["path"] for file in config["files"]]
+            state["bytes"] = initial["bytes"]
     task = config.get("task", config["focus"])
     instruction = ('Eres el especialista ' + config["name"] + '. Encargo: ' + task +
         '\nEl coordinador no elige tus fuentes. Elige todos los archivos necesarios para responder tus preguntas y seguir sus flujos. '
@@ -75,8 +83,10 @@ def research(snapshot, config, state, evidence, invoke, output, cells):
         remaining = rounds - attempt
         if first:
             prompt = role_instructions(config["id"]) + instruction + '\nPrimero revisa las herramientas y solicita queries si necesitas fuentes. Rondas disponibles: ' + str(rounds)
-            if enabled(snapshot):
-                prompt = make_prompt({**snapshot, "files": [], "context_maps_managed":True}, config) + '\n' + instruction + '\nSolicita consultas pertinentes agrupadas antes de cerrar.'
+            if enabled(snapshot) or initial is not None:
+                prompt = make_prompt({**snapshot, "files": config["files"], "context_maps_managed":True}, config) + '\n' + instruction
+                prompt += ('\nLee las fuentes iniciales, reutiliza sus citas y solicita consultas agrupadas solo si falta evidencia pertinente.'
+                           if config["files"] else '\nSolicita consultas pertinentes agrupadas antes de cerrar.')
         else:
             prompt = make_prompt({**snapshot, "files": config["files"], "context_maps_managed":True}, config) + '\n' + instruction
             prompt += '\nCONSULTAS REALIZADAS: ' + json.dumps(state["retrievals"], ensure_ascii=False)
@@ -114,7 +124,7 @@ def research(snapshot, config, state, evidence, invoke, output, cells):
             state["archivos"] = [f["path"] for f in files]
             state["bytes"] = sum(len(f["text"].encode()) for f in files)
             continue
-        if first and not enabled(snapshot):
+        if first and not enabled(snapshot) and not config["files"]:
             raise AuditError("La fase de investigación no devolvió consultas; no se omite silenciosamente.")
         if enabled(snapshot) and evidence.files and rounds > 0 and not config["files"]:
             premature_closures += 1

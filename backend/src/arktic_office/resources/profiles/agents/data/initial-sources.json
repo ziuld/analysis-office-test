@@ -1,0 +1,11 @@
+{
+  "max_files": 5,
+  "max_bytes": 4400,
+  "max_file_bytes": 1150,
+  "groups": [
+    {"id": "schema", "take": 1, "patterns": ["**/schema.prisma", "**/schema.sql", "**/models.py", "**/*DbContext.cs", "**/structure.sql", "**/schema.rb"]},
+    {"id": "storage", "take": 2, "patterns": ["**/blob.[jt]s", "**/database.[jt]s", "**/database.py", "**/persistence.xml", "**/cache.[jt]s", "**/redis.[jt]s", "**/storage.[jt]s"]},
+    {"id": "migrations", "take": 1, "patterns": ["**/migrations/*retention*/migration.sql", "**/alembic.ini", "**/prisma.config.[jt]s", "**/migrations/migration_lock.toml", "**/db/migrate/*.rb"]},
+    {"id": "persistence-configuration", "take": 1, "patterns": ["docker-compose.y*ml", "compose.y*ml", "docs/data/README*", "README*"], "anchor": "(?i)^#{1,4}.*(?:datos|data|backup|almacenamiento)"}
+  ]
+}

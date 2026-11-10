@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "arktic-office-backend"
-version = "0.3.0"
+version = "0.4.0"
 description = "Local Arktic Office API, evidence and report workflow"
 requires-python = ">=3.14"
 dependencies = []
@@ -23,4 +23,4 @@ where = ["backend/src"]
 include = ["arktic_office*"]
 
 [tool.setuptools.package-data]
-"arktic_office.resources" = ["assets/*", "profiles/*", "skills/*/SKILL.md", "editorial/*"]
+"arktic_office.resources" = ["assets/*", "profiles/*", "profiles/agents/*/*.json", "skills/*/SKILL.md", "editorial/*"]

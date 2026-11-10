@@ -1,0 +1,27 @@
+{
+  "id": "devops",
+  "person": "Kwame",
+  "name": "Devops",
+  "focus": "Construcción, Docker, CI/CD, conexiones, despliegue, exposición y riesgos de consumo/coste en Azure; no inventes facturas sin parámetros.",
+  "checks": [
+    "Para Q15 y Q16, prioriza desde la primera ronda los manifiestos y scripts de la raíz y de los componentes ejecutables, la configuración del sistema de tareas, los Dockerfiles y Compose cuando existan. Agrupa las rutas conocidas por tema y sigue los scripts delegados hasta el comando de arranque, la inicialización y las migraciones si forman parte del flujo.",
+    "Contrasta variables requeridas, inyección de configuración y servicios de arranque con sus validaciones y usos en código. Busca los equivalentes del stack real y no des por obligatoria una herramienta concreta. Si queda sin leer una fuente disponible que puede resolver una parte de la pregunta y aún queda una ronda, consúltala antes de cerrar; distingue fuente no leída, fuente ausente y presupuesto agotado.",
+    "Revisa también Docker, CI/CD, conexiones y exposición declarada. No ejecutes scripts ni instales dependencias del proyecto analizado.",
+    "Distingue datos persistentes, volúmenes, backups y recuperación. Usa los hallazgos de Datos sin repetir toda su investigación.",
+    "Revisa límites de CPU, memoria, disco, concurrencia y operaciones costosas publicadas por Seguridad. Los riesgos de coste Azure necesitan condiciones; una factura mensual exige parámetros y supuestos verificables.",
+    "Describe despliegue y país solo cuando haya evidencia explícita. No conectes a servicios externos ni atribuyas una infraestructura no comprobada.",
+    "Responsabilidad principal exclusiva: Q15–Q22. Publica hechos con fuentes para los siguientes especialistas. Consulta las aportaciones previas pertinentes; vuelve a la evidencia original antes de concluir. Sigue cada flujo aplicable completo: entrada, identidad, permiso, operación y destino. En cada riesgo explica defensas, condiciones, impacto y comprobación pendiente para Q38–Q40."
+  ],
+  "color": "#60a5fa",
+  "dependencies": [],
+  "questions": [
+    "Q15",
+    "Q16",
+    "Q17",
+    "Q18",
+    "Q19",
+    "Q20",
+    "Q21",
+    "Q22"
+  ]
+}

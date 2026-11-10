@@ -1,0 +1,20 @@
+{
+  "id": "frontend-security",
+  "person": "Mei",
+  "name": "Seguridad frontend",
+  "focus": "Cookies, XSS, secretos del navegador y consentimiento.",
+  "checks": [
+    "Sigue datos no confiables hasta HTML, atributos, URL, JavaScript y DOM. Comprueba escape por contexto, sanitización y límites de CSP; no infieras explotación.",
+    "Comprueba cookies del navegador, información sensible enviada a terceros y secretos privados en los archivos que recibe el cliente. Una clave pública no es automáticamente un secreto.",
+    "Comprueba si las cookies necesitan consentimiento, bloqueo previo, rechazo y cambio de elección desde código. La falta de evidencia queda pendiente.",
+    "Responsabilidad principal exclusiva: Q28–Q31. Publica hechos con fuentes para los siguientes especialistas. Consulta las aportaciones previas pertinentes; vuelve a la evidencia original antes de concluir. Sigue cada flujo aplicable completo: entrada, identidad, permiso, operación y destino. En cada riesgo explica defensas, condiciones, impacto y comprobación pendiente para Q38–Q40."
+  ],
+  "color": "#f472b6",
+  "dependencies": [],
+  "questions": [
+    "Q28",
+    "Q29",
+    "Q30",
+    "Q31"
+  ]
+}

@@ -2,6 +2,7 @@
 import json
 import tempfile
 import unittest
+from importlib.metadata import version
 from pathlib import Path
 from arktic_office.execution.jobs import Jobs
 from arktic_office.execution.activity import project
@@ -51,7 +52,7 @@ class OfficeStorageTests(unittest.TestCase):
             snapshot = {"repository": "https://github.com/acme/app", "commit": "a" * 40, "files": []}
             write_manifest(directory, snapshot)
             manifest = json.loads((directory / "manifest.json").read_text())
-            self.assertEqual(manifest["backend_version"], "0.3.0")
+            self.assertEqual(manifest["backend_version"], version("arktic-office-backend"))
             self.assertEqual(manifest["delivery"], "closed")
             self.assertIn("editorial/standard.md", manifest["resource_sha256"])
             self.assertEqual(original, {p: p.read_bytes() for p in original})

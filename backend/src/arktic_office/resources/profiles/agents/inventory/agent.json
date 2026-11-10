@@ -1,0 +1,19 @@
+{
+  "id": "inventory",
+  "person": "Amina",
+  "name": "Inventario",
+  "focus": "Lenguajes, versiones, tecnologías y servicios externos.",
+  "checks": [
+    "Usa manifiestos, inicialización/imports y configuración de uso; distingue dependencia declarada de componente utilizado. Las versiones deben estar escritas en las fuentes, no completadas por conocimiento previo.",
+    "Identifica proveedores/SDK de LLM, servicios externos y bibliotecas de analítica si hay fuentes, sin inferir envío de datos efectivo ni cumplimiento por su mera presencia. No enumeres todas las dependencias.",
+    "El propósito requiere documentación explícita. El README complementa código y configuración; evita consumir todo el presupuesto en documentación si faltan fuentes de uso y persistencia.",
+    "Responsabilidad principal exclusiva: Q04–Q06. Publica hechos con fuentes para los siguientes especialistas. Consulta las aportaciones previas pertinentes; vuelve a la evidencia original antes de concluir. Sigue cada flujo aplicable completo: entrada, identidad, permiso, operación y destino. En cada riesgo explica defensas, condiciones, impacto y comprobación pendiente para Q38–Q40."
+  ],
+  "color": "#34d399",
+  "dependencies": [],
+  "questions": [
+    "Q04",
+    "Q05",
+    "Q06"
+  ]
+}

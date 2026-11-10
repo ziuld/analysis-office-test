@@ -12,8 +12,9 @@ from arktic_office.preparation.repository import AuditError, MANIFESTS, SOURCE_E
 from arktic_office.reporting.reports import evidence_index, make_prompt, validate_report
 from arktic_office.config.settings import settings, runtime_options
 
-from arktic_office.resources.paths import resource_path
-CELLS = tuple(json.loads(resource_path("profiles", "agents.json").read_text(encoding="utf-8")))
+from arktic_office.config.agents import read_profiles
+
+CELLS = read_profiles()
 
 
 
@@ -491,7 +492,9 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print, evidence=None):
         received = {a["id"]: a for _, report in results for a in report.get("respuestas", [])}
         if coordinator:
             received.update({a["id"]: a for a in coordinator.state.get("question_answers", [])})
-        answers = [received.get(q["id"], {**q, "estado": "no_comprobado", "respuesta": "El responsable no entregó una respuesta para esta pregunta.",
+        active_roles = {cell["id"] for cell in CELLS} | {"coordinator"}
+        answers = [received.get(q["id"], {**q, "estado": "no_comprobado",
+            "respuesta": "El responsable no entregó una respuesta para esta pregunta." if q["role"] in active_roles else "Pregunta sin responsable activo.",
             "evidencia": [], "herramientas": [], "pendiente": "Completar la revisión de esta pregunta; consultar el estado del agente responsable."}) for q in catalog()]
         data["cuestionario"] = {"version": VERSION, "respuestas": answers}
         if not complete(answers):

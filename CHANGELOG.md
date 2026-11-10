@@ -1,5 +1,11 @@
 # Cambios por componente
 
+## Backend 0.4.0 · perfiles independientes · 10/11/2026
+
+- Cada especialista tiene una definición y una lista de fuentes iniciales en su propia carpeta. Core selecciona y limita los fragmentos antes de la primera llamada.
+- Los informes muestran la respuesta original de cada especialista en un bloque de código dentro de su desplegable.
+- La revisión completa con siete especialistas y Akira se verificó sobre la misma captura que la referencia. El frontend conserva su versión.
+
 ## Checkpoint de rama — coordinación centralizada, 31/10/2026
 
 - Akira y siete especialistas secuenciales; Q01–Q40 conservadas y catálogo compartido con la oficina.

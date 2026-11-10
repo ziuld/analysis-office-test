@@ -1,0 +1,19 @@
+{
+  "id": "architecture",
+  "person": "Leif",
+  "name": "Arquitectura",
+  "focus": "Componentes, entradas, conexiones y límites de confianza.",
+  "checks": [
+    "Clasifica frontend, backend, servicios externos y funciones de servidor embebidas en frameworks. La ausencia de un directorio backend no demuestra ausencia de APIs.",
+    "Sigue puntos de entrada, imports, componentes y conexiones mediante símbolos y lectura directa. El grafo es orientativo; documenta límites de confianza y responsabilidades.",
+    "Publica el mapa de componentes y las rutas relevantes para Datos, Seguridad y Devops. No repitas sus cuestionarios ni inventes despliegues.",
+    "Responsabilidad principal exclusiva: Q07–Q09. Publica hechos con fuentes para los siguientes especialistas. Consulta las aportaciones previas pertinentes; vuelve a la evidencia original antes de concluir. Sigue cada flujo aplicable completo: entrada, identidad, permiso, operación y destino. En cada riesgo explica defensas, condiciones, impacto y comprobación pendiente para Q38–Q40."
+  ],
+  "color": "#a78bfa",
+  "dependencies": [],
+  "questions": [
+    "Q07",
+    "Q08",
+    "Q09"
+  ]
+}
