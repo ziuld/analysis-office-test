@@ -371,6 +371,7 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print, evidence=None):
               "model": c["model"], "reasoning": c["reasoning"], "archivos": [f["path"] for f in c["files"]],
               "bytes": c["bytes"], "calls": 0} for c in plan]
     results = []
+    original_texts = {}
     (output / "celulas").mkdir()
     for config, state in zip(plan, cells):
         from arktic_office.reporting.questionnaire import catalog
@@ -455,6 +456,7 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print, evidence=None):
             if envelope.get("reused_from"):
                 state["reutilizado_de"] = envelope["reused_from"]
             results.append((config["id"], report))
+            original_texts[config["id"]] = original_raw
             state['summary'] = next((a['respuesta'] for a in report.get('respuestas', []) if a['estado'] in {'respondida', 'parcial'}), 'Aportación guardada; consultar cobertura.')[:240]
             knowledge.export(output, config, state, report)
             write_json(output / "celulas" / (config["id"] + ".json"), {**state, "resultado": report})
@@ -476,6 +478,8 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print, evidence=None):
         write_json(output / 'celulas' / (config['id'] + '.json'), {**state, **({'resultado': saved_result} if saved_result is not None else {})})
         write_json(output / "estado.json", {"estado": "analizando", "celulas": cells})
     data = consolidate(results, cells)
+    for contribution in data["aportaciones_agentes"]:
+        contribution["texto_original"] = original_texts[contribution["id"]]
     if coordinator and not budget.stop_reason:
         write_json(output / 'meeting.json', {'active': True, 'run_id': output.name, 'participants': ['coordinator', *[a for a, _ in results]], 'phase': 'synthesis'})
         data["sintesis"] = coordinator.synthesize(results)

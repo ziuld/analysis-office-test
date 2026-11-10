@@ -2,6 +2,7 @@
 import json
 import tempfile
 import unittest
+from html import escape
 from pathlib import Path
 from arktic_office.preparation.repository import redact, mask_findings
 from arktic_office.reporting.specialist import compose
@@ -48,13 +49,17 @@ class UnfilteredTests(unittest.TestCase):
         self.assertEqual(len(report['confirmados'][0]['evidencia']),3)
 
     def test_original_annex_is_escaped_and_never_truncated(self):
-        text = '<script>synthetic-test-only</script>\n'+('x'*18000)
-        data = {'aportaciones_agentes':[{'nombre':'Arun','respuesta':{'observaciones':[{'observacion':text}]}}]}
+        text = '<script>synthetic-test-only</script>\n````\n' + ('x' * 18000)
+        parsed = {'observaciones': [{'observacion': text}]}
+        raw = '\n' + json.dumps(parsed, ensure_ascii=False, indent=4) + '\n'
+        entry = {'nombre': 'Arun', 'respuesta': parsed, 'texto_original': raw}
+        data = {'aportaciones_agentes': [entry]}
         rendered = html(data)
-        self.assertNotIn('<script>',rendered)
-        self.assertIn('&lt;script&gt;',rendered)
-        self.assertIn('x'*18000,rendered)
-        self.assertIn('x'*18000,markdown(data))
+        self.assertNotIn('<script>', rendered)
+        self.assertIn('<code>' + escape(raw, quote=False) + '</code>', rendered)
+        self.assertIn('`````json\n' + raw + '`````', markdown(data))
+        del entry['texto_original']
+        self.assertIn('<code>' + escape(json.dumps(parsed, ensure_ascii=False, indent=2), quote=False) + '</code>', html(data))
 
     def test_azure_recommendation_is_not_judged_by_core(self):
         snapshot,_ = fixture()

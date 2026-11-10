@@ -15,7 +15,10 @@
 pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px}.risk-detail{border-left:3px solid #dce5ec;padding-left:16px;margin-top:12px}
 [id]{scroll-margin-top:115px}.hero h1{overflow-wrap:anywhere}.tag{white-space:normal}.flow>.arrow{display:block!important;text-align:center}.arrow small{display:block;font-size:9px}
 @media(max-width:800px){.review-grid{grid-template-columns:1fr}#hallazgos-resumen table{min-width:720px;table-layout:auto}#hallazgos-resumen th{width:auto!important}}
+.original-response{margin:0 1rem 1rem;padding:1rem;max-height:32rem;overflow:auto;border:1px solid var(--line);border-radius:5px;background:var(--bg);line-height:1.55}
+.original-response:focus-visible{outline:3px solid #009da1;outline-offset:2px}.original-response code{font:inherit;font-family:Consolas,monospace}
 @media print{
+ .original-response{max-height:none;overflow:visible}
  @page{margin:15mm}body{background:white;color:#172d40;font-size:11px}.wrap{max-width:none;padding:0}.nav,.return-link,.hero-art{display:none!important}
  .hero{padding:15px;background:#fff;color:#172d40}.hero p,.meta span{color:#172d40}.hero:after{display:none}.chapter{break-before:auto}
  .panel,.review-card,.risk-detail{box-shadow:none;break-inside:avoid}.table-wrap{overflow:visible}table{min-width:0!important;table-layout:auto!important}

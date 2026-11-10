@@ -120,7 +120,11 @@ class QuestionnaireTests(unittest.TestCase):
             self.assertIn(q["id"], markdown)
         for tool in snapshot["deterministic_results"]["tools"]:
             self.assertIn('id="' + tool["id"] + '"', html)
-        self.assertNotIn('<pre>', html)
+        body, annex = html.split('<section id="respuestas-originales">', 1)
+        self.assertNotIn('<pre', body)
+        self.assertIn('<pre class="original-response"', annex)
+        originals = {entry['id']: entry['texto_original'] for entry in data['aportaciones_agentes']}
+        self.assertEqual(originals['inventory'], json.dumps({"observaciones": [], "respuestas": answers('inventory')}))
         self.assertNotIn('"nodes"', html)
         self.assertEqual(data['deterministic_results']['tools'][-1]['result']['nodes'][0]['id'], 'entry')
         self.assertNotIn("<script>alert(1)</script>", html)
