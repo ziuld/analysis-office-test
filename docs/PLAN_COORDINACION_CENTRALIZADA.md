@@ -1,10 +1,10 @@
 # Plan único de mejoras — Coordinación centralizada
 
-Fecha: 30/10/2026. Estado: implementado con resultados y límites comprobados. La comparación inicial no demostró mejora; la prueba posterior de mapas reduce el consumo, pero no demuestra conservar la profundidad de Arquitectura y Devops. Chromium aplazado por indicación del usuario.
+Inicio: 30/10/2026. Coordinación centralizada e Iris están implementadas y validadas con cobertura parcial. El cierre del 11/11/2026 recoge la comprobación de Chromium, las propuestas archivadas y las dos revisiones de referencia.
 
 Este es el único plan de trabajo de Arktic Office. Sustituye el antiguo plan de fase 3, el prompt externo de agentes reutilizables y las alternativas anteriores de concurrencia. MVP y fases cerradas se conservan exclusivamente como histórico. El cierre publicado `76abf0f` es el punto de referencia para la implementación descrita aquí.
 
-Siguiente etapa planificada el 10/11/2026: perfiles independientes, preparación inicial e Iris · Full Stack con selección desde la oficina (sección 11).
+Siguiente etapa aprobada: migrar los siete especialistas al [estándar de agentes independientes](PROPUESTA_AGENTES_INDEPENDIENTES.md).
 
 ## 1. Objetivo y decisiones
 
@@ -315,6 +315,8 @@ Verificado: 34 respuestas originales intactas, 40 preguntas y anclas, seis desca
 
 ## Cierre estable y propuestas pendientes — 31/10/2026
 
+Registro histórico. El [cierre del 11/11/2026](#cierre-antes-de-migrar-el-equipo--11112026) recoge la decisión posterior sobre cada propuesta.
+
 Por instrucción expresa del usuario se guarda este punto estable mediante commit y push de la rama actual antes de hacer más cambios. No se aplica la unificación de perfiles comentada: permanecen siete especialistas y Akira, con Arquitectura y Datos separados. Estabilidad funcional no significa cobertura semántica completa. Se conservan los resultados favorables y desfavorables de las tres configuraciones en `docs/evidence/agent-comparison-2026-10-31/` y el cierre en `docs/CIERRE_COORDINACION_2026-10-31.md`.
 
 Las siguientes propuestas quedan documentadas, **sin implementar ni activar**. Este apartado pertenece al único plan vigente; no es una autorización para nuevas ejecuciones de modelos.
@@ -535,3 +537,24 @@ Iris revisó Web Corporativa 2.0 en `develop` y `4ae82b4097b3b01360bd8c6fb6d779b
 Las siete tareas cerraron con 18 respuestas nuevas, incluida la síntesis. Se recuperaron 0 respuestas. Cada bloque de seguridad usó sus dos rondas reservadas. La API publicó HTML y Markdown, con las mismas huellas que los archivos guardados. Ambos contienen las 40 preguntas únicas. El estado fue parcial por cobertura, con 2 respondidas, 35 parciales y 3 sin comprobar. [HTML](../reports/2026-11-11/155939-snapshot/3a29b4d5-55f3-41e3-97d7-d14d80fb3cdf/informe.html) · [Markdown](../reports/2026-11-11/155939-snapshot/3a29b4d5-55f3-41e3-97d7-d14d80fb3cdf/informe.md)
 
 Iris reconoció la carrera de login, los CV huérfanos, la entrega sin recuperación duradera y la caducidad sin purga. Quedaron pendientes la CSP con scripts en línea, la salida de CV con antimalware desactivado y la clasificación de los dos candidatos de Gitleaks. El equipo `2b105836-e626-42db-9742-6ff55491a2b1` cubrió los seis riesgos principales y clasificó los dos falsos positivos en Q36. Iris registró 348.904 tokens, 18 llamadas y 713,505 s frente a 640.181 tokens, 27 llamadas y 864,549 s del equipo. Los bytes de líneas de prompt repetidas bajaron de 592.644 a 126.785. [Comparación y evaluación de citas](../artifacts/central-coordination/iris-integral-comparacion.md)
+
+#### Cierre antes de migrar el equipo · 11/11/2026
+
+- **Archivadas.** La comparación adicional con tres especialistas y la fusión de Arquitectura con Datos quedan cerradas como propuestas históricas. El reparto aprobado conserva los siete especialistas.
+- **Trasladadas.** La profundidad de Arquitectura y DevOps, la agrupación de consultas y los criterios de cierre pasan al estándar de agentes independientes. Se evaluarán con las citas y la cobertura obtenidas en el piloto.
+- **Chromium verificado.** La oficina mostró nueve perfiles, el selector desactivado por defecto, el modo Iris guardado y a Iris trabajando en su escritorio. Se abrió su panel de consulta desde la oficina, se abrió el visor y se probaron los botones de descarga. La revisión se simuló en el navegador. Hubo cero llamadas al modelo y cero POST reales. Las descargas reales HTML y Markdown de Iris se comprobaron por SHA-256 contra los archivos publicados. [Registro de la comprobación](../artifacts/central-coordination/iris-chromium-checkpoint/resultado.json)
+
+Las dos revisiones siguientes son la referencia local para la comparación con el equipo migrado. Ambas corresponden a Web Corporativa 2.0, `develop@4ae82b4`. Se guardaron copias de los informes JSON, HTML y Markdown, evidencia, métricas, manifiestos y preparación. También se guardó el avance de Iris con sus respuestas originales. Los 15 archivos se cotejaron por SHA-256 con sus originales.
+
+| Referencia | ID de revisión | Informe local |
+| --- | --- | --- |
+| Iris integral | `3a29b4d5-55f3-41e3-97d7-d14d80fb3cdf` | [JSON](../artifacts/central-coordination/baselines-4ae82b4/iris/informe.json) |
+| Equipo anterior | `2b105836-e626-42db-9742-6ff55491a2b1` | [JSON](../artifacts/central-coordination/baselines-4ae82b4/equipo/informe.json) |
+
+[Huellas del archivo local](../artifacts/central-coordination/baselines-4ae82b4/sha256.json) · [Comparación de ambas referencias](../artifacts/central-coordination/iris-integral-comparacion.md)
+
+#### Estándar aprobado para los agentes independientes · 11/11/2026
+
+El estándar de Iris se extiende a los siete perfiles actuales con diez tareas y las asignaciones de preguntas acordadas. El piloto empieza con tres rondas adicionales para Kwame y cuatro para Arun. Las rondas son máximos. Tras las pruebas se revisarán las rondas usadas, las citas o comprobaciones que aportó cada una, los tokens y los fragmentos reenviados antes de ajustar los presupuestos.
+
+La primera ejecución pedirá confirmar el uso de un entorno de IA privado autorizado antes de enviar el primer prompt. La protección sustituirá los valores de credenciales detectados en la copia de salida. Las búsquedas, Graphify y los escáneres trabajarán sobre la captura original. El piloto verificará estas condiciones con un proveedor simulado. [Plan aprobado de agentes independientes](PROPUESTA_AGENTES_INDEPENDIENTES.md)

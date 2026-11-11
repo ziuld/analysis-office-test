@@ -29,6 +29,8 @@ Tras fusionar el PR y verificar el commit final, las etiquetas pueden distinguir
 
 Las versiones de los componentes son independientes de los commits de Hermes fijados a continuación. La instalación en otro equipo sigue [Inicio rápido](INICIO_RAPIDO.md) con sus propias credenciales.
 
+`release.json` registra la aceptación de Fase 1 en 0.3.0, con el estado que tenía al generar ese manifiesto. Los archivos de versión de la tabla y el changelog describen los componentes actuales.
+
 ## Versiones fijadas
 
 | Fuente | Commit | Registro |

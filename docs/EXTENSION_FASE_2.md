@@ -1,6 +1,6 @@
 # Extensión de fase 2: revisión por preguntas
 
-Encargo aprobado el 28/10/2026, posterior al cierre histórico de fase 2 y anterior a implementar fase 3. No implementa el diseño completo de fase 3 ni crea servicios o agentes adicionales.
+Registro histórico del encargo aprobado el 28/10/2026. El reparto de tres especialistas de este documento corresponde a esa entrega. [Reparto vigente de las 40 preguntas](PLAN_COORDINACION_CENTRALIZADA.md#3-perfiles-preguntas-y-orden-de-trabajo)
 
 ## Reparto obligatorio
 

@@ -6,20 +6,23 @@ El MVP entrega un informe con evidencia del código, indicios por confirmar y pr
 
 Versiones propias: **frontend 0.3.0** y **backend 0.4.0**, gestionadas de forma independiente en `FRONTEND_VERSION` y `BACKEND_VERSION`. Cambios de cada componente: [CHANGELOG.md](CHANGELOG.md). Los archivos `HERMES3D_VERSION` y `HERMES_AGENT_VERSION` fijan las dependencias originales, no la versión de Arktic Office.
 
-**Extensión de fase 2 (28/10/2026):** las nuevas revisiones incorporan [40 preguntas repartidas entre los especialistas y el coordinador](docs/EXTENSION_FASE_2.md). El HTML muestra el resumen, las respuestas con fuentes y los resultados deterministas completos en anexos, incluidos Graphify y herramientas no evaluadas. Los resultados históricos se conservan. Su evolución se recoge únicamente en el plan vigente.
+Las revisiones cubren 40 preguntas. Se puede elegir entre el equipo de especialistas e Iris · Full Stack. El HTML incluye resumen, respuestas con fuentes y anexos de herramientas. [Reparto vigente y flujo de revisión](docs/PLAN_COORDINACION_CENTRALIZADA.md#3-perfiles-preguntas-y-orden-de-trabajo)
 
 ## Plan vigente e histórico
 
-El único plan vigente es el [plan de coordinación centralizada](docs/PLAN_COORDINACION_CENTRALIZADA.md). Su implementación local incorpora ejecución secuencial, información compartida en Core/SQLite, el nuevo reparto de las mismas 40 preguntas y panel compacto. Los resultados comprobados y los pendientes se recogen en el [cierre de implementación](docs/RESULTADOS_COORDINACION_2026-10-30.md). El [cierre estable del 31/10](docs/CIERRE_COORDINACION_2026-10-31.md) conserva la comparación entre tres y siete especialistas, los informes y las propuestas pendientes sin aplicar. Arquitectura y Datos siguen separados. La comprobación visual con Chromium está aplazada por indicación del usuario.
+El [plan de coordinación centralizada](docs/PLAN_COORDINACION_CENTRALIZADA.md) reúne los cierres, las decisiones de diseño y las referencias de comparación. La siguiente implementación es la migración de los siete especialistas al [estándar aprobado de agentes independientes](docs/PROPUESTA_AGENTES_INDEPENDIENTES.md).
 
 | Documento | Estado |
 |---|---|
-| [Coordinación centralizada](docs/PLAN_COORDINACION_CENTRALIZADA.md) | Único plan vigente; estado de implementación y comprobaciones por bloque |
-| [Cierre estable](docs/CIERRE_COORDINACION_2026-10-31.md) | Estado actual, resultados comparados, archivo de informes y pendientes |
+| [Coordinación centralizada](docs/PLAN_COORDINACION_CENTRALIZADA.md) | Plan general, cierres de implementación y referencias de comparación |
+| [Agentes independientes](docs/PROPUESTA_AGENTES_INDEPENDIENTES.md) | Próxima implementación aprobada |
+| [Cierre estable](docs/CIERRE_COORDINACION_2026-10-31.md) | Punto de control histórico del 31/10 con resultados y propuestas de entonces |
 | [Cierre de referencia](docs/CIERRE_FASE_2_2026-10-30.md) | Referencia publicada en el commit 76abf0f, con validaciones y límites |
-| [MVP](PLAN_MVP.md), [Fase 1](docs/PLAN_FASE_1.md), [Fase 2](docs/PLAN_FASE_2.md) | Histórico cerrado; no son instrucciones de continuación |
+| [MVP](PLAN_MVP.md), [Fase 1](docs/PLAN_FASE_1.md), [Fase 2](docs/PLAN_FASE_2.md) | Entregas históricas cerradas |
 
 ## Empezar
+
+**Requisito para revisiones con modelos.** Usa un entorno de IA privado autorizado para el código del proyecto. Antes de la primera ejecución, confirma qué entorno está configurado. Si estás usando un servicio gratuito o la autorización de ese entorno está sin confirmar, detén la revisión. La confirmación en la aplicación y la protección de valores antes del envío forman parte del [plan aprobado de agentes independientes](docs/PROPUESTA_AGENTES_INDEPENDIENTES.md#política-aprobada-de-ia-privada-y-credenciales).
 
 - **Otro ordenador:** [Inicio rápido](docs/INICIO_RAPIDO.md), desde los requisitos hasta la primera revisión.
 - **Repositorio local y rama activa, sin acceso al remoto:** [Análisis local](docs/ANALISIS_LOCAL.md).
@@ -29,8 +32,6 @@ El único plan vigente es el [plan de coordinación centralizada](docs/PLAN_COOR
 - **Cómo se redacta el informe:** [Estándar de comunicación compartido](docs/ESTANDAR_COMUNICACION_INFORMES.md).
 - **Preparar la subida y mantener las versiones:** [Repositorio y reproducción](docs/REPOSITORIO.md).
 - **MVP actual e histórico:** [PLAN_MVP.md](PLAN_MVP.md), con el alcance y las verificaciones de la entrega 0.2.0.
-- **Cierre actual y siguiente trabajo:** [cierre publicado](docs/CIERRE_FASE_2_2026-10-30.md) y [único plan vigente](docs/PLAN_COORDINACION_CENTRALIZADA.md). Las fases anteriores conservan sus evidencias históricas.
-
 - **Experimento del Bloque 2:** [Validación del indexador](docs/INDEXADOR.md), con recuperación y extracción estructural de muestras dentro de Docker, sin modelos ni ejecución de las aplicaciones.
 - **Núcleo del Bloque 3:** [Paquete Python y compatibilidad](docs/CORE.md), con pruebas manuales mínimas y sin ampliar CI/CD.
 
@@ -90,7 +91,7 @@ El recorrido híbrido prepara el snapshot y grafo sin modelos. Con coordinación
 
 ## Datos y despliegue local
 
-Los archivos seleccionados se envían al proveedor configurado, sin ocultación del contenido por decisión del usuario. Las capturas de código, respuestas crudas, consultas, SQLite, cachés y sesiones permanecen locales. Este cierre archiva por autorización expresa seis informes renderizados y métricas comparativas en [docs/evidence](docs/evidence/agent-comparison-2026-10-31/README.md); `reports/`, `artifacts/` y `.env` siguen fuera de Git.
+La versión actual envía los fragmentos seleccionados al proveedor configurado y conserva su texto, incluidas las líneas marcadas por escáneres. La fase aprobada incorpora protección de valores detectados en la copia de salida. Las capturas completas, respuestas crudas, consultas, SQLite, cachés y sesiones permanecen locales. Este cierre archiva por autorización expresa seis informes renderizados y métricas comparativas en [docs/evidence](docs/evidence/agent-comparison-2026-10-31/README.md); `reports/`, `artifacts/` y `.env` siguen fuera de Git.
 
 Solo se publica `127.0.0.1:3000`. El analizador funciona sin privilegios, sin socket Docker y sin puerto público. Es un MVP de uso local, sin autenticación corporativa; una publicación en red requiere trabajo adicional. La infraestructura de Azure DevOps/Kubernetes queda fuera de esta versión.
 

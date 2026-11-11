@@ -35,8 +35,10 @@ Las seis copias renderizadas se incorporan por autorización expresa de este cie
 - 40 anclas de pregunta y 34 respuestas originales intactas, seis descargas idénticas a sus archivos, 103 archivos históricos sin cambios e integridad SQLite correcta (ocho tareas y 105 hechos en la última revisión).
 - Informe disponible y todos los perfiles inactivos al finalizar; reunión cerrada. No se afirma comprobación visual con Chromium.
 
-## Pendientes sin aplicar
+## Pendientes al 31/10/2026
 
 La unificación de Arquitectura/Datos, una comparación controlada con tres especialistas y la mejora de profundidad/consultas quedan como propuestas en el [único plan vigente](PLAN_COORDINACION_CENTRALIZADA.md#cierre-estable-y-propuestas-pendientes--31102026). No se lanzan nuevas llamadas a modelos para este cierre. Chromium permanece aplazado.
+
+La decisión posterior sobre esas propuestas y la validación de Iris en Chromium están en el [cierre del 11/11/2026](PLAN_COORDINACION_CENTRALIZADA.md#cierre-antes-de-migrar-el-equipo--11112026).
 
 Revisión del contenido preparado para publicar: las seis copias coinciden por SHA-256 con sus originales y no contienen detecciones de credenciales. Las tres alertas del detector corresponden a huellas de caché en las métricas, contrastadas con los registros de origen; no se ocultan ni se modifican. Véase `docs/evidence/agent-comparison-2026-10-31/publication-review.json`.
