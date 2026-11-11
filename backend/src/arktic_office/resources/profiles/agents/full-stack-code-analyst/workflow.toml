@@ -1,0 +1,48 @@
+# Orden, fuentes iniciales y salidas permitidas por tarea.
+
+[[tasks]]
+id = "aplicacion"
+guide = "tasks/01-aplicacion.md"
+source_groups = ["purpose", "manifests", "entry"]
+output = ["respuestas", "observaciones", "pendientes"]
+
+[[tasks]]
+id = "estructura"
+guide = "tasks/02-estructura.md"
+source_groups = ["entry", "manifests", "operation"]
+output = ["respuestas", "observaciones", "pendientes", "componentes", "conexiones"]
+
+[[tasks]]
+id = "datos"
+guide = "tasks/03-datos.md"
+source_groups = ["data", "operation"]
+output = ["respuestas", "observaciones", "pendientes"]
+
+[[tasks]]
+id = "operacion"
+guide = "tasks/04-operacion.md"
+source_groups = ["manifests", "operation", "purpose"]
+output = ["respuestas", "observaciones", "pendientes"]
+
+[[tasks]]
+id = "seguridad-identidad-frontend"
+guide = "tasks/05-seguridad-identidad-frontend.md"
+source_groups = ["security", "entry", "data"]
+output = ["respuestas", "observaciones", "pendientes", "controles"]
+controls = ["acceso"]
+reserved_rounds = 2
+
+[[tasks]]
+id = "seguridad-backend-datos"
+guide = "tasks/06-seguridad-backend-datos.md"
+source_groups = ["data", "security", "manifests"]
+output = ["respuestas", "observaciones", "pendientes", "controles"]
+controls = ["entradas", "secretos", "dependencias", "configuracion", "operacion"]
+reserved_rounds = 2
+
+[[tasks]]
+id = "alcance"
+guide = "tasks/07-alcance.md"
+source_groups = []
+output = ["respuestas", "pendientes"]
+depends_on = ["aplicacion", "estructura", "datos", "operacion", "seguridad-identidad-frontend", "seguridad-backend-datos"]

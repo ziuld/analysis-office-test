@@ -3,9 +3,10 @@ import json
 
 from arktic_office.preparation.repository import AuditError, redact
 from arktic_office.coordination.team import CELLS, cell_config, invoke_hermes
+from arktic_office.config.agents import read_profiles
 from arktic_office.config.models import profile
 
-AGENTS = {"security": "Seguridad (histórico)", "coordinator": "Coordinador", **{c["id"]: c["name"] for c in CELLS}}
+AGENTS = {"security": "Seguridad (histórico)", "coordinator": "Coordinador", **{c["id"]: c["name"] for c in (*CELLS, *read_profiles(full_stack=True))}}
 
 
 def load(path):
@@ -45,7 +46,7 @@ def prepare_question(directory, agent, question):
         cell = load(directory / "celulas" / (agent + ".json"))
         if cell.get("estado") not in {"completada", "parcial"} or "resultado" not in cell:
             raise AuditError("Esta célula no tiene un resultado válido en la revisión seleccionada; consulta al coordinador sobre la cobertura parcial.")
-        config = cell_config(next((c for c in CELLS if c["id"] == agent), {"id": "security"}))
+        config = cell_config(next((c for c in (*CELLS, *read_profiles(full_stack=True)) if c["id"] == agent), {"id": "security"}))
         result = {k:v for k,v in cell["resultado"].items() if k != "respuesta_original"}
         if agent == "security":
             result = {**result, "scanners": report.get("scanners", [])}

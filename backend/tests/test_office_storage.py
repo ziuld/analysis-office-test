@@ -4,6 +4,7 @@ import tempfile
 import unittest
 from importlib.metadata import version
 from pathlib import Path
+from unittest.mock import patch
 from arktic_office.execution.jobs import Jobs
 from arktic_office.execution.activity import project
 from arktic_office.storage.jsonio import write_json
@@ -13,6 +14,27 @@ from test_questions import fixture
 
 
 class OfficeStorageTests(unittest.TestCase):
+    def test_atomic_checkpoint_retries_a_temporarily_locked_destination(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "workflow.json"
+            write_json(path, {"estado": "anterior"})
+            replace = Path.replace
+            attempts = 0
+
+            def replace_once_locked(source, target):
+                nonlocal attempts
+                attempts += 1
+                if attempts == 1:
+                    self.assertEqual(json.loads(path.read_text())["estado"], "anterior")
+                    raise PermissionError("Archivo abierto temporalmente por un lector")
+                return replace(source, target)
+
+            with patch.object(Path, "replace", replace_once_locked):
+                write_json(path, {"estado": "guardado"})
+            self.assertEqual(attempts, 2)
+            self.assertEqual(json.loads(path.read_text())["estado"], "guardado")
+            self.assertFalse(path.with_suffix(".tmp").exists())
+
     def test_terminal_state_overrides_stale_work_and_history_is_scoped_bounded_read_only(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

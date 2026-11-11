@@ -1,6 +1,7 @@
 """Small polling projection of persisted events/states; never invents dialogue."""
 from arktic_office.storage.jsonio import read_json
 from arktic_office.core.contracts import ACTIVE_STATES
+from arktic_office.config.agents import FULL_STACK
 
 LABELS = {"no_ejecutado": "Omitido con justificación","preparando": "Preparando evidencia", "analizando": "Revisando evidencia", "completo": "Revisión completada",
           "completada": "Aportación completada", "parcial": "Resultado parcial", "error": "Trabajo interrumpido o con error",
@@ -31,9 +32,11 @@ def project(directory, job, cells):
             elif preparation.get("exploration", {}).get("status") == "running":
                 state, text = 'analizando', "Explorando evidencia con límites"
             elif any(c["estado"] == "analizando" for c in cells):
-                state, text = "pendiente", "Contexto entregado a los especialistas"
+                state = "pendiente"
+                text = "Contexto entregado a Iris" if job.get("full_stack") else "Contexto entregado a los especialistas"
         cell = next((c for c in cells if c["id"] == agent), {})
-        if not active and cells and agent != 'coordinator' and not cell:
+        excluded = agent != "coordinator" and (agent == FULL_STACK) != job.get("full_stack", False)
+        if excluded or (not active and cells and agent != 'coordinator' and not cell):
             state, text = 'no_participo', 'No participó en esta revisión'
         if cell.get("coverage"):
             coverage = {"partial": "cobertura parcial", "insufficient": "evidencia insuficiente", "incomplete": "cobertura incompleta", "available_evidence": "evidencia disponible evaluada"}

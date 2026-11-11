@@ -48,15 +48,16 @@ def profile(role):
     provider, model = settings()
     options = runtime_options()
     limits = dict(registry()["roles"][role])
+    base_calls = limits.get("calls", 1)
     prefix = "AUDIT_" + role.upper().replace("-", "_")
     if role != "preparation":
         limits["max_extra_queries"] = integer(prefix + "_MAX_EXTRA_QUERIES", 0, 0, 1)
-        limits["calls"] = (2 if role == "coordinator" else 1) + limits["max_extra_queries"]
+        limits["calls"] = base_calls + limits["max_extra_queries"]
     if "research_rounds" in limits:
         requested = integer(prefix + "_RESEARCH_ROUNDS", limits.get("research_rounds", 1), 0, 20)
         limits['requested_research_rounds'] = requested
         limits["research_rounds"] = requested if role == 'security' else min(requested, limits['research_rounds'])
-        limits["calls"] = 1 + limits["research_rounds"]
+        limits["calls"] = base_calls + limits["research_rounds"]
     if role == "preparation":
         limits["max_loops"] = integer(prefix + "_MAX_LOOPS", limits["max_loops"], 0, 20)
         limits["iterations"] = 1 + limits["max_loops"]

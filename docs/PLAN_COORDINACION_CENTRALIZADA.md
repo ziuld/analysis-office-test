@@ -389,6 +389,149 @@ Q04 y Q07–Q09 pasaron a respondidas. Kwame terminó en una llamada y dejó sin
 | 5 | Dar de alta a **Iris · Full Stack** (`full-stack-code-analyst`) como personaje con escritorio, estado y panel de consulta. Su carpeta sigue el formato de la fase 1. Usar el Full Stack de AI Workspace como referencia para investigar por evidencia, reutilizar lecturas y escribir con claridad. | Iris recibe los IDs y textos del catálogo de Arktic Office para las 40 preguntas. Conserva el informe actual, con resumen ejecutivo, detalle técnico y cobertura. Investiga por bloques con un presupuesto total y usa una lectura para varias preguntas cuando procede. |
 | 6 | Añadir el interruptor **Usar Full Stack** al formulario **Iniciar revisión**. Enviar `full_stack` como booleano para repositorios locales y de GitHub. Guardar la elección por revisión y mostrarla en estado, historial e informe. | `false` ejecuta el flujo actual con el equipo; `true` ejecuta a Iris como única analista. Las solicitudes e historiales sin el campo se interpretan como equipo. El valor queda fijado al iniciar. El flujo de oficina, consultas y descargas conserva el mismo recorrido en ambos modos. |
 | 7 | Hacer que Core construya el plan según el booleano elegido. Akira mantiene el papel de orquestación y cierre. En modo Full Stack entrega un único encargo a Iris y Core publica sus aportaciones con sus estados, fuentes y autoría. Ajustar la composición del informe para impedir que el cierre sobrescriba sus respuestas, incluidas Q01–Q03 y Q38–Q40. | En modo equipo se ejecutan los perfiles activos en orden y el cierre habitual. En modo Full Stack se registra solo a Iris como analista. Si llega a un límite o falla, se conservan los resultados parciales y el modo elegido. El frontend y su parche reproducible se validan junto con la API. |
-| 8 | Comparar los dos modos con el mismo commit, catálogo, herramientas, modelo y techo global. Registrar también los límites por perfil y el contexto enviado. | Verificar las 40 preguntas y sus autores, contrastar respuestas clave de seguridad, arquitectura, datos y operación, y comparar tokens, llamadas y tiempo. La conclusión debe distinguir cobertura, calidad de evidencia y eficiencia. |
+| 8 | Implementar el flujo por tareas solo para Iris. Core prepara el contexto del bloque activo y conserva el avance que Iris entrega. | La prueba local comprueba el aislamiento del contexto, la reutilización de citas, la conservación de parciales y las 40 respuestas atribuidas a Iris. |
+| 9 | Ejecutar a Iris después de validar el paso 8 y comparar con la corrida completa del equipo ya guardada. | Mismo commit, catálogo, herramientas, modelo y techo global. Comparar evidencia, cobertura, tokens, llamadas, tiempo y contexto reenviado. Registrar los límites por perfil. |
+
+#### Implementación y verificación local de Iris · 10/11/2026
+
+Pasos 5–7 implementados en local. La oficina muestra a Iris y tiene nueve escritorios accesibles. El interruptor **Usar Full Stack** queda desactivado inicialmente. El booleano `full_stack` se fija al crear una revisión desde GitHub o una captura local y aparece en estado, historial e informe. Los registros sin el campo siguen siendo de equipo. Con el interruptor activo, Core asigna Q01–Q40 a Iris y Akira registra el reparto y el cierre sin llamadas al modelo de coordinación. El paso 7 concentraba la revisión en un encargo con hasta ocho rondas de búsqueda y una llamada de cierre.
+
+Compilación local del frontend desde el commit fijado más el parche reproducible. Pasaron 18 pruebas de interfaz, incluidas las dos del interruptor y la modalidad guardada. El backend empaquetado pasó 206 pruebas con una omitida. Una prueba simulada confirmó 40 respuestas atribuidas a Iris, con las seis preguntas antes asignadas a Akira incluidas. La prueba con modelo queda detrás del nuevo paso 8 de Iris por tareas.
+
+
+#### Cómo investiga Iris por tareas
+
+```mermaid
+flowchart TD
+    A["Seleccionas Usar Full Stack"] --> B["Core valida el reparto de Q01–Q40"]
+    B --> C["Iris recibe las preguntas y las fuentes del bloque activo"]
+    C --> D["Iris registra comprobaciones y entrega resultados"]
+    D --> E{"¿Necesita fuentes y quedan rondas?"}
+    E -- Sí --> F["Core guarda el avance y atiende hasta 4 consultas locales"]
+    F --> C
+    E -- No --> G["Core guarda el bloque y sus pendientes"]
+    G --> H{"¿Quedan bloques de investigación?"}
+    H -- Sí --> C
+    H -- No --> I["Iris redacta Q01–Q03 y Q38–Q40 con resultados guardados"]
+    I --> J["Core reúne las 40 respuestas y publica el informe"]
+```
+
+Los cinco bloques de investigación y el de síntesis coinciden con los grupos del informe. Cada llamada recibe el texto de las preguntas activas, las fuentes de ese bloque y el resultado de sus consultas recientes. Los identificadores de cita permanecen estables durante la revisión. Iris puede recuperar respuestas previas y líneas ya entregadas de forma selectiva. La síntesis recibe los resultados guardados y las líneas citadas en ellos.
+
+Para el paso 9 se mantiene GPT-6.1 Sol con esfuerzo medio. El conjunto inicial compartido se limita a 8 archivos y 7.200 bytes. La investigación conserva hasta 200 archivos y 600.000 bytes de fragmentos y dispone de 1.080 segundos para Iris. El perfil pasa a seis llamadas de bloque, incluida la síntesis, y hasta ocho rondas adicionales compartidas, con un máximo de 14 llamadas sujeto al presupuesto global. El máximo de salida configurado para la comparación es de 8.000 tokens por llamada. `metrics.json` identifica la tarea y registra bytes del prompt, duración, uso comunicado por el proveedor y bytes de líneas de fuente enviadas y reenviadas. Estos últimos cuentan el texto de las líneas, sin el marcado del prompt.
+
+
+#### Iris por tareas antes de la prueba real · 10/11/2026
+
+Decisión del usuario. Implementar primero el flujo por tareas de Iris y validarlo sin consumir modelo. La primera corrida real de Iris se reserva para después de esta mejora. El equipo y el selector actual siguen el contrato ya aprobado.
+
+- Mantener el paquete independiente. Añadir `workflow.json` a la carpeta `full-stack-code-analyst`, junto a `agent.json` e `initial-sources.json`. Cada tarea declara su ID, los IDs de preguntas, grupos de fuentes iniciales, criterio de cierre y salida esperada. El catálogo común conserva el texto de Q01–Q40 y la lista de fuentes conserva los patrones. Las guías Markdown son opcionales y se cargan únicamente si las necesita la tarea activa. Reutilizar las consultas de Core para rutas, símbolos, herramientas y evidencia guardada.
+- Iris registra sus tareas y lo que necesita comprobar. Core valida que cubran cada pregunta una vez, prepara un bloque activo y aplica el presupuesto compartido. La lista inicial puede registrarse en la primera llamada útil, evitando una llamada adicional dedicada a planificar. Usar los bloques del informe y reservar la síntesis para Q01–Q03 y Q38–Q40. Iris ordena sus lecturas dentro del alcance de cada bloque.
+- Cada llamada recibe las instrucciones comunes imprescindibles, las preguntas del bloque activo, sus fuentes seleccionadas y las referencias previas pertinentes. Core conserva las fuentes citables y permite recuperar un archivo, símbolo o tramo concreto cuando haga falta. El avance se guarda por revisión en la persistencia existente con estado, respuestas, citas, pendientes y métricas. Un bloque se puede cerrar con respuestas parciales y carencias explícitas.
+- Iris redacta la síntesis final a partir de los resultados guardados. Core reúne las respuestas, conserva su autoría y entrega el informe HTML y Markdown actual. Al llegar a un límite o interrumpirse una tarea, conserva lo ya guardado y señala las preguntas pendientes. La validación local comprueba el contrato, las citas reutilizadas, el contexto enviado y la cobertura sin usar el proveedor.
+- Para el paso 9, usar Web Corporativa 2.0 en `4ae82b4097b3b01360bd8c6fb6d779b210f50564`, GPT-6.1 Sol con esfuerzo medio, la misma captura, Q01–Q40, herramientas y techo global. Comparar con la ejecución del equipo `2b105836-e626-42db-9742-6ff55491a2b1`, que registró 640.181 tokens, 27 llamadas y 864,549 segundos de coordinación y análisis. Revisar qué afirmaciones y pendientes quedaron respaldados, además de bytes iniciales y reenviados, tokens, llamadas y tiempo. La comparación medirá Iris por tareas frente al equipo. Aislar el efecto del flujo por tareas requeriría una referencia adicional de Iris.
+
+**Resultado del paso 8.** `workflow.json` define el reparto, las fuentes iniciales y el cierre de cada bloque de Iris. Core valida la cobertura del catálogo y guarda el avance atómicamente en `agents/full-stack-code-analyst/workflow.json` dentro de la revisión. El registro incluye las comprobaciones de Iris, los resultados originales, las respuestas con citas localizadas, los pendientes y las llamadas por tarea. Un límite o una interrupción gestionada permite publicar el informe parcial con lo guardado. Si se termina el proceso de forma abrupta, el servicio conserva el avance en disco y marca las tareas pendientes al reiniciar.
+
+La validación simuló el proveedor y comprobó la separación de las preguntas y fuentes, las lecturas por ruta, símbolo y línea, la recuperación selectiva de citas, los cierres parciales y la conservación del avance tras un límite o una interrupción. HTML y Markdown contienen las 40 preguntas una sola vez, con las respuestas de Iris y sus pendientes. La suite de backend en un contenedor sin red registró 211 pruebas aprobadas y una omitida por faltar la referencia visual v12. Pasaron las pruebas de reparto y síntesis del modo equipo y de persistencia del selector para ambos orígenes.
+
+#### Primera corrida real de Iris por tareas · 10/11/2026
+
+Ejecución `9e09a83a-b3c4-4bf5-b250-ff9ff5c07a9d` sobre `4ae82b4`, GPT‑6.1 Sol con esfuerzo medio. Se verificaron los 682 archivos de la captura y se reutilizaron los resultados históricos de Graphify, Gitleaks, OSV y Semgrep. El contexto de esta ejecución protegió valores de credenciales en 59 líneas, manteniendo sus posiciones. Un fallo local de arranque se corrigió antes de la primera llamada al proveedor.
+
+Iris cerró aplicación, arquitectura, datos y operación como parciales. Hermes informó tiempo agotado en la segunda llamada de seguridad. Core preservó los bloques guardados y publicó el HTML y Markdown parciales. La síntesis quedó sin iniciar. Los dos informes contienen las 40 preguntas una vez y explican los pendientes de las 40.
+
+| Métrica | Equipo de referencia | Iris, corrida parcial |
+| --- | ---: | ---: |
+| Llamadas registradas por Core | 27 | 13, de las que 12 terminaron |
+| Tokens comunicados por el proveedor | 640.181 | 123.888 de las 12 llamadas terminadas |
+| Segundos de coordinación y análisis | 864,549 | 352,307 |
+| Bytes de los prompts registrados | 2.224.657 | 437.283 |
+| Bytes de contexto repetido según el registro de Core | Sin dato en el resumen de referencia | 149.948 |
+| Archivos de texto entregados a analistas | 95 | 22 |
+| Respondidas / parciales / no comprobadas / no aplica | 5 / 33 / 2 / 0 | 0 / 16 / 24 / 0 |
+
+Iris recibió 6.720 bytes de fuentes iniciales y 122.826 bytes de texto de líneas de fuente a lo largo de la corrida, de los que 62.718 correspondieron a líneas reenviadas. El consumo de la llamada interrumpida es desconocido. Los totales de esta muestra parcial no establecen el coste ni el tiempo de una revisión completa.
+
+Se verificaron 714 líneas de cita distintas en 20 archivos del contexto conservado para 18 preguntas. Q17 y Q19 mantuvieron la distinción entre volúmenes de desarrollo observados en Compose e infraestructura de producción declarada en documentación. Q18 dejó explícito que ver scripts de comprobación no basta para acreditar una canalización de CI/CD. Q04 y Q07–Q09 quedaron parciales con Iris y figuraban como respondidas en el equipo. Algunas citas de Iris abarcan rangos amplios de clientes de integración para preguntas de inventario y clasificación. La coincidencia de una línea con su fuente acredita su localización y deja por evaluar su pertinencia. El resumen disponible de la referencia permite comparar cobertura y consumo, sin un cotejo de sus citas línea por línea.
+
+La traza registra cinco consultas rechazadas porque enviaron cuatro rutas cada una. Core admite tres rutas por consulta y el prompt de Iris solo anunciaba el máximo de cuatro consultas por ronda. El 11/11 se documentaron ambos límites en el prompt, con un ejemplo de cómo repartir cuatro rutas. Pasaron 24 pruebas locales, incluida la verificación de que cada llamada contiene el texto completo de las preguntas activas.
+
+#### Paquete de agente de Iris · 11/11/2026
+
+`AGENT.md` contiene el método de Iris y `README.md` explica su uso desde la oficina. `workflow.toml` declara el orden, las dependencias, los grupos de fuentes y los campos de salida. `initial-sources.toml` conserva los patrones y los topes de orientación. Cada guía en `tasks/` incluye sus preguntas completas, el criterio de evidencia y el cierre. El ejecutor extrae los IDs de los encabezados y coteja el texto con el catálogo común. La cobertura debe ser de 40 preguntas únicas y la síntesis depende de los cinco bloques anteriores.
+
+Core conserva la identidad del selector en su registro e invoca una vez al ejecutor de Iris por revisión. Cada llamada al modelo carga `AGENT.md`, el Markdown del bloque activo y el contexto pertinente. Los avances, métricas y resultados quedan en la carpeta de la revisión. Los casos de `evals/casos.toml` se ejecutan con un proveedor simulado y verifican cobertura, reutilización de citas y publicación parcial al agotar el presupuesto.
+
+El paquete instalable incluye los 11 archivos de Iris. La suite sin red terminó con 211 pruebas aprobadas y una omitida por faltar la referencia visual v12. Pasaron las pruebas del selector y del modo equipo.
+
+#### Corrida del paquete de Iris frente al equipo · 11/11/2026
+
+La revisión `12c24c15-1e90-438b-90a0-9dfd04e715f7` ejecutó los seis bloques sobre Web Corporativa 2.0 en `4ae82b4`, con GPT‑6.1 Sol en esfuerzo medio. Usó la preparación histórica de la captura y protegió valores de credenciales en 59 líneas. Las 14 llamadas terminaron y la síntesis se publicó. El informe quedó parcial por el alcance de las respuestas. La referencia es la última corrida del equipo `2b105836-e626-42db-9742-6ff55491a2b1`.
+
+| Métrica | Iris | Equipo |
+| --- | ---: | ---: |
+| Llamadas | 14 | 27 |
+| Tokens totales comunicados | 195.282 | 640.181 |
+| Segundos de coordinación y análisis | 605,317 | 864,549 |
+| Bytes de los prompts | 588.173 | 2.224.657 |
+| Archivos de texto entregados | 44 | 95 |
+| Respondidas / parciales / no comprobadas / no aplica | 2 / 30 / 8 / 0 | 5 / 33 / 2 / 0 |
+
+Iris consumió un 69,5 % menos de tokens y tardó un 30 % menos. Core registró 6.720 bytes de fuentes iniciales, 135.175 bytes de líneas de fuente reenviadas y 88.745 bytes de contexto repetido por coincidencia de líneas del prompt. El resumen del equipo aporta los bytes totales y carece de un desglose de reenvío comparable.
+
+Se verificaron las 40 preguntas únicas en HTML y Markdown y la coincidencia de 902 líneas de cita distintas en 35 archivos del contexto retenido. Hubo citas en 37 preguntas. Q08 y Q09 quedaron respondidas con recorridos concretos de código. Q04 y Q07 quedaron parciales y el equipo las había dado por respondidas. Q18 siguió sin comprobar. Iris recibió un fragmento de `azure-pipelines.yml` en Aplicación y Operación cerró sin recuperarlo. Seis preguntas de Seguridad quedaron sin comprobar. Los estados son los declarados por los agentes. El resumen disponible del equipo permite cotejar cobertura y métricas agregadas.
+
+#### Profundidad de seguridad de Iris · 11/11/2026
+
+La traza de la corrida registró una sola ronda de búsqueda para las 16 preguntas de seguridad. Dos consultas pasaron directorios en `paths` y reenviaron fragmentos de una búsqueda general. Iris consultó dos candidatos de Gitleaks y dejó pendiente su contraste. Las respuestas originales no incluyeron observaciones de riesgo.
+
+El flujo divide la investigación en identidad y navegador (Q23–Q31) y servidor y datos (Q14, Q32–Q37). Cada tarea tiene dos rondas reservadas, sujetas al presupuesto global. El perfil permite hasta 18 llamadas, con siete llamadas de bloque y once rondas adicionales. Las guías piden localizar una entrada, seguirla hasta la operación afectada y contrastar defensas, condiciones y efecto. Cada tarea registra los riesgos respaldados y señala las comprobaciones pendientes. Iris recibe un error explícito si ninguna ruta solicitada identifica un archivo, con indicaciones para buscar por símbolo o pedir una ruta exacta.
+
+El informe conserva el grupo de seguridad y las 40 preguntas. La prueba con proveedor simulado agota las rondas compartidas, comprueba que cada tarea de seguridad dispone de sus dos rondas y verifica que un indicio citado llega al HTML. En Linux sin red pasaron 212 pruebas y una se omitió por faltar la referencia visual v12. La capacidad de detectar vulnerabilidades adicionales queda por medir con el proveedor real.
+
+#### Prueba ciega de seguridad · 11/11/2026
+
+Se contrastó el informe del equipo `2b105836-e626-42db-9742-6ff55491a2b1` con el código de `4ae82b4`. Los casos de evaluación se guardaron en `artifacts/central-coordination/iris-security-reference-4ae82b4.md` y quedaron fuera del contexto de Iris. Se mantuvieron visibles las dos líneas que Gitleaks había marcado y que se verificaron como no secretas. Se protegieron valores en otras 57 líneas.
+
+La corrida integral `1caf0f61-aa5e-4c04-8b99-f65e3c4d3204` publicó un informe parcial tras un timeout de Hermes en Operación, antes de los dos bloques de seguridad. Registró diez llamadas y 132.955 tokens comunicados por las nueve completadas. La prueba focalizada `c4047a6d-12d2-4f6e-a112-b394dc939a8a` ejecutó únicamente los dos bloques de seguridad sobre la misma captura, con GPT‑6.1 Sol y esfuerzo medio. Completó las seis llamadas en 282,886 segundos y registró 81.205 tokens. De las 16 preguntas de alcance, una quedó respondida, diez parciales y cinco sin comprobar. Se verificó la coincidencia de las citas con la evidencia retenida.
+
+Iris identificó la carrera en el límite de login por IP y por cuenta, citó ambas implementaciones y explicó la condición de concurrencia. El equipo la clasificó como vulnerabilidad baja. Iris la etiquetó como vulnerabilidad y omitió la gravedad. Core asignó `informativa` por defecto y el hallazgo quedó fuera de «Principales riesgos». La observación y el control de acceso quedaron guardados en JSON.
+
+Quedaron sin reconocer la política de scripts en línea, la salida de CV con antimalware desactivado, los CV huérfanos, la entrega no durable y la fecha de caducidad sin purga. Iris recibió los archivos de los dos candidatos de Gitleaks y los dejó pendientes de clasificación. Las búsquedas de servidor agruparon términos con sintaxis de expresión regular, aunque la herramienta busca texto literal. La lectura se concentró en el descargador de noticias y el esquema, sin alcanzar la implementación del flujo de CV. La prueba focalizada mide el reconocimiento de casos de seguridad y su consumo corresponde solo a ese alcance.
+
+#### Repetición focalizada tras corregir búsqueda e informe · 11/11/2026
+
+Iris recibe el contrato de búsqueda literal y Core devuelve un error explícito si una consulta combina alternativas con `|`. Las guías de seguridad priorizan lecturas de implementación. El informe incluye las vulnerabilidades de Iris con citas y gravedad informativa como «Gravedad sin determinar». En Linux sin red pasaron 213 pruebas y se omitió la referencia visual v12.
+
+La repetición `3be7db75-8d98-4c03-940d-12ca55983d3e` se detuvo al reemplazar el archivo de avance en el volumen de Windows. Core ahora reintenta de forma acotada el reemplazo atómico ante un bloqueo de permisos. La recuperación `8a41349b-a34b-4ada-9f57-a197bd1d0f76` cotejó las huellas de los prompts, reprodujo cuatro respuestas guardadas y continuó en Servidor y datos. Hermes informó tiempo agotado en la siguiente llamada. Se publicó el informe parcial, con 48.862 tokens comunicados por las cuatro llamadas completadas y consumo desconocido en la llamada fallida.
+
+Iris volvió a identificar la carrera por IP y por cuenta. Esta vez aparece en «Principales riesgos» con sus citas y gravedad sin determinar. Las consultas de Servidor usaron términos separados. El fallo de Hermes dejó sin comprobar los siete puntos de ese bloque y el resultado no permite medir la detección de riesgos de CV o retención.
+
+#### Recuperación con 90 segundos de inactividad · 11/11/2026
+
+El registro de Hermes mostró que el intento anterior se cerró tras 12 segundos sin eventos de Codex desde el primer evento. Se aplicó `HERMES_CODEX_EVENT_STALE_TIMEOUT_SECONDS=90` al contenedor de la recuperación `b5e15a74-a902-4c74-9bfe-0e3195e87e4e`. Se recuperaron cuatro respuestas por huella del prompt. Las dos llamadas pendientes completaron Servidor y datos en 73,690 y 82,507 segundos respectivamente. Comunicaron 37.191 tokens nuevos. Las seis respuestas del informe suman 86.053 tokens comunicados.
+
+Iris conservó la carrera de login, descartó correctamente los dos falsos positivos de Gitleaks y observó que desactivar antimalware devuelve `clean`. Para ese caso quedó pendiente vincular el veredicto con los envíos reales por correo y OneDrive. Quedaron pendientes también la política de scripts en línea, la purga, los CV huérfanos y la recuperación de entregas.
+
+Iris identificó un riesgo operativo adicional en el endpoint público de relacionados. El código valida idioma y existencia de la publicación de origen y después carga publicaciones y casos de éxito publicados sin límite en las consultas, antes de ordenar la respuesta. Se verificó el patrón en la captura. Su impacto sobre disponibilidad depende del volumen, la concurrencia y los controles de infraestructura. El HTML muestra el riesgo operativo y la vulnerabilidad de login.
+
+#### Preparación de la próxima corrida integral de Iris
+
+El adaptador de Hermes aplica por defecto 90 segundos de inactividad entre eventos a las llamadas de Iris con `openai-codex`. Conserva el valor si el operador configura otro explícitamente. Se mantienen los topes por llamada y por revisión.
+
+En búsquedas por símbolo sin ruta exacta, Iris recibe primero definiciones y llamadas en archivos distintos. Las demás apariciones siguen disponibles por paginación. La validación local con la captura de Web Corporativa 2.0 devolvió la definición y la llamada desde el servicio de candidaturas para `notifyTalentTeam`. Para `cvScanVerdict` devolvió la definición y los consumidores de OneDrive y correo en la primera página.
+
+Las dos tareas de seguridad reciben un índice acotado de rutas, rangos e identificadores de fuentes ya consultadas. Incluye símbolos del grafo cuando su línea está en un tramo retenido. Iris puede recuperar solo las líneas pertinentes para seguir un resultado hasta la operación que lo consume. Cada bloque conserva dos rondas reservadas. La próxima corrida ejecutará las siete tareas con respuestas nuevas y los casos verificados se usarán para evaluar el informe al cierre.
+
+En Linux sin red pasaron 215 pruebas, incluidas las de búsqueda, recuperación selectiva y modo equipo. Se omitió una prueba por faltar la referencia visual v12.
 
 Las dos fases comparten la captura local de solo lectura, el buscador, el presupuesto, la persistencia y el formato del informe. El cambio de carpetas es una separación de recursos empaquetados. Los límites y los presupuestos concretos de las nuevas pruebas de modelo se fijan antes de ejecutarlas.
+
+#### Resultado del paso 9 · Iris integral · 11/11/2026
+
+Iris revisó Web Corporativa 2.0 en `develop` y `4ae82b4097b3b01360bd8c6fb6d779b210f50564` con GPT‑6.1 Sol, esfuerzo medio y `openai-codex`. La revisión `3a29b4d5-55f3-41e3-97d7-d14d80fb3cdf` cargó los módulos y recursos del workspace en solo lectura, verificados por SHA-256. Se comprobó el valor efectivo de 90 segundos en el proceso de Hermes. Se reutilizaron Graphify y los escáneres tras verificar la preparación contra la captura de 682 archivos y se protegieron 57 líneas. Los modos de prueba focalizada y recuperación quedaron desactivados.
+
+Las siete tareas cerraron con 18 respuestas nuevas, incluida la síntesis. Se recuperaron 0 respuestas. Cada bloque de seguridad usó sus dos rondas reservadas. La API publicó HTML y Markdown, con las mismas huellas que los archivos guardados. Ambos contienen las 40 preguntas únicas. El estado fue parcial por cobertura, con 2 respondidas, 35 parciales y 3 sin comprobar. [HTML](../reports/2026-11-11/155939-snapshot/3a29b4d5-55f3-41e3-97d7-d14d80fb3cdf/informe.html) · [Markdown](../reports/2026-11-11/155939-snapshot/3a29b4d5-55f3-41e3-97d7-d14d80fb3cdf/informe.md)
+
+Iris reconoció la carrera de login, los CV huérfanos, la entrega sin recuperación duradera y la caducidad sin purga. Quedaron pendientes la CSP con scripts en línea, la salida de CV con antimalware desactivado y la clasificación de los dos candidatos de Gitleaks. El equipo `2b105836-e626-42db-9742-6ff55491a2b1` cubrió los seis riesgos principales y clasificó los dos falsos positivos en Q36. Iris registró 348.904 tokens, 18 llamadas y 713,505 s frente a 640.181 tokens, 27 llamadas y 864,549 s del equipo. Los bytes de líneas de prompt repetidas bajaron de 592.644 a 126.785. [Comparación y evaluación de citas](../artifacts/central-coordination/iris-integral-comparacion.md)

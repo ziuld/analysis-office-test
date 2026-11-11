@@ -3,6 +3,7 @@ import json
 import os
 import subprocess
 import sys
+from arktic_office.config.agents import FULL_STACK
 from arktic_office.core.errors import AuditError
 
 
@@ -27,6 +28,8 @@ def invoke_hermes(prompt, config):
     env = dict(os.environ, AUDIT_MODEL=config["model"], AUDIT_REASONING=config["reasoning"])
     if "provider" in config:
         env["AUDIT_PROVIDER"] = config["provider"]
+    if config.get("id") == FULL_STACK and env.get("AUDIT_PROVIDER", "openai-codex").strip() == "openai-codex":
+        env.setdefault("HERMES_CODEX_EVENT_STALE_TIMEOUT_SECONDS", "90")
     if "max_output_tokens" in config:
         env["AUDIT_MAX_OUTPUT_TOKENS"] = str(config["max_output_tokens"])
     timeout = max(1, min(float(config.get("timeout", 240)), 240))

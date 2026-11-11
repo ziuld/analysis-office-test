@@ -23,4 +23,8 @@ where = ["backend/src"]
 include = ["arktic_office*"]
 
 [tool.setuptools.package-data]
-"arktic_office.resources" = ["assets/*", "profiles/*", "profiles/agents/*/*.json", "skills/*/SKILL.md", "editorial/*"]
+"arktic_office.resources" = [
+    "assets/*", "profiles/*", "profiles/agents/*/*.json", "skills/*/SKILL.md", "editorial/*",
+    "profiles/agents/*/*.md", "profiles/agents/*/*.toml", "profiles/agents/*/tasks/*.md",
+    "profiles/agents/*/evals/*.toml",
+]

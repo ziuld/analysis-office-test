@@ -58,6 +58,30 @@ class ApiTests(unittest.TestCase):
             self.assertEqual(self.request('/runs/'+job['id']+'/report')[0],200)
             self.assertEqual(self.request('/runs/'+job['id']+'/download')[0],200)
 
+    def test_full_stack_choice_is_boolean_and_persists_for_both_origins(self):
+        root, source_id = self.local_fixture()
+        choices = []
+
+        def record(job_id, target, *, full_stack=False):
+            choices.append((str(target), full_stack))
+            return self.fake_runner(job_id, "https://github.com/acme/app")
+
+        self.jobs.runner = self.jobs.local_runner = record
+        self.release.set()
+        with patch.dict('os.environ', {'AUDIT_LOCAL_INPUTS_ROOT': str(root)}):
+            self.assertEqual(self.request('/runs', {'repository': 'https://github.com/acme/app', 'full_stack': 'true'})[0], 400)
+            for payload, target, expected in (
+                ({'local_source_id': source_id, 'full_stack': True}, root/source_id, True),
+                ({'repository': 'https://github.com/acme/app', 'full_stack': True}, 'https://github.com/acme/app', True),
+                ({'repository': 'https://github.com/acme/app'}, 'https://github.com/acme/app', False),
+            ):
+                status, body, _ = self.request('/runs', payload)
+                self.assertEqual(status, 202)
+                job = json.loads(body)
+                self.assertIs(job['full_stack'], expected)
+                self.assertIs(self.await_finished(job['id'])['full_stack'], expected)
+                self.assertEqual(choices[-1], (str(target), expected))
+
     def test_local_sources_cannot_start_arbitrary_paths_or_unprepared_inputs(self):
         root,source_id=self.local_fixture()
         with patch.dict('os.environ',{'AUDIT_LOCAL_INPUTS_ROOT':str(root)}):

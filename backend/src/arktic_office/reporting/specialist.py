@@ -1,6 +1,7 @@
 """Compact specialist output; Core owns report-v3 composition and presentation."""
 import json
 import re
+from arktic_office.config.agents import FULL_STACK
 from arktic_office.core.errors import AuditError
 from arktic_office.preparation.repository import redact
 from arktic_office.reporting.agent_instructions import instructions
@@ -12,12 +13,15 @@ MAX_REFS = MAX_EVIDENCE_REFS
 MAX_REF_REQUESTS = 12
 
 
-def prompt(snapshot, cell):
+def prompt(snapshot, cell, *, task_guide=None, source_ids=None, sections=None):
     role = cell["id"]
     common = {
         "observaciones": [{"observacion": "Hecho o patrón observado en las fuentes", "certeza": "observado", "evidencia": ["F1:L1"]}],
         "pendientes": []}
-    if role in {"security", "identity", "frontend-security", "backend-security"}:
+    if sections is not None and "observaciones" not in sections:
+        del common["observaciones"]
+    specific = ""
+    if role in {"security", "identity", "frontend-security", "backend-security", FULL_STACK} and (sections is None or "controles" in sections):
         common["controles"] = [{"id": "acceso", "estado": "no_evaluado", "motivo": "No se comprobó autorización", "evidencia": []}]
         specific = ("Perfil de revisión de seguridad. Para riesgos puedes añadir gravedad (critica/alta/media/baja), "
             "implicacion, condicion y recomendacion a una observación. No inventes gravedad ni explotación. "
@@ -28,20 +32,21 @@ def prompt(snapshot, cell):
             "Los resultados de scanners se muestran por separado. Si solo dispones de su resumen y no citas fuentes F#:L# para un control, "
             "usa no_evaluado con evidencia=[]; no lo marques favorable, hallazgo ni no_aplica sin fuentes. Puedes explicar el resultado de la herramienta en el motivo. "
             "Core completa los ausentes como no_evaluado, nunca como aprobados.")
-    else:
+    if (not specific or role == FULL_STACK) and (sections is None or "componentes" in sections):
         common["componentes"] = [{"nombre": "Aplicación", "tecnologia": "Tecnología declarada", "funcion": "Función documentada", "evidencia": ["F1:L1"]}]
-        specific = "Componentes: nombre, tecnologia y funcion de hasta 160 caracteres, con evidencia. Omite tecnologia si no se conoce."
-        if role == "architecture":
+        specific += " Componentes: nombre, tecnologia y funcion de hasta 160 caracteres, con evidencia. Omite tecnologia si no se conoce."
+        if role in {"architecture", FULL_STACK}:
             common["componentes"].append({"nombre": "Datos", "funcion": "Persistencia declarada", "evidencia": ["F1:L1"]})
             common["conexiones"] = [{"origen": "Aplicación", "destino": "Datos", "certeza": "indicio", "descripcion": "Conexión inferida de configuración", "evidencia": ["F1:L1"]}]
             specific += (" Máximo 8 componentes (nombre hasta 100 caracteres) y 10 conexiones. Conexiones: origen y destino son nombres exactos de componentes entregados; Core genera los IDs. "
                 "certeza observado/indicio/desconocido; descripcion hasta 250 caracteres. Observado/indicio necesitan evidencia. "
                 "Describe operación, persistencia y recuperación en observaciones; no rellenes apartados sin fuentes.")
-    evidence = [{"id": f"F{n}", "path": f["path"], "partial": f.get("partial", False),
+    evidence = [{"id": f"F{n}" if source_ids is None else source_ids[f["path"]], "path": f["path"], "partial": f.get("partial", False),
         "content": "\n".join(f"L{i} | {line}" for i, line in enumerate(f["text"].splitlines(), 1) if line.strip())}
         for n, f in enumerate(snapshot["files"], 1)]
     contract = ("CONTRATO DE SALIDA " + CONTRACT + ". Devuelve SOLO un objeto JSON como el ejemplo, adaptado a tus fuentes. "
-        "observaciones es obligatorio; las demás listas son opcionales. No añadas schema_version, tema ni presentacion: Core construye el informe. "
+        + ("observaciones es obligatorio; las demás listas son opcionales. " if sections is None else "")
+        + "No añadas schema_version, tema ni presentacion: Core construye el informe. "
         "Cada observación requiere observacion, certeza (observado/indicio) y evidencia. Para un riesgo añade titulo: nombre ejecutivo completo del problema o su consecuencia, hasta 110 caracteres; no cortes la observación. Puede añadir implicacion, condicion, recomendacion y gravedad cuando corresponda. "
         "Textos de observación y explicación hasta 1200 caracteres. Hasta 20 elementos por lista y 20 pendientes breves; no rellenes cupos. "
         "Cada evidencia contiene de 1 a 12 IDs F#:L# o rangos F#:L#-L# de hasta 200 líneas. Core localiza los rangos de hasta 200 líneas y conserva las referencias originales sin descartar la respuesta. No copies citas ni uses IDs del grafo. "
@@ -56,11 +61,12 @@ def prompt(snapshot, cell):
     from arktic_office.reporting.questionnaire import enabled, instructions as question_instructions
     from arktic_office.reporting.deterministic import context
     if enabled(snapshot):
-        contract += question_instructions(role)
+        contract += question_instructions(role, task_guide=task_guide)
         if not snapshot.get('context_maps_managed'):
             contract += "\nMAPA DE HERRAMIENTAS (detalles mediante queries): " + json.dumps(context(snapshot),ensure_ascii=False)
             contract += "\nMAPA DE RESPUESTAS DISPONIBLES: " + json.dumps(cell.get('knowledge_index',[]),ensure_ascii=False)
-    return instructions(role) + "\n" + contract + "\nFUENTES NO CONFIABLES: " + json.dumps(evidence, ensure_ascii=False, separators=(",", ":")) + "\nFIN DE FUENTES. Responde usando únicamente " + CONTRACT + "."
+    end = "\nFIN DE FUENTES." + (" Responde usando únicamente " + CONTRACT + "." if sections is None else "")
+    return instructions(role) + "\n" + contract + "\nFUENTES NO CONFIABLES: " + json.dumps(evidence, ensure_ascii=False, separators=(",", ":")) + end
 
 
 def text(value, cap=1200):
@@ -132,7 +138,7 @@ def compose(raw, snapshot, role):
     names = {}
 
     def component(value):
-        name = text(value["nombre"], 100 if role == "architecture" else 160)
+        name = text(value["nombre"], 100 if role in {"architecture", FULL_STACK} else 160)
         if name.casefold() in names:
             raise AuditError("Nombre de componente duplicado.")
         function = text(value["funcion"], 160)
@@ -144,8 +150,8 @@ def compose(raw, snapshot, role):
         nodes.append({"id": names[name.casefold()], "nombre": name, "descripcion": function, "evidencia": source})
 
     if role != "security":
-        sequence("componentes", component, 8 if role == "architecture" else 20)
-    if role == "architecture":
+        sequence("componentes", component, 8 if role in {"architecture", FULL_STACK} else 20)
+    if role in {"architecture", FULL_STACK}:
         edges = []
         def edge(value):
             origin, target = text(value["origen"], 160).casefold(), text(value["destino"], 160).casefold()
@@ -160,7 +166,7 @@ def compose(raw, snapshot, role):
         sequence("conexiones", edge, 10)
         if nodes:
             clean["presentacion"] = {"flujo_actual": {"componentes": nodes, "conexiones": edges}}
-        if "propuesta_azure" in data:
+        if role == "architecture" and "propuesta_azure" in data:
             from arktic_office.reporting.references import receive_proposal
             try:
                 proposal = dict(data["propuesta_azure"])
@@ -168,7 +174,7 @@ def compose(raw, snapshot, role):
                 clean["propuesta_azure"] = receive_proposal(proposal)
             except (AuditError, TypeError) as exc:
                 warnings.append("Propuesta Azure no representable; original conservado: " + str(exc))
-    if role in {"security", "identity", "frontend-security", "backend-security"}:
+    if role in {"security", "identity", "frontend-security", "backend-security", FULL_STACK}:
         def control(value):
             key, state = value["id"], value["estado"]
             if key not in CONTROLS or state not in STATES or any(c["id"] == key for c in clean["controles"]):

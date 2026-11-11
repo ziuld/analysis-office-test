@@ -6,7 +6,10 @@ from arktic_office.core.errors import AuditError
 from arktic_office.resources.paths import resource_path
 
 
-def read_profiles():
+FULL_STACK = "full-stack-code-analyst"
+
+
+def read_profiles(*, full_stack=False):
     from arktic_office.reporting.questionnaire import catalog
 
     profiles = resource_path('profiles')
@@ -18,7 +21,13 @@ def read_profiles():
         if not re.fullmatch(r'[a-z][a-z0-9-]*', role) or role in seen:
             raise AuditError('Identificador de agente inválido o duplicado: ' + role)
         seen.add(role)
-        if set(entry) == {'id'}:
+        if (role == FULL_STACK) != full_stack:
+            continue
+        if role == FULL_STACK:
+            if not (profiles / 'agents' / role / 'AGENT.md').is_file():
+                continue
+            entry = {**entry, 'questions': [question['id'] for question in catalog(role)]}
+        elif set(entry) == {'id'}:
             folder = profiles / 'agents' / role
             if not folder.is_dir():
                 continue

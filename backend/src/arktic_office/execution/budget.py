@@ -51,6 +51,8 @@ class Budget:
         record = {'agent': config.get('id'), 'model': config['model'], 'reasoning': config.get('reasoning'), 'prompt_bytes': size,
                   'prompt_sha256': hashlib.sha256(prompt.encode()).hexdigest(), 'repeated_context_bytes': repeated,
                   'reserved_output_tokens': tokens, 'usage': None, 'status': 'running'}
+        if config.get('task_id'):
+            record.update(task=config['task_id'], context_sections=config['context_sections'])
         self.calls.append(record)
         self.save()
         started = time.monotonic()
@@ -58,6 +60,9 @@ class Budget:
             result = self.invoke(prompt, {**config, 'timeout': min(config.get('timeout', 240), self.limits['seconds'] - elapsed)})
             record.update(usage=result.get('usage'), status='complete')
             return result
+        except KeyboardInterrupt:
+            record.update(status='interrupted')
+            raise
         except AuditError as exc:
             record.update(status='error', error=redact(str(exc)))
             # A transport failure leaves remote outcome unknown; never call again automatically.

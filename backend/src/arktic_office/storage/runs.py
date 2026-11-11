@@ -120,6 +120,7 @@ class RunStore:
         cells = team.get("celulas", report.get("celulas", []))
         coordination = read_json(path / 'coordinacion.json', {})
         from arktic_office.execution.activity import project
+        job = {**job, "full_stack": job.get("full_stack", snapshot.get("request", {}).get("full_stack", False))}
         return {**job, "commit": snapshot.get("commit",job.get('commit')), "branch": snapshot.get("branch",job.get('branch')), "celulas": cells,
                 "meeting": read_json(path / 'meeting.json', {}) if job['estado'] in ACTIVE_STATES else {'active': False},
                 "metrics": read_json(path / 'metrics.json', {}),

@@ -94,6 +94,14 @@
       "output_tokens": 8000,
       "calls": 1,
       "research_rounds": 3
+    },
+    "full-stack-code-analyst": {
+      "files": 200,
+      "bytes": 600000,
+      "seconds": 1080,
+      "output_tokens": 8000,
+      "calls": 7,
+      "research_rounds": 11
     }
   }
 }

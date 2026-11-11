@@ -93,7 +93,8 @@ def markdown(data, snapshot):
         lines += ['', '## Protecciones y buenas prácticas comprobadas', '']
         for a in strengths:
             good = a["aspecto_favorable"]
-            lines += ['- **' + text(good["titulo"]) + '**: ' + text(good["detalle"]) + ' — ' + a["id"] + ' · ' + text(a["pregunta"])]
+            reference = a["id"] if data.get("full_stack") else a["id"] + ' · ' + text(a["pregunta"])
+            lines += ['- **' + text(good["titulo"]) + '**: ' + text(good["detalle"]) + ' — ' + reference]
         if not strengths:
             lines += ['Esta revisión no documentó protecciones o buenas prácticas con respaldo suficiente para destacarlas. Esto no significa que la aplicación carezca de ellas.']
         lines += ['', '## Cuestionario de revisión', '']

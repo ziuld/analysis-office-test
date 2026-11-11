@@ -1,9 +1,11 @@
 """One trusted role brief shared by research and analysis, without report schemas."""
-from arktic_office.config.agents import read_profiles
+from arktic_office.config.agents import FULL_STACK, read_profiles
 from arktic_office.resources.paths import resource_path
 
 
 def instructions(role):
+    if role == FULL_STACK:
+        return resource_path("profiles", "agents", role, "AGENT.md").read_text(encoding="utf-8")
     common = resource_path("profiles", "agent-common.md").read_text(encoding="utf-8")
     if role == "coordinator":
         return common + "\nROL COORDINADOR: asigna objetivos a las especialidades y sintetiza sus aportaciones validadas. No selecciones archivos ni añadas hechos. Conserva certeza, condiciones, carencias y discrepancias; no generalices lo que un especialista no leyó como ausencia global.\n"

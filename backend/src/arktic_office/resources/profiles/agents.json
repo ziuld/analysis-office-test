@@ -5,5 +5,13 @@
   {"id": "identity"},
   {"id": "frontend-security"},
   {"id": "backend-security"},
-  {"id": "devops"}
+  {"id": "devops"},
+  {
+    "id": "full-stack-code-analyst",
+    "person": "Iris",
+    "name": "Full Stack",
+    "color": "#c084fc",
+    "dependencies": [],
+    "focus": "Revisión estática del repositorio por tareas."
+  }
 ]

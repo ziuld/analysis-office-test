@@ -74,11 +74,16 @@ def handler_for(jobs):
                     if not isinstance(data, dict) or set(data) != {"agent", "question"} or not isinstance(data["agent"], str):
                         raise ValueError()
                     return self.send(202, jobs.ask(parts[1], data["agent"], data["question"]))
-                if isinstance(data,dict) and set(data) == {'local_source_id'}:
-                    return self.send(202,jobs.start_local(data['local_source_id']))
-                if not isinstance(data, dict) or set(data) != {"repository"} or not isinstance(data["repository"], str):
+                if not isinstance(data, dict):
                     raise ValueError()
-                return self.send(202, jobs.start(data["repository"].strip()))
+                full_stack = data.pop("full_stack", False)
+                if type(full_stack) is not bool:
+                    raise ValueError()
+                if set(data) == {"local_source_id"}:
+                    return self.send(202, jobs.start_local(data["local_source_id"], full_stack=full_stack))
+                if set(data) != {"repository"} or not isinstance(data["repository"], str):
+                    raise ValueError()
+                return self.send(202, jobs.start(data["repository"].strip(), full_stack=full_stack))
             except (ValueError, UnicodeError):
                 self.send(400, {"error": "Solicitud inválida: revisa los campos enviados."})
             except AuditError as exc:

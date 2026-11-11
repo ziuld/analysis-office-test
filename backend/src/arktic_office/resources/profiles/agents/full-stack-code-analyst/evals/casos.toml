@@ -1,0 +1,14 @@
+# Contratos que verifica test_iris.py con una captura sintética.
+[cobertura]
+preguntas = 40
+sintesis = ["Q01", "Q02", "Q03", "Q38", "Q39", "Q40"]
+
+[evidencia]
+origen = "Q06"
+reutilizacion = ["Q08", "Q01"]
+fuera_del_bloque = "Q11"
+
+[cierre_parcial]
+max_llamadas = 1
+conservada = "Q04"
+pendiente = "Q40"

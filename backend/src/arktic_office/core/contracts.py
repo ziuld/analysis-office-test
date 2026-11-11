@@ -60,6 +60,7 @@ class JobRecord(TypedDict):
     estado: str
     created: str
     error: NotRequired[str]
+    full_stack: NotRequired[bool]
 
 
 @dataclass(frozen=True)

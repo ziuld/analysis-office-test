@@ -8,7 +8,14 @@ STATUS = {"hallazgo": "Hallazgo identificado", "evidencia_favorable_limitada": "
 
 
 def risks(data):
-    items = [{**x, "certeza": section} for section in ("confirmados", "indicios") for x in data.get(section, []) if x.get("severidad", "informativa") != "informativa"]
+    items = []
+    for section in ("confirmados", "indicios"):
+        for item in data.get(section, []):
+            severity = item.get("severidad", "informativa")
+            if severity != "informativa":
+                items.append({**item, "certeza": section})
+            elif data.get("full_stack") and item.get("tipo") == "vulnerabilidad" and item.get("evidencia"):
+                items.append({**item, "certeza": section, "severidad": severity})
     return sorted(items, key=lambda x: ((SEVERITIES.index(x["severidad"]) if x["severidad"] in SEVERITIES else len(SEVERITIES)), x["certeza"] != "confirmados"))
 
 

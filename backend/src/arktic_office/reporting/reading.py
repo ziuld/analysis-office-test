@@ -22,6 +22,14 @@ def authors(item):
     return ', '.join(names.get(a, a) for a in item.get('celulas', [])) or 'Autor no registrado en el resultado guardado.'
 
 
+def review_mode(data, snapshot):
+    return 'Iris · Full Stack' if data.get('full_stack', snapshot.get('request', {}).get('full_stack', False)) else 'Equipo de especialistas'
+
+
+def iris_pending(data):
+    return [item['pregunta'] for item in data.get('dudas', [])] if data.get('full_stack') else []
+
+
 def render_markdown(data, snapshot, model=''):
     from arktic_office.reporting.brief import text, references
     from arktic_office.reporting.executive import risks
@@ -29,6 +37,7 @@ def render_markdown(data, snapshot, model=''):
     answers = {a['id']: a for a in data['cuestionario']['respuestas']}
     title = snapshot.get('project_name') or snapshot['repository'].rstrip('/').split('/')[-1]
     lines = ['# ' + text(title), '', 'Revisión estática · ' + text(snapshot.get('branch', '')) + ' · ' + text(snapshot['commit']), '', '## Resumen ejecutivo']
+    lines[4:4] = ["Modalidad · " + review_mode(data, snapshot), ""]
     for key in ('Q07', 'Q05', 'Q01'):
         a = answers.get(key)
         if a and a['estado'] != 'no_comprobado':
@@ -41,12 +50,17 @@ def render_markdown(data, snapshot, model=''):
         lines += ['', f'#### R{n:02} · ' + text(item.get('titulo') or item['observacion']), '', text(item['observacion'])]
         if item.get('tipo'):
             lines += ['', 'Tipo de riesgo: ' + {'coste':'Coste', 'vulnerabilidad':'Vulnerabilidad', 'operacion':'Operación'}[item['tipo']]]
+        if item["severidad"] == "informativa":
+            lines += ['', 'Gravedad sin determinar.']
         lines += ['', 'Autoría: ' + text(authors(item))]
         for label, field in (('Consecuencia posible', 'importancia'), ('De qué depende', 'condiciones'), ('Qué queda por comprobar', 'pendiente')):
             if item.get(field):
                 lines += ['', label + ': ' + text(item[field])]
         lines += ['', 'Fuentes: ' + references(item, snapshot)]
     from arktic_office.reporting.originals import markdown as original_markdown
+    pending = iris_pending(data)
+    if pending:
+        lines += ['', '### Pendientes generales de Iris', '', *('- ' + text(item) for item in pending)]
     return '\n'.join(lines) + '\n' + markdown(data, snapshot) + original_markdown(data)
 
 
@@ -92,6 +106,8 @@ def render_html(data, snapshot, model=""):
         return heading
 
     def marker(item):
+        if item["severidad"] == "informativa":
+            return '<span class="risk-certainty">Gravedad sin determinar</span>'
         label = {"critica": "crítica", "alta": "alta", "media": "media", "baja": "baja"}.get(item["severidad"], item["severidad"])
         return '<span class="severity-dot severity-' + h(item["severidad"]) + '" role="img" aria-label="Gravedad ' + h(label) + '" title="Gravedad ' + h(label) + '"></span>'
 
@@ -158,14 +174,15 @@ def render_html(data, snapshot, model=""):
         favorable += '<p>Implementaciones comprobadas en las fuentes revisadas. Su alcance se explica en cada pregunta.</p><ul>'
         for answer in strengths:
             good = answer["aspecto_favorable"]
-            favorable += '<li><b>' + h(good["titulo"]) + '.</b> ' + h(good["detalle"]) + f' <a href="#{h(answer["id"])}">' + h(answer["id"] + " · " + answer["pregunta"]) + '</a></li>'
+            reference = answer["id"] if data.get("full_stack") else answer["id"] + " · " + answer["pregunta"]
+            favorable += '<li><b>' + h(good["titulo"]) + '.</b> ' + h(good["detalle"]) + f' <a href="#{h(answer["id"])}">' + h(reference) + '</a></li>'
         favorable += '</ul>'
     else:
         favorable += '<p>Esta revisión no documentó protecciones o buenas prácticas con respaldo suficiente para destacarlas. Esto no significa que la aplicación carezca de ellas.</p>'
     if original_policy:
         favorable = favorable.replace("Protecciones y buenas prácticas comprobadas", "Protecciones descritas por los especialistas").replace("Implementaciones comprobadas en las fuentes revisadas.", "Aportaciones originales de los especialistas, sin segunda revisión automática.")
     favorable += '</section>'
-    omissions = unreviewed_scope(data, snapshot)
+    omissions = unreviewed_scope(data, snapshot) + iris_pending(data)
     limits = '<section id="pendientes-validar" class="reading-limits"><h3>Pendientes de validar</h3><ul>' + ''.join('<li>' + h(x) + '</li>' for x in omissions) + '</ul></section>' if omissions else ""
     executive = chapter("resumen-ejecutivo", "01", "Una primera lectura", "Resumen ejecutivo", "La aplicación, los resultados relevantes y los límites de esta revisión.", about + conclusion + risk_section + favorable + limits)
 
@@ -196,7 +213,7 @@ def render_html(data, snapshot, model=""):
         groups += detail("riesgos-adicionales", "Otros riesgos documentados", "Resultados fuera de los diez principales", extra)
     questions = chapter("analisis-preguntas", "02", "La evidencia, por temas", "Análisis por preguntas", "Cada respuesta conserva sus fuentes y explica qué queda por comprobar. Abre un tema para consultar sus preguntas.", groups)
     annexes = chapter("anexos-deterministas", "03", "Resultados de las herramientas", "Anexos deterministas", "Resultados explicados, cobertura y limitaciones de cada análisis automático.", deterministic_html(data))
-    hero = f'<header class="hero"><div class="hero-art" aria-hidden="true"></div><div class="wrap"><div class="brand-row"><img class="corporate-logo" src="{logo}" alt="Arktic"></div><h1>{h(title)}</h1><p>Una lectura de la aplicación, sus riesgos y la evidencia disponible.</p><div class="meta"><span>{h(display_date(snapshot.get("analyzed_at")))}</span><span>Revisión estática · {h(snapshot.get("branch", ""))}@{h(snapshot["commit"][:12])}</span></div></div></header>'
+    hero = f'<header class="hero"><div class="hero-art" aria-hidden="true"></div><div class="wrap"><div class="brand-row"><img class="corporate-logo" src="{logo}" alt="Arktic"></div><h1>{h(title)}</h1><p>Una lectura de la aplicación, sus riesgos y la evidencia disponible.</p><div class="meta"><span>{h(display_date(snapshot.get("analyzed_at")))}</span><span>Revisión estática · {h(snapshot.get("branch", ""))}@{h(snapshot["commit"][:12])}</span><span>{h(review_mode(data, snapshot))}</span></div></div></header>'
     nav = '<nav class="nav" aria-label="Secciones del informe"><div class="wrap">' + ''.join(f'<a href="#{key}"><b>{n:02}</b> {label}</a>' for n, (key, label) in enumerate((("resumen-ejecutivo", "Resumen ejecutivo"), ("analisis-preguntas", "Análisis por preguntas"), ("anexos-deterministas", "Anexos deterministas")), 1)) + '</div></nav>'
     script = (assets / 'report-navigation.js').read_text(encoding='utf-8')
     banner = '<div class="demo"><div class="wrap">' + ('FUENTES FICTICIAS · ' if snapshot.get("simulation") else '') + 'Resultados vinculados al commit revisado. Las conclusiones respetan el alcance de la evidencia disponible.</div></div>'

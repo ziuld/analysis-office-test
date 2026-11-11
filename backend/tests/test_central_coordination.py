@@ -32,7 +32,7 @@ class CentralTests(unittest.TestCase):
                     'frontend-security': list(range(28,32)), 'backend-security': list(range(32,38))}
         for role, numbers in expected.items():
             self.assertEqual([q['id'] for q in catalog(role)], [f'Q{n:02}' for n in numbers])
-        self.assertEqual(len(profiles()), 8)
+        self.assertEqual(len(profiles()), 9)
         self.assertEqual([c['id'] for c in CELLS], ['inventory','architecture','data','identity','frontend-security','backend-security','devops'])
 
     def test_lightweight_listing_keeps_flags_from_older_manifests(self):

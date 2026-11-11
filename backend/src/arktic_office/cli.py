@@ -26,7 +26,7 @@ def parse_job_id(value):
     return value
 
 
-def run(url, inspect_only=False, job_id=None, *, local_snapshot=None):
+def run(url, inspect_only=False, job_id=None, *, local_snapshot=None, full_stack=False):
     from arktic_office.config.models import validate_configuration, scanners_enabled
     profiles = validate_configuration()
     provider, model = settings()
@@ -77,7 +77,7 @@ def run(url, inspect_only=False, job_id=None, *, local_snapshot=None):
             snapshot = collect(url, scanner=scanner)
         snapshot["analyzed_at"] = datetime.now(timezone.utc).isoformat()
         from arktic_office.config.models import request_options
-        snapshot["request"] = request_options()
+        snapshot["request"] = {**request_options(), "full_stack": full_stack}
         from arktic_office.reporting.questionnaire import VERSION
         from arktic_office.reporting.deterministic import results
         snapshot["questionnaire_version"] = VERSION
@@ -128,13 +128,14 @@ def main():
     parser = argparse.ArgumentParser(description="Revisión de GitHub o de un snapshot de la rama local activa")
     parser.add_argument("repository", nargs='?', help="https://github.com/propietario/repositorio")
     parser.add_argument('--local-snapshot', help='Bundle local generado por scripts/analyze-local.ps1')
+    parser.add_argument("--full-stack", action="store_true", help="Revisar con Iris como única analista")
     parser.add_argument("--inspect-only", action="store_true", help="Verificar lectura sin invocar el modelo")
     parser.add_argument("--job-id", type=parse_job_id, help=argparse.SUPPRESS)
     args = parser.parse_args()
     if bool(args.repository) == bool(args.local_snapshot):
         parser.error('Indicar una URL o --local-snapshot.')
     try:
-        run(args.repository, args.inspect_only, args.job_id, local_snapshot=args.local_snapshot)
+        run(args.repository, args.inspect_only, args.job_id, local_snapshot=args.local_snapshot, full_stack=args.full_stack)
     except AuditError as exc:
         if args.job_id:
             try:

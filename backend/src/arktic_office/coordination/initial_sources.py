@@ -1,8 +1,10 @@
 """Seed specialist research from the existing snapshot, without model calls."""
 import json
 import re
+import tomllib
 from pathlib import PurePosixPath
 
+from arktic_office.config.agents import FULL_STACK
 from arktic_office.resources.paths import resource_path
 
 
@@ -22,13 +24,17 @@ def fragment(file, limit, anchor):
             'partial': start > 0 or len(selected) != len(lines), 'start': start + 1, 'end': start + len(selected)}
 
 
-def select(role, evidence, limits):
-    config = resource_path('profiles', 'agents', role, 'initial-sources.json')
-    if not config.is_file():
-        return [], None
-    policy = json.loads(config.read_text(encoding='utf-8'))
+def select(role, evidence, limits, *, with_groups=False):
+    folder = resource_path('profiles', 'agents', role)
+    if role == FULL_STACK:
+        policy = tomllib.loads((folder / 'initial-sources.toml').read_text(encoding='utf-8'))
+    else:
+        config = folder / 'initial-sources.json'
+        if not config.is_file():
+            return [], None
+        policy = json.loads(config.read_text(encoding='utf-8'))
     paths = sorted((PurePosixPath(path) for path in evidence.files), key=lambda path: (len(path.parts), str(path)))
-    files, matches, missing, seen = [], {}, [], set()
+    files, provided, matches, missing, seen = [], [], {}, [], set()
     remaining = min(policy['max_bytes'], limits['bytes'])
     file_limit = min(policy['max_files'], limits['files'])
     for group in policy['groups']:
@@ -45,10 +51,14 @@ def select(role, evidence, limits):
             item = fragment(evidence.files[path], min(remaining, policy['max_file_bytes']), anchor)
             if item:
                 files.append(item)
+                entry = {k: item[k] for k in ('path', 'start', 'end', 'partial')}
+                if with_groups:
+                    entry['group'] = group['id']
+                provided.append(entry)
                 seen.add(path)
                 supplied += 1
                 remaining -= len(item['text'].encode())
     pending = [path for path in matches if path not in seen]
-    return files, {'provided': [{k: f[k] for k in ('path', 'start', 'end', 'partial')} for f in files],
+    return files, {'provided': provided,
                    'pending_paths': pending[:12], 'pending_count': len(pending), 'unmatched_groups': missing,
                    'bytes': sum(len(f['text'].encode()) for f in files)}

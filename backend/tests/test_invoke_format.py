@@ -3,6 +3,7 @@ import json
 from types import SimpleNamespace
 from unittest.mock import patch
 from arktic_office.adapters.invoke import invoke_hermes, normalize_json_report
+from arktic_office.config.agents import FULL_STACK
 
 
 class InvokeFormatTests(unittest.TestCase):
@@ -26,3 +27,20 @@ class InvokeFormatTests(unittest.TestCase):
         self.assertEqual(json.loads(envelope['report']), {"observaciones":[]})
         self.assertEqual(envelope['usage']['total_tokens'], 7)
         self.assertEqual(envelope['format_normalization'], 'removed_final_closing_tag')
+
+    def test_iris_codex_idle_default_preserves_operator_override(self):
+        setting = "HERMES_CODEX_EVENT_STALE_TIMEOUT_SECONDS"
+        process = SimpleNamespace(returncode=0, stdout='{"report":"{}"}')
+        for agent, provider, overrides, expected in (
+            (FULL_STACK, "openai-codex", {}, "90"),
+            (FULL_STACK, "openai-codex", {setting: "75"}, "75"),
+            (FULL_STACK, "openai", {}, None),
+            ("identity", "openai-codex", {}, None),
+        ):
+            with self.subTest(agent=agent, provider=provider, expected=expected):
+                with patch.dict("os.environ", overrides, clear=True), patch(
+                        "arktic_office.adapters.invoke.subprocess.run", return_value=process) as run:
+                    invoke_hermes("fixture", {"id": agent, "provider": provider, "model": "fixture",
+                                              "reasoning": "medium", "timeout": 240})
+                self.assertEqual(run.call_args.kwargs["env"].get(setting), expected)
+                self.assertEqual(run.call_args.kwargs["timeout"], 240)

@@ -70,6 +70,37 @@ class InitialSourcesTests(unittest.TestCase):
                     self.assertLessEqual(len(paths), 5)
                     self.assertLessEqual(trace['bytes'], 4400)
 
+    def test_full_stack_answers_all_questions_without_invoking_the_team(self):
+        from arktic_office.config.agents import FULL_STACK
+        from arktic_office.coordination.iris import load_tasks
+        from arktic_office.reporting.questionnaire import catalog
+        from arktic_office.reporting.view import render_html, render_markdown
+
+        snapshot, _ = fixture()
+        snapshot['request']['full_stack'] = True
+        evidence = Evidence([{'path': 'package.json', 'text': '{}'}], {})
+        calls = []
+        tasks = {task['id']: task for task in load_tasks()}
+
+        def invoke(prompt, config):
+            calls.append(config['id'])
+            task = tasks[config['task_id']]
+            if task['id'] == 'aplicacion':
+                self.assertIn('"path":"package.json"', prompt)
+            return {'report': json.dumps({'comprobar': ['Contrastar la configuración.'],
+                'cierre': 'Queda por comprobar el resto de la configuración.', 'respuestas': [
+                    {'id': key, 'estado': 'parcial', 'respuesta': 'Resultado de Iris ' + key}
+                    for key in task['questions']]})}
+
+        with tempfile.TemporaryDirectory() as folder:
+            report = run_team(snapshot, Path(folder), invoke=invoke, evidence=evidence)
+        self.assertEqual(calls, [FULL_STACK] * len(tasks))
+        answers = report['cuestionario']['respuestas']
+        self.assertEqual([q['id'] for q in answers], [q['id'] for q in catalog()])
+        self.assertTrue(all(q['role'] == FULL_STACK and q['respuesta'].endswith(q['id']) for q in answers))
+        self.assertIn('Iris · Full Stack', render_html(report, snapshot))
+        self.assertIn('Iris · Full Stack', render_markdown(report, snapshot))
+
     def test_removed_profile_leaves_its_questions_explicitly_unassigned(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

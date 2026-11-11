@@ -1,9 +1,17 @@
 """Job-scoped original evidence. Shared read-only lookup; no model, shell or network."""
 import re
 from pathlib import PurePosixPath
-from arktic_office.preparation.repository import AuditError, redact, file_role, balanced_files, select, priority, mask_findings
+from arktic_office.preparation.repository import AuditError, SOURCE_EXT, redact, file_role, balanced_files, select, priority, mask_findings
 from arktic_office.preparation.snapshot import acquire_complete
 from arktic_office.preparation.hybrid import index_files
+
+
+def discovery_order(path):
+    """Prefer application code over scripts, test fixtures and documentation."""
+    file = PurePosixPath(path.casefold())
+    return (file.suffix not in SOURCE_EXT
+            or bool(set(file.parts[:-1]) & {"docs", "examples", "fixtures", "scripts", "test", "tests", "__tests__"})
+            or ".test." in file.name or ".spec." in file.name)
 
 
 class Evidence:
@@ -11,7 +19,7 @@ class Evidence:
         self.files = {f["path"]: f for f in files}
         self.graph = graph
 
-    def lookup(self, request):
+    def lookup(self, request, *, strict=False):
         if isinstance(request,dict) and 'questions' in request:
             from arktic_office.preparation.lookups import questions
             return questions(self,request)
@@ -39,6 +47,8 @@ class Evidence:
             raise AuditError('Desplazamiento de búsqueda inválido.')
         if not isinstance(query, str) or len(query) > 120 or not isinstance(paths, list) or len(paths) > 3:
             raise AuditError("Consulta de evidencia supera el límite.")
+        if strict and "|" in query and all(part.strip() for part in query.split("|")):
+            raise AuditError('La búsqueda es literal. Envía cada alternativa de "query" como una consulta separada.')
         if any(not isinstance(p, str) or len(p) > 500 or not p or PurePosixPath(p).is_absolute()
                or ".." in PurePosixPath(p).parts or ".git" in PurePosixPath(p).parts or "\\" in p or ":" in p for p in paths):
             raise AuditError("Ruta de consulta insegura; solo se permite el espacio de esta revisión.")
@@ -47,6 +57,9 @@ class Evidence:
             raise AuditError("Lectura por líneas inválida; indica rutas y una línea positiva hasta 100000.")
         unavailable = [p for p in paths if p not in self.files]
         paths = [p for p in paths if p in self.files]
+        if strict and unavailable and not paths:
+            return {"fragments": [], "unavailable_paths": unavailable,
+                    "error": "Ninguna ruta identifica un archivo de la captura. Busca el símbolo sin paths o usa una ruta exacta."}
         if not query.strip() and not paths and not unavailable:
             raise AuditError("La consulta necesita un símbolo o una ruta.")
         seeds = [n for n in self.graph.get("nodes", []) if query and query.casefold() in str(n.get("label", "")).casefold()][:8]
@@ -63,16 +76,35 @@ class Evidence:
         # Paginate occurrences, not just filenames: content remains searchable even
         # when a filename or graph symbol happened to match first.
         locations = []
+        discover = strict and query and not explicit_paths
+        first_hits, later_hits = [], []
+        symbol = re.escape(query) if discover and re.fullmatch(r"[A-Za-z_$][\w$]*", query) else None
+        declaration = re.compile(r"\b(?:function|def|func|class|const|let|var|interface|type|struct)\s+"
+                                 + symbol + r"(?![\w$])") if symbol else None
+        invocation = re.compile(r"(?<![\w$])" + symbol + r"\s*\(") if symbol else None
+        query_text = query.casefold()
         for path in candidates:
-            hits = [i + 1 for i, line in enumerate(self.files[path]['text'].splitlines()) if query and query.casefold() in line.casefold()]
+            lines = self.files[path]['text'].splitlines()
+            hits = [i + 1 for i, line in enumerate(lines) if query and query_text in line.casefold()]
             definitions = [int(m[1]) for n in self.graph.get('nodes', [])
-                           if query and n.get('source_file') == path and query.casefold() in str(n.get('label', '')).casefold()
+                           if query and n.get('source_file') == path
+                           and (label := str(n.get('label', '')).casefold())
+                           and (query_text == label if discover else query_text in label)
                            and (m := re.match(r'^L(\d+)', str(n.get('source_location', ''))))
-                           and 1 <= int(m[1]) <= len(self.files[path]['text'].splitlines())]
+                           and 1 <= int(m[1]) <= len(lines)]
+            if declaration:
+                definitions = [line for line in hits if declaration.search(lines[line - 1])] + definitions
+                hits = [line for line in hits if invocation.search(lines[line - 1])] + hits
             hits = list(dict.fromkeys(definitions + hits))
             if explicit_paths and start_line is not None:
                 hits = [start_line]
-            locations.extend((path, line) for line in (hits or [1]))
+            if discover and hits:
+                first_hits.append((discovery_order(path), not definitions, path, hits[0]))
+                later_hits.extend((path, line) for line in hits[1:])
+            else:
+                locations.extend((path, line) for line in (hits or [1]))
+        if discover:
+            locations = [(path, line) for _, _, path, line in sorted(first_hits)] + later_hits + locations
         page = locations[offset:offset + 3]
         paths = [p for p, _ in page]
         fragments = []
@@ -103,16 +135,16 @@ class Evidence:
                 "symbols": [{k: n.get(k) for k in ("id", "label", "source_file", "source_location")} for n in self.graph.get("nodes", []) if n.get("id") in neighbors][:12],
                 "limitation": "Relaciones estáticas auxiliares; las conclusiones requieren fuentes de texto."}
 
-    def respond(self, request):
+    def respond(self, request, *, strict=False):
         """Tool failures are observations, not permission to retry or read elsewhere."""
         try:
-            return self.lookup(request)
+            return self.lookup(request, strict=strict)
         except AuditError as exc:
             return {"fragments": [], "relations": [], "symbols": [], "error": str(exc)}
 
-    def batch(self, requests, limits, initial=None):
+    def batch(self, requests, limits, initial=None, *, max_queries=4, strict=False):
         """At most four bounded local lookups; return exactly the fragments delivered."""
-        if not isinstance(requests, list) or not 1 <= len(requests) <= 4:
+        if not isinstance(requests, list) or not 1 <= len(requests) <= max_queries:
             raise AuditError("Una ronda admite entre una y cuatro consultas.")
         # Adapt over-grouped path lists without increasing the four-lookup budget.
         expanded = []
@@ -123,12 +155,12 @@ class Evidence:
                 expanded.extend(({**request, "paths": part}, {"original_paths": len(paths), "part": n + 1, "parts": len(parts)}) for n, part in enumerate(parts))
             else:
                 expanded.append((request, None))
-        if len(expanded) > 4:
+        if len(expanded) > max_queries:
             # Preserve existing bounded error handling; never silently drop a query.
             expanded = [(request, None) for request in requests]
         results, files = [], list(initial or [])
         for request, split in expanded:
-            result = self.respond(request)
+            result = self.respond(request, strict=strict)
             if split:
                 result["request_split"] = split
             # Merge same-file windows instead of silently losing earlier evidence.

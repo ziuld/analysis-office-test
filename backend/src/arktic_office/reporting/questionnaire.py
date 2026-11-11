@@ -1,5 +1,6 @@
 """Phase 2 extension: fixed question ownership and evidence-backed answers."""
 import json
+from arktic_office.config.agents import FULL_STACK
 from arktic_office.resources.paths import resource_path
 from arktic_office.core.errors import AuditError
 from arktic_office.preparation.repository import redact
@@ -11,6 +12,8 @@ STATES = {"respondida", "parcial", "no_aplica", "no_comprobado"}
 def catalog(role=None):
     source = 'questions-reference.json' if role == 'security' else 'questions.json'
     items = json.loads(resource_path("profiles", source).read_text(encoding="utf-8"))
+    if role == FULL_STACK:
+        return [{**question, "role": FULL_STACK} for question in items]
     return [q for q in items if role is None or q["role"] == role]
 
 
@@ -18,9 +21,13 @@ def enabled(snapshot):
     return snapshot.get("questionnaire_version") == VERSION
 
 
-def instructions(role):
-    return ("\nCUESTIONARIO OBLIGATORIO: " + json.dumps(catalog(role), ensure_ascii=False) +
-        "\nResponde cada ID exactamente una vez en respuestas. Estados: respondida, parcial, no_aplica, no_comprobado. "
+def instructions(role, *, task_guide=None):
+    scope = ("Responde cada ID exactamente una vez en respuestas." if task_guide is None else
+             "Incluye en respuestas solo IDs del bloque activo. Puedes completarlo en varias llamadas y dejar pendientes explícitos al cierre.")
+    questionnaire = ("\nCUESTIONARIO OBLIGATORIO: " + json.dumps(catalog(role), ensure_ascii=False)
+                     if task_guide is None else "\nTAREA ACTIVA\n" + task_guide + "\nFIN DE TAREA ACTIVA.")
+    return (questionnaire +
+        "\n" + scope + " Estados: respondida, parcial, no_aplica, no_comprobado. "
         "Cada respuesta: {id, estado, respuesta, evidencia:[F#:L#], herramientas:[ID Dxx], pendiente}. "
         "Si has comprobado una protección o buena práctica concreta, explícalo en respuesta y añade opcionalmente "
         "aspecto_favorable:{titulo,detalle}, con título hasta 110 caracteres y detalle hasta 400. "
@@ -39,9 +46,9 @@ def instructions(role):
         "prioriza responder el cuestionario, evita repetir en observaciones los hechos sin riesgo.")
 
 
-def assemble_answers(values, role, resolve_refs, tools):
+def assemble_answers(values, role, resolve_refs, tools, *, questions=None):
     """Attach fixed question metadata without grading or rewriting expert answers."""
-    expected = {q["id"]: q for q in catalog(role)}
+    expected = {q["id"]: q for q in (catalog(role) if questions is None else questions)}
     received, notes = {}, []
     if not isinstance(values, list):
         values = []

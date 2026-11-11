@@ -12,7 +12,7 @@ from arktic_office.preparation.repository import AuditError, MANIFESTS, SOURCE_E
 from arktic_office.reporting.reports import evidence_index, make_prompt, validate_report
 from arktic_office.config.settings import settings, runtime_options
 
-from arktic_office.config.agents import read_profiles
+from arktic_office.config.agents import FULL_STACK, read_profiles
 
 CELLS = read_profiles()
 
@@ -49,8 +49,12 @@ def plan_cells(snapshot):
     """Per-cell byte/file caps are fixed MVP limits, within the global selection."""
     plan = []
     from arktic_office.config.models import request_options
-    capabilities = snapshot.get("request", request_options())["capabilities"]
-    for cell in CELLS:
+    request = snapshot.get("request", request_options())
+    capabilities = request["capabilities"]
+    cells = read_profiles(full_stack=True) if request.get("full_stack") else CELLS
+    if request.get("full_stack") and not cells:
+        raise AuditError("El perfil Full Stack no está disponible.")
+    for cell in cells:
         config = cell_config(cell)
         candidates = [(relevance(cell["id"], file), i, file) for i, file in enumerate(snapshot["files"])]
         candidates = sorted((x for x in candidates if x[0] is not None), key=lambda x: (x[0], x[1]))
@@ -121,7 +125,7 @@ def consolidate(results, cells):
     output['aportaciones_agentes'] = [{'id':role,'nombre':names.get(role,role),'respuesta':report['respuesta_original']}
                                     for role,report in results if 'respuesta_original' in report]
     presentation = {}
-    allowed = {"inventory": {"resumen"}, "architecture": {"flujo_actual", "estado_operativo", "decision"}, "security": set()}
+    allowed = {"inventory": {"resumen"}, "architecture": {"flujo_actual", "estado_operativo", "decision"}, FULL_STACK: {"flujo_actual"}, "security": set()}
     for cell_id, report in results:
         for key, value in report.get("presentacion", {}).items():
             if key in allowed.get(cell_id, set()):
@@ -348,6 +352,14 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print, evidence=None):
     from arktic_office.config.models import validate_configuration, request_options
     validate_configuration()
     snapshot = {**snapshot, "request": snapshot.get("request", request_options())}
+    full_stack = snapshot["request"].get("full_stack", False)
+    if full_stack:
+        from arktic_office.reporting.questionnaire import VERSION
+        snapshot["questionnaire_version"] = VERSION
+        if evidence is None:
+            from arktic_office.preparation.evidence import Evidence
+            evidence = Evidence(snapshot["files"], {})
+            evidence.deterministic = snapshot.get("deterministic_results", {})
     from arktic_office.execution.budget import Budget
     from arktic_office.storage.knowledge import Knowledge
     from arktic_office.config.settings import reports_root
@@ -361,7 +373,10 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print, evidence=None):
         evidence.run_id = output.name
     plan = plan_cells(snapshot)
     coordinator = None
-    if snapshot["request"]["mode"] == "ai":
+    if full_stack:
+        coordination = {"mode": "full_stack", "stages": {"routing": {"status": "complete", "calls": 0}}}
+        write_json(output / "coordinacion.json", coordination)
+    elif snapshot["request"]["mode"] == "ai":
         from arktic_office.coordination.coordinator import Coordinator
         coordinator = Coordinator(snapshot, output, invoke, evidence=evidence)
         coordinator.knowledge = knowledge
@@ -406,7 +421,11 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print, evidence=None):
         knowledge.export(output, config, state)
         raw = None
         try:
-            if evidence:
+            if full_stack:
+                from arktic_office.coordination.iris import research
+                envelope = research(snapshot, config, state, evidence, budget, output, cells)
+                subset["files"] = config["files"]
+            elif evidence:
                 from arktic_office.coordination.research import research
                 envelope = research(snapshot, config, state, evidence, invoke, output, cells)
                 subset["files"] = config["files"]
@@ -416,8 +435,8 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print, evidence=None):
                 envelope = invoke(make_prompt(subset, config), config)
                 state["usage"] = envelope.get("usage")
             raw = envelope["report"]
-            original_raw = raw
-            (output / "celulas" / (config["id"] + ".respuesta-original.txt")).write_text(raw, encoding="utf-8")
+            original_raw = envelope["original"] if full_stack else raw
+            (output / "celulas" / (config["id"] + ".respuesta-original.txt")).write_text(original_raw, encoding="utf-8")
             if isinstance(raw, str) and "\"observaciones\"" in raw:
                 state["contrato_salida"] = "compact-v1"
             if config["id"] == "architecture" and "azure" not in config["capabilities"]:
@@ -444,7 +463,8 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print, evidence=None):
                 state["advertencias"] = warnings
             from arktic_office.core.outcome import INSUFFICIENT, useful
             insufficient = report.get("evaluacion", {}).get("estado") == INSUFFICIENT or not useful(report)
-            state["estado"] = INSUFFICIENT if not useful(report) else "parcial" if proposal_error or insufficient else "completada"
+            partial_tasks = full_stack and any(status != "completa" for status in state["task_states"].values())
+            state["estado"] = INSUFFICIENT if not useful(report) else "parcial" if proposal_error or insufficient or partial_tasks else "completada"
             if insufficient:
                 state["mensaje"] = report.get("evaluacion", {}).get("motivo", "La información recibida no permite elaborar una evaluación útil de esta especialidad.")
                 state["necesita"] = report.get("evaluacion", {}).get("necesita", report["dudas"])
@@ -452,7 +472,7 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print, evidence=None):
                 state["mensaje"] = (state.get("mensaje", "") + " " + proposal_error).strip()
             if evidence:
                 state["execution"] = "completed"
-                state["coverage"] = "insufficient" if insufficient else "partial" if warnings or config.get("missing") or any(c["estado"] == "no_evaluado" for c in report.get("controles", [])) else "available_evidence"
+                state["coverage"] = "insufficient" if insufficient else "partial" if partial_tasks or warnings or config.get("missing") or any(c["estado"] == "no_evaluado" for c in report.get("controles", [])) else "available_evidence"
             state["omitidos_por_limite"] = omitted
             if envelope.get("reused_from"):
                 state["reutilizado_de"] = envelope["reused_from"]
@@ -481,6 +501,16 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print, evidence=None):
     data = consolidate(results, cells)
     for contribution in data["aportaciones_agentes"]:
         contribution["texto_original"] = original_texts[contribution["id"]]
+    data["full_stack"] = full_stack
+    if full_stack:
+        from arktic_office.coordination.iris import SYNTHESIS
+        synthesis_calls = sum(call.get("task") == SYNTHESIS for call in budget.calls)
+        synthesis_status = cells[0].get("task_states", {}).get(SYNTHESIS)
+        coordination["stages"]["synthesis"] = {
+            "status": "complete" if synthesis_status == "completa" else "partial" if synthesis_calls else "skipped",
+            "agent": FULL_STACK, "calls": synthesis_calls}
+        data["coordination"] = coordination
+        write_json(output / "coordinacion.json", coordination)
     if coordinator and not budget.stop_reason:
         write_json(output / 'meeting.json', {'active': True, 'run_id': output.name, 'participants': ['coordinator', *[a for a, _ in results]], 'phase': 'synthesis'})
         data["sintesis"] = coordinator.synthesize(results)
@@ -492,10 +522,11 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print, evidence=None):
         received = {a["id"]: a for _, report in results for a in report.get("respuestas", [])}
         if coordinator:
             received.update({a["id"]: a for a in coordinator.state.get("question_answers", [])})
-        active_roles = {cell["id"] for cell in CELLS} | {"coordinator"}
+        active_roles = {cell["id"] for cell in cells} | {"coordinator"}
         answers = [received.get(q["id"], {**q, "estado": "no_comprobado",
             "respuesta": "El responsable no entregó una respuesta para esta pregunta." if q["role"] in active_roles else "Pregunta sin responsable activo.",
-            "evidencia": [], "herramientas": [], "pendiente": "Completar la revisión de esta pregunta; consultar el estado del agente responsable."}) for q in catalog()]
+            "evidencia": [], "herramientas": [], "pendiente": "Completar la revisión de esta pregunta; consultar el estado del agente responsable."})
+            for q in catalog(FULL_STACK if full_stack else None)]
         data["cuestionario"] = {"version": VERSION, "respuestas": answers}
         if not complete(answers):
             data["estado"] = "parcial"

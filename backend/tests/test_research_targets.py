@@ -6,6 +6,22 @@ from unittest.mock import patch
 from arktic_office.preparation.evidence import Evidence
 
 class ResearchTargetTests(unittest.TestCase):
+    def test_iris_symbol_search_prioritizes_definition_and_distinct_callers(self):
+        entries = {
+            "scripts/demo.ts": "notifyTalentTeam()",
+            "src/a-route.ts": "notifyTalentTeam()\nnotifyTalentTeam()\nnotifyTalentTeam()",
+            "src/b-service.ts": "await notifyTalentTeam()",
+            "src/z-notifications.ts": "export async function notifyTalentTeam() {}",
+        }
+        evidence = Evidence([{"path": path, "text": content} for path, content in entries.items()], {})
+        page = evidence.lookup({"query": "notifyTalentTeam"}, strict=True)
+        self.assertEqual([hit["path"] for hit in page["matches"]],
+                         ["src/z-notifications.ts", "src/a-route.ts", "src/b-service.ts"])
+        remaining = evidence.lookup({"query": "notifyTalentTeam", "offset": page["next_offset"]}, strict=True)
+        self.assertEqual({(hit["path"], hit["line"]) for hit in remaining["matches"]},
+                         {("scripts/demo.ts", 1), ("src/a-route.ts", 2), ("src/a-route.ts", 3)})
+        self.assertIsNone(remaining["next_offset"])
+
     def test_complete_path_catalog_is_paginated_and_unsupported_sources_readable(self):
         paths = [f"src/{i:03}.vue" for i in range(250)]
         evidence = Evidence([{"path": p, "text": "const submit = () => axios.post('/contact')"} for p in paths], {"nodes": [], "edges": []})
