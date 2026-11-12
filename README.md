@@ -4,7 +4,7 @@ Oficina virtual 2D para entender una aplicación a partir de su repositorio de G
 
 El MVP entrega un informe con evidencia del código, indicios por confirmar y preguntas pendientes. Ayuda al responsable técnico a valorar seguridad, operación y una posible migración a VPS o Kubernetes. La decisión de despliegue corresponde al arquitecto.
 
-Versiones propias: **frontend 0.3.0** y **backend 0.4.0**, gestionadas de forma independiente en `FRONTEND_VERSION` y `BACKEND_VERSION`. Cambios de cada componente: [CHANGELOG.md](CHANGELOG.md). Los archivos `HERMES3D_VERSION` y `HERMES_AGENT_VERSION` fijan las dependencias originales, no la versión de Arktic Office.
+Las versiones de Arktic Office son **frontend 0.4.0** y **backend 0.5.0**, registradas en `FRONTEND_VERSION` y `BACKEND_VERSION`. `HERMES3D_VERSION` y `HERMES_AGENT_VERSION` fijan las dependencias originales. [Historial de cambios](CHANGELOG.md)
 
 Las revisiones cubren 40 preguntas. Se puede elegir entre el equipo de especialistas e Iris · Full Stack. El HTML incluye resumen, respuestas con fuentes y anexos de herramientas. [Reparto vigente y flujo de revisión](docs/PLAN_COORDINACION_CENTRALIZADA.md#3-perfiles-preguntas-y-orden-de-trabajo)
 

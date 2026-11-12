@@ -1,5 +1,15 @@
 # Cambios por componente
 
+## Backend 0.5.0 · Iris y flujos de especialistas · 12/11/2026
+
+- Iris analiza las 40 preguntas en siete tareas con síntesis y hasta 35 minutos. El equipo ejecuta diez tareas repartidas entre siete especialistas, con 300 segundos por agente y un margen de cierre de 90 segundos.
+- Se exige confirmar el uso de IA privada autorizada al iniciar una revisión. En la API, el solicitante puede declarar `private_ai_confirmed: true`. Core protege los valores de credenciales detectados en la copia enviada y en el informe.
+- Las pruebas reales publicaron las 40 preguntas en ambos modos. Iris completó 18 llamadas y el equipo 28, con síntesis y sin respuestas recuperadas. Ambos informes registraron cobertura parcial. [Validación de Iris y del equipo](docs/PLAN_COORDINACION_CENTRALIZADA.md#prueba-integral-de-iris-con-35-minutos--12112026)
+
+## Frontend 0.4.0 · selector de revisión · 12/11/2026
+
+- La oficina permite elegir entre el equipo e Iris · Full Stack, conserva la modalidad de cada revisión y pide confirmar el entorno de IA privado antes de iniciar.
+
 ## Backend 0.4.0 · perfiles independientes · 10/11/2026
 
 - Cada especialista tiene una definición y una lista de fuentes iniciales en su propia carpeta. Core selecciona y limita los fragmentos antes de la primera llamada.

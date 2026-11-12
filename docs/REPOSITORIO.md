@@ -18,8 +18,8 @@ Antes del commit, revisar `git diff --cached` y ejecutar `git ls-files .env repo
 
 | Componente | Versión propia | Imagen Docker | Identificación en ejecución |
 |---|---|---|---|
-| Frontend | `FRONTEND_VERSION`: 0.3.0 | `arktic-hermes3d-office:0.3.0` | Cabecera de la oficina |
-| Backend | `BACKEND_VERSION`: 0.4.0 | `arktic-hermes-auditor:0.4.0` | Campo `version` de `GET /health` en la API interna |
+| Frontend | `FRONTEND_VERSION` 0.4.0 | `arktic-hermes3d-office:0.4.0` | Cabecera de la oficina |
+| Backend | `BACKEND_VERSION` 0.5.0 | `arktic-hermes-auditor:0.5.0` | Campo `version` de `GET /health` en la API interna |
 
 Se usa SemVer: corrección compatible → patch, funcionalidad compatible → minor, cambio incompatible de contrato → major. En versiones 0.x, documentar explícitamente cualquier cambio de contrato. Un cambio exclusivo de frontend no obliga a subir backend, ni a la inversa.
 
