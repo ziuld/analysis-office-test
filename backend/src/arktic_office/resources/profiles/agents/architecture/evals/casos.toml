@@ -1,0 +1,4 @@
+[[cases]]
+task = "componentes-conexiones"
+questions = ["Q07", "Q08", "Q09"]
+rounds = 2

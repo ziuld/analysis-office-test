@@ -1,0 +1,23 @@
+max_files = 5
+max_bytes = 4400
+max_file_bytes = 1150
+
+[[groups]]
+id = "root-manifests"
+take = 2
+patterns = ["package.json", "pom.xml", "build.gradle*", "pyproject.toml", "requirements*.txt", "Pipfile", "go.mod", "Cargo.toml", "*.csproj", "composer.json", "Gemfile"]
+
+[[groups]]
+id = "component-manifests"
+take = 2
+patterns = ["apps/*/package.json", "services/*/package.json", "*/pom.xml", "*/build.gradle*", "*/pyproject.toml", "*/requirements*.txt", "*/*.csproj"]
+
+[[groups]]
+id = "runtime-versions"
+take = 1
+patterns = [".nvmrc", ".node-version", ".python-version", ".java-version", ".tool-versions", "global.json"]
+
+[[groups]]
+id = "purpose"
+take = 1
+patterns = ["README*", "docs/README*"]

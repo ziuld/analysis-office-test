@@ -1,0 +1,1 @@
+Sigue el login y la sesión hasta la revalidación de identidad y una operación sensible. Comprueba permisos, almacenamiento y expiración. Lee los límites por IP y cuenta, sus escrituras y el comportamiento ante concurrencia.

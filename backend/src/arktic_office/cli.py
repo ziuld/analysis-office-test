@@ -26,12 +26,14 @@ def parse_job_id(value):
     return value
 
 
-def run(url, inspect_only=False, job_id=None, *, local_snapshot=None, full_stack=False):
-    from arktic_office.config.models import validate_configuration, scanners_enabled
+def run(url, inspect_only=False, job_id=None, *, local_snapshot=None, full_stack=False, private_ai_confirmed=False):
+    from arktic_office.config.models import validate_configuration, scanners_enabled, task_workflows
+    from arktic_office.config.private_ai import require_private_ai
     profiles = validate_configuration()
     provider, model = settings()
     options = runtime_options()
     if not inspect_only:
+        require_private_ai(private_ai_confirmed)
         if provider == "openai" and not os.environ.get("OPENAI_API_KEY", "").strip():
             raise AuditError("Falta OPENAI_API_KEY en .env para el modo API. Plus utiliza openai-codex con OAuth.")
         if provider == "openai-codex" and not (Path(os.environ["HERMES_HOME"]) / "auth.json").is_file():
@@ -77,7 +79,8 @@ def run(url, inspect_only=False, job_id=None, *, local_snapshot=None, full_stack
             snapshot = collect(url, scanner=scanner)
         snapshot["analyzed_at"] = datetime.now(timezone.utc).isoformat()
         from arktic_office.config.models import request_options
-        snapshot["request"] = {**request_options(), "full_stack": full_stack}
+        snapshot["request"] = {**request_options(), "full_stack": full_stack, "task_workflows": task_workflows(),
+                               "private_ai_confirmed": not inspect_only}
         from arktic_office.reporting.questionnaire import VERSION
         from arktic_office.reporting.deterministic import results
         snapshot["questionnaire_version"] = VERSION
@@ -105,7 +108,9 @@ def run(url, inspect_only=False, job_id=None, *, local_snapshot=None, full_stack
             print(f"Solo lectura verificada: {len(snapshot['files'])} archivos, {snapshot['branch']}@{snapshot['commit']}. Evidencia: {output}. Sin llamada al modelo.")
             return
         print(f"Revisando {len(snapshot['files'])} archivos de {snapshot['branch']}@{snapshot['commit']} con Hermes Agent...", flush=True)
-        data = run_team(snapshot, output, evidence=evidence)
+        from arktic_office.preparation.credentials import CredentialProtection
+        protection = CredentialProtection(evidence.files.values() if evidence else snapshot["files"], snapshot.get("scanners", []))
+        data = run_team(snapshot, output, evidence=evidence, protection=protection)
         data["deterministic_results"] = deterministic
         if evidence:
             snapshot["coverage"]["retained_paths"] = [f["path"] for f in snapshot["files"]]
@@ -113,11 +118,13 @@ def run(url, inspect_only=False, job_id=None, *, local_snapshot=None, full_stack
         (output / "evidencia.json").write_text(json.dumps(snapshot, ensure_ascii=False, indent=2), encoding="utf-8")
         write_manifest(output, snapshot, data)
         model = provider + "/" + model
+        data = protection.publication(data)
+        public_snapshot = protection.publication(snapshot)
         (output / "informe.json").write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
-        (output / "informe.md").write_text(markdown(data, snapshot, model), encoding="utf-8")
+        (output / "informe.md").write_text(markdown(data, public_snapshot, model), encoding="utf-8")
         if data.get("schema_version") == 3:
             from arktic_office.reporting.executive import render_html
-            (output / "informe.html").write_text(render_html(data, snapshot, model), encoding="utf-8")
+            (output / "informe.html").write_text(render_html(data, public_snapshot, model), encoding="utf-8")
         print(f"Informe listo: {output}/informe.md")
         write_json(output / 'meeting.json', {'active': False, 'run_id': output.name, 'phase': 'report_available'})
         if data["estado"] != "completo" and any(c["estado"] == "error" for c in data.get("celulas", [])):
@@ -130,12 +137,21 @@ def main():
     parser.add_argument('--local-snapshot', help='Bundle local generado por scripts/analyze-local.ps1')
     parser.add_argument("--full-stack", action="store_true", help="Revisar con Iris como única analista")
     parser.add_argument("--inspect-only", action="store_true", help="Verificar lectura sin invocar el modelo")
+    parser.add_argument("--private-ai-confirmed", action="store_true", help="Confirmar que el entorno de IA está autorizado para el código")
     parser.add_argument("--job-id", type=parse_job_id, help=argparse.SUPPRESS)
     args = parser.parse_args()
     if bool(args.repository) == bool(args.local_snapshot):
         parser.error('Indicar una URL o --local-snapshot.')
     try:
-        run(args.repository, args.inspect_only, args.job_id, local_snapshot=args.local_snapshot, full_stack=args.full_stack)
+        from arktic_office.config.private_ai import QUESTION, confirmed
+        private_ai_confirmed = args.private_ai_confirmed
+        if not args.inspect_only and not confirmed(private_ai_confirmed) and sys.stdin.isatty():
+            try:
+                private_ai_confirmed = input(QUESTION + " [s/N] ").strip().casefold() in {"s", "sí", "si"}
+            except EOFError:
+                private_ai_confirmed = False
+        run(args.repository, args.inspect_only, args.job_id, local_snapshot=args.local_snapshot,
+            full_stack=args.full_stack, private_ai_confirmed=private_ai_confirmed)
     except AuditError as exc:
         if args.job_id:
             try:

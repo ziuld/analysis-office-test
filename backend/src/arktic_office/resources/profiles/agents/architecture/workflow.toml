@@ -1,0 +1,7 @@
+[[tasks]]
+id = "componentes-conexiones"
+guide = "tasks/01-componentes-conexiones.md"
+questions = ["Q07", "Q08", "Q09"]
+source_groups = ["entrypoints", "boundaries", "component-map"]
+output = ["respuestas", "observaciones", "pendientes", "componentes", "conexiones"]
+reserved_rounds = 2

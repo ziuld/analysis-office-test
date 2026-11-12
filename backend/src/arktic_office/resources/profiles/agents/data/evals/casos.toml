@@ -1,0 +1,9 @@
+[[cases]]
+task = "persistencia-cache"
+questions = ["Q10", "Q11", "Q12"]
+rounds = 1
+
+[[cases]]
+task = "recuperacion-retencion"
+questions = ["Q13", "Q14"]
+rounds = 1

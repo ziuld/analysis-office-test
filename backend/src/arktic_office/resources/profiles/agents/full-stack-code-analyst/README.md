@@ -16,7 +16,9 @@ Core divide la revisión en siete tareas. Cada tarea recibe sus preguntas, fuent
 | Seguridad de servidor y datos | Q14 y Q32–Q37 |
 | Síntesis y alcance | Q01–Q03 y Q38–Q40 |
 
-El perfil reserva siete llamadas de tarea y hasta once rondas de búsqueda, con un máximo de 18 llamadas al modelo y 1.080 segundos para Iris. Cada bloque de seguridad tiene dos rondas reservadas dentro de ese presupuesto. Las fuentes iniciales se limitan a ocho archivos y 7.200 bytes. El perfil admite hasta 200 archivos y 600.000 bytes de fragmentos durante la investigación. El presupuesto global también se aplica. Para `openai-codex`, el adaptador establece 90 segundos de inactividad entre eventos de forma predeterminada.
+El perfil reserva siete llamadas de tarea y hasta once rondas de búsqueda, con un máximo de 18 llamadas al modelo y 35 minutos (2.100 segundos) para todo el análisis de Iris, incluida la síntesis. Es el equivalente a los 300 segundos de cada uno de los siete especialistas del equipo. Cuando la revisión se inicia desde la oficina, el plazo predeterminado de 45 minutos abarca también la preparación y la publicación.
+
+Cada bloque de seguridad tiene dos rondas reservadas dentro del presupuesto de Iris. Las fuentes iniciales se limitan a ocho archivos y 7.200 bytes. El perfil admite hasta 200 archivos y 600.000 bytes de fragmentos durante la investigación. El presupuesto global también se aplica. Para `openai-codex`, el adaptador establece 90 segundos de inactividad entre eventos de forma predeterminada.
 
 Core guarda el avance por tarea en `agents/full-stack-code-analyst/workflow.json` y las llamadas y su consumo en `metrics.json`, dentro de la carpeta de la revisión. Publica HTML y Markdown con las 40 preguntas, las citas y la autoría de Iris. Un informe parcial identifica qué se comprobó y qué sigue pendiente. La revisión estática puede acreditar un patrón de código y dejar abierta su explotación o configuración efectiva.
 
@@ -32,4 +34,4 @@ Core guarda el avance por tarea en `agents/full-stack-code-analyst/workflow.json
 
 La corrida integral de Web Corporativa 2.0 en `develop@4ae82b4` completó las siete tareas con GPT‑6.1 Sol, esfuerzo medio y `openai-codex`. Publicó Q01–Q40 una vez en cada formato con 18 llamadas nuevas. El informe quedó parcial por cobertura. En esa captura, Iris reconoció cuatro de los seis riesgos de referencia. Quedaron pendientes la política de scripts en línea, el flujo de CV con antimalware desactivado y la clasificación de dos alertas de Gitleaks. Los resultados y la comparación con el equipo están en el [plan de coordinación centralizada](../../../../../../../docs/PLAN_COORDINACION_CENTRALIZADA.md#resultado-del-paso-9--iris-integral--11112026).
 
-Para esa corrida, el lanzador de evaluación protegió 57 líneas antes de enviarlas al proveedor. El flujo habitual conserva el texto de los fragmentos seleccionados, incluidas las líneas que marquen los escáneres.
+Para esa corrida, el lanzador de evaluación protegió 57 líneas antes de enviarlas al proveedor. El flujo actual mantiene la captura original para las búsquedas locales y protege los valores de credenciales detectados en la copia que envía al modelo.

@@ -1,0 +1,7 @@
+[[tasks]]
+id = "stack-integraciones"
+guide = "tasks/01-stack-integraciones.md"
+questions = ["Q04", "Q05", "Q06"]
+source_groups = ["root-manifests", "component-manifests", "runtime-versions", "purpose"]
+output = ["respuestas", "observaciones", "pendientes", "componentes"]
+reserved_rounds = 2

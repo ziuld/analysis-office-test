@@ -1,0 +1,1 @@
+Sigue clientes, esquemas y escrituras hasta su configuración y almacenamiento. Distingue memoria, volumen y servicio externo. Comprueba caducidad, persistencia al reiniciar y acceso a datos sensibles.

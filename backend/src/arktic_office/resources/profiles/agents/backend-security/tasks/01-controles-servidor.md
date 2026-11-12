@@ -1,0 +1,1 @@
+Sigue entradas hasta renderizado, cookies o consultas a datos. Lee la implementación y el punto de uso de la validación, el escape y la parametrización. Distingue cobertura parcial y vulnerabilidad demostrada.

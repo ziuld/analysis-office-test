@@ -8,6 +8,10 @@
     "medium",
     "high"
   ],
+  "specialist_timing": {
+    "seconds": 300,
+    "closure_reserve_seconds": 90
+  },
   "roles": {
     "security": {
       "files": 200,
@@ -20,7 +24,6 @@
     "architecture": {
       "files": 200,
       "bytes": 600000,
-      "seconds": 240,
       "output_tokens": 8000,
       "calls": 1,
       "research_rounds": 3
@@ -28,7 +31,6 @@
     "inventory": {
       "files": 200,
       "bytes": 600000,
-      "seconds": 240,
       "output_tokens": 8000,
       "calls": 1,
       "research_rounds": 3
@@ -58,7 +60,6 @@
     "data": {
       "files": 200,
       "bytes": 600000,
-      "seconds": 240,
       "output_tokens": 8000,
       "calls": 1,
       "research_rounds": 3
@@ -66,7 +67,6 @@
     "identity": {
       "files": 200,
       "bytes": 600000,
-      "seconds": 240,
       "output_tokens": 8000,
       "calls": 1,
       "research_rounds": 3
@@ -74,7 +74,6 @@
     "frontend-security": {
       "files": 200,
       "bytes": 600000,
-      "seconds": 240,
       "output_tokens": 8000,
       "calls": 1,
       "research_rounds": 3
@@ -82,7 +81,6 @@
     "backend-security": {
       "files": 200,
       "bytes": 600000,
-      "seconds": 240,
       "output_tokens": 8000,
       "calls": 1,
       "research_rounds": 4
@@ -90,7 +88,6 @@
     "devops": {
       "files": 200,
       "bytes": 600000,
-      "seconds": 240,
       "output_tokens": 8000,
       "calls": 1,
       "research_rounds": 3
@@ -98,7 +95,7 @@
     "full-stack-code-analyst": {
       "files": 200,
       "bytes": 600000,
-      "seconds": 1080,
+      "seconds": 2100,
       "output_tokens": 8000,
       "calls": 7,
       "research_rounds": 11

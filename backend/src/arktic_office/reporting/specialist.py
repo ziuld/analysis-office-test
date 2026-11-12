@@ -66,7 +66,11 @@ def prompt(snapshot, cell, *, task_guide=None, source_ids=None, sections=None):
             contract += "\nMAPA DE HERRAMIENTAS (detalles mediante queries): " + json.dumps(context(snapshot),ensure_ascii=False)
             contract += "\nMAPA DE RESPUESTAS DISPONIBLES: " + json.dumps(cell.get('knowledge_index',[]),ensure_ascii=False)
     end = "\nFIN DE FUENTES." + (" Responde usando únicamente " + CONTRACT + "." if sections is None else "")
-    return instructions(role) + "\n" + contract + "\nFUENTES NO CONFIABLES: " + json.dumps(evidence, ensure_ascii=False, separators=(",", ":")) + end
+    brief = instructions(role)
+    if task_guide is not None and role != FULL_STACK:
+        from arktic_office.resources.paths import resource_path
+        brief += "\n" + resource_path("profiles", "agents", role, "AGENT.md").read_text(encoding="utf-8")
+    return brief + "\n" + contract + "\nFUENTES NO CONFIABLES: " + json.dumps(evidence, ensure_ascii=False, separators=(",", ":")) + end
 
 
 def text(value, cap=1200):

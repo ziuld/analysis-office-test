@@ -66,14 +66,14 @@ La fuente de perfiles y límites locales es [models.json](../backend/src/arktic_
 | Rol | Límites predeterminados relevantes |
 |---|---|
 | Seguridad | 12 archivos, 64000 bytes, una llamada, 240 s, salida solicitada hasta 4500 tokens |
-| Arquitectura / Inventario | 6 archivos, 24000 bytes, una llamada cada uno, 240 s, salida solicitada hasta 4500 tokens |
+| Siete especialistas independientes | 300 s totales por agente, con margen de 90 s para cerrar. Archivos, contexto y rondas según perfil y tarea |
 | Coordinador | Dos llamadas como máximo; cada una hasta 32000 bytes de prompt, 16000 bytes de respuesta, 60 s, salida solicitada hasta 2000 tokens |
 | Preparación | 1 pasada inicial + `AUDIT_PREPARATION_MAX_LOOPS` adicionales (1 por defecto), 180 s, 60000 bytes acumulados; 60 s por llamada, salida solicitada hasta 1500 tokens |
 | Consulta al coordinador | Una llamada, 240 s; hereda el modelo común, salida solicitada hasta 4500 tokens |
 
 `AUDIT_MODEL`, `AUDIT_REASONING` y `AUDIT_MAX_OUTPUT_TOKENS` siguen siendo la base. Los prefijos `AUDIT_SECURITY_`, `AUDIT_ARCHITECTURE_`, `AUDIT_INVENTORY_`, `AUDIT_COORDINATOR_`, `AUDIT_PREPARATION_` y `AUDIT_QUESTION_` permiten ajustar `MODEL`, `REASONING` y `MAX_OUTPUT_TOKENS`. Los límites locales de archivos, tiempo y contexto están en el registro. La consulta a un especialista mantiene su perfil propio; `QUESTION` corresponde a la consulta al coordinador. Los ajustes explícitos de salida admiten 1000–8000 tokens; el valor predeterminado de cada rol limita el valor común heredado.
 
-Se valida toda la configuración antes de la adquisición/exploración o de la primera llamada del equipo: proveedor, sintaxis del modelo, razonamiento, salida, modo y capacidades. Esta validación es local: no demuestra disponibilidad del modelo, cuota, soporte de razonamiento ni compatibilidad del proveedor. El runtime recibe el proveedor, modelo, razonamiento y salida efectivos del perfil. El backend Codex OAuth fijado sigue sin garantizar un techo duro de tokens de salida; llamadas, bytes y tiempo tampoco equivalen a un presupuesto monetario exacto. El límite global de 1500 segundos de la ejecución API continúa prevaleciendo sobre las fases.
+Se valida toda la configuración antes de la adquisición/exploración o de la primera llamada del equipo: proveedor, sintaxis del modelo, razonamiento, salida, modo y capacidades. Esta validación es local: no demuestra disponibilidad del modelo, cuota, soporte de razonamiento ni compatibilidad del proveedor. El runtime recibe el proveedor, modelo, razonamiento y salida efectivos del perfil. El backend Codex OAuth fijado sigue sin garantizar un techo duro de tokens de salida; llamadas, bytes y tiempo tampoco equivalen a un presupuesto monetario exacto. La API limita el proceso completo a 2700 segundos por defecto mediante `AUDIT_JOB_TIMEOUT_SECONDS`. Los plazos de cada especialista se detallan en la [propuesta de agentes independientes](PROPUESTA_AGENTES_INDEPENDIENTES.md).
 
 ## Reparto, síntesis y conservación
 

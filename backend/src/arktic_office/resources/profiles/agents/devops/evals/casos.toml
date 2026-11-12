@@ -1,0 +1,9 @@
+[[cases]]
+task = "construccion-arranque"
+questions = ["Q15", "Q16", "Q17"]
+rounds = 1
+
+[[cases]]
+task = "pipeline-despliegue"
+questions = ["Q18", "Q19", "Q20", "Q21", "Q22"]
+rounds = 2

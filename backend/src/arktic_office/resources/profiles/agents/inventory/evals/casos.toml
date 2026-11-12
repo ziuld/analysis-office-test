@@ -1,0 +1,4 @@
+[[cases]]
+task = "stack-integraciones"
+questions = ["Q04", "Q05", "Q06"]
+rounds = 2

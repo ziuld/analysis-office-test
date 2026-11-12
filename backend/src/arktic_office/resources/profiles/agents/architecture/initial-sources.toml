@@ -1,0 +1,19 @@
+max_files = 5
+max_bytes = 4400
+max_file_bytes = 1150
+
+[[groups]]
+id = "entrypoints"
+take = 2
+patterns = ["**/app/layout.[jt]sx", "**/*Application.java", "**/Program.cs", "**/main.py", "**/main.go", "**/server.[jt]s", "**/main.[jt]s", "**/app.py", "**/asgi.py", "**/wsgi.py"]
+
+[[groups]]
+id = "boundaries"
+take = 2
+patterns = ["**/backend-proxy.[jt]s", "**/trpc.[jt]s", "**/urls.py", "**/routes.[jt]s", "**/router.[jt]s", "**/app/api/**/route.[jt]s", "**/*Controller.java"]
+
+[[groups]]
+id = "component-map"
+take = 1
+patterns = ["docs/architecture/README*", "docs/architecture*.md", "README*", "docker-compose.y*ml", "compose.y*ml"]
+anchor = "(?i)^#{1,4}.*(?:arquitectura|architecture|estructura|structure|component)"

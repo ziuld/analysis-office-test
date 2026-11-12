@@ -9,12 +9,15 @@ STATUS = {"hallazgo": "Hallazgo identificado", "evidencia_favorable_limitada": "
 
 def risks(data):
     items = []
+    ungraded_types = {"vulnerabilidad"} if data.get("full_stack") else set()
+    if data.get("task_workflows") in {"pilot", "all"}:
+        ungraded_types = {"vulnerabilidad", "operacion", "coste"}
     for section in ("confirmados", "indicios"):
         for item in data.get(section, []):
             severity = item.get("severidad", "informativa")
             if severity != "informativa":
                 items.append({**item, "certeza": section})
-            elif data.get("full_stack") and item.get("tipo") == "vulnerabilidad" and item.get("evidencia"):
+            elif item.get("tipo") in ungraded_types and item.get("evidencia"):
                 items.append({**item, "certeza": section, "severidad": severity})
     return sorted(items, key=lambda x: ((SEVERITIES.index(x["severidad"]) if x["severidad"] in SEVERITIES else len(SEVERITIES)), x["certeza"] != "confirmados"))
 

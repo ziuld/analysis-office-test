@@ -61,6 +61,7 @@ class JobRecord(TypedDict):
     created: str
     error: NotRequired[str]
     full_stack: NotRequired[bool]
+    private_ai_confirmed: NotRequired[bool]
 
 
 @dataclass(frozen=True)

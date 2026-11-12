@@ -1,5 +1,7 @@
 """Job-scoped original evidence. Shared read-only lookup; no model, shell or network."""
 import re
+from collections import defaultdict
+from functools import cached_property
 from pathlib import PurePosixPath
 from arktic_office.preparation.repository import AuditError, SOURCE_EXT, redact, file_role, balanced_files, select, priority, mask_findings
 from arktic_office.preparation.snapshot import acquire_complete
@@ -18,6 +20,19 @@ class Evidence:
     def __init__(self, files, graph):
         self.files = {f["path"]: f for f in files}
         self.graph = graph
+
+    @cached_property
+    def graph_index(self):
+        by_path, by_label, adjacency = defaultdict(list), defaultdict(list), defaultdict(dict)
+        nodes = {}
+        for position, node in enumerate(self.graph.get("nodes", [])):
+            nodes[node["id"]] = (position, node)
+            by_path[node.get("source_file")].append(node)
+            by_label[str(node.get("label", "")).casefold()].append(node)
+        for position, edge in enumerate(self.graph.get("edges", [])):
+            for endpoint in ("source", "target"):
+                adjacency[edge[endpoint]][position] = edge
+        return nodes, by_path, by_label, adjacency
 
     def lookup(self, request, *, strict=False):
         if isinstance(request,dict) and 'questions' in request:
@@ -62,17 +77,23 @@ class Evidence:
                     "error": "Ninguna ruta identifica un archivo de la captura. Busca el símbolo sin paths o usa una ruta exacta."}
         if not query.strip() and not paths and not unavailable:
             raise AuditError("La consulta necesita un símbolo o una ruta.")
-        seeds = [n for n in self.graph.get("nodes", []) if query and query.casefold() in str(n.get("label", "")).casefold()][:8]
-        ids = {n["id"] for n in seeds} | {n["id"] for n in self.graph.get("nodes", []) if n.get("source_file") in paths}
-        edges = [e for e in self.graph.get("edges", []) if e.get("source") in ids or e.get("target") in ids][:12]
+        query_text = query.casefold()
+        nodes, by_path, by_label, adjacency = self.graph_index
+        seeds = by_label.get(query_text) if query_text else []
+        if seeds is None:
+            seeds = [node for _, node in nodes.values() if query_text in str(node.get("label", "")).casefold()]
+        ids = {n["id"] for n in seeds[:8]} | {n["id"] for path in paths for n in by_path.get(path, [])}
+        links = {n: edge for node in ids for n, edge in adjacency.get(node, {}).items()}
+        edges = [links[n] for n in sorted(links)[:12]]
         neighbors = ids | {e[k] for e in edges for k in ("source", "target")}
-        related = [n.get("source_file") for n in self.graph.get("nodes", []) if n.get("id") in neighbors]
-        words = re.findall(r"[A-Za-z_][A-Za-z0-9_]{2,}", query.casefold())[:8]
+        nearby = [node for _, node in sorted(nodes[key] for key in neighbors if key in nodes)]
+        related = [n.get("source_file") for n in nearby]
+        words = re.findall(r"[A-Za-z_][A-Za-z0-9_]{2,}", query_text)[:8]
         matches = sorted(self.files, key=lambda p: (-sum(w in p.casefold() for w in words), p))
         explicit_paths = list(paths)
         candidates = explicit_paths or list(dict.fromkeys([p for p in related if p in self.files] +
                           [p for p in matches if any(w in p.casefold() for w in words)] +
-                          [p for p in sorted(self.files) if query and query.casefold() in self.files[p]['text'].casefold()]))
+                          [p for p in sorted(self.files) if query and query_text in self.files[p]['text'].casefold()]))
         # Paginate occurrences, not just filenames: content remains searchable even
         # when a filename or graph symbol happened to match first.
         locations = []
@@ -82,12 +103,11 @@ class Evidence:
         declaration = re.compile(r"\b(?:function|def|func|class|const|let|var|interface|type|struct)\s+"
                                  + symbol + r"(?![\w$])") if symbol else None
         invocation = re.compile(r"(?<![\w$])" + symbol + r"\s*\(") if symbol else None
-        query_text = query.casefold()
         for path in candidates:
             lines = self.files[path]['text'].splitlines()
             hits = [i + 1 for i, line in enumerate(lines) if query and query_text in line.casefold()]
-            definitions = [int(m[1]) for n in self.graph.get('nodes', [])
-                           if query and n.get('source_file') == path
+            definitions = [int(m[1]) for n in by_path.get(path, [])
+                           if query
                            and (label := str(n.get('label', '')).casefold())
                            and (query_text == label if discover else query_text in label)
                            and (m := re.match(r'^L(\d+)', str(n.get('source_location', ''))))
@@ -111,13 +131,6 @@ class Evidence:
         for path, location in page:
             lines = self.files[path]["text"].splitlines()
             hit = location - 1
-            # Use the graph's definition location for this file; text hits may be call sites.
-            definition = next((int(m.group(1)) - 1 for n in self.graph.get("nodes", [])
-                if query and n.get("source_file") == path and query.casefold() in str(n.get("label", "")).casefold()
-                and (m := re.match(r"^L(\d+)", str(n.get("source_location", ""))))
-                and 1 <= int(m.group(1)) <= len(lines)), None)
-            if definition is not None and not query:
-                hit = definition
             start = start_line - 1 if start_line is not None else max(0, hit - 8)
             end = min(len(lines), start + 200)
             while end > start and len("\n".join(lines[start:end]).encode()) > 6000:
@@ -132,7 +145,7 @@ class Evidence:
         return {"fragments": fragments, "relations": edges, "unavailable_paths": unavailable,
                 "matches": [{'path': p, 'line': line} for p, line in page], 'total': len(locations), 'offset': offset,
                 'next_offset': offset + len(page) if offset + len(page) < len(locations) else None,
-                "symbols": [{k: n.get(k) for k in ("id", "label", "source_file", "source_location")} for n in self.graph.get("nodes", []) if n.get("id") in neighbors][:12],
+                "symbols": [{k: n.get(k) for k in ("id", "label", "source_file", "source_location")} for n in nearby[:12]],
                 "limitation": "Relaciones estáticas auxiliares; las conclusiones requieren fuentes de texto."}
 
     def respond(self, request, *, strict=False):

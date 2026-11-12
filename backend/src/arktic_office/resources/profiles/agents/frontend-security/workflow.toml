@@ -1,0 +1,8 @@
+[[tasks]]
+id = "navegador"
+guide = "tasks/01-navegador.md"
+questions = ["Q28", "Q29", "Q30", "Q31"]
+source_groups = ["browser-safety", "headers", "browser-flows", "frontend-docs"]
+output = ["respuestas", "observaciones", "pendientes", "controles"]
+reserved_rounds = 2
+controls = ["entradas", "configuracion"]

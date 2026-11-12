@@ -1,0 +1,4 @@
+[[cases]]
+task = "identidad-sesion"
+questions = ["Q23", "Q24", "Q25", "Q26", "Q27"]
+rounds = 2

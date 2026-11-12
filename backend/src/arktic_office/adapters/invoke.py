@@ -3,8 +3,7 @@ import json
 import os
 import subprocess
 import sys
-from arktic_office.config.agents import FULL_STACK
-from arktic_office.core.errors import AuditError
+from arktic_office.core.errors import AuditError, SpecialistTimeout
 
 
 class ProviderError(AuditError):
@@ -28,7 +27,7 @@ def invoke_hermes(prompt, config):
     env = dict(os.environ, AUDIT_MODEL=config["model"], AUDIT_REASONING=config["reasoning"])
     if "provider" in config:
         env["AUDIT_PROVIDER"] = config["provider"]
-    if config.get("id") == FULL_STACK and env.get("AUDIT_PROVIDER", "openai-codex").strip() == "openai-codex":
+    if env.get("AUDIT_PROVIDER", "openai-codex").strip() == "openai-codex":
         env.setdefault("HERMES_CODEX_EVENT_STALE_TIMEOUT_SECONDS", "90")
     if "max_output_tokens" in config:
         env["AUDIT_MAX_OUTPUT_TOKENS"] = str(config["max_output_tokens"])
@@ -37,6 +36,8 @@ def invoke_hermes(prompt, config):
         result = subprocess.run([sys.executable, "-m", "arktic_office.adapters.hermes_runtime"], input=prompt, text=True,
                                 capture_output=True, timeout=timeout, check=False, env=env)
     except subprocess.TimeoutExpired:
+        if config.get("timeout_scope") == "specialist":
+            raise SpecialistTimeout("Se agotó el plazo local del especialista. Resultado y consumo remotos desconocidos; se conserva el avance.") from None
         raise ProviderError("Hermes superó el tiempo permitido; resultado remoto desconocido; no se reintentó.") from None
     if result.returncode:
         reasons = {"quota_or_rate_limit": "cuota o límite de peticiones", "unsupported_model": "modelo no admitido por el proveedor", "authentication": "sesión no válida", "timeout": "tiempo agotado", "incomplete_response": "respuesta incompleta"}

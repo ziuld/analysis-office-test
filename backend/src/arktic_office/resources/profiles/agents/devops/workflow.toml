@@ -1,0 +1,15 @@
+[[tasks]]
+id = "construccion-arranque"
+guide = "tasks/01-construccion-arranque.md"
+questions = ["Q15", "Q16", "Q17"]
+source_groups = ["root-manifests", "tasks", "applications", "startup-config", "compose", "migration-image", "deployment", "env-examples"]
+output = ["respuestas", "observaciones", "pendientes"]
+reserved_rounds = 1
+
+[[tasks]]
+id = "pipeline-despliegue"
+guide = "tasks/02-pipeline-despliegue.md"
+questions = ["Q18", "Q19", "Q20", "Q21", "Q22"]
+source_groups = ["pipeline", "pipeline-templates", "compose", "deployment", "readme"]
+output = ["respuestas", "observaciones", "pendientes"]
+reserved_rounds = 2

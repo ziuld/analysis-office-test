@@ -43,9 +43,9 @@ class Jobs:
                 data.update(estado="error", error="La revisión se interrumpió al reiniciar el servicio. Puedes iniciarla de nuevo.")
                 write_json(path, data)
                 write_json(path.parent / 'meeting.json', {'active':False, 'phase':'interrupted'})
-                if data.get('full_stack'):
-                    from arktic_office.coordination.iris import interrupt
-                    interrupt(path.parent)
+                from arktic_office.coordination.workflow import interrupt
+                for checkpoint in (path.parent / "agents").glob("*/workflow.json"):
+                    interrupt(path.parent, checkpoint.parent.name)
                 if (self.root / '.knowledge' / 'office.sqlite').is_file():
                     from arktic_office.storage.knowledge import Knowledge
                     Knowledge(self.root).interrupt(path.parent.name)
@@ -60,16 +60,22 @@ class Jobs:
     def listing(self):
         return self.store.listing()
 
-    def start(self, repository, *, full_stack=False):
+    def start(self, repository, *, full_stack=False, private_ai_confirmed=False):
+        if self.runner == self.execute:
+            from arktic_office.config.private_ai import require_private_ai
+            require_private_ai(private_ai_confirmed)
         parse_repo(repository)
-        return self._start(repository, full_stack=full_stack)
+        return self._start(repository, full_stack=full_stack, private_ai_confirmed=private_ai_confirmed)
 
-    def start_local(self, source_id, *, full_stack=False):
+    def start_local(self, source_id, *, full_stack=False, private_ai_confirmed=False):
+        if self.local_runner == self.execute_local:
+            from arktic_office.config.private_ai import require_private_ai
+            require_private_ai(private_ai_confirmed)
         from arktic_office.preparation.local_sources import local_source
         source = local_source(source_id)
-        return self._start(source['repository'], source, full_stack=full_stack)
+        return self._start(source['repository'], source, full_stack=full_stack, private_ai_confirmed=private_ai_confirmed)
 
-    def _start(self, repository, local=None, *, full_stack=False):
+    def _start(self, repository, local=None, *, full_stack=False, private_ai_confirmed=False):
         if full_stack:
             from arktic_office.config.agents import read_profiles
             if not read_profiles(full_stack=True):
@@ -81,6 +87,8 @@ class Jobs:
             path = self.store.create(job_id, repository=repository)
             job: JobRecord = {"id": job_id, "repository": repository, "estado": "preparando",
                    "created": datetime.now(timezone.utc).isoformat(), "full_stack": full_stack}
+            if private_ai_confirmed:
+                job["private_ai_confirmed"] = True
             if local:
                 job.update(source_type='local_git',local_source_id=local['id'],branch=local['branch'],
                            commit=local['commit'],project_name=local['name'])
@@ -210,6 +218,8 @@ class Jobs:
             write_json(path / "job.json", job)
             self._publish(job_id, "analizando")
             mode = {'full_stack': True} if job.get('full_stack') else {}
+            if job.get("private_ai_confirmed"):
+                mode["private_ai_confirmed"] = True
             if job.get('source_type') == 'local_git':
                 from arktic_office.preparation.local_sources import local_source
                 source = local_source(job['local_source_id'])
@@ -242,12 +252,12 @@ class Jobs:
         self.dispatch_questions()
 
     @staticmethod
-    def execute(job_id, repository, *, full_stack=False):
-        return run_audit(job_id, repository, full_stack=full_stack)
+    def execute(job_id, repository, *, full_stack=False, private_ai_confirmed=False):
+        return run_audit(job_id, repository, full_stack=full_stack, private_ai_confirmed=private_ai_confirmed)
 
     @staticmethod
-    def execute_local(job_id, folder, *, full_stack=False):
-        return run_audit(job_id, local_snapshot=folder, full_stack=full_stack)
+    def execute_local(job_id, folder, *, full_stack=False, private_ai_confirmed=False):
+        return run_audit(job_id, local_snapshot=folder, full_stack=full_stack, private_ai_confirmed=private_ai_confirmed)
 
     def _publish(self, run_id, state, *, question_id=None):
         if self.event_sink is None:

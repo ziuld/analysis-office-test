@@ -1,9 +1,12 @@
 import unittest
 import json
+import subprocess
 from types import SimpleNamespace
 from unittest.mock import patch
-from arktic_office.adapters.invoke import invoke_hermes, normalize_json_report
+from arktic_office.adapters.invoke import ProviderError, invoke_hermes, normalize_json_report
+from arktic_office.adapters.processes import run_audit
 from arktic_office.config.agents import FULL_STACK
+from arktic_office.core.errors import SpecialistTimeout
 
 
 class InvokeFormatTests(unittest.TestCase):
@@ -28,14 +31,14 @@ class InvokeFormatTests(unittest.TestCase):
         self.assertEqual(envelope['usage']['total_tokens'], 7)
         self.assertEqual(envelope['format_normalization'], 'removed_final_closing_tag')
 
-    def test_iris_codex_idle_default_preserves_operator_override(self):
+    def test_codex_idle_default_preserves_operator_override(self):
         setting = "HERMES_CODEX_EVENT_STALE_TIMEOUT_SECONDS"
         process = SimpleNamespace(returncode=0, stdout='{"report":"{}"}')
         for agent, provider, overrides, expected in (
             (FULL_STACK, "openai-codex", {}, "90"),
             (FULL_STACK, "openai-codex", {setting: "75"}, "75"),
             (FULL_STACK, "openai", {}, None),
-            ("identity", "openai-codex", {}, None),
+            ("identity", "openai-codex", {}, "90"),
         ):
             with self.subTest(agent=agent, provider=provider, expected=expected):
                 with patch.dict("os.environ", overrides, clear=True), patch(
@@ -44,3 +47,18 @@ class InvokeFormatTests(unittest.TestCase):
                                               "reasoning": "medium", "timeout": 240})
                 self.assertEqual(run.call_args.kwargs["env"].get(setting), expected)
                 self.assertEqual(run.call_args.kwargs["timeout"], 240)
+
+    def test_specialist_deadline_is_distinct_from_provider_interruption(self):
+        with patch("arktic_office.adapters.invoke.subprocess.run",
+                   side_effect=subprocess.TimeoutExpired("hermes", 95)):
+            for scope, error in (("specialist", SpecialistTimeout), ("call", ProviderError)):
+                with self.subTest(scope=scope), self.assertRaises(error):
+                    invoke_hermes("fixture", {"model": "fixture", "reasoning": "medium",
+                                              "timeout": 95, "timeout_scope": scope})
+
+    def test_office_deadline_defaults_to_45_minutes_and_accepts_override(self):
+        for env, expected in (({}, 2700), ({"AUDIT_JOB_TIMEOUT_SECONDS": "2800"}, 2800)):
+            with patch.dict("os.environ", env, clear=True), patch(
+                    "arktic_office.adapters.processes.subprocess.run", return_value=SimpleNamespace(returncode=0)) as run:
+                self.assertEqual(run_audit("fixture", "fixture"), 0)
+                self.assertEqual(run.call_args.kwargs["timeout"], expected)

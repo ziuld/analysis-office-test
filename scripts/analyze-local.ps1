@@ -2,10 +2,16 @@ param(
     [Parameter(Mandatory=$true)][string]$Repository,
     [switch]$InspectOnly,
     [switch]$PrepareOnly,
+    [switch]$PrivateAiConfirmed,
     [ValidateRange(1000000,256000000)][long]$MaxSnapshotBytes = 32000000
 )
 $ErrorActionPreference = 'Stop'
 if ($InspectOnly -and $PrepareOnly) { throw 'Usar -InspectOnly o -PrepareOnly, no ambas.' }
+if (-not ($InspectOnly -or $PrepareOnly -or $PrivateAiConfirmed)) {
+    $answer = Read-Host '¿Estás usando un entorno de IA privado autorizado para el código de este proyecto? [s/N]'
+    if ($answer -notin @('s', 'si', 'sí')) { throw 'La revisión requiere confirmar el uso de IA privada autorizada.' }
+    $PrivateAiConfirmed = $true
+}
 $officeRoot = Split-Path -Parent $PSScriptRoot
 $repoRoot = (Resolve-Path -LiteralPath $Repository).Path
 if (-not (Test-Path -LiteralPath $repoRoot -PathType Container)) { throw 'Indicar una carpeta de repositorio Git.' }
@@ -36,6 +42,7 @@ try {
     $runArgs = @('compose','-f','compose.yaml','-f','compose.hybrid.yaml','--profile','audit',
         'run','--rm','-T','--volume',"${bundleRoot}:/local-input:ro",'auditor','--local-snapshot','/local-input')
     if ($InspectOnly) { $runArgs += '--inspect-only' }
+    if ($PrivateAiConfirmed) { $runArgs += '--private-ai-confirmed' }
     & docker @runArgs
     if ($LASTEXITCODE -ne 0) { throw 'El equipo devolvió un error o resultado parcial; revisar el informe y las respuestas conservadas.' }
 } finally { Pop-Location }

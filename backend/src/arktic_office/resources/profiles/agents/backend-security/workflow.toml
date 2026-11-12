@@ -1,0 +1,17 @@
+[[tasks]]
+id = "controles-servidor"
+guide = "tasks/01-controles-servidor.md"
+questions = ["Q32", "Q33", "Q34"]
+source_groups = ["server-entrypoints", "validation-and-sinks", "backend-docs"]
+output = ["respuestas", "observaciones", "pendientes", "controles"]
+reserved_rounds = 2
+controls = ["entradas"]
+
+[[tasks]]
+id = "recursos-secretos-salidas"
+guide = "tasks/02-recursos-secretos-salidas.md"
+questions = ["Q35", "Q36", "Q37"]
+source_groups = ["egress-verdict", "egress-email", "egress-onedrive", "server-entrypoints", "validation-and-sinks"]
+output = ["respuestas", "observaciones", "pendientes", "controles"]
+reserved_rounds = 2
+controls = ["secretos", "dependencias", "configuracion", "operacion"]

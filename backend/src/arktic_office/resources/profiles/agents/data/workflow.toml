@@ -1,0 +1,15 @@
+[[tasks]]
+id = "persistencia-cache"
+guide = "tasks/01-persistencia-cache.md"
+questions = ["Q10", "Q11", "Q12"]
+source_groups = ["schema", "storage", "persistence-configuration"]
+output = ["respuestas", "observaciones", "pendientes"]
+reserved_rounds = 1
+
+[[tasks]]
+id = "recuperacion-retencion"
+guide = "tasks/02-recuperacion-retencion.md"
+questions = ["Q13", "Q14"]
+source_groups = ["migrations", "persistence-configuration", "recovery"]
+output = ["respuestas", "observaciones", "pendientes"]
+reserved_rounds = 1

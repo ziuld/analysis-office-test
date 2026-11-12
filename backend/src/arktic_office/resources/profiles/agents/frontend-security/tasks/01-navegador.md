@@ -1,0 +1,1 @@
+Sigue contenido editable hasta el renderizado y lee la CSP aplicada, el saneador y el escape JSON-LD. Distingue el efecto de las defensas de una ruta XSS demostrada. Comprueba cookies, consentimiento y frontera servidor-cliente.

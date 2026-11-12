@@ -348,10 +348,17 @@ def prepare_partial_response(raw, snapshot, cell_id):
     return clean, omitted, warnings
 
 
-def run_team(snapshot, output, invoke=invoke_hermes, emit=print, evidence=None):
+def run_team(snapshot, output, invoke=invoke_hermes, emit=print, evidence=None, protection=None):
     from arktic_office.config.models import validate_configuration, request_options
     validate_configuration()
     snapshot = {**snapshot, "request": snapshot.get("request", request_options())}
+    if invoke is invoke_hermes:
+        from arktic_office.config.private_ai import require_private_ai
+        from arktic_office.preparation.credentials import CredentialProtection
+        require_private_ai(snapshot["request"].get("private_ai_confirmed", False))
+        if protection is None:
+            protection = CredentialProtection(evidence.files.values() if evidence else snapshot["files"],
+                                              snapshot.get("scanners", []))
     full_stack = snapshot["request"].get("full_stack", False)
     if full_stack:
         from arktic_office.reporting.questionnaire import VERSION
@@ -363,7 +370,7 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print, evidence=None):
     from arktic_office.execution.budget import Budget
     from arktic_office.storage.knowledge import Knowledge
     from arktic_office.config.settings import reports_root
-    budget = Budget(invoke, output)
+    budget = Budget(invoke, output, protection)
     invoke = budget
     root = reports_root()
     knowledge = Knowledge(root if output.resolve().is_relative_to(root.resolve()) else output.parent)
@@ -383,13 +390,22 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print, evidence=None):
         plan = coordinator.route(plan)
     if evidence:
         plan = [{**c, "files": [], "bytes": 0} for c in plan]
+    workflows = {}
+    rollout = snapshot["request"].get("task_workflows", "legacy")
+    if evidence and not full_stack and rollout in {"pilot", "all"}:
+        from arktic_office.coordination.workflow import load_tasks
+        for config in plan:
+            role = config["id"]
+            if rollout == "all" or role in {"devops", "backend-security"}:
+                workflows[role] = load_tasks(role=role)
+        budget.shared_rounds = 2 if rollout == "all" else 0
     cells = [{"id": c["id"], "nombre": c["name"], "estado": "pendiente", "provider": c["provider"],
               "model": c["model"], "reasoning": c["reasoning"], "archivos": [f["path"] for f in c["files"]],
               "bytes": c["bytes"], "calls": 0} for c in plan]
     results = []
     original_texts = {}
     (output / "celulas").mkdir()
-    for config, state in zip(plan, cells):
+    for position, (config, state) in enumerate(zip(plan, cells)):
         from arktic_office.reporting.questionnaire import catalog
         knowledge.export(output, config, state)
         if budget.stop_reason:
@@ -421,9 +437,24 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print, evidence=None):
         knowledge.export(output, config, state)
         raw = None
         try:
+            task_specs = workflows.get(config["id"])
+            if workflows:
+                reserve_after = sum(len(workflows.get(item["id"], (None,))) for item in plan[position + 1:]) + bool(coordinator)
+                limits = config["limits"]
+                base = len(task_specs) if task_specs else 1
+                room = max(0, budget.limits["calls"] - len(budget.calls) - base - reserve_after)
+                config["limits"] = {**limits, "research_rounds": min(limits["research_rounds"], room)}
             if full_stack:
                 from arktic_office.coordination.iris import research
                 envelope = research(snapshot, config, state, evidence, budget, output, cells)
+                subset["files"] = config["files"]
+            elif task_specs:
+                from arktic_office.coordination.workflow import research
+                limits = config["limits"]
+                cap = sum(task["reserved_rounds"] for task in task_specs)
+                config["limits"] = {**limits, "research_rounds": min(limits["research_rounds"], cap)}
+                envelope = research(snapshot, config, state, evidence, budget, output, cells,
+                                    tasks=task_specs, reserve_after=reserve_after)
                 subset["files"] = config["files"]
             elif evidence:
                 from arktic_office.coordination.research import research
@@ -435,7 +466,7 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print, evidence=None):
                 envelope = invoke(make_prompt(subset, config), config)
                 state["usage"] = envelope.get("usage")
             raw = envelope["report"]
-            original_raw = envelope["original"] if full_stack else raw
+            original_raw = envelope.get("original", raw)
             (output / "celulas" / (config["id"] + ".respuesta-original.txt")).write_text(original_raw, encoding="utf-8")
             if isinstance(raw, str) and "\"observaciones\"" in raw:
                 state["contrato_salida"] = "compact-v1"
@@ -463,7 +494,7 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print, evidence=None):
                 state["advertencias"] = warnings
             from arktic_office.core.outcome import INSUFFICIENT, useful
             insufficient = report.get("evaluacion", {}).get("estado") == INSUFFICIENT or not useful(report)
-            partial_tasks = full_stack and any(status != "completa" for status in state["task_states"].values())
+            partial_tasks = any(status != "completa" for status in state.get("task_states", {}).values())
             state["estado"] = INSUFFICIENT if not useful(report) else "parcial" if proposal_error or insufficient or partial_tasks else "completada"
             if insufficient:
                 state["mensaje"] = report.get("evaluacion", {}).get("motivo", "La información recibida no permite elaborar una evaluación útil de esta especialidad.")
@@ -502,6 +533,8 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print, evidence=None):
     for contribution in data["aportaciones_agentes"]:
         contribution["texto_original"] = original_texts[contribution["id"]]
     data["full_stack"] = full_stack
+    if workflows:
+        data["task_workflows"] = rollout
     if full_stack:
         from arktic_office.coordination.iris import SYNTHESIS
         synthesis_calls = sum(call.get("task") == SYNTHESIS for call in budget.calls)

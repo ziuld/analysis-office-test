@@ -1,0 +1,4 @@
+[[cases]]
+task = "navegador"
+questions = ["Q28", "Q29", "Q30", "Q31"]
+rounds = 2

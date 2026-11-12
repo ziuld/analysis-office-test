@@ -1,0 +1,8 @@
+[[tasks]]
+id = "identidad-sesion"
+guide = "tasks/01-identidad-sesion.md"
+questions = ["Q23", "Q24", "Q25", "Q26", "Q27"]
+source_groups = ["authentication", "authorization", "credentials-and-sessions", "identity-docs"]
+output = ["respuestas", "observaciones", "pendientes", "controles"]
+reserved_rounds = 2
+controls = ["acceso"]

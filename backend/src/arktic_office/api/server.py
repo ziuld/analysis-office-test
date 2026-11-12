@@ -77,13 +77,19 @@ def handler_for(jobs):
                 if not isinstance(data, dict):
                     raise ValueError()
                 full_stack = data.pop("full_stack", False)
-                if type(full_stack) is not bool:
+                declared = "private_ai_confirmed" in data
+                private = data.pop("private_ai_confirmed", False)
+                if type(full_stack) is not bool or type(private) is not bool:
                     raise ValueError()
+                if declared and not private:
+                    from arktic_office.config.private_ai import REQUIRED
+                    raise AuditError(REQUIRED)
+                options = {"full_stack": full_stack, **({"private_ai_confirmed": True} if private else {})}
                 if set(data) == {"local_source_id"}:
-                    return self.send(202, jobs.start_local(data["local_source_id"], full_stack=full_stack))
+                    return self.send(202, jobs.start_local(data["local_source_id"], **options))
                 if set(data) != {"repository"} or not isinstance(data["repository"], str):
                     raise ValueError()
-                return self.send(202, jobs.start(data["repository"].strip(), full_stack=full_stack))
+                return self.send(202, jobs.start(data["repository"].strip(), **options))
             except (ValueError, UnicodeError):
                 self.send(400, {"error": "Solicitud inválida: revisa los campos enviados."})
             except AuditError as exc:

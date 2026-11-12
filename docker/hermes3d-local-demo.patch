@@ -364,10 +364,10 @@ index 0000000..d5aa57d
 +}
 diff --git a/src/features/audit/AuditOffice.tsx b/src/features/audit/AuditOffice.tsx
 new file mode 100644
-index 0000000..5106dde
+index 0000000..091db46
 --- /dev/null
 +++ b/src/features/audit/AuditOffice.tsx
-@@ -0,0 +1,180 @@
+@@ -0,0 +1,187 @@
 +"use client";
 +
 +import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -416,6 +416,7 @@ index 0000000..5106dde
 +  const [repository, setRepository] = useState("");
 +  const [sourceKind, setSourceKind] = useState("github");
 +  const [fullStack, setFullStack] = useState(false);
++  const [privateAiConfirmed, setPrivateAiConfirmed] = useState(false);
 +  const [localSources, setLocalSources] = useState<LocalSource[]>([]);
 +  const [localSourceId, setLocalSourceId] = useState("");
 +  const [runs, setRuns] = useState<Run[]>([]);
@@ -461,10 +462,12 @@ index 0000000..5106dde
 +  const activityText = Object.fromEntries(roles.map(role => [role.id, !connected ? "" : questionActive?.agent === role.id && questionActive.estado === "respondiendo" ? "Consultando evidencia guardada" : live?.activity?.[role.id]?.working ? live?.activity?.[role.id]?.text || "" : ""]));
 +
 +  async function start(event: React.FormEvent) {
-+    event.preventDefault(); setSubmitting(true); setError(""); setReport(null);
++    event.preventDefault();
++    if (!privateAiConfirmed) return;
++    setSubmitting(true); setError(""); setReport(null);
 +    try {
 +      const source = sourceKind === "local" ? { local_source_id: localSourceId } : { repository };
-+      const run = await api("runs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...source, full_stack: fullStack }) });
++      const run = await api("runs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...source, full_stack: fullStack, private_ai_confirmed: true }) });
 +      setSelected(run.id); setSelectedCell(fullStack ? IRIS : "coordinator"); await refresh();
 +    } catch (e) { setError(e instanceof Error ? e.message : "No se pudo iniciar la revisión."); }
 +    finally { setSubmitting(false); }
@@ -516,7 +519,11 @@ index 0000000..5106dde
 +            {fullStack ? "Iris responde las 40 preguntas." : "La revisión se reparte entre los especialistas."}
 +          </span></span>
 +        </label>
-+        <button disabled={!connected || submitting || !!active || !!questionActive || fullStack && !irisAvailable || sourceKind === "local" && !localSourceId} className="audit-pixel-button w-full border-cyan-100/50 bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 disabled:opacity-40"><PixelIcon kind="play" />{submitting ? "Iniciando…" : active ? "Revisión en curso" : questionActive ? "Consulta en curso" : "Iniciar revisión"}</button>
++        <label className="flex items-start gap-3 text-sm">
++          <input type="checkbox" required checked={privateAiConfirmed} onChange={event => setPrivateAiConfirmed(event.target.checked)} className="mt-1 accent-cyan-300" />
++          Uso un entorno de IA privado autorizado para el código de este proyecto.
++        </label>
++        <button disabled={!privateAiConfirmed || !connected || submitting || !!active || !!questionActive || fullStack && !irisAvailable || sourceKind === "local" && !localSourceId} className="audit-pixel-button w-full border-cyan-100/50 bg-cyan-300 px-4 py-3 text-sm font-semibold text-slate-950 disabled:opacity-40"><PixelIcon kind="play" />{submitting ? "Iniciando…" : active ? "Revisión en curso" : questionActive ? "Consulta en curso" : "Iniciar revisión"}</button>
 +      </form>
 +      {(error || networkError) && <p role="alert" className="mt-4 rounded-lg border border-rose-400/30 bg-rose-950 p-3 text-sm text-rose-200">{error || networkError}</p>}
 +      {runs.length > 0 && <div className="mt-5"><label htmlFor="runs" className="text-xs text-slate-400">Revisiones guardadas</label><select id="runs" value={current?.id || ""} onChange={e => { setSelected(e.target.value); setReport(null); }} className="mt-1 w-full rounded-lg border border-white/20 bg-slate-900 p-2 text-xs">{runs.map(r => <option key={r.id} value={r.id}>{r.simulation ? "SIMULACIÓN · " : r.report_format === 3 ? "Seguridad · " : r.report_format === 2 ? "Formato 2 · " : ""}{r.derived_from ? "Evidencia guardada · " : r.historical ? "Histórico · " : ""}{r.full_stack ? "Iris · Full Stack" : "Equipo"} · {r.repository.split("/").slice(-2).join("/")} · {label[r.estado] || r.estado} · {r.id.slice(0, 10)}</option>)}</select></div>}
@@ -2346,10 +2353,10 @@ new file mode 100644
 +});
 diff --git a/tests/unit/auditFullStack.test.ts b/tests/unit/auditFullStack.test.ts
 new file mode 100644
-index 0000000..4097f6e
+index 0000000..7246bee
 --- /dev/null
 +++ b/tests/unit/auditFullStack.test.ts
-@@ -0,0 +1,45 @@
+@@ -0,0 +1,47 @@
 +import React from "react";
 +import { afterEach, expect, it, vi } from "vitest";
 +import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
@@ -2381,6 +2388,8 @@ index 0000000..4097f6e
 +  const toggle = screen.getByRole("switch", { name: /Usar Full Stack/ });
 +  await waitFor(() => expect(toggle).toBeEnabled());
 +  expect(toggle).not.toBeChecked();
++  expect(screen.getByRole("button", { name: "Iniciar revisión" })).toBeDisabled();
++  fireEvent.click(screen.getByRole("checkbox", { name: /Uso un entorno de IA privado/ }));
 +  if (fullStack) {
 +    fireEvent.click(toggle);
 +    fireEvent.change(screen.getByLabelText("Origen del repositorio"), { target: { value: "local" } });
@@ -2392,6 +2401,6 @@ index 0000000..4097f6e
 +  await screen.findByText(fullStack ? "Modalidad · Iris · Full Stack" : "Modalidad · Equipo de especialistas");
 +  const submitted = fetchMock.mock.calls.find(([, init]) => init?.method === "POST");
 +  expect(JSON.parse(String(submitted?.[1]?.body))).toEqual(fullStack
-+    ? { local_source_id: "local-source", full_stack: true }
-+    : { repository: "https://github.com/acme/app", full_stack: false });
++    ? { local_source_id: "local-source", full_stack: true, private_ai_confirmed: true }
++    : { repository: "https://github.com/acme/app", full_stack: false, private_ai_confirmed: true });
 +});

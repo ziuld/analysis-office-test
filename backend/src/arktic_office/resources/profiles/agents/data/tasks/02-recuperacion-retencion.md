@@ -1,0 +1,1 @@
+Busca configuración de respaldo y procedimientos de restauración. Para datos personales, sigue la fecha de retención hasta la purga, sus consumidores y copias externas. Distingue fecha registrada y borrado efectivo.

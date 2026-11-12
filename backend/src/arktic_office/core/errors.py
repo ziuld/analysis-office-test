@@ -5,5 +5,9 @@ class AuditError(Exception):
     pass
 
 
+class SpecialistTimeout(AuditError):
+    """A local deadline prevents a specialist from starting or finishing a call."""
+
+
 class GitHubNotFound(AuditError):
     pass

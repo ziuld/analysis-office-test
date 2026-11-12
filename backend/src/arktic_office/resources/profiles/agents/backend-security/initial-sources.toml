@@ -1,0 +1,37 @@
+max_files = 5
+max_bytes = 4400
+max_file_bytes = 1150
+
+[[groups]]
+id = "egress-verdict"
+take = 1
+patterns = ["**/cv-scan.[jt]s"]
+anchor = "\\bfunction\\s+cvScanVerdict\\b"
+
+[[groups]]
+id = "egress-email"
+take = 1
+patterns = ["**/notifyTalentTeam.[jt]s", "**/mailClient.[jt]s"]
+anchor = "\\bfunction\\s+sendCvByEmail\\b"
+
+[[groups]]
+id = "egress-onedrive"
+take = 1
+patterns = ["**/uploadCvs.[jt]s", "**/onedriveClient.[jt]s"]
+anchor = "\\bfunction\\s+syncCvToOneDrive\\b"
+
+[[groups]]
+id = "server-entrypoints"
+take = 2
+patterns = ["**/v1/public/**/route.[jt]s", "**/backend/**/api/**/route.[jt]s", "**/*Controller.java", "**/urls.py", "**/routes.py", "**/server.[jt]s", "**/server.py"]
+
+[[groups]]
+id = "validation-and-sinks"
+take = 2
+patterns = ["**/validators.[jt]s", "**/validation.[jt]s", "**/serializers.py", "**/blob.[jt]s", "**/repository.[jt]s", "**/repository.py", "**/mailClient.[jt]s", "**/onedriveClient.[jt]s"]
+
+[[groups]]
+id = "backend-docs"
+take = 1
+patterns = ["apps/backend/README*", "backend/README*", "docs/security/README*", "README*"]
+anchor = "(?i)^#{1,4}.*(?:backend|api|security|seguridad)"

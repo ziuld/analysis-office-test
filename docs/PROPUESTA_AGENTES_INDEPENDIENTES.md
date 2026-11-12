@@ -60,12 +60,18 @@ Una ronda empieza cuando el especialista pide evidencia adicional y termina con 
 | Inventario | 1 | 2 | 6–10 | Confirmar stack con los manifiestos. Seguir el registro de proveedores hasta clientes y consumidores relevantes. |
 | Arquitectura | 1 | 2 | 5–9 | Localizar entradas y fronteras de componentes. Seguir una petición o import hasta el destino. |
 | Datos | 2 | 2 (1 por tarea) | 6–12 | Seguir persistencia y caché hasta configuración y escritura. Localizar respaldo, restauración o purga para el segundo bloque. |
-| DevOps | 2 | 3 (1 para Q15–Q17, 1 para Q18–Q22 y 1 flexible) | 8–14 | Contrastar scripts, Dockerfiles y Compose. Leer CI/CD e infraestructura. Usar la ronda flexible para seguir un paso delegado o comprobar configuración aplicada por el pipeline. |
+| DevOps | 2 | 3 (1 para Q15–Q17 y 2 para Q18–Q22) | 8–14 | Contrastar scripts, Dockerfiles y Compose. Localizar etapas de CI/CD y seguir los pasos delegados o completar su configuración en la segunda ronda del bloque. |
 | Identidad | 1 | 2 | 6–10 | Seguir login y sesión. Verificar la autorización en una operación y los límites en sus implementaciones. |
 | Seguridad frontend | 1 | 2 | 7–12 | Identificar entradas y renderizado. Leer los consumidores y las defensas efectivas, incluidas CSP y escape, y buscar consentimiento. |
 | Seguridad backend | 2 | 4 (2 por tarea) | 10–16 | Una ronda para identificar las entradas y otra para llegar a la operación y sus defensas. En datos salientes, localizar la decisión y después comprobar los consumidores y su configuración. |
 
 El reparto suma **10 llamadas base + 17 rondas + hasta 2 llamadas de Akira + 2 rondas de reserva común = 31 llamadas**. Son máximos aprobados para empezar. La reserva queda disponible para comprobaciones concretas que puedan cerrar una conclusión, por ejemplo, localizar la CSP aplicada o seguir el veredicto de un CV hasta un segundo consumidor. Core reserva primero las llamadas base de tareas pendientes y respeta los topes globales de tiempo, salida y contexto. Cada tarea cierra en cuanto tenga evidencia suficiente.
+
+Los siete especialistas comparten un **máximo de 300 segundos por agente**, que abarca sus tareas, llamadas y búsquedas locales. Core protege **90 segundos para cerrar** con la evidencia disponible y guarda un margen equivalente para cada tarea pendiente del mismo agente. Una llamada de exploración solo se ofrece cuando caben al menos 90 segundos de búsqueda y 90 de cierre. El margen se libera al terminar cada tarea. El siguiente especialista puede empezar en cuanto finaliza el anterior.
+
+El adaptador de `openai-codex` aplica por defecto **90 segundos de inactividad entre eventos** y permite ajustar ese valor con `HERMES_CODEX_EVENT_STALE_TIMEOUT_SECONDS`. Hermes conserva sus límites técnicos por llamada de 180 segundos en el runtime y 240 segundos en el subproceso. Si una llamada alcanza el plazo local del especialista, Core guarda las respuestas validadas, registra el resultado y consumo remotos como desconocidos y sigue con el equipo sin reintentar esa llamada. Un fallo de proveedor conserva la interrupción global.
+
+La oficina dispone de **45 minutos** por ejecución para incluir hasta 35 minutos de especialistas, hasta 2 de Akira y margen para preparación y publicación. Se configura con `AUDIT_JOB_TIMEOUT_SECONDS`. En la siguiente prueba completa se medirán duración por especialista, rondas aprovechadas, tokens y preguntas pendientes para decidir si conviene reducir el presupuesto de búsqueda.
 
 Tras el piloto, revisar por agente las rondas asignadas y usadas, los archivos y tramos distintos, los tokens por llamada y qué cita, defensa o conclusión añadió cada ronda. Si sobran rondas de forma consistente, se puede reducir el máximo. Si los tokens suben por repetir fuentes, ajustar primero los fragmentos y su reenvío. Si una ronda adicional cierra una comprobación relevante, mantenerla aunque consuma el máximo previsto. Los cambios se contrastarán con la cobertura y la calidad de las citas.
 
@@ -104,3 +110,35 @@ En la ejecución del plan, **Seguridad** aporta casos de detección y excepcione
 Para aceptar la migración, verificar las 40 preguntas únicas y su autoría en HTML y Markdown, la conservación de parciales y la correspondencia de las citas con la captura. En los casos de referencia, revisar si las citas sostienen la afirmación y si la respuesta incluye defensas y condiciones. Comparar también estados por pregunta, llamadas, tokens, tiempo, bytes de prompt y líneas de prompt reenviadas. Instrumentar por separado los bytes de fuente repetidos y los hallazgos confirmados gracias a una pista del grafo. El ahorro de contexto cuenta como mejora cuando se conserva la evidencia de los casos principales.
 
 El piloto empieza con tres rondas para Kwame y cuatro para Arun. Las pruebas simuladas de confirmación y protección de credenciales preceden a cualquier envío real de código.
+
+## Activación y verificación
+
+El ejecutor común está en `coordination/workflow.py`. La oficina mantiene sus siete especialistas y permite seguir usando Iris. En modo híbrido, `AUDIT_TASK_WORKFLOWS=pilot` activa los flujos de Kwame y Arun. `all` prepara la comparación del equipo completo una vez revisado el piloto y `legacy` permite reproducir el ejecutor anterior.
+
+Las métricas de tareas distinguen texto de fuente enviado y repetido. El recuento de observaciones que citan líneas sugeridas por Graphify permite identificar casos para revisión manual. La coincidencia entre una cita y una ubicación del grafo permite comprobar la relación con la fuente. La utilidad de la sugerencia se evalúa leyendo el caso.
+
+La validación local del 12/11/2026 comprobó los dos perfiles del piloto, el modo de siete especialistas con proveedor simulado, la persistencia de parciales de Iris, los IDs y citas de las 40 preguntas en HTML y Markdown y la protección de valores en el envío. La oficina se verificó con pruebas de interfaz y TypeScript. La corrida de piloto con el proveedor autorizado y la comparación completa son las siguientes comprobaciones de cobertura y consumo.
+
+### Resultado del piloto real · 12/11/2026
+
+La revisión `97c39807-ee5e-4c80-a19e-ae2caf00f410` ejecutó las cuatro tareas de Kwame y Arun con GPT‑6.1 Sol, esfuerzo medio y `openai-codex`. Las 11 respuestas fueron nuevas y las 14 preguntas de su alcance tienen citas. Q17 pasó a respondida y Q18 a parcial. Arun acreditó el envío de CV por correo con antimalware desactivado y el riesgo de CV huérfanos. Quedaron abiertas la cadena completa de OneDrive, la clasificación de las alertas de Gitleaks y las etapas posteriores de CI/CD.
+
+Los dos roles consumieron 156.564 tokens, frente a 179.364 en sus aportaciones del equipo anterior. Aumentaron de 6 a 11 llamadas. La revisión conservó Q01–Q40 en los dos formatos y marcó el alcance del piloto. Se corrigieron y probaron localmente dos defectos de presentación detectados en el informe real. La comparación del equipo completo queda pendiente. [Resultado, citas y métricas del piloto](../artifacts/central-coordination/independent-pilot-comparacion.md)
+
+### Ajustes posteriores al piloto
+
+Kwame conserva tres rondas. La de construcción y arranque agrupa las lecturas pendientes de scripts y Dockerfiles. CI/CD y despliegue recibe dos rondas para localizar las etapas del pipeline y seguir las plantillas, scripts o tramos posteriores. La selección inicial prioriza el pipeline y sus posibles plantillas.
+
+Arun conserva dos rondas en cada tarea. Para Q35–Q37, la selección inicial intenta entregar en el mismo bloque las líneas de la decisión antimalware y las dos ramas consumidoras. La guía pide reunirlas en una misma ronda si hace falta ampliar la evidencia y guardar sus citas antes de pasar a la configuración y al comportamiento ante fallos.
+
+### Prueba completa del equipo por tareas · 12/11/2026
+
+El informe final `8f98bdeb-989a-4575-8e01-a704fd059211` completó las diez tareas, el reparto y la síntesis. Se recuperaron por huella 22 respuestas de `bf2cd177-50ba-4981-9e16-1696d32ec00f` después de un límite local de tiempo y se completaron siete llamadas nuevas. Hubo 30 intentos dentro del techo de 31 y el consumo remoto de uno quedó sin confirmar. El HTML y el Markdown contienen las 40 preguntas únicas.
+
+Se comunicaron 392.440 tokens, un 38,7 % menos que el equipo anterior. Los bytes de líneas de prompt repetidas bajaron un 31,5 %. El tiempo combinado de coordinación y análisis fue 1.183,388 s. El informe quedó parcial, con una pregunta respondida, 37 parciales y dos sin comprobar. Mejoraron Docker y CI/CD. Se acreditó la condición del antimalware para correo y OneDrive. Quedaron sin recoger el CV huérfano y la CSP específica de la web pública. La comparación recoge los pendientes de Arquitectura, la pérdida de evidencia entre observaciones y respuestas y los ajustes propuestos antes de activar los siete flujos por defecto. [Informes, comparación y métricas](../artifacts/central-coordination/independent-full-comparacion.md)
+
+### Repetición del equipo con el plazo común · 12/11/2026
+
+La revisión `6014f7ea-0ee2-4204-a3f7-d55d6186da16` repitió la captura de Web Corporativa 2.0 en `develop@4ae82b4` con GPT‑6.1 Sol, esfuerzo medio y `openai-codex`. Se verificó el código del workspace y el perfil efectivo de 300 segundos con margen de cierre de 90 para los siete especialistas. Cerraron las diez tareas, el reparto y la síntesis de Akira. Se completaron 28 llamadas nuevas, con cero interrupciones y cero respuestas recuperadas. Arun cerró sus dos tareas en cinco llamadas y 175,65 segundos acumulados de modelo.
+
+Se verificaron las 40 preguntas únicas en HTML, Markdown y JSON. El informe quedó parcial, con una respondida, 37 parciales y dos sin comprobar. Registró 383.555 tokens y 905,545 segundos de coordinación y análisis. De 6.068 referencias de preguntas, 6.040 coinciden textualmente y 28 conservan ruta y línea con un valor protegido. Quedaron abiertos la atomicidad del login, la clasificación de Gitleaks y el consumidor de CV de OneDrive. La corrida valida el cierre operativo con el plazo común. El modo `all` sigue disponible para pruebas de cobertura. [Informe HTML](../reports/2026-11-12/140000-snapshot/6014f7ea-0ee2-4204-a3f7-d55d6186da16/informe.html) · [Informe Markdown](../reports/2026-11-12/140000-snapshot/6014f7ea-0ee2-4204-a3f7-d55d6186da16/informe.md) · [Comparación y métricas](../artifacts/central-coordination/equipo-300s-comparacion.json)

@@ -48,6 +48,8 @@ def profile(role):
     provider, model = settings()
     options = runtime_options()
     limits = dict(registry()["roles"][role])
+    if "seconds" not in limits:
+        limits.update(registry()["specialist_timing"])
     base_calls = limits.get("calls", 1)
     prefix = "AUDIT_" + role.upper().replace("-", "_")
     if role != "preparation":
@@ -91,3 +93,10 @@ def validate_configuration():
 
 def scanners_enabled():
     return bool(integer("AUDIT_SCANNERS_ENABLED", 1, 0, 1))
+
+
+def task_workflows():
+    mode = os.environ.get("AUDIT_TASK_WORKFLOWS", "pilot").strip()
+    if mode not in {"pilot", "all", "legacy"}:
+        raise AuditError("AUDIT_TASK_WORKFLOWS debe ser pilot, all o legacy.")
+    return mode

@@ -24,9 +24,9 @@ def fragment(file, limit, anchor):
             'partial': start > 0 or len(selected) != len(lines), 'start': start + 1, 'end': start + len(selected)}
 
 
-def select(role, evidence, limits, *, with_groups=False):
+def select(role, evidence, limits, *, with_groups=False, groups=None):
     folder = resource_path('profiles', 'agents', role)
-    if role == FULL_STACK:
+    if role == FULL_STACK or with_groups:
         policy = tomllib.loads((folder / 'initial-sources.toml').read_text(encoding='utf-8'))
     else:
         config = folder / 'initial-sources.json'
@@ -38,6 +38,8 @@ def select(role, evidence, limits, *, with_groups=False):
     remaining = min(policy['max_bytes'], limits['bytes'])
     file_limit = min(policy['max_files'], limits['files'])
     for group in policy['groups']:
+        if groups is not None and group['id'] not in groups:
+            continue
         matched = list(dict.fromkeys(str(path) for pattern in group['patterns'] for path in paths
                                      if path.full_match(pattern, case_sensitive=False)))
         if not matched:

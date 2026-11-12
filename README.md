@@ -22,7 +22,7 @@ El [plan de coordinación centralizada](docs/PLAN_COORDINACION_CENTRALIZADA.md) 
 
 ## Empezar
 
-**Requisito para revisiones con modelos.** Usa un entorno de IA privado autorizado para el código del proyecto. Antes de la primera ejecución, confirma qué entorno está configurado. Si estás usando un servicio gratuito o la autorización de ese entorno está sin confirmar, detén la revisión. La confirmación en la aplicación y la protección de valores antes del envío forman parte del [plan aprobado de agentes independientes](docs/PROPUESTA_AGENTES_INDEPENDIENTES.md#política-aprobada-de-ia-privada-y-credenciales).
+**Requisito para revisiones con modelos.** Usa un entorno de IA privado autorizado para el código del proyecto. La oficina pide la confirmación al iniciar una revisión. En CLI interactiva se pregunta antes de preparar la revisión. Para automatización, el operador puede confirmarlo con `--private-ai-confirmed` o `AUDIT_PRIVATE_AI_CONFIRMED=1`. Una respuesta negativa o la falta de confirmación detiene el inicio. [Política y plan de agentes independientes](docs/PROPUESTA_AGENTES_INDEPENDIENTES.md#política-aprobada-de-ia-privada-y-credenciales)
 
 - **Otro ordenador:** [Inicio rápido](docs/INICIO_RAPIDO.md), desde los requisitos hasta la primera revisión.
 - **Repositorio local y rama activa, sin acceso al remoto:** [Análisis local](docs/ANALISIS_LOCAL.md).
@@ -91,7 +91,9 @@ El recorrido híbrido prepara el snapshot y grafo sin modelos. Con coordinación
 
 ## Datos y despliegue local
 
-La versión actual envía los fragmentos seleccionados al proveedor configurado y conserva su texto, incluidas las líneas marcadas por escáneres. La fase aprobada incorpora protección de valores detectados en la copia de salida. Las capturas completas, respuestas crudas, consultas, SQLite, cachés y sesiones permanecen locales. Este cierre archiva por autorización expresa seis informes renderizados y métricas comparativas en [docs/evidence](docs/evidence/agent-comparison-2026-10-31/README.md); `reports/`, `artifacts/` y `.env` siguen fuera de Git.
+Core protege los valores de credenciales detectados en la copia que se envía al modelo y en los informes nuevos. Las búsquedas, Graphify y los escáneres trabajan sobre la captura local original. La detección combina Gitleaks y patrones de valores sensibles y puede omitir formatos desconocidos. Las capturas, trazas y respuestas crudas se conservan en el almacenamiento local. El cierre previo conserva seis informes renderizados y métricas comparativas. [Evidencias autorizadas para versionar](docs/evidence/agent-comparison-2026-10-31/README.md)
+
+El modo `AUDIT_TASK_WORKFLOWS=pilot` activa las tareas de DevOps y Seguridad backend sobre la preparación híbrida. `all` habilita los siete perfiles para una comparación controlada. `legacy` conserva el ejecutor anterior del equipo.
 
 Solo se publica `127.0.0.1:3000`. El analizador funciona sin privilegios, sin socket Docker y sin puerto público. Es un MVP de uso local, sin autenticación corporativa; una publicación en red requiere trabajo adicional. La infraestructura de Azure DevOps/Kubernetes queda fuera de esta versión.
 

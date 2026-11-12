@@ -2,13 +2,14 @@
 import time
 import hashlib
 from arktic_office.config.models import integer, runtime_options
-from arktic_office.core.errors import AuditError
+from arktic_office.core.errors import AuditError, SpecialistTimeout
 from arktic_office.storage.jsonio import write_json
 
 
 class Budget:
-    def __init__(self, invoke, output):
+    def __init__(self, invoke, output, protection=None):
         self.invoke, self.output = invoke, output
+        self.protection = protection
         self.started = time.monotonic()
         self.calls = []
         self.seen_lines = set()
@@ -37,6 +38,8 @@ class Budget:
 
     def __call__(self, prompt, config):
         from arktic_office.preparation.repository import redact
+        if self.protection:
+            prompt = self.protection.protect(prompt)
         elapsed = time.monotonic() - self.started
         reserved = self.charged_output_tokens()
         size = len(prompt.encode())
@@ -48,20 +51,32 @@ class Budget:
         lines = prompt.splitlines(keepends=True)
         repeated = sum(len(line.encode()) for line in lines if line in self.seen_lines)
         self.seen_lines.update(lines)
+        remaining = self.limits['seconds'] - elapsed
+        requested = config.get('timeout', 240)
+        scope = 'call' if requested > 240 else config.get('timeout_scope', 'call')
+        if remaining < min(requested, 240):
+            scope = 'review'
+        timeout = min(requested, remaining, 240)
         record = {'agent': config.get('id'), 'model': config['model'], 'reasoning': config.get('reasoning'), 'prompt_bytes': size,
                   'prompt_sha256': hashlib.sha256(prompt.encode()).hexdigest(), 'repeated_context_bytes': repeated,
-                  'reserved_output_tokens': tokens, 'usage': None, 'status': 'running'}
+                  'reserved_output_tokens': tokens, 'usage': None, 'status': 'running',
+                  'timeout_seconds': round(timeout, 3), 'timeout_scope': scope}
         if config.get('task_id'):
             record.update(task=config['task_id'], context_sections=config['context_sections'])
         self.calls.append(record)
         self.save()
         started = time.monotonic()
         try:
-            result = self.invoke(prompt, {**config, 'timeout': min(config.get('timeout', 240), self.limits['seconds'] - elapsed)})
+            result = self.invoke(prompt, {**config, 'timeout': timeout, 'timeout_scope': scope})
+            if self.protection:
+                result = {**result, "report": self.protection.protect(result["report"])}
             record.update(usage=result.get('usage'), status='complete')
             return result
         except KeyboardInterrupt:
             record.update(status='interrupted')
+            raise
+        except SpecialistTimeout as exc:
+            record.update(status='interrupted', error=redact(str(exc)), remote_outcome='unknown')
             raise
         except AuditError as exc:
             record.update(status='error', error=redact(str(exc)))

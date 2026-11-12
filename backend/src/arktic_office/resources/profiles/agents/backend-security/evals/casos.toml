@@ -1,0 +1,9 @@
+[[cases]]
+task = "controles-servidor"
+questions = ["Q32", "Q33", "Q34"]
+rounds = 2
+
+[[cases]]
+task = "recursos-secretos-salidas"
+questions = ["Q35", "Q36", "Q37"]
+rounds = 2

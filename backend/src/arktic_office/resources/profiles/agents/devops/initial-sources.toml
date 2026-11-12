@@ -1,0 +1,62 @@
+max_files = 11
+max_bytes = 10500
+max_file_bytes = 1600
+
+[[groups]]
+id = "pipeline"
+take = 2
+patterns = [".github/workflows/*.y*ml", "azure-pipelines.y*ml", ".gitlab-ci.yml", "Jenkinsfile", ".circleci/config.yml"]
+anchor = "(?i)^\\s*(?:stages|jobs|workflows)\\s*:|^\\s*stage\\s*\\("
+
+[[groups]]
+id = "pipeline-templates"
+take = 2
+patterns = [".github/actions/**/action.y*ml", ".azuredevops/**/*.y*ml", "**/pipelines/templates/**/*.y*ml", "**/ci/templates/**/*.y*ml", "**/deploy*.sh", "**/deploy*.ps1"]
+
+[[groups]]
+id = "root-manifests"
+take = 2
+patterns = ["package.json", "pom.xml", "build.gradle*", "pyproject.toml", "requirements*.txt", "go.mod", "Cargo.toml", "*.sln"]
+
+[[groups]]
+id = "tasks"
+take = 1
+patterns = ["turbo.json", "settings.gradle*", "Makefile", "Taskfile.y*ml", "tox.ini", "noxfile.py"]
+
+[[groups]]
+id = "applications"
+take = 3
+patterns = ["apps/*/package.json", "services/*/package.json", "*/pom.xml", "*/build.gradle*", "*/pyproject.toml", "*/requirements*.txt"]
+
+[[groups]]
+id = "startup-config"
+take = 1
+patterns = ["**/env.[jt]s", "**/settings.py", "**/entrypoint.sh", "**/start.sh", "**/instrumentation.[jt]s"]
+anchor = "(?i)process\\.env|validat|environ|^#!"
+
+[[groups]]
+id = "compose"
+take = 1
+patterns = ["compose.y*ml", "docker-compose.y*ml"]
+
+[[groups]]
+id = "migration-image"
+take = 1
+patterns = ["**/database/Dockerfile*", "**/migrations/Dockerfile*", "**/Dockerfile*migrat*"]
+anchor = "(?i)^FROM.* AS runner|^ENTRYPOINT|^CMD"
+
+[[groups]]
+id = "readme"
+take = 1
+patterns = ["README*", "**/README*"]
+anchor = "(?i)^#{1,4}.*(?:arranque|instalaci[oó]n|getting started|local|quick start|desarrollo)"
+
+[[groups]]
+id = "env-examples"
+take = 2
+patterns = ["**/.env.example", "**/.env.sample", "**/.env.template"]
+
+[[groups]]
+id = "deployment"
+take = 2
+patterns = ["**/Dockerfile*", "infra/**/*.bicep", "infra/**/*.tf"]

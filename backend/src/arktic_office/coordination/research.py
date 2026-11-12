@@ -3,7 +3,7 @@ import json
 import time
 from collections import Counter
 from arktic_office.coordination.initial_sources import select as select_initial_sources
-from arktic_office.core.errors import AuditError
+from arktic_office.core.errors import AuditError, SpecialistTimeout
 from arktic_office.reporting.reports import make_prompt
 from arktic_office.reporting.agent_instructions import instructions as role_instructions
 from arktic_office.storage.jsonio import write_json
@@ -28,7 +28,8 @@ def common_context(snapshot, evidence):
 
 def research(snapshot, config, state, evidence, invoke, output, cells):
     rounds = config["limits"]["research_rounds"]
-    started = time.monotonic()
+    closing_reserve = config["limits"].get("closure_reserve_seconds", 0)
+    deadline = time.monotonic() + config["limits"].get("seconds", 240)
     premature_closures = 0
     context = common_context(snapshot, evidence)
     context['question_map'] = config.get('knowledge_index', [])
@@ -79,8 +80,12 @@ def research(snapshot, config, state, evidence, invoke, output, cells):
         'No recibirás detecciones ni respuestas completas por adelantado. Consulta lo relevante, sigue next_offset si hace falta y conserva tus rondas. '
         'Graphify, búsquedas de texto y lecturas por paths/query/start_line siguen disponibles sin cambios.')
     for attempt in range(rounds + 1):
-        first = attempt == 0 and rounds > 0
         remaining = rounds - attempt
+        remaining_seconds = deadline - time.monotonic()
+        if remaining_seconds <= 0 or remaining_seconds < closing_reserve:
+            raise SpecialistTimeout("Sin margen para cerrar dentro del plazo del especialista.")
+        can_search = remaining > 0 and remaining_seconds >= 2 * closing_reserve
+        first = attempt == 0 and can_search
         if first:
             prompt = role_instructions(config["id"]) + instruction + '\nPrimero revisa las herramientas y solicita queries si necesitas fuentes. Rondas disponibles: ' + str(rounds)
             if enabled(snapshot) or initial is not None:
@@ -90,7 +95,7 @@ def research(snapshot, config, state, evidence, invoke, output, cells):
         else:
             prompt = make_prompt({**snapshot, "files": config["files"], "context_maps_managed":True}, config) + '\n' + instruction
             prompt += '\nCONSULTAS REALIZADAS: ' + json.dumps(state["retrievals"], ensure_ascii=False)
-            prompt += ('\nPuedes devolver queries si necesitas otra ronda; quedan ' + str(remaining) + '.' if remaining > 0 else
+            prompt += ('\nPuedes devolver queries si necesitas otra ronda; quedan ' + str(remaining) + '.' if can_search else
                        '\nSin consultas restantes. Devuelve el resultado compacto compact-v1 con observaciones y listas de tu rol. Declara pendientes; nunca inventes citas.')
         state["calls"] = attempt + 1
         state["usage"] = None
@@ -101,10 +106,12 @@ def research(snapshot, config, state, evidence, invoke, output, cells):
                           "lookup_history_bytes":len(json.dumps(state['retrievals'],ensure_ascii=False).encode())}}
         state["invocations"].append(invocation)
         write_json(output / "estado.json", {"estado": "analizando", "celulas": cells})
-        remaining_seconds = config['limits'].get('seconds', 240) - (time.monotonic() - started)
+        call_deadline = deadline - (closing_reserve if can_search else 0)
+        remaining_seconds = call_deadline - time.monotonic()
         if remaining_seconds <= 0:
-            raise AuditError('Tiempo total del encargo agotado; no se inicia otra llamada.')
-        envelope = invoke(prompt, {**config, 'timeout': min(config.get('timeout', 240), remaining_seconds)})
+            raise SpecialistTimeout("Se agotó el plazo local del especialista antes de iniciar otra llamada.")
+        envelope = invoke(prompt, {**config, 'timeout': min(config.get('timeout', 240), remaining_seconds),
+                                   'timeout_scope': 'specialist' if closing_reserve else 'call'})
         invocation["usage"] = envelope.get("usage")
         usages = [x["usage"] for x in state["invocations"]]
         state["usage"] = {k: sum(u[k] for u in usages) for k in set.intersection(*(set(u) for u in usages))
@@ -115,7 +122,7 @@ def research(snapshot, config, state, evidence, invoke, output, cells):
         except (ValueError, TypeError):
             request = None
         if isinstance(request, dict) and set(request) == {"queries"}:
-            if remaining <= 0:
+            if not can_search or deadline - time.monotonic() < closing_reserve:
                 raise AuditError("Consulta solicitada con presupuesto de rondas agotado.")
             files, trace = evidence.batch(request["queries"], config["limits"], initial=config["files"])
             config["files"] = files
@@ -128,7 +135,7 @@ def research(snapshot, config, state, evidence, invoke, output, cells):
             raise AuditError("La fase de investigación no devolvió consultas; no se omite silenciosamente.")
         if enabled(snapshot) and evidence.files and rounds > 0 and not config["files"]:
             premature_closures += 1
-            if remaining <= 0 or premature_closures > 1:
+            if not can_search or premature_closures > 1:
                 raise AuditError("El especialista no leyó fuentes de código/configuración pese a disponer de ellas; no se acepta un cierre sin revisión.")
             state["retrievals"].append({"result": {"error": "Cierre prematuro: aún no se ha leído código/configuración. Solicita queries con rutas o símbolos del inventario antes de responder."}})
             continue
