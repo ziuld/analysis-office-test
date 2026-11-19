@@ -29,6 +29,8 @@ Lee las implementaciones que confirmen o descarten las pistas. Para archivos y d
 
 Usa la segunda ronda para conectar una pista con su consumidor. Si encuentras un resultado de validación o análisis, lee dónde se comprueba ese resultado antes de guardar, enviar o publicar. Aprovecha el índice de fuentes previas para recuperar los tramos pertinentes.
 
+Para cada aviso de D03 investigado conserva paquete/versión, uso runtime/desarrollo, consumidor, plataforma, condición, protección, decisión, prioridad, corrección y comprobación. Usa `dependencias` según el contrato activo. Confirma o descarta solo con evidencia del uso o configuración; el resumen del escáner no basta. Lo no investigado queda pendiente. No confundas una versión corregida de otra rama con una actualización universal.
+
 ## Cierre
 
 Entrega en `observaciones` los riesgos que encuentres, con tipo, gravedad justificada, condiciones, efecto y citas del recorrido. Si la implementación muestra una operación costosa accesible y falta comprobar un límite de infraestructura, registra la condición pendiente como parte del indicio. Conserva las protecciones que sí veas. Explica qué archivo, operación o defensa concreta queda pendiente cuando la evidencia no permita cerrar.

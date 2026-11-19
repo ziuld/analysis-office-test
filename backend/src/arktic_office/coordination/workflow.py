@@ -21,7 +21,7 @@ from arktic_office.storage.jsonio import read_json, write_json
 
 
 SYNTHESIS = "alcance"
-OUTPUT = {"respuestas", "observaciones", "pendientes", "componentes", "conexiones", "controles"}
+OUTPUT = {"respuestas", "observaciones", "pendientes", "componentes", "conexiones", "controles", "dependencias"}
 
 
 def load_tasks(folder=None, *, role=FULL_STACK):
@@ -186,6 +186,16 @@ def receive(payload, task, questions, visible, source_ids, delivered_tools, *, r
                     saved.append(item)
                 continue
             if not isinstance(item, dict):
+                continue
+            if section == 'dependencias':
+                from arktic_office.reporting.iris_delivery import triage
+                decision = triage(item, visible, delivered_tools)
+                if decision is None:
+                    task['dependency_omissions'] = task.get('dependency_omissions',0) + 1
+                    continue
+                identity = tuple(decision[k] for k in ('package','version','advisory'))
+                saved[:] = [old for old in saved if tuple(old[k] for k in ('package','version','advisory')) != identity]
+                saved.append(decision)
                 continue
             if section == "controles" and item.get("id") not in task["controls"]:
                 continue
@@ -475,6 +485,8 @@ def research(snapshot, config, state, evidence, budget, output, cells, *, tasks=
     result = {"observaciones": [], "respuestas": [], "pendientes": []}
     for task in progress["tasks"]:
         for section, items in task["result"].items():
+            if section == 'dependencias':
+                continue  # Stored in the workflow checkpoint; never force this into the legacy v3 schema.
             if section == "propuesta_azure":
                 result[section] = items
             elif section != "respuestas":

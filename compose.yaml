@@ -14,12 +14,12 @@ services:
 
   auditor:
     profiles: [audit]
-    image: arktic-hermes-auditor:0.5.0
+    image: arktic-hermes-auditor:0.6.0
     build:
       context: .
       dockerfile: docker/Auditor.Dockerfile
       args:
-        APP_VERSION: "0.5.0"
+        APP_VERSION: "0.6.0"
     env_file: .env
     volumes:
       - ./reports:/reports

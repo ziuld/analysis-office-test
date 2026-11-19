@@ -1,0 +1,68 @@
+IRIS - CARPETA AUTÓNOMA CON HERRAMIENTAS Y CACHÉ
+
+full-stack-code-analyst/
+|-- README.md
+|-- VERSION                          Versión 0.1.2 del agente
+|-- CHANGELOG.md                     Cambios y límites de la entrega
+|-- AGENT.md                          Entrada y modelo del chat actual
+|-- AGENTS.md
+|-- CLAUDE.md
+|-- .gitignore                        Excluye .local/ del paquete versionado
+|-- skills/revisar-codigo/
+|   |-- SKILL.md
+|   `-- referencias/                 Siete bloques, Q01-Q40
+|-- plantillas/informe.html
+|-- scripts/
+|   |-- iris.py                       Estado, preparación, consultas y cierre
+|   |-- storage.py                    Huellas, inventario y escrituras atómicas
+|   |-- scanners.py                   Adaptadores y caché por herramienta
+|   |-- install_tools.py              Instalación aislada y verificación de binarios
+|   |-- semgrep_docker.py             Contenedor opcional, sin instalar Docker/WSL
+|   |-- review_evidence.py            Procedencia, matriz OSV y comparación
+|   |-- report_renderer.py            HTML y fichas con estructura fija desde JSON
+|   |-- iris_core.py                  Copia autónoma del núcleo compartido 1.1
+|   |-- verify_report.py              Formato fijo y permisos sin destino alternativo
+|   |-- verify_local.py               Comprobaciones offline del ciclo de caché
+|   |-- verify_features.py            Procedencia, matriz y fallos del contenedor
+|   `-- verify_docker.py              Prueba real opcional con código ficticio
+|-- tools/
+|   |-- versions.json
+|   |-- semgrep-rules.json
+|   `-- licenses/
+|-- docs/
+|   |-- ejecucion-local.md
+|   |-- contrato-informe.md
+|   |-- graphify.md
+|   |-- evidencia-revisiones.md
+|   |-- prueba-independiente.md
+|   |-- propuesta-mejoras.md
+|   `-- integracion.md
+`-- .local/                          Generado privado de este proyecto
+    |-- tools/                        Ejecutables y entornos instalados
+    |-- cache/
+    |   |-- graphify/                 Copia de entrada, grafo, logs y estado
+    |   |-- gitleaks/                 Copia de entrada y detecciones redactadas
+    |   |-- semgrep/                  Reglas aplicadas y resultados
+    |   `-- osv/                     Dependencias y avisos con fecha de consulta
+    `-- revisiones/
+        `-- fecha-id/
+            |-- entrada/inventario.json
+            |-- graphify/estado.json  Puntero al resultado usado
+            |-- gitleaks/estado.json
+            |-- semgrep/estado.json
+            |-- osv/estado.json
+            |-- bloques/01.md ... 07.md
+            |-- cobertura.json
+            |-- informe.json          Datos; no se redacta HTML a mano
+            |-- dependencias.json
+            |-- hallazgos.json
+            |-- cambios-entrada.json
+            |-- comparacion.json
+            |-- evidencia.html
+            |-- estado.json
+            `-- informe-iris.html
+
+El informe predeterminado queda dentro de .local/revisiones/.
+Los resultados vigentes se reutilizan sin repetir la revisión.
+Cada usuario puede pedir una exportación adicional a otra ruta.
+Para distribuir el agente se conserva .local/ en privado.

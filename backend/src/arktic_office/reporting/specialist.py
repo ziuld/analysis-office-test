@@ -21,9 +21,14 @@ def prompt(snapshot, cell, *, task_guide=None, source_ids=None, sections=None):
     if sections is not None and "observaciones" not in sections:
         del common["observaciones"]
     specific = ""
+    if sections is not None and 'dependencias' in sections:
+        common['dependencias'] = []
+        specific += (' Para cada aviso OSV investigado puedes entregar dependencias: [{package,version,advisory,scope,consumer,platform,condition,defense,decision,priority,correction,verification,evidencia:[F#:L#]}]. '
+                     'scope: unknown/runtime/development/both; decision: pending/applicable/not_applicable. Primero consulta D03; cita el uso o configuración para confirmar o descartar. '
+                     'No inventes avisos, no equipares versión afectada con explotación. Los avisos no contrastados quedan pending y no desaparecen. ')
     if role in {"security", "identity", "frontend-security", "backend-security", FULL_STACK} and (sections is None or "controles" in sections):
         common["controles"] = [{"id": "acceso", "estado": "no_evaluado", "motivo": "No se comprobó autorización", "evidencia": []}]
-        specific = ("Perfil de revisión de seguridad. Para riesgos puedes añadir gravedad (critica/alta/media/baja), "
+        specific += ("Perfil de revisión de seguridad. Para riesgos puedes añadir gravedad (critica/alta/media/baja), "
             "implicacion, condicion y recomendacion a una observación. No inventes gravedad ni explotación. "
             "Controles: solo los revisados, con id acceso/entradas/secretos/dependencias/configuracion/operacion; "
             "estado hallazgo/evidencia_favorable_limitada/no_evaluado/no_aplica. Un control evaluado necesita evidencia. "

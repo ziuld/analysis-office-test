@@ -36,7 +36,7 @@ reserved_rounds = 2
 id = "seguridad-backend-datos"
 guide = "tasks/06-seguridad-backend-datos.md"
 source_groups = ["data", "security", "manifests"]
-output = ["respuestas", "observaciones", "pendientes", "controles"]
+output = ["respuestas", "observaciones", "pendientes", "controles", "dependencias"]
 controls = ["entradas", "secretos", "dependencias", "configuracion", "operacion"]
 reserved_rounds = 2
 

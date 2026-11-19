@@ -121,6 +121,9 @@ def flow_html(flow, snapshot):
 
 def render_html(data, snapshot, model=""):
     """Executive v14 layout over saved evidence; no extra model calls."""
+    if data.get('full_stack') and data.get('iris_delivery'):
+        from arktic_office.reporting.iris_delivery import render_html as iris_html
+        return iris_html(data,snapshot,model)
     if data.get("cuestionario"):
         from arktic_office.reporting.reading import render_html as reading_html
         return reading_html(data, snapshot, model)

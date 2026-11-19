@@ -1,0 +1,10 @@
+{
+  "agent_version": "0.2.0",
+  "shared_contract": "1.1",
+  "portable_lineage": "0.1.2",
+  "runtime": "office-core",
+  "storage": "native-run-directory",
+  "model": "office-configured-provider",
+  "renderer": "iris_core",
+  "semantic_independence": "not_certified"
+}

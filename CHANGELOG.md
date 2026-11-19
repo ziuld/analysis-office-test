@@ -1,5 +1,14 @@
 # Cambios por componente
 
+## Backend 0.6.0 · Iris interno 0.2.0 y contrato compartido 1.1 · 19/11/2026
+
+- Iris integrado adapta las mejoras del portable conservando Core, snapshots, proveedor, presupuestos, checkpoints y almacenamiento de la oficina. Se mantienen los siete bloques y las dos rondas reservadas de seguridad.
+- Generador y plantilla compartidos con el portable 0.1.2, con copias autónomas verificadas por hashes; cuatro grupos del resumen, 40 preguntas y siete bloques. Las corridas antiguas conservan el renderizador histórico; no se reetiquetan automáticamente.
+- Nuevas corridas guardan procedencia, cobertura, matriz por aviso OSV, hallazgos y fichas. Las decisiones de aplicabilidad requieren herramienta y fuentes entregadas; lo no investigado sigue pendiente. No se deducen resoluciones o independencia semántica.
+- Documentado el patrón de extracción para futuros agentes y un equipo orquestado. El entregable portable permanece fuera del paquete backend, sin dependencias hacia la oficina.
+- Nueve pruebas dirigidas del backend y las tres comprobaciones portables correctas; informe histórico recompuesto sin llamadas nuevas al modelo, conservando 40 preguntas, cuatro riesgos y 89 avisos pendientes. Imagen de pruebas 0.6.0 construida. Suite Linux completa y piloto nuevo con IA pendientes por elección del usuario. [Cierre y límites](docs/CIERRE_IRIS_0.6.0.md).
+- Frontend 0.4.0 y pins de Hermes/Hermes3D conservados; no se publica una versión de esas dependencias externas.
+
 ## Backend 0.5.0 · Iris y flujos de especialistas · 12/11/2026
 
 - Iris analiza las 40 preguntas en siete tareas con síntesis y hasta 35 minutos. El equipo ejecuta diez tareas repartidas entre siete especialistas, con 300 segundos por agente y un margen de cierre de 90 segundos.

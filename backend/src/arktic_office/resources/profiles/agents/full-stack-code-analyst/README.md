@@ -1,5 +1,7 @@
 # Iris · Full Stack
 
+Perfil interno **0.2.0**, contrato de presentación **1.1** (delivery.json), compatible con la presentación del portable **0.1.2**. Las versiones de los dos adaptadores son independientes.
+
 Iris realiza una revisión estática individual del repositorio y responde las 40 preguntas de Arktic Office. En la oficina, activa **Usar Full Stack** al iniciar la revisión. La API acepta `full_stack: true` y la CLI ofrece `--full-stack`. La modalidad queda registrada con la revisión. El equipo sigue siendo la modalidad predeterminada.
 
 ## Cómo trabaja
@@ -21,6 +23,10 @@ El perfil reserva siete llamadas de tarea y hasta once rondas de búsqueda, con 
 Cada bloque de seguridad tiene dos rondas reservadas dentro del presupuesto de Iris. Las fuentes iniciales se limitan a ocho archivos y 7.200 bytes. El perfil admite hasta 200 archivos y 600.000 bytes de fragmentos durante la investigación. El presupuesto global también se aplica. Para `openai-codex`, el adaptador establece 90 segundos de inactividad entre eventos de forma predeterminada.
 
 Core guarda el avance por tarea en `agents/full-stack-code-analyst/workflow.json` y las llamadas y su consumo en `metrics.json`, dentro de la carpeta de la revisión. Publica HTML y Markdown con las 40 preguntas, las citas y la autoría de Iris. Un informe parcial identifica qué se comprobó y qué sigue pendiente. La revisión estática puede acreditar un patrón de código y dejar abierta su explotación o configuración efectiva.
+
+Las nuevas corridas conservan además iris-contract.json, procedencia.json, cobertura.json, dependencias.json, hallazgos.json y bloques/01.md a 07.md en esa misma carpeta de agente. El HTML se construye con el núcleo y plantilla compartidos, sin llamadas al modelo para presentarlo. El bloque de backend puede clasificar avisos tras consultar D03 y leer fuentes; Core mantiene pendientes para los demás y comprueba que correspondan al resultado de la captura. Reutilizar preparación no reutiliza conclusiones ni acredita independencia.
+
+Este perfil no usa la .local del portable ni instala sus herramientas. Las corridas anteriores sin iris_delivery siguen renderizándose con su contrato histórico. La oficina conserva su proveedor configurado y su almacenamiento nativo.
 
 ## Archivos del perfil
 

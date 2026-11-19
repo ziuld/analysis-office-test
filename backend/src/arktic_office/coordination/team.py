@@ -579,6 +579,9 @@ def run_team(snapshot, output, invoke=invoke_hermes, emit=print, evidence=None, 
     budget.save()
     data['metrics'] = __import__('json').loads((output / 'metrics.json').read_text(encoding='utf-8'))
     data['stop_reason'] = budget.stop_reason
+    if full_stack:
+        from arktic_office.reporting.iris_delivery import attach
+        attach(data, snapshot, output)
     write_json(output / "estado.json", {"estado": data["estado"], "celulas": cells})
     return data
 

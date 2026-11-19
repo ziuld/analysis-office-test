@@ -1,0 +1,17 @@
+{
+  "date": "2026-11-19",
+  "versions": {"backend": "0.6.0", "python_package": "0.6.0", "frontend": "0.4.0", "iris_internal": "0.2.0", "iris_portable": "0.1.2", "shared_contract": "1.1"},
+  "validation": {
+    "backend_targeted": {"run": 9, "passed": 9, "provider_calls": 0},
+    "portable_checks": ["verify_report.py", "verify_features.py", "verify_local.py"],
+    "portable_checks_passed": true,
+    "historical_replay": {"source_run": "a0477b24-63c5-4899-9267-dcd7f92de06f", "new_provider_calls": 0, "questions": 40, "blocks": 7, "risks": 4, "dependency_rows": 89, "dependency_decisions_pending": 89},
+    "test_image_built": "arktic-backend-tests:0.6.0",
+    "windows_broad_suite": {"run": 168, "errors": 10, "accepted_as_full_validation": false},
+    "linux_full_suite": "pending_user_deferred",
+    "integrated_startup": "pending",
+    "new_model_pilot": "pending_user_deferred"
+  },
+  "limits": ["No se acredita paridad semántica entre modelos", "Los históricos no se reetiquetan", "No se cambia el proveedor, los presupuestos o el almacenamiento de la oficina"],
+  "documentation": "docs/PATRON_EXPORTACION_AGENTES.md"
+}
